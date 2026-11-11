@@ -12,7 +12,7 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง v1.2.0 ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.2.0; ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
 - Source: `COMPANY_SOURCE/js/campus-render.js: updateSpritePositions, render; js/api.js: frame/view; js/sim.js: step/tick indexes; js/layout.js: findPath; tools/benchmark.cjs` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
 - ตัวอย่างหลักฐานเดิม: `COMPANY_SOURCE/test/api.test.cjs; campus-browser.cjs; tools/benchmark.cjs (simulation-only)` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)

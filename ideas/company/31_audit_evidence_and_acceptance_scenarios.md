@@ -4,7 +4,7 @@
 
 ## หลักฐานปัจจุบัน
 
-- `docs/company/validation/NPC_COVERAGE_MATRIX_V1.3.0.csv` มี 123 รายการที่ทำเครื่องหมาย `VERIFIED_V130` ตามรายงาน v1.3.0; ใช้เป็นหลักฐานของรอบนั้น ไม่แทนการทดสอบ v2.0.0 ทุกระบบ
+- `docs/company/NPC_COVERAGE_MATRIX_V1.3.0.csv` มี 123 รายการที่ทำเครื่องหมาย `VERIFIED_V130` ตามรายงาน v1.3.0; ใช้เป็นหลักฐานของรอบนั้น ไม่แทนการทดสอบ v2.0.0 ทุกระบบ
 - `COMPANY_SOURCE/test/product-depth-npc-board-v130.test.cjs` ตรวจเงื่อนไขเงินทุน ทรัพยากร/ความรู้ บริการ และความต่างของการตัดสินใจ CEO ตามบุคลิก
 - `COMPANY_SOURCE/test/geopolitics-living-world-v200.test.cjs` ตรวจการเปลี่ยนรัฐบาล สงคราม สนธิสัญญา ผลต่อราคา/FX/ค่าขนส่ง/ดีมานด์ และพงศาวดาร
 - ผลตรวจล่าสุดและขอบเขตแต่ละชุดอยู่ใน [สถานะโครงการ](../../project_status_and_ai_onboarding.md)

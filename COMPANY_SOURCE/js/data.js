@@ -897,6 +897,7 @@
       icon: "🚚",
       purchaseCost: 3500000, // ฿35,000 in game satang scale
       dailyLeaseCost: 180000, // ฿1,800/day
+      leaseDepositSatang: 900000, // 5-day lease deposit (฿9,000)
       maxWeightKg: 6500,
       maxVolumeM3: 28,
       baseLitersPerKm: 0.18,
@@ -911,6 +912,7 @@
       icon: "❄️",
       purchaseCost: 4800000, // ฿48,000 in game satang scale
       dailyLeaseCost: 250000,
+      leaseDepositSatang: 1250000, // 5-day lease deposit (฿12,500)
       maxWeightKg: 6000,
       maxVolumeM3: 24,
       baseLitersPerKm: 0.24,
@@ -925,6 +927,7 @@
       icon: "🚛",
       purchaseCost: 6500000, // ฿65,000 in game satang scale
       dailyLeaseCost: 340000,
+      leaseDepositSatang: 1700000, // 5-day lease deposit (฿17,000)
       maxWeightKg: 16000,
       maxVolumeM3: 54,
       baseLitersPerKm: 0.29,
@@ -1003,6 +1006,40 @@
       volumeM3: 22,
       cargoValueSatang: 45000000,
       clientCorpId: "tokyo_elec"
+    },
+    {
+      id: "route_eec_singapore_feeder",
+      nameTh: "นิคมแหลมฉบัง ➔ ท่าเรือฟีดเดอร์สิงคโปร์-จูร่ง (คอนเทนเนอร์ห้องเย็นข้ามชาติ)",
+      originTh: "ท่าเรือแหลมฉบัง ชลบุรี",
+      destinationTh: "ศูนย์กระจายสินค้าท่าเรือจูร่ง-สิงคโปร์",
+      pickupEmptyKm: 20,
+      outboundLoadedKm: 130,
+      backhaulEmptyKm: 150,
+      tollFeeSatang: 28000,
+      baseRateSatang: 680000,
+      cargoType: "cold_chain",
+      cargoNameTh: "เวชภัณฑ์ปลอดเชื้อและอาหารพรีเมียมส่งออกฮับสิงคโปร์",
+      weightKg: 4600,
+      volumeM3: 20,
+      cargoValueSatang: 38000000,
+      clientCorpId: "singapore_port_3pl"
+    },
+    {
+      id: "route_maptaphut_metal_heavy",
+      nameTh: "ท่าเรือมาบตาพุด ➔ โรงถลุงและนิคมอมตะชลบุรี (ขนส่งแร่และเหล็กโครงสร้างหนัก)",
+      originTh: "ท่าเรืออุตสาหกรรมมาบตาพุด ระยอง",
+      destinationTh: "นิคมอมตะซิตี้ ชลบุรี",
+      pickupEmptyKm: 18,
+      outboundLoadedKm: 112,
+      backhaulEmptyKm: 130,
+      tollFeeSatang: 30000,
+      baseRateSatang: 740000,
+      cargoType: "ore_metal",
+      cargoNameTh: "แร่บ็อกไซต์ เหล็กกล้าแผ่นรีดร้อน และโปรไฟล์อะลูมิเนียม",
+      weightKg: 12500,
+      volumeM3: 42,
+      cargoValueSatang: 42000000,
+      clientCorpId: "siam_metal"
     }
   ]);
 
@@ -1339,6 +1376,107 @@
       recoveredOutputs: { metal_sheet: 1, pack_carton: 2, organic_compost: 1 },
       clientCorps: ["cp_health", "metro_retail", "siam_tech", "petro_chem_siam"],
       descTh: "รับบำบัดกากของเสียจากบริษัทคู่ค้าโดยใช้น้ำดิบและกระบวนการคัดแยก ได้ทั้งเงินค่าบริการบำบัด และได้แผ่นโลหะรีไซเคิล กล่องกระดาษ และปุ๋ยหมักกลับเข้าคลังจริง!"
+    },
+    energy_epc_install: {
+      id: "energy_epc_install",
+      nameTh: "บริการรับเหมาติดตั้งโซลาร์รูฟท็อปและระบบกักเก็บพลังงาน B2B (Turnkey Solar & Storage EPC)",
+      shortNameTh: "รับเหมาติดตั้งโซลาร์/กริด EPC",
+      icon: "☀️",
+      domainId: "power_electronics",
+      requiredRole: "engineer",
+      fallbackRole: "assembler",
+      stages: ["site_engineering_survey", "mounting_and_wiring", "grid_sync_commissioning", "epc_handover_settled"],
+      stagesTh: [
+        "1. สำรวจโครงสร้างหลังคาโรงงานลูกค้าและคำนวณโหลดไฟฟ้า (Site Engineering Survey)",
+        "2. เบิกแผงโซลาร์เซลล์ รางอะลูมิเนียม และชุดสายไฟไปติดตั้งหน้างาน (Mounting & HV Wiring)",
+        "3. ทดสอบขนานไฟเข้าสมาร์ตกริดและตรวจวัดค่าความปลอดภัย (Grid Sync & Commissioning)",
+        "4. ส่งมอบใบรับรองวิศวกรรม EPC และรับชำระค่าบริการเหมาโครงการ (EPC Handover & Settlement)"
+      ],
+      serviceFeeSatang: 920000, // ฿9,200 turnkey EPC project fee
+      labConsumableCostSatang: 85000,
+      slaPenaltySatang: 180000,
+      slaPenaltyPct: 0.2,
+      requiredMinutes: 95,
+      sparePartInputs: { solar_cell: 1, aluminum_extrusion_profile: 1, wire_harness: 1 },
+      fallbackSparePartInputs: { solar_cell: 1, metal_sheet: 1, wire_harness: 1 },
+      recoveredOutputs: {},
+      clientCorps: ["green_power", "metro_retail", "cp_health", "singapore_port_3pl"],
+      descTh: "ส่งทีมวิศวกรพร้อมเบิกแผงโซลาร์เซลล์ รางอะลูมิเนียมอัดรีด และชุดสายไฟจากคลังไปติดตั้งระบบผลิตไฟฟ้าสะอาดที่โรงงานลูกค้า สร้างรายได้โครงการ EPC มาร์จิ้นสูงและยกระดับชื่อเสียง ESG"
+    },
+    b2b_technical_academy: {
+      id: "b2b_technical_academy",
+      nameTh: "บริการศูนย์ฝึกอบรมและรับรองมาตรฐานช่างเทคนิคอุตสาหกรรม B2B (Industrial Technical Academy)",
+      shortNameTh: "ศูนย์ฝึกอบรมช่างเทคนิค B2B (Tech Academy)",
+      icon: "🎓",
+      domainId: "embedded_iot",
+      requiredRole: "coordinator",
+      fallbackRole: "inspector",
+      stages: ["curriculum_enrollment", "workshop_simulation", "skill_certification_exam", "academy_settled"],
+      stagesTh: [
+        "1. ลงทะเบียนทีมช่างของบริษัทคู่ค้าเข้าหลักสูตรมาตรฐานอุตสาหกรรม (Curriculum Enrollment)",
+        "2. ฝึกปฏิบัติการหน้าเครื่องจักรและห้องแล็บสอบเทียบด้วยชุดคู่มือฝึกอบรม (Workshop Simulation)",
+        "3. สอบวัดผลทักษะวิชาชีพและออกใบรับรองมาตรฐานฝีมือแรงงาน (Skill Certification Exam)",
+        "4. ส่งมอบผลการฝึกอบรมแก่บริษัทลูกค้าและรับค่าธรรมเนียมหลักสูตร (Academy Billing)"
+      ],
+      serviceFeeSatang: 440000, // ฿4,400 B2B training & certification fee
+      labConsumableCostSatang: 40000,
+      requiredMinutes: 60,
+      sparePartInputs: { pack_carton: 1 },
+      recoveredOutputs: {},
+      clientCorps: ["asia_autoparts", "siam_tech", "bharat_biotech_it", "nusantara_nickel"],
+      descTh: "เปิดศูนย์ฝึกอบรมของบริษัทรับจัดหลักสูตรยกระดับฝีมือช่างและวิศวกรให้แก่บริษัทคู่ค้าในนิคม ใช้ชุดเอกสารคู่มือ (pack_carton) และผู้เชี่ยวชาญสร้างรายได้บริการพร้อมเพิ่มความเชื่อใจคู่ค้า"
+    },
+    wholesale_distribution: {
+      id: "wholesale_distribution",
+      nameTh: "ศูนย์ค้าส่งและกระจายวัตถุดิบอุตสาหกรรม B2B (Industrial Wholesale & Lot Distribution)",
+      shortNameTh: "ค้าส่งและกระจายวัตถุดิบ B2B (Wholesale Hub)",
+      icon: "📦",
+      domainId: "fleet_coldchain",
+      requiredRole: "logistics",
+      fallbackRole: "sales",
+      stages: ["lot_allocation_qc", "warehouse_staging", "regional_dispatch", "wholesale_settled"],
+      stagesTh: [
+        "1. คัดเกรดและจัดสรรล็อตวัตถุดิบอุตสาหกรรมจากคลังพร้อมตรวจสภาพ (Lot Allocation & QC)",
+        "2. แพ็กบรรจุหีบห่อมาตรฐานส่งออกและจัดเตรียมเอกสาร B2B (Warehouse Staging)",
+        "3. กระจายสินค้าส่งมอบให้โรงงานลูกค้าตามระเบียงการค้า (Regional Lot Dispatch)",
+        "4. วางบิลและตัดบัญชีต้นทุนจัดเก็บ/ขนส่งสุทธิ (Wholesale Settlement)"
+      ],
+      serviceFeeSatang: 740000,
+      labConsumableCostSatang: 65000,
+      slaPenaltySatang: 150000,
+      slaPenaltyPct: 0.2,
+      requiredMinutes: 75,
+      sparePartInputs: { pack_carton: 2, metal_sheet: 1 },
+      fallbackSparePartInputs: { pack_carton: 2 },
+      recoveredOutputs: {},
+      clientCorps: ["metro_retail", "singapore_port_3pl", "siam_tech", "cp_health"],
+      descTh: "บริหารสต็อกวัตถุดิบและบรรจุภัณฑ์ล็อตใหญ่เพื่อกระจายส่งต่อให้โรงงานลูกค้า B2B คิดค่าบริการจัดหา คัดเกรด และหีบห่อ พร้อมกติกาป้องกันการซื้อขายวนกับคู่ค้ารายเดิม"
+    },
+    toll_smelting_extrusion: {
+      id: "toll_smelting_extrusion",
+      nameTh: "บริการรับจ้างถลุงโลหะและรีดโพรไฟล์ตามสั่ง (Contract Toll Smelting & Extrusion)",
+      shortNameTh: "รับจ้างถลุงแร่และรีดอะลูมิเนียม (Toll Smelting)",
+      icon: "🔥",
+      domainId: "metal_machining",
+      requiredRole: "assembler",
+      fallbackRole: "engineer",
+      stages: ["ore_custody_intake", "smelting_extrusion_run", "slag_separation_qc", "toll_settled"],
+      stagesTh: [
+        "1. รับฝากล็อตแร่/แท่งบิลเล็ตของลูกค้าเข้าบัญชี Custody แยกจากสต็อกบริษัท (Client Ore Custody Intake)",
+        "2. เดินเตาถลุงด้วยถ่านโค้กฟลักซ์และอัดรีดขึ้นรูปตามสเปกลูกค้า (Smelting & Extrusion Run)",
+        "3. แยกกากตะกรันเตาถลุง (mineral_slag_mud) และตรวจสอบความแข็งแรงโลหะ (Slag Separation & QC)",
+        "4. ส่งมอบโลหะแปรรูปคืนลูกค้าและรับค่าจ้างถลุง (Toll Smelting Settlement)"
+      ],
+      serviceFeeSatang: 860000,
+      labConsumableCostSatang: 75000,
+      slaPenaltySatang: 180000,
+      slaPenaltyPct: 0.2,
+      requiredMinutes: 90,
+      sparePartInputs: { coke_reducing_flux: 1, raw_water_m3: 1 },
+      fallbackSparePartInputs: { raw_water_m3: 1 },
+      recoveredOutputs: { mineral_slag_mud: 1 },
+      clientCorps: ["nusantara_nickel", "pilbara_resources", "asia_autoparts", "siam_metal"],
+      descTh: "รับแร่หรือแท่งอะลูมินาของลูกค้ามาถลุงและอัดรีดด้วยเตาของโรงงาน (แยกบัญชี Custody 100%) ใช้ถ่านโค้กฟลักซ์และน้ำดิบจริง พร้อมเกิดกากตะกรัน (mineral_slag_mud) เข้าคลังเพื่อนำไปบำบัดต่อ"
     }
   });
 
@@ -1499,7 +1637,7 @@
       nameTh: "ตระกูลเกตเวย์ มิเตอร์ และดาต้าล็อกเกอร์อุตสาหกรรม (Industrial IoT & Telemetry)",
       domainId: "embedded_iot",
       sharedToolingGroup: "smt_iot_jig",
-      products: ["iotController", "smartMeter", "cold_chain_temp_logger"],
+      products: ["iotController", "smartMeter", "cold_chain_temp_logger", "braided_fast_charge_kit"],
     },
     ai_vision_edge: {
       id: "ai_vision_edge",
@@ -1513,7 +1651,7 @@
       nameTh: "ตระกูลระบบขับเคลื่อน เซนเซอร์ และช่วงล่างยานยนต์ไฟฟ้า (EV Powertrain & Chassis)",
       domainId: "metal_machining",
       sharedToolingGroup: "heavy_ev_jig",
-      products: ["autoSensor", "evController", "batteryPack", "ev_suspension_kit", "ev_traction_motor"],
+      products: ["autoSensor", "evController", "batteryPack", "ev_suspension_kit", "ev_traction_motor", "ev_battery_tray_assembly"],
     },
     robotics_automation: {
       id: "robotics_automation",
@@ -1534,7 +1672,7 @@
       nameTh: "ตระกูลขนมปังโฮลเกรน ครัวซองต์เนยสด บิสกิตข้าวสาลี และอาหารพร้อมทาน",
       domainId: "food_fermentation",
       sharedToolingGroup: "tunnel_oven_line",
-      products: ["artisan_bakery", "pastry_croissant_box", "wheat_grain_biscuit", "ready_meal_box"],
+      products: ["artisan_bakery", "pastry_croissant_box", "wheat_grain_biscuit", "ready_meal_box", "artisan_chili_paste_jar"],
     },
     dairy_fermented: {
       id: "dairy_fermented",
@@ -1555,7 +1693,7 @@
       nameTh: "ตระกูลโซลาร์เซลล์ อินเวอร์เตอร์ ตู้ชาร์จไว DC และตู้กักเก็บพลังงาน LFP/Solid-State",
       domainId: "power_electronics",
       sharedToolingGroup: "power_cabinet_line",
-      products: ["solarCharger", "homeInverter", "evFastCharger", "lfp_grid_rack", "solid_state_powerwall"],
+      products: ["solarCharger", "homeInverter", "evFastCharger", "lfp_grid_rack", "solid_state_powerwall", "solar_mounting_rail_kit", "industrial_switchgear_cabinet", "high_nickel_nmc_module"],
     },
   });
 
@@ -1639,6 +1777,16 @@
       midstreamProcessingTh: "สังเคราะห์ปุ๋ยธาตุอาหารหลัก (npk_fertilizer) หรือหมักปุ๋ยอินทรีย์ชีวภาพ (organic_compost)",
       downstreamProductTh: "เติมธาตุอาหารในแปลงเกษตรทั้ง 4 สายเพื่อรักษาระดับผลผลิตในรอบปลูกถัดไป หรือขายส่งสหกรณ์เกษตร B2B",
       simulationScopeNoteTh: "ปิดลูปธาตุอาหารดินตามบทที่ 23: ปุ๋ยไม่ใช่วัตถุเสกฟรี แต่มีวัตถุดิบ ต้นทุน และกระบวนการผลิตจริง"
+    },
+    {
+      chainId: "bauxite_alumina_steel_slag_chain",
+      nameTh: "สายแร่บ็อกไซต์ & แร่เหล็ก + ถ่านโค้กฟลักซ์ ➔ อะลูมินาบิลเล็ต/เหล็กกล้าแผ่น + กากตะกรันโคลนแดง ➔ โปรไฟล์อะลูมิเนียม/รางโซลาร์/ถาดแบต EV",
+      trueNaturalSourceTh: "แหล่งแร่บ็อกไซต์ (bauxite_ore) และแร่เหล็กธรรมชาติ (iron_ore) จากเหมืองลพบุรี/ออสเตรเลีย/อินโดนีเซีย",
+      propaguleOrDepositTh: "ปริมาณสำรองแร่จำกัดในเหมือง (reserveRemaining) + ถ่านโค้กและหินปูนฟลักซ์ลดออกไซด์ (coke_reducing_flux)",
+      cultivationOrExtractionTh: "ขุดแร่บ็อกไซต์และแร่เหล็กจากเหมืองตามกำลังเครื่องจักร",
+      midstreamProcessingTh: "สกัด Bayer/Hall-Héroult เป็นแท่งอะลูมินาบิลเล็ต (alumina_billet) และถลุงแร่เหล็กด้วยโค้กเป็นเหล็กกล้าแผ่น (structural_steel_plate) โดยเกิดกากโคลนแดง/ตะกรันเตาถลุง (mineral_slag_mud) ที่ต้องบำบัดหรือรีไซเคิล ➔ อัดรีดเป็นโปรไฟล์อะลูมิเนียม (aluminum_extrusion_profile)",
+      downstreamProductTh: "ชุดรางโซลาร์รูฟท็อป (solar_mounting_rail_kit), ถาดแบตเตอรี่ EV (ev_battery_tray_assembly), ตู้สวิตช์เกียร์ (industrial_switchgear_cabinet), โมดูลแบต NMC (high_nickel_nmc_module)",
+      simulationScopeNoteTh: "ปิดช่องโหว่แร่บ็อกไซต์และแร่เหล็กค้างคลัง: ถลุงด้วยถ่านโค้กฟลักซ์ตามหลักเคมีโลหะวิทยาจริง เกิดกากตะกรันจริง และต่อยอดเป็นสินค้าปลายน้ำได้ครบวงจร"
     }
   ]);
 
@@ -1803,7 +1951,7 @@
       dailyUpkeep: 28000,
       dailyDividend: 82000,
       starterSeeds: {},
-      harvestYields: { silica_bauxite_ore: 4, bauxite_ore: 2, copper_iron_ore: 4, lithium_brine_ore: 2, phosphate_potash_rock: 2 },
+      harvestYields: { silica_bauxite_ore: 4, bauxite_ore: 3, iron_ore: 2, copper_iron_ore: 4, lithium_brine_ore: 2, phosphate_potash_rock: 2 },
       linkedChainId: "chain_silica_wafer_semicon",
       operationalEffectsTh: [
         "ขุดแร่ธรรมชาติต้นน้ำแท้จริงจากแหล่งสัมปทานที่มีปริมาณสำรองจำกัด (420 หน่วย): ทรายควอตซ์ซิลิกา, แร่บ็อกไซต์, แร่ทองแดง/เหล็ก, แร่ลิเธียม และหินฟอสเฟต",
@@ -2138,14 +2286,75 @@
       b2bSellPrice: 4600,
       chainPathTh: "ถั่วเหลือง/สมุนไพรเพาะปลูก (soybean_crop) + อ้อยสด ➔ สารสกัดสมุนไพร/โปรตีน (T1) ➔ โภชนเภสัช (T4)"
     },
+    coke_reducing_flux: {
+      id: "coke_reducing_flux",
+      outputMaterialId: "coke_reducing_flux",
+      nameTh: "เผาถ่านโค้กโลหะวิทยาและบดหินปูนฟลักซ์สำหรับเตาถลุงเหล็ก-อะลูมินา (T0/Log ➔ Reducing Flux T1)",
+      tier: 1,
+      domainId: "metal_machining",
+      minResearch: 0,
+      capitalRequirement: 80000,
+      inputs: { crude_petro_feedstock: 1, timber_bamboo_log: 1 },
+      fallbackRawInputs: { timber_bamboo_log: 2 },
+      outputs: { coke_reducing_flux: 3 },
+      b2bSellPrice: 3500,
+      chainPathTh: "ปิโตรเลียมดิบ/ท่อนไม้เศรษฐกิจ ➔ ถ่านโค้กและฟลักซ์ลดออกไซด์ (coke_reducing_flux) ➔ ใช้ถลุงแร่เหล็กและบ็อกไซต์"
+    },
+    alumina_billet: {
+      id: "alumina_billet",
+      outputMaterialId: "alumina_billet",
+      nameTh: "สกัดแร่บ็อกไซต์ด้วยกระบวนการ Bayer & แยกด้วยไฟฟ้า Hall-Héroult เป็นแท่งอะลูมินาบิลเล็ต (Bauxite T0 ➔ Alumina Billet T1 + Red Mud)",
+      tier: 1,
+      domainId: "metal_machining",
+      chainId: "chain_bauxite_aluminum_extrusion",
+      minResearch: 15,
+      capitalRequirement: 1400000,
+      inputs: { bauxite_ore: 2, coke_reducing_flux: 1, raw_water_m3: 1 },
+      fallbackRawInputs: { bauxite_ore: 2, raw_water_m3: 1 },
+      outputs: { alumina_billet: 2, mineral_slag_mud: 1 },
+      b2bSellPrice: 7800,
+      chainPathTh: "แร่บ็อกไซต์ (bauxite_ore) + โค้กฟลักซ์ + น้ำดิบ ➔ แท่งอะลูมินาบิลเล็ต (alumina_billet) + กากโคลนแดง (mineral_slag_mud) ➔ โปรไฟล์อะลูมิเนียมอัดรีด (T2)"
+    },
+    structural_steel_plate: {
+      id: "structural_steel_plate",
+      outputMaterialId: "structural_steel_plate",
+      nameTh: "ถลุงแร่เหล็กในเตาพ่นลมร้อนด้วยถ่านโค้กฟลักซ์และรีดร้อนเป็นเหล็กกล้าแผ่นโครงสร้าง (Iron Ore T0 ➔ Structural Steel T1 + Slag)",
+      tier: 1,
+      domainId: "metal_machining",
+      chainId: "chain_ore_smelting_metal",
+      minResearch: 15,
+      capitalRequirement: 1400000,
+      inputs: { iron_ore: 2, coke_reducing_flux: 1 },
+      fallbackRawInputs: { iron_ore: 2 },
+      outputs: { structural_steel_plate: 2, mineral_slag_mud: 1 },
+      b2bSellPrice: 8400,
+      chainPathTh: "แร่เหล็ก (iron_ore) + ถ่านโค้กฟลักซ์ (coke_reducing_flux) ➔ เหล็กกล้าแผ่นโครงสร้าง (structural_steel_plate) + ตะกรันเตาถลุง (mineral_slag_mud)"
+    },
+    nickel_cobalt_matte: {
+      id: "nickel_cobalt_matte",
+      outputMaterialId: "nickel_cobalt_matte",
+      nameTh: "สกัดความดันสูง HPAL แร่โลหะและลิเธียมเป็นนิกเกิล-โคบอลต์แมตต์เกรดแบตเตอรี่ (T0 Ore ➔ Battery Nickel Matte T1)",
+      tier: 1,
+      domainId: "power_electronics",
+      minResearch: 25,
+      capitalRequirement: 1800000,
+      inputs: { copper_iron_ore: 1, lithium_brine_ore: 1, coke_reducing_flux: 1 },
+      fallbackRawInputs: { copper_iron_ore: 1, lithium_brine_ore: 1 },
+      outputs: { nickel_cobalt_matte: 2, mineral_slag_mud: 1 },
+      b2bSellPrice: 8900,
+      chainPathTh: "แร่โลหะ/นิกเกิล + แร่ลิเธียม + ฟลักซ์ ➔ นิกเกิล-โคบอลต์แมตต์ (nickel_cobalt_matte) ➔ โมดูลแบตเตอรี่ NMC-811 (T4)"
+    },
     metal_sheet: {
       id: "metal_sheet",
       outputMaterialId: "metal_sheet",
       nameTh: "ถลุงและรีดแร่เหล็ก-ทองแดง-บ็อกไซต์เป็นแผ่นโลหะขึ้นรูป (T0 Ore ➔ T1)",
       tier: 1,
+      domainId: "metal_machining",
+      chainId: "chain_ore_smelting_metal",
       minResearch: 15,
       capitalRequirement: 1500000,
       inputs: { copper_iron_ore: 2 },
+      fallbackRawInputs: { iron_ore: 2 },
       outputs: { metal_sheet: 2 },
       b2bSellPrice: 9100,
       chainPathTh: "แร่เหล็ก/ทองแดง/บ็อกไซต์จากเหมือง (T0) ➔ แผ่นโลหะขึ้นรูป (T1) ➔ ตัวถัง/ฮีตซิงก์ (T2) ➔ ยานยนต์ EV (T4)"
@@ -2272,17 +2481,34 @@
       b2bSellPrice: 5900,
       chainPathTh: "แร่ทองแดง + น้ำยางพารา ➔ ขดลวดทองแดง + เรซิน (T1) ➔ ชุดสายไฟ (T2)"
     },
+    aluminum_extrusion_profile: {
+      id: "aluminum_extrusion_profile",
+      outputMaterialId: "aluminum_extrusion_profile",
+      nameTh: "อัดรีดแท่งอะลูมินาบิลเล็ตและชุบอโนไดซ์เป็นโปรไฟล์อะลูมิเนียมโครงสร้างเบา (Alumina Billet T1 ➔ Extrusion Profile T2)",
+      tier: 2,
+      domainId: "metal_machining",
+      chainId: "chain_bauxite_aluminum_extrusion",
+      minResearch: 35,
+      capitalRequirement: 1800000,
+      inputs: { alumina_billet: 2, polymer_resin: 1 },
+      fallbackRawInputs: { metal_sheet: 2, polymer_resin: 1 },
+      outputs: { aluminum_extrusion_profile: 3 },
+      b2bSellPrice: 9600,
+      chainPathTh: "แร่บ็อกไซต์ (T0) ➔ แท่งอะลูมินาบิลเล็ต (T1) ➔ โปรไฟล์อะลูมิเนียมอัดรีด (T2) ➔ รางโซลาร์รูฟท็อป & ถาดแบตเตอรี่ EV (T4)"
+    },
     heat_sink: {
       id: "heat_sink",
       outputMaterialId: "heat_sink",
-      nameTh: "กลึง CNC แผ่นโลหะและท่อทองแดงเป็นครีบระบายความร้อนอะลูมิเนียม (T1 ➔ T2)",
+      nameTh: "กลึง CNC แผ่นโลหะ/แท่งอะลูมินาและท่อทองแดงเป็นครีบระบายความร้อนอะลูมิเนียม (T1 ➔ T2)",
       tier: 2,
+      domainId: "metal_machining",
       minResearch: 40,
       capitalRequirement: 1800000,
       inputs: { metal_sheet: 1, copper_coil: 1 },
+      fallbackRawInputs: { alumina_billet: 1, copper_coil: 1 },
       outputs: { heat_sink: 3 },
       b2bSellPrice: 5300,
-      chainPathTh: "แร่บ็อกไซต์/โลหะ (T0) ➔ แผ่นโลหะ + ทองแดง (T1) ➔ ครีบระบายความร้อน (T2)"
+      chainPathTh: "แร่บ็อกไซต์/โลหะ (T0) ➔ แท่งอะลูมินา/แผ่นโลหะ + ทองแดง (T1) ➔ ครีบระบายความร้อน (T2)"
     },
     optical_lens: {
       id: "optical_lens",
@@ -2299,14 +2525,16 @@
     cathode_electrolyte: {
       id: "cathode_electrolyte",
       outputMaterialId: "cathode_electrolyte",
-      nameTh: "สกัดแร่ลิเธียมและทองแดงเป็นสารแคโทดและอิเล็กโทรไลต์แบตเตอรี่ (T0+T1 ➔ T2)",
+      nameTh: "สกัดแร่ลิเธียม นิกเกิลแมตต์ และทองแดงเป็นสารแคโทดและอิเล็กโทรไลต์แบตเตอรี่ (T0+T1 ➔ T2)",
       tier: 2,
+      domainId: "power_electronics",
       minResearch: 85,
       capitalRequirement: 2500000,
       inputs: { lithium_brine_ore: 2, copper_coil: 1 },
+      fallbackRawInputs: { nickel_cobalt_matte: 1, lithium_brine_ore: 1 },
       outputs: { cathode_electrolyte: 2 },
       b2bSellPrice: 8900,
-      chainPathTh: "แร่ลิเธียม (T0) + ทองแดง (T1) ➔ แคโทดและอิเล็กโทรไลต์ (T2) ➔ แบตเตอรี่ลิเธียม (T3)"
+      chainPathTh: "แร่ลิเธียม (T0) + นิกเกิลแมตต์/ทองแดง (T1) ➔ แคโทดและอิเล็กโทรไลต์ (T2) ➔ แบตเตอรี่ลิเธียม (T3)"
     },
     silicon_wafer: {
       id: "silicon_wafer",
@@ -2537,8 +2765,8 @@
     },
     chain_ore_smelting_metal: {
       id: "chain_ore_smelting_metal",
-      nameTh: "ห่วงโซ่เหมืองแร่ › โรงถลุงโลหะและรีดเส้นทองแดง › แผ่นโลหะและขดลวดทองแดง",
-      shortNameTh: "แร่ทองแดง/เหล็กดิบ (T0) ➔ แผ่นโลหะ + ขดลวดทองแดง (T1)",
+      nameTh: "ห่วงโซ่เหมืองแร่ › โรงถลุงเหล็กกล้า แผ่นโลหะ และขดลวดทองแดง › โครงสร้างยานยนต์และตู้สวิตช์เกียร์",
+      shortNameTh: "แร่เหล็ก/ทองแดงดิบ (T0) ➔ เหล็กกล้าแผ่น + แผ่นโลหะ + ขดลวดทองแดง (T1)",
       icon: "🔩",
       sector: "automotive",
       tierStep: "T0 ➔ T1",
@@ -2548,8 +2776,24 @@
       inputs: { copper_iron_ore: 2 },
       outputs: { metal_sheet: 1, copper_coil: 1 },
       batchesPerDayBase: 3,
-      downstreamProducts: ["evController", "servoActuator", "ev_suspension_kit", "autonomous_cargo_drone"],
-      makeOrBuyNoteTh: "ถลุงแร่ทองแดงและเหล็กดิบจากเหมืองเป็นแผ่นโลหะและขดลวดทองแดง ลดการนำเข้าโลหะจากตลาด"
+      downstreamProducts: ["evController", "servoActuator", "ev_suspension_kit", "industrial_switchgear_cabinet", "autonomous_cargo_drone"],
+      makeOrBuyNoteTh: "ถลุงแร่ทองแดงและเหล็กดิบจากเหมืองเป็นแผ่นโลหะ เหล็กกล้าแผ่น และขดลวดทองแดง ลดการนำเข้าโลหะจากตลาด"
+    },
+    chain_bauxite_aluminum_extrusion: {
+      id: "chain_bauxite_aluminum_extrusion",
+      nameTh: "ห่วงโซ่แร่บ็อกไซต์ › โรงสกัดอะลูมินาบิลเล็ตและอัดรีดโปรไฟล์อะลูมิเนียม › รางโซลาร์และถาดแบตเตอรี่ EV",
+      shortNameTh: "แร่บ็อกไซต์ (T0) ➔ อะลูมินาบิลเล็ต (T1) ➔ โปรไฟล์อะลูมิเนียมอัดรีด (T2)",
+      icon: "🏗️",
+      sector: "energy",
+      tierStep: "T0 ➔ T1 ➔ T2",
+      minResearch: 15,
+      upstreamAssetId: "silica_copper_mine",
+      upstreamAssetNameTh: "สัมปทานเหมืองแร่บ็อกไซต์และโลหะ",
+      inputs: { bauxite_ore: 2, raw_water_m3: 1 },
+      outputs: { alumina_billet: 2, mineral_slag_mud: 1 },
+      batchesPerDayBase: 3,
+      downstreamProducts: ["solar_mounting_rail_kit", "ev_battery_tray_assembly", "high_nickel_nmc_module"],
+      makeOrBuyNoteTh: "สกัดแร่บ็อกไซต์เป็นแท่งอะลูมินาและอัดรีดเป็นโปรไฟล์อะลูมิเนียม (฿96/ชิ้น) ป้อนสายรางโซลาร์และถาดแบต EV โดยเกิดกากโคลนแดงที่สามารถส่งรีไซเคิลเป็นปุ๋ย/วัสดุรองพื้นได้"
     },
     chain_silica_mg_silicon: {
       autoRun: false,
@@ -3184,6 +3428,126 @@
         },
       ],
     },
+    ID: {
+      id: "ID",
+      flag: "🇮🇩",
+      nameTh: "สาธารณรัฐอินโดนีเซีย (มหาอำนาจแร่นิกเกิล บ็อกไซต์ และปาล์มน้ำมันหมู่เกาะ)",
+      shortNameTh: "อินโดนีเซีย (Indonesia)",
+      bloc: "ASEAN",
+      defaultRegimeId: "downstream_mineral_mandate",
+      regimes: [
+        {
+          id: "downstream_mineral_mandate",
+          nameTh: "รัฐบาลยุทธศาสตร์แปรรูปแร่ในประเทศและจำกัดส่งออกแร่ดิบ (Hilirisasi Mineral Mandate)",
+          leaderStyleTh: "สายชาตินิยมทรัพยากรและบังคับตั้งโรงถลุง",
+          tariffModPct: 8,
+          fxModPct: 2,
+          materialMods: { bauxite_ore: 1.32, nickel_cobalt_matte: 1.28, alumina_billet: 1.22, crude_palm: 0.94 },
+          sectorDemandMods: { automotive: 1.14, energy: 1.16, service: 1.12 },
+          summaryTh: "จำกัดการส่งออกแร่บ็อกไซต์และนิกเกิลดิบเพื่อดึงดูดห่วงโซ่แบตเตอรี่ EV ทำให้ราคาแร่บ็อกไซต์และนิกเกิลแมตต์ในตลาดโลกปรับตัวสูงขึ้น (+22~32%)"
+        },
+        {
+          id: "archipelago_maritime_open",
+          nameTh: "รัฐบาลเปิดเสรีการค้าทางทะเลและพันธมิตรพลังงานอาเซียน (Archipelago Maritime Free Trade)",
+          leaderStyleTh: "สายเสรีการค้าหมู่เกาะและส่งออกวัตถุดิบ",
+          tariffModPct: -3,
+          fxModPct: -1,
+          materialMods: { bauxite_ore: 0.92, nickel_cobalt_matte: 0.94, crude_palm: 0.92, refined_palm_oil: 0.95 },
+          sectorDemandMods: { food: 1.12, fleet: 1.14, energy: 1.1 },
+          summaryTh: "ผ่อนคลายโควตาส่งออกแร่บ็อกไซต์ นิกเกิล และน้ำมันปาล์มดิบสู่โรงงานในไทย พร้อมเพิ่มคำสั่งซื้ออุปกรณ์โซลาร์และอาหารแปรรูป"
+        }
+      ]
+    },
+    AU: {
+      id: "AU",
+      flag: "🇦🇺",
+      nameTh: "เครือรัฐออสเตรเลีย (ผู้ส่งออกแร่เหล็กพิลบารา ลิเธียมสปอดูมีน และถ่านโค้กโลหะวิทยา)",
+      shortNameTh: "ออสเตรเลีย (Australia)",
+      bloc: "WESTERN_ALLIANCE",
+      defaultRegimeId: "pilbara_mining_boom",
+      regimes: [
+        {
+          id: "pilbara_mining_boom",
+          nameTh: "รัฐบาลส่งเสริมการส่งออกเหมืองแร่พิลบาราและพันธมิตรแปซิฟิก (Pilbara Resource Export Pact)",
+          leaderStyleTh: "สายเปิดเสรีเหมืองแร่และส่งออกทรัพยากร",
+          tariffModPct: -3,
+          fxModPct: 0,
+          materialMods: { iron_ore: 0.93, lithium_brine_ore: 0.94, bauxite_ore: 0.95, coke_reducing_flux: 0.94 },
+          sectorDemandMods: { automotive: 1.08, energy: 1.12, fleet: 1.08 },
+          summaryTh: "เดินเครื่องท่าเรือส่งออกแร่เหล็กพิลบารา แร่ลิเธียม และถ่านโค้กโลหะวิทยาเต็มกำลัง ช่วยลดต้นทุนโรงถลุงเหล็กและอะลูมิเนียมในเอเชีย"
+        },
+        {
+          id: "carbon_royalty_levy",
+          nameTh: "รัฐบาลจัดเก็บค่าภาคหลวงคาร์บอนเหมืองแร่และฟื้นฟูสิ่งแวดล้อม (Mining Royalty & Climate Levy)",
+          leaderStyleTh: "สายควบคุมคาร์บอนต้นน้ำและขึ้นค่าภาคหลวงแร่",
+          tariffModPct: 5,
+          fxModPct: 3,
+          materialMods: { iron_ore: 1.28, coke_reducing_flux: 1.3, lithium_brine_ore: 1.22, structural_steel_plate: 1.18 },
+          sectorDemandMods: { energy: 1.22, service: 1.16 },
+          summaryTh: "เก็บค่าภาคหลวงคาร์บอนจากเหมืองแร่เหล็กและถ่านโค้ก ทำให้ราคาแร่เหล็กและโค้กฟลักซ์ตลาดโลกพุ่งขึ้น (+22~30%) แต่เร่งดีมานด์อุปกรณ์โซลาร์และตู้แบตเตอรี่"
+        }
+      ]
+    },
+    IN: {
+      id: "IN",
+      flag: "🇮🇳",
+      nameTh: "สาธารณรัฐอินเดีย (ตลาดโครงสร้างพื้นฐานพลังงาน ชีวเภสัชกรรม และวิศวกรรมซอฟต์แวร์)",
+      shortNameTh: "อินเดีย (India)",
+      bloc: "BRICS_EURASIA",
+      defaultRegimeId: "make_in_india_infra",
+      regimes: [
+        {
+          id: "make_in_india_infra",
+          nameTh: "รัฐบาลเร่งอภิมหาโครงการสมาร์ตกริดและโครงสร้างพื้นฐานแห่งชาติ (National Grid & Infra Push)",
+          leaderStyleTh: "สายลงทุนเมกะโปรเจกต์ไฟฟ้าและอุตสาหกรรม",
+          tariffModPct: 2,
+          fxModPct: 1,
+          materialMods: { structural_steel_plate: 1.16, copper_coil: 1.14, aluminum_extrusion_profile: 1.15 },
+          sectorDemandMods: { energy: 1.24, electronics: 1.16, service: 1.18 },
+          summaryTh: "ทุ่มงบขยายสายส่งไฟฟ้าและโซลาร์ฟาร์มทั่วประเทศ ดันความต้องการตู้สวิตช์เกียร์ รางโซลาร์ อินเวอร์เตอร์ และบริการ EPC พุ่งสูง (+18~24%)"
+        },
+        {
+          id: "pharma_digital_corridor",
+          nameTh: "รัฐบาลพันธมิตรชีวเภสัชกรรมและซอฟต์แวร์อินโด-แปซิฟิก (Bio-Pharma & IT Corridor)",
+          leaderStyleTh: "สายส่งออกเวชภัณฑ์และเทคโนโลยีสารสนเทศ",
+          tariffModPct: -4,
+          fxModPct: -1,
+          materialMods: { pharma_saline_water: 0.94, raw_extract: 0.95, wheat_grain: 0.95 },
+          sectorDemandMods: { biomed: 1.22, software: 1.24, food: 1.12 },
+          summaryTh: "เชื่อมระเบียงการค้าเวชภัณฑ์ปลอดเชื้อและซอฟต์แวร์องค์กรกับไทย กระตุ้นยอดสั่งซื้อเครื่องมือแพทย์และโครงการพัฒนาซอฟต์แวร์ B2B"
+        }
+      ]
+    },
+    SG: {
+      id: "SG",
+      flag: "🇸🇬",
+      nameTh: "สาธารณรัฐสิงคโปร์ (ศูนย์กลางการเงิน ท่าเรือถ่ายลำสินค้า คลังห้องเย็น 3PL และคลาวด์อาเซียน)",
+      shortNameTh: "สิงคโปร์ (Singapore)",
+      bloc: "ASEAN",
+      defaultRegimeId: "global_maritime_fin_hub",
+      regimes: [
+        {
+          id: "global_maritime_fin_hub",
+          nameTh: "รัฐบาลศูนย์กลางท่าเรืออัจฉริยะและการค้าเสรีการเงินโลก (Smart Maritime & FinTech Hub)",
+          leaderStyleTh: "สายการค้าเสรี โลจิสติกส์ความเร็วสูง และคลาวด์",
+          tariffModPct: -6,
+          fxModPct: -2,
+          materialMods: { pack_carton: 0.96, foil_pouch: 0.96 },
+          sectorDemandMods: { fleet: 1.22, software: 1.2, food: 1.16, biomed: 1.15 },
+          summaryTh: "ลดต้นทุนธุรกรรมและเปิดช่องทางด่วนเรือฟีดเดอร์แหลมฉบัง–สิงคโปร์ กระตุ้นดีมานด์คลังห้องเย็น 3PL ซอฟต์แวร์ SaaS และอาหารพรีเมียม"
+        },
+        {
+          id: "green_straits_regulation",
+          nameTh: "รัฐบาลมาตรฐานเดินเรือสีเขียวและคาร์บอนต่ำแห่งช่องแคบมะละกา (Green Straits & ESG Finance)",
+          leaderStyleTh: "สายการเงินสีเขียวและมาตรฐานความยั่งยืนเข้มงวด",
+          tariffModPct: -2,
+          fxModPct: 2,
+          materialMods: { diesel_liter: 1.14, aluminum_extrusion_profile: 1.12, solar_cell: 1.14 },
+          sectorDemandMods: { energy: 1.2, service: 1.22, biomed: 1.18 },
+          summaryTh: "ให้สินเชื่อดอกเบี้ยต่ำและโบนัสราคาแก่ซัพพลายเออร์ที่มีการบำบัดกากอุตสาหกรรม รีไซเคิล และรับเหมาติดตั้งโซลาร์ EPC"
+        }
+      ]
+    }
   });
 
   const GEOPOLITICAL_EVENTS = deepFreeze({
@@ -3470,6 +3834,346 @@
       chronicleTh: "เหตุการณ์โจมตีไซเบอร์ต่อระบบซัพพลายเชนแบบเก่าทั่วโลก ทำให้บริษัทคู่ค้า B2B เร่งสั่งพัฒนาซอฟต์แวร์องค์กร (POS, WMS, TMS, e-Procurement, AI Assistant) และสมัครสมาชิก SaaS เพิ่มขึ้นอย่างก้าวกระโดด!",
       strategicAdviceTh: "มอบหมายวิศวกรซอฟต์แวร์เปิดพัฒนา MVP แอปพลิเคชันใหม่และแปลง Lead ลูกค้าเข้าสู่ระบบสมาชิก SaaS รายรอบ",
     },
+    indonesia_nickel_bauxite_ban: {
+      id: "indonesia_nickel_bauxite_ban",
+      category: "trade_war",
+      badgeTh: "⛏️ ระงับส่งออกแร่ดิบอาเซียน",
+      titleTh: "อินโดนีเซียประกาศระงับส่งออกแร่บ็อกไซต์และนิกเกิลดิบ บังคับใช้โควตาโรงถลุงในภูมิภาค",
+      regionTh: "อินโดนีเซีย / ทะเลชวา–อาเซียน",
+      durationDays: 5,
+      triggerNationId: "ID",
+      triggerRegimeId: "downstream_mineral_mandate",
+      oilMultiplier: 1.04,
+      freightRateMultiplier: 1.12,
+      leadTimeMultiplier: 1.16,
+      fxDeltaBaht: 0.5,
+      materialMods: {
+        bauxite_ore: 1.38,
+        alumina_billet: 1.3,
+        nickel_cobalt_matte: 1.35,
+        aluminum_extrusion_profile: 1.25,
+        cathode_electrolyte: 1.22
+      },
+      sectorDemandMods: { automotive: 1.2, energy: 1.22, service: 1.15 },
+      stockMods: { AUTO: 3.4, GREEN: 3.8, SET_IND: 1.6 },
+      chronicleTh: "รัฐบาลจาการ์ตาบังคับใช้มาตรการห้ามส่งออกแร่บ็อกไซต์และนิกเกิลดิบที่ยังไม่ผ่านการถลุง ส่งผลให้ราคาแร่บ็อกไซต์ แท่งอะลูมินา และนิกเกิลแมตต์ในตลาดเอเชียพุ่งสูงขึ้น +25~38% โรงงานที่มีเหมืองแร่หรือเตาถลุงอะลูมินา/โปรไฟล์อะลูมิเนียมของตนเองทำกำไรจากส่วนต่างราคาได้มหาศาล!",
+      strategicAdviceTh: "เดินเครื่องถลุงแร่บ็อกไซต์เป็นแท่งอะลูมินาบิลเล็ต (alumina_billet) และอัดรีดโปรไฟล์อะลูมิเนียม (aluminum_extrusion_profile) ใช้ผลิตถาดแบต EV / รางโซลาร์ หรือขายส่ง B2B"
+    },
+    australia_pilbara_cyclone_iron_shock: {
+      id: "australia_pilbara_cyclone_iron_shock",
+      category: "climate_shock",
+      badgeTh: "🌪️ พายุไซโคลนถล่มท่าเรือแร่เหล็ก",
+      titleTh: "พายุไซโคลนรุนแรงพัดถล่มท่าเรือส่งออกแร่เหล็กและลิเธียมภูมิภาคพิลบารา ออสเตรเลียตะวันตก",
+      regionTh: "ออสเตรเลียตะวันตก / มหาสมุทรอินเดีย",
+      durationDays: 5,
+      triggerNationId: "AU",
+      triggerRegimeId: "carbon_royalty_levy",
+      oilMultiplier: 1.06,
+      freightRateMultiplier: 1.18,
+      leadTimeMultiplier: 1.2,
+      fxDeltaBaht: 0.7,
+      materialMods: {
+        iron_ore: 1.4,
+        coke_reducing_flux: 1.32,
+        structural_steel_plate: 1.34,
+        metal_sheet: 1.24,
+        lithium_brine_ore: 1.26
+      },
+      sectorDemandMods: { energy: 1.18, automotive: 1.16, fleet: 1.15 },
+      stockMods: { SET_IND: 2.8, AUTO: -1.2, GREEN: 2.9 },
+      chronicleTh: "พายุไซโคลนระดับ 4 ทำให้ท่าเรือส่งออกแร่เหล็กและถ่านโค้กในพิลบาราต้องหยุดเดินเรือชั่วคราว ราคาแร่เหล็ก (iron_ore) และเหล็กกล้าแผ่นโครงสร้าง (structural_steel_plate) พุ่งขึ้นกว่า +34~40%!",
+      strategicAdviceTh: "ใช้แร่เหล็กจากสัมปทานเหมืองในประเทศถลุงเป็นเหล็กกล้าแผ่นโครงสร้างและประกอบตู้สวิตช์เกียร์/รางโซลาร์ขายทำกำไร"
+    },
+    singapore_asean_coldchain_corridor: {
+      id: "singapore_asean_coldchain_corridor",
+      category: "international_cooperation",
+      badgeTh: "🚢 ระเบียงโคลด์เชนและท่าเรือด่วน",
+      titleTh: "สิงคโปร์–ไทย เปิดช่องทางด่วนเรือฟีดเดอร์ห้องเย็นและคลังทัณฑ์บนดิจิทัลเชื่อมแหลมฉบัง–จูร่ง",
+      regionTh: "ช่องแคบมะละกา / แหลมฉบัง–สิงคโปร์",
+      durationDays: 6,
+      triggerNationId: "SG",
+      triggerRegimeId: "global_maritime_fin_hub",
+      oilMultiplier: 0.97,
+      freightRateMultiplier: 1.22,
+      leadTimeMultiplier: 0.84,
+      fxDeltaBaht: -0.4,
+      materialMods: {
+        pack_carton: 0.94,
+        foil_pouch: 0.94,
+        pharma_saline_water: 1.14,
+        bakery_dough_butter: 1.18
+      },
+      sectorDemandMods: { fleet: 1.28, food: 1.24, biomed: 1.22, software: 1.2 },
+      stockMods: { FOOD: 4.6, SET_IND: 3.9, TECH: 3.2 },
+      chronicleTh: "การท่าเรือสิงคโปร์และนิคมแหลมฉบังเปิดระบบศุลกากรอิเล็กทรอนิกส์เชื่อมกองรถห้องเย็นและเรือฟีดเดอร์ ลดเวลานำเข้าวัตถุดิบลง 16% พร้อมอัดฉีดค่าระวางงานขนส่งห้องเย็น คลัง 3PL และคำสั่งซื้ออาหาร/เวชภัณฑ์ส่งออก!",
+      strategicAdviceTh: "จัดหารถห้องเย็น (reefer_6w) รับงานสายแหลมฉบัง–สิงคโปร์ และเปิดบริการคลังห้องเย็น 3PL / ซอฟต์แวร์ WMS & TMS"
+    },
+    india_apac_clean_grid_pharma_boom: {
+      id: "india_apac_clean_grid_pharma_boom",
+      category: "international_cooperation",
+      badgeTh: "⚡ เมกะโปรเจกต์สมาร์ตกริด & เวชภัณฑ์เอเชีย",
+      titleTh: "อินเดียและกลุ่มประเทศเอเชียใต้เปิดประมูลเมกะโปรเจกต์สมาร์ตกริด โซลาร์รูฟท็อป และเวชภัณฑ์ปลอดเชื้อ",
+      regionTh: "อินเดีย / อ่าวเบงกอล–อาเซียน",
+      durationDays: 6,
+      triggerNationId: "IN",
+      triggerRegimeId: "make_in_india_infra",
+      oilMultiplier: 1.02,
+      freightRateMultiplier: 1.1,
+      leadTimeMultiplier: 0.94,
+      fxDeltaBaht: -0.2,
+      materialMods: {
+        aluminum_extrusion_profile: 1.24,
+        structural_steel_plate: 1.22,
+        solar_cell: 1.2,
+        nickel_cobalt_matte: 1.18
+      },
+      sectorDemandMods: { energy: 1.3, biomed: 1.24, service: 1.25 },
+      stockMods: { GREEN: 5.8, FOOD: 3.1, SET_IND: 3.4 },
+      chronicleTh: "อินเดียเร่งขยายโครงข่ายไฟฟ้าพลังงานสะอาดและโรงพยาบาลภูมิภาค เปิดประมูลชุดรางโซลาร์รูฟท็อป ตู้สวิตช์เกียร์ โมดูลแบตเตอรี่ NMC และบริการรับเหมาติดตั้ง EPC ล็อตใหญ่จากฐานการผลิตในไทย!",
+      strategicAdviceTh: "ผลิตชุดรางโซลาร์ (solar_mounting_rail_kit), ตู้สวิตช์เกียร์ (industrial_switchgear_cabinet) และรับงานบริการติดตั้งโซลาร์ EPC (energy_epc_install)"
+    }
+  });
+
+  // Regional Trade Corridors & Dynamic Tariff/Freight/Demand Transmission (Era 2.1.0)
+  const SME_GROWTH_STAGES = deepFreeze([
+    {
+      id: "stage_1_micro_workshop",
+      order: 1,
+      badgeTh: "🌱 ระยะที่ 1/6",
+      nameTh: "ห้องแถวและเวิร์กช็อปตั้งต้น (Micro SME Workshop)",
+      minEmployees: 4,
+      minOrdersPaid: 0,
+      minReputation: 0,
+      minPlotsOrAssets: 0,
+      creditLimitMult: 1.0,
+      b2bTrustBonus: 0,
+      summaryTh: "กิจการขนาดเล็กช่วงก่อตั้ง พึ่งพาการหมุนเงินสดรายวันจากออเดอร์ล็อตเล็ก CEO และพนักงานช่วยกันลุยงานหน้างานเพื่อประคองสภาพคล่อง"
+    },
+    {
+      id: "stage_2_registered_sme",
+      order: 2,
+      badgeTh: "🏭 ระยะที่ 2/6",
+      nameTh: "โรงงาน SME มาตรฐานจดทะเบียน (Registered Industrial SME)",
+      minEmployees: 8,
+      minOrdersPaid: 2,
+      minReputation: 47,
+      minPlotsOrAssets: 0,
+      creditLimitMult: 1.25,
+      b2bTrustBonus: 2,
+      summaryTh: "ผ่านพ้นช่วงตั้งไข่ มีประวัติส่งมอบออเดอร์ตรงเวลา เริ่มแยกแผนกออฟฟิศ/โรงงานชัดเจน และพร้อมเปิดบริการ B2B หรือเช่ารถขนส่งคันแรก"
+    },
+    {
+      id: "stage_3_midcap_manufacturer",
+      order: 3,
+      badgeTh: "⚙️ ระยะที่ 3/6",
+      nameTh: "บริษัทผู้ผลิตขนาดกลางหลายสายพาน (Multi-Line Mid-Cap)",
+      minEmployees: 12,
+      minOrdersPaid: 5,
+      minReputation: 52,
+      minPlotsOrAssets: 1,
+      creditLimitMult: 1.6,
+      b2bTrustBonus: 5,
+      summaryTh: "มีอาคารส่วนต่อขยายหรือสินทรัพย์ธุรกิจเสริม ทีม R&D เริ่มปลดล็อกสินค้าเทคโนโลยีกลางน้ำ และบริหารจัดการหลายโมเดลธุรกิจควบคู่กัน"
+    },
+    {
+      id: "stage_4_supply_chain_group",
+      order: 4,
+      badgeTh: "🚢 ระยะที่ 4/6",
+      nameTh: "เครือข่ายซัพพลายเชนครบวงจร (Integrated Supply Chain Group)",
+      minEmployees: 24,
+      minOrdersPaid: 12,
+      minReputation: 60,
+      minPlotsOrAssets: 2,
+      creditLimitMult: 2.1,
+      b2bTrustBonus: 8,
+      summaryTh: "เชื่อมโยงวัตถุดิบต้นน้ำ การแปรรูปกลางน้ำ กองรถขนส่ง และบริการวิศวกรรมเข้าด้วยกัน พร้อมค้าขายข้ามประเทศตามระเบียงการค้าภูมิภาค"
+    },
+    {
+      id: "stage_5_public_pcl",
+      order: 5,
+      badgeTh: "🏛️ ระยะที่ 5/6",
+      nameTh: "บริษัทมหาชนจำกัด (Public Company Limited — PCL)",
+      minEmployees: 50,
+      minOrdersPaid: 22,
+      minReputation: 70,
+      minPlotsOrAssets: 4,
+      creditLimitMult: 3.0,
+      b2bTrustBonus: 12,
+      summaryTh: "องค์กรธรรมาภิบาลระดับมหาชน ฐานะการเงินแข็งแกร่ง ดึงดูดบุคลากรเกรดเอและเป็นพันธมิตรหลักของบริษัทข้ามชาติ"
+    },
+    {
+      id: "stage_6_regional_conglomerate",
+      order: 6,
+      badgeTh: "👑 ระยะที่ 6/6",
+      nameTh: "กลุ่มบริษัทอุตสาหกรรมระดับภูมิภาค (ASEAN Industrial Conglomerate)",
+      minEmployees: 100,
+      minOrdersPaid: 40,
+      minReputation: 80,
+      minPlotsOrAssets: 6,
+      creditLimitMult: 4.5,
+      b2bTrustBonus: 18,
+      summaryTh: "อาณาจักรธุรกิจครบวงจรทั้ง 8 โมเดลอุตสาหกรรม มีเครือข่ายบริษัทลูก/พันธมิตร Spin-off และความยืดหยุ่นสูงต่อวิกฤตภูมิรัฐศาสตร์โลก"
+    }
+  ]);
+
+  const SME_MILESTONE_CATALOG = deepFreeze([
+    { id: "first_order_paid", icon: "💰", titleTh: "รับเงินสดก้อนแรกจากการส่งมอบออเดอร์ B2B สำเร็จ", descTh: "พิสูจน์ว่าสายการผลิตและฝ่ายขายสามารถเปลี่ยนวัตถุดิบเป็นเงินสดจริงก้อนแรกได้" },
+    { id: "first_research_unlock", icon: "🔬", titleTh: "ทีมวิจัย R&D ปลดล็อกแบบแปลนสินค้าใหม่ชิ้นแรก", descTh: "ก้าวแรกจากการรับจ้างผลิตพื้นฐานสู่การมีทรัพย์สินทางปัญญาของบริษัทเอง" },
+    { id: "first_debt_repaid", icon: "🏦", titleTh: "ชำระคืนเงินต้นหนี้ธนาคารก้อนแรกสำเร็จ", descTh: "ผู้บริหารนำเงินสดส่วนเกินเหนือเงินสำรองมาลดภาระดอกเบี้ยรายวัน" },
+    { id: "debt_free_turnaround", icon: "🦅", titleTh: "ปลอดหนี้ธนาคาร 100% (Debt-Free Turnaround)", descTh: "บริษัทไถ่ถอนหนี้เงินกู้ตั้งต้นครบทุกบาท กระแสเงินสดจากการดำเนินงานเป็นอิสระเต็มตัว" },
+    { id: "team_double_digits", icon: "👥", titleTh: "ขยายทีมงานทะลุ 10 คน ก้าวพ้นกิจการห้องแถว", descTh: "โครงสร้างองค์กรเริ่มมีหัวหน้ากลุ่มและแผนกเฉพาะทางรองรับปริมาณงานที่เพิ่มขึ้น" },
+    { id: "first_plot_constructed", icon: "🏗️", titleTh: "ก่อสร้างอาคารส่วนต่อขยายแห่งแรกในนิคม", descTh: "ขยายพื้นที่กายภาพของโรงงานเพื่อเพิ่มสถานีทำงานและปลดล็อกคอขวดกำลังผลิต" },
+    { id: "first_fleet_truck", icon: "🚛", titleTh: "มีรถบรรทุกขนส่งคันแรกในกองรถบริษัท", descTh: "เริ่มบริหารโลจิสติกส์และรับงานขนส่ง B2B ด้วยกองรถของตนเอง" },
+    { id: "first_b2b_service", icon: "🛠️", titleTh: "เปิดรับใบงานธุรกิจบริการวิศวกรรม/ค้าส่ง B2B งานแรก", descTh: "แตกไลน์รายได้สู่ธุรกิจบริการที่ใช้ความเชี่ยวชาญของทีมช่างและวิศวกร" },
+    { id: "first_external_asset", icon: "🌾", titleTh: "เข้าถือครองสินทรัพย์ต้นน้ำนอกนิคมแห่งแรก", descTh: "สร้างความมั่นคงทางทรัพยากรด้วยการมีแหล่งผลิตวัตถุดิบต้นน้ำของบริษัทเอง" },
+    { id: "first_green_utility_offset", icon: "☀️", titleTh: "ผลิตพลังงานโซลาร์/น้ำรีไซเคิลช่วยลดบิลค่าไฟ-ค่าน้ำโรงงาน", descTh: "เปลี่ยนโสหุ้ยสาธารณูปโภครายสัปดาห์ให้ลดลงด้วยโครงสร้างพื้นฐานสีเขียว" },
+    { id: "first_employee_car", icon: "🚗", titleTh: "พนักงานคนแรกเก็บเงินเดือนถอยรถส่วนตัวมาจอดหน้าบริษัท", descTh: "ความมั่งคั่งของบริษัทส่งผ่านสู่คุณภาพชีวิตจริงของพนักงานจนลานจอดรถเริ่มคึกคัก" },
+    { id: "first_alumni_spinoff", icon: "🚀", titleTh: "อดีตพนักงานอาวุโสก่อตั้งกิจการ SME Spin-off ในระบบนิเวศตลาด", descTh: "บุคลากรที่เติบโตจากบริษัทออกไปตั้งกิจการคู่ค้าหรือคู่แข่งรายใหม่ในตลาดจริง" }
+  ]);
+
+  const UTILITY_TARIFFS = deepFreeze({
+    baseKwhPerBuildingLevel: 18,
+    kwhPerActiveFactoryLine: 42,
+    kwhPerCleanroomOrRefineryPlot: 55,
+    kwhPerOtHour: 14,
+    rateSatangPerKwh: 420,
+    peakOtRateSatangPerKwh: 580,
+    solarPlotOffsetKwhDaily: 145,
+    offsiteSolarOffsetKwhPerLevelDaily: 210,
+    waterM3PerEmployeeAtWork: 0.45,
+    waterM3PerFactoryLine: 4.5,
+    rateSatangPerWaterM3: 1850,
+    waterPlantOffsetM3Daily: 18,
+    billingIntervalDays: 7
+  });
+
+  const AFTER_WORK_CLUBS = deepFreeze([
+    {
+      id: "club_courtyard_running",
+      nameTh: "ชมรมวิ่งและฟิตเนสสวนหย่อมนิคม (Campus Running Club)",
+      icon: "🏃",
+      locationBuildingId: "courtyard",
+      energyDelta: 4,
+      burnoutDelta: -6,
+      stressDelta: -4,
+      moraleDelta: 3,
+      summaryTh: "พนักงานสายรักสุขภาพออกวิ่งรอบสวนหย่อมหลังเลิกงาน ลดความเหนื่อยล้าสะสมและเพิ่มความสดชื่น"
+    },
+    {
+      id: "club_canteen_friday_social",
+      nameTh: "วงสังสรรค์และหมูกระทะลานโรงอาหาร (Canteen Evening Social)",
+      icon: "🍲",
+      locationBuildingId: "canteen",
+      energyDelta: 2,
+      burnoutDelta: -4,
+      stressDelta: -8,
+      moraleDelta: 6,
+      summaryTh: "พนักงานต่างแผนกล้อมวงพูดคุยและทานมื้อเย็นร่วมกัน สร้างความไว้ใจข้ามสายงานและลดความตึงเครียด"
+    },
+    {
+      id: "club_rnd_boardgame_tech",
+      nameTh: "ชมรมบอร์ดเกมและแลกเปลี่ยนเทคนิค (R&D Tech & Strategy Circle)",
+      icon: "🎲",
+      locationBuildingId: "rnd",
+      energyDelta: 1,
+      burnoutDelta: -3,
+      stressDelta: -4,
+      moraleDelta: 4,
+      xpBonus: 18,
+      summaryTh: "วิศวกรและฝ่ายออฟฟิศลับสมองด้วยเกมวางแผนและแชร์เทคนิคแก้คอขวดงานผลิต"
+    }
+  ]);
+
+  const CULTURE_GOSSIP_TOPICS = deepFreeze([
+    {
+      id: "gossip_booming_orders",
+      badgeTh: "💬 ข่าวดีข้างตู้กดน้ำ",
+      topicTh: "ยอดส่งมอบและเงินสดบริษัทกำลังโตต่อเนื่อง ลุ้นโบนัสรอบหน้า!",
+      moraleDelta: 3,
+      stressDelta: -2
+    },
+    {
+      id: "gossip_tight_runway",
+      badgeTh: "💬 เสียงกระซิบการเงิน",
+      topicTh: "กระแสเงินสดสำรองเริ่มตึงตัว ช่วงนี้ต้องช่วยกันประหยัดวัตถุดิบและลดของเสีย",
+      moraleDelta: -2,
+      stressDelta: 3
+    },
+    {
+      id: "gossip_aging_machines",
+      badgeTh: "💬 เสียงบ่นหน้าไลน์ผลิต",
+      topicTh: "เครื่องจักรโรงงานเริ่มสึกหรอและร้อนจัด อยากให้ทีมช่างเร่งซ่อมบำรุงก่อนพัง",
+      moraleDelta: -2,
+      stressDelta: 2
+    },
+    {
+      id: "gossip_merit_culture",
+      badgeTh: "💬 ชื่นชมผู้บริหาร",
+      topicTh: "การเลื่อนขั้นและให้รางวัลรอบล่าสุดโปร่งใส คนตั้งใจทำงานรู้สึกมีอนาคต",
+      moraleDelta: 4,
+      stressDelta: -2
+    },
+    {
+      id: "gossip_favoritism_concern",
+      badgeTh: "💬 ข่าวลือเรื่องเส้นสาย",
+      topicTh: "มีเสียงวิจารณ์เรื่องการเลื่อนตำแหน่งข้ามหัวคนที่ทำผลงานหนักในแผนก",
+      moraleDelta: -4,
+      stressDelta: 4
+    },
+    {
+      id: "gossip_utility_green_pride",
+      badgeTh: "💬 ความภูมิใจนิคมสีเขียว",
+      topicTh: "ระบบโซลาร์และบำบัดน้ำของโรงงานช่วยเซฟค่าไฟค่าน้ำได้จริง แถมอากาศในนิคมดีขึ้นมาก",
+      moraleDelta: 3,
+      stressDelta: -1
+    }
+  ]);
+
+  const TRADE_CORRIDORS = deepFreeze({
+    corridor_asean_landbridge: {
+      id: "corridor_asean_landbridge",
+      nameTh: "ระเบียงเศรษฐกิจทางบกและท่าเรือฟีดเดอร์อาเซียน (CLMVT–Singapore Smart Corridor)",
+      icon: "🚛",
+      nations: ["TH", "ASEAN", "SG"],
+      primarySectors: ["fleet", "food", "service"],
+      keyMaterials: ["paddy_grain", "milled_rice", "pack_carton", "diesel_liter"],
+      baseTariffPct: 0,
+      baseLeadTimeMod: 0.9,
+      descTh: "เชื่อมนิคมอุตสาหกรรมไทยสู่ด่านชายแดนอาเซียนและท่าเรือถ่ายลำสินค้าสิงคโปร์ ส่งผลโดยตรงต่อค่าระวางกองรถขนส่ง B2B คลังห้องเย็น 3PL และการส่งออกอาหาร"
+    },
+    corridor_indo_australia_mineral: {
+      id: "corridor_indo_australia_mineral",
+      nameTh: "ระเบียงทรัพยากรแร่โลหะและแบตเตอรี่แปซิฟิกใต้ (Indonesia–Australia Mineral & EV Belt)",
+      icon: "⛏️",
+      nations: ["ID", "AU", "TH"],
+      primarySectors: ["automotive", "energy"],
+      keyMaterials: ["bauxite_ore", "iron_ore", "lithium_brine_ore", "coke_reducing_flux", "alumina_billet", "structural_steel_plate", "nickel_cobalt_matte", "aluminum_extrusion_profile"],
+      baseTariffPct: 3,
+      baseLeadTimeMod: 1.0,
+      descTh: "เส้นทางลำเลียงแร่บ็อกไซต์ แร่เหล็ก ลิเธียม และถ่านโค้กโลหะวิทยาเข้าสู่โรงถลุงและสายการผลิตถาดแบตเตอรี่ EV / รางโซลาร์ในไทย"
+    },
+    corridor_east_asia_tech_express: {
+      id: "corridor_east_asia_tech_express",
+      nameTh: "ระเบียงเซมิคอนดักเตอร์และหุ่นยนต์เอเชียตะวันออก (Japan–China–Taiwan Tech Corridor)",
+      icon: "🔬",
+      nations: ["JP", "CN", "US"],
+      primarySectors: ["electronics", "automotive", "software"],
+      keyMaterials: ["silica_bauxite_ore", "metallurgical_silicon", "silicon_wafer", "microchip", "pcb", "optical_lens", "sensor"],
+      baseTariffPct: 4,
+      baseLeadTimeMod: 0.95,
+      descTh: "เส้นทางซัพพลายเชนแผ่นเวเฟอร์ ชิปประมวลผล เลนส์ออปติคัล และหุ่นยนต์ความแม่นยำสูง อ่อนไหวต่อสงครามเทคโนโลยีและกำแพงภาษี"
+    },
+    corridor_india_eu_green_pharma: {
+      id: "corridor_india_eu_green_pharma",
+      nameTh: "ระเบียงพลังงานสะอาดและเวชภัณฑ์อินโด-ยุโรป (India–Middle East–EU Green & Clinical Corridor)",
+      icon: "🌍",
+      nations: ["IN", "ME", "EU", "RU_EE"],
+      primarySectors: ["energy", "biomed", "food"],
+      keyMaterials: ["pharma_saline_water", "probiotic_culture", "solar_cell", "power_inverter_ic", "phosphate_potash_rock", "npk_fertilizer"],
+      baseTariffPct: 5,
+      baseLeadTimeMod: 1.05,
+      descTh: "เส้นทางส่งออกเวชภัณฑ์ปลอดเชื้อ ตู้กักเก็บพลังงาน และนำเข้าแร่แม่ปุ๋ย/น้ำมันดิบ อ่อนไหวต่อมาตรการคาร์บอน CBAM และความมั่นคงทางทะเล"
+    }
   });
 
   const EXTERNAL_WORLD_DEFAULTS = deepFreeze({
@@ -3584,7 +4288,7 @@
         paymentDays: 1,
         sellsMaterials: ["metal_sheet", "wire_harness"],
         buysMaterials: ["polymer_resin", "metal_sheet", "copper_coil", "wire_harness", "battery", "cathode_electrolyte"],
-        buysProducts: ["autoSensor", "evController", "batteryPack", "servoActuator", "ev_suspension_kit"],
+        buysProducts: ["autoSensor", "evController", "batteryPack", "servoActuator", "ev_suspension_kit", "ev_battery_tray_assembly", "high_nickel_nmc_module"],
         rivalsWith: ["eastern_auto", "apex_ind"],
         alliesWith: ["tokyo_elec", "siam_metal"],
         strategyTh: "ขยายฐานประกอบรถยนต์ไฟฟ้า EV ใน EEC รับซื้อทั้งชุดควบคุม EV แพ็กแบตเตอรี่ และเม็ดโพลีเมอร์"
@@ -3628,9 +4332,9 @@
         cashMillionBaht: 320,
         pricePremium: 0.03,
         paymentDays: 1,
-        sellsMaterials: ["copper_iron_ore", "silica_bauxite_ore", "lithium_brine_ore", "metal_sheet", "copper_coil", "casing", "driver", "wire_harness", "heat_sink", "polymer_resin", "natural_latex"],
-        buysMaterials: ["copper_iron_ore", "metallurgical_silicon", "polymer_resin"],
-        buysProducts: ["servoActuator", "smartMeter"],
+        sellsMaterials: ["copper_iron_ore", "iron_ore", "bauxite_ore", "coke_reducing_flux", "alumina_billet", "structural_steel_plate", "aluminum_extrusion_profile", "silica_bauxite_ore", "lithium_brine_ore", "metal_sheet", "copper_coil", "casing", "driver", "wire_harness", "heat_sink", "polymer_resin", "natural_latex"],
+        buysMaterials: ["copper_iron_ore", "iron_ore", "bauxite_ore", "alumina_billet", "structural_steel_plate", "aluminum_extrusion_profile", "metallurgical_silicon", "polymer_resin"],
+        buysProducts: ["servoActuator", "smartMeter", "industrial_switchgear_cabinet", "ev_battery_tray_assembly"],
         rivalsWith: ["eastern_auto"],
         alliesWith: ["asia_autoparts", "titan_elec"],
         strategyTh: "จำหน่ายแร่ดิบและโลหะขึ้นรูปทุกชนิด พร้อมรับซื้อแขนกลเซอร์โวไปอัปเกรดโรงถลุง"
@@ -3722,7 +4426,7 @@
         paymentDays: 1,
         sellsMaterials: ["solar_cell"],
         buysMaterials: ["solar_cell", "battery", "cathode_electrolyte", "power_inverter_ic", "silicon_wafer", "copper_coil"],
-        buysProducts: ["solarCharger", "homeInverter", "batteryPack", "evFastCharger", "solid_state_powerwall", "smartMeter"],
+        buysProducts: ["solarCharger", "homeInverter", "batteryPack", "evFastCharger", "solid_state_powerwall", "smartMeter", "solar_mounting_rail_kit", "industrial_switchgear_cabinet", "high_nickel_nmc_module"],
         rivalsWith: ["solartech_asia"],
         alliesWith: ["pacific_solar", "siam_tech"],
         strategyTh: "ลงทุนเมกะโปรเจกต์โซลาร์ฟาร์มและสถานีชาร์จ EV รับซื้อทั้งเซลล์แสงอาทิตย์ แบตเตอรี่ และตู้ Powerwall"
@@ -3887,21 +4591,119 @@
         rivalsWith: ["siam_tech", "asia_autoparts", "biomed_siam", "siam_aero_robotics"],
         alliesWith: ["solartech_asia", "petro_chem_siam"],
         strategyTh: "กลุ่มทุนใหญ่ที่แข่งขันในหลายอุตสาหกรรม แต่ยังต้องพึ่งพาการสั่งซื้อแผ่นเวเฟอร์และชิปขั้นสูงจากผู้ผลิตที่มีแล็บ R&D"
+      },
+      {
+        id: "nusantara_nickel",
+        nameTh: "บจก. นูซันตารา นิกเกิล แอนด์ อะลูมินา อินโดนีเซีย",
+        symbol: "NUSAN",
+        sector: "energy",
+        sectorTh: "เหมืองนิกเกิล บ็อกไซต์ และวัสดุแบตเตอรี่อาเซียน",
+        originTh: "สุลาเวสี อินโดนีเซีย / ท่าเรือแหลมฉบัง",
+        tierTh: "ยักษ์ใหญ่แร่แบตเตอรี่และอะลูมินาอาเซียน",
+        roles: ["supplier", "client", "partner"],
+        relationshipMode: "cordial",
+        baseTrust: 57,
+        marketSharePct: 8.0,
+        strength: 66,
+        cashMillionBaht: 520,
+        pricePremium: 0.06,
+        paymentDays: 1,
+        sellsMaterials: ["bauxite_ore", "nickel_cobalt_matte", "alumina_billet", "coke_reducing_flux", "crude_palm", "copper_iron_ore"],
+        buysMaterials: ["alumina_billet", "aluminum_extrusion_profile", "structural_steel_plate", "cathode_electrolyte"],
+        buysProducts: ["solar_mounting_rail_kit", "industrial_switchgear_cabinet", "high_nickel_nmc_module", "evFastCharger"],
+        rivalsWith: ["pacific_solar", "siam_metal"],
+        alliesWith: ["green_power", "asia_autoparts"],
+        strategyTh: "ป้อนแร่บ็อกไซต์และนิกเกิลแมตต์จากอินโดนีเซีย พร้อมรับซื้อโปรไฟล์อะลูมิเนียม ตู้สวิตช์เกียร์ และโมดูลแบต NMC ไปขยายนิคมถลุงแร่"
+      },
+      {
+        id: "pilbara_resources",
+        nameTh: "บจก. พิลบารา ไอรอน แอนด์ ลิเธียม รีซอร์สเซส (ออสเตรเลีย)",
+        symbol: "PILBARA",
+        sector: "automotive",
+        sectorTh: "เหมืองแร่เหล็ก ถ่านโค้กฟลักซ์ และลิเธียมออสเตรเลีย",
+        originTh: "พอร์ตเฮดแลนด์ ออสเตรเลีย / ท่าเรือมาบตาพุด",
+        tierTh: "ผู้ส่งออกแร่เหล็กและลิเธียมระดับโลก",
+        roles: ["supplier", "client", "partner"],
+        relationshipMode: "cordial",
+        baseTrust: 60,
+        marketSharePct: 9.5,
+        strength: 71,
+        cashMillionBaht: 640,
+        pricePremium: 0.07,
+        paymentDays: 1,
+        sellsMaterials: ["iron_ore", "bauxite_ore", "lithium_brine_ore", "coke_reducing_flux", "structural_steel_plate", "silica_bauxite_ore"],
+        buysMaterials: ["structural_steel_plate", "aluminum_extrusion_profile", "truck_tire", "wire_harness"],
+        buysProducts: ["ev_battery_tray_assembly", "industrial_switchgear_cabinet", "warehouse_agv_bot", "autonomous_cargo_drone"],
+        rivalsWith: ["siam_metal"],
+        alliesWith: ["tokyo_elec", "siam_aero_robotics"],
+        strategyTh: "ส่งออกแร่เหล็กพิลบารา แร่ลิเธียม และถ่านโค้กฟลักซ์เกรดพรีเมียม และสั่งซื้อหุ่นยนต์ AGV ตู้สวิตช์เกียร์ และถาดแบตเตอรี่ EV ไปใช้ในเหมืองอัตโนมัติ"
+      },
+      {
+        id: "bharat_biotech_it",
+        nameTh: "บมจ. ภารตะ ไบโอเทค แอนด์ สมาร์ตกริด ซิสเต็มส์",
+        symbol: "BHARAT",
+        sector: "biomed",
+        sectorTh: "เวชภัณฑ์คลีนรูม สมาร์ตกริด และซอฟต์แวร์เอเชียใต้",
+        originTh: "ไฮเดอราบัด & มุมไบ อินเดีย",
+        tierTh: "พันธมิตรเวชภัณฑ์และโครงข่ายไฟฟ้าอินเดีย",
+        roles: ["client", "partner", "competitor"],
+        relationshipMode: "partner",
+        baseTrust: 59,
+        marketSharePct: 7.5,
+        strength: 64,
+        cashMillionBaht: 480,
+        pricePremium: 0.08,
+        paymentDays: 1,
+        sellsMaterials: ["pharma_saline_water", "raw_extract", "wheat_grain"],
+        buysMaterials: ["pharma_saline_water", "probiotic_culture", "aluminum_extrusion_profile", "structural_steel_plate", "solar_cell"],
+        buysProducts: ["sterile_wound_dressing", "medical_saline_iv", "vital_signs_monitor", "solar_mounting_rail_kit", "industrial_switchgear_cabinet", "lfp_grid_rack"],
+        rivalsWith: ["apex_ind"],
+        alliesWith: ["biomed_siam", "green_power"],
+        strategyTh: "นำเข้าชุดรางโซลาร์ ตู้สวิตช์เกียร์ และเวชภัณฑ์ปลอดเชื้อจากไทยไปป้อนโครงการโรงพยาบาลและสมาร์ตกริดทั่วเอเชียใต้"
+      },
+      {
+        id: "singapore_port_3pl",
+        nameTh: "บจก. สิงคโปร์ สเตรทส์ พอร์ต แอนด์ โคลด์เชน 3PL",
+        symbol: "SGPORT",
+        sector: "general",
+        sectorTh: "ท่าเรือคอนเทนเนอร์ คลังห้องเย็น 3PL และการค้าข้ามชาติ",
+        originTh: "ท่าเรือจูร่ง สิงคโปร์ / แหลมฉบัง",
+        tierTh: "ฮับโลจิสติกส์และเทรดดิ้งอาเซียน",
+        roles: ["client", "partner", "supplier"],
+        relationshipMode: "partner",
+        baseTrust: 63,
+        marketSharePct: 8.5,
+        strength: 68,
+        cashMillionBaht: 590,
+        pricePremium: 0.08,
+        paymentDays: 0,
+        sellsMaterials: ["foil_pouch", "pack_carton", "diesel_liter", "microchip", "silicon_wafer"],
+        buysMaterials: ["bakery_dough_butter", "milled_rice", "alumina_billet", "aluminum_extrusion_profile", "nickel_cobalt_matte"],
+        buysProducts: ["pastry_croissant_box", "probiotic_yogurt_cup", "cold_chain_temp_logger", "solar_mounting_rail_kit", "high_nickel_nmc_module"],
+        rivalsWith: ["metro_retail"],
+        alliesWith: ["cp_health", "siam_tech"],
+        strategyTh: "รับซื้ออาหารแช่แข็ง เวชภัณฑ์ ดาต้าล็อกเกอร์ห้องเย็น และโมดูลพลังงานด้วยเงินสดทันใจ (COD) เพื่อกระจายผ่านฮับท่าเรือสิงคโปร์"
       }
     ],
     clients: [
-      { id: "siam_tech", nameTh: "บมจ. สยามเทค โฮลดิ้งส์", sector: "tech", tierTh: "องค์กรมหาชน (SET100)", baseTrust: 55, pricePremium: 0.04, paymentDays: 1, preferredProducts: ["speaker", "lamp", "iotController", "smartMeter", "visionCamera", "ai_edge_module"] },
+      { id: "siam_tech", nameTh: "บมจ. สยามเทค โฮลดิ้งส์", sector: "tech", tierTh: "องค์กรมหาชน (SET100)", baseTrust: 55, pricePremium: 0.04, paymentDays: 1, preferredProducts: ["speaker", "lamp", "braided_fast_charge_kit", "iotController", "smartMeter", "visionCamera", "ai_edge_module"] },
       { id: "asia_autoparts", nameTh: "บจก. เอเชีย ออโต้พาร์ท แอนด์ อีวี", sector: "automotive", tierTh: "ผู้ผลิตยานยนต์ OEM", baseTrust: 52, pricePremium: 0.06, paymentDays: 1, preferredProducts: ["autoSensor", "evController", "batteryPack", "servoActuator", "ev_suspension_kit"] },
       { id: "cp_health", nameTh: "บมจ. เจริญผล ฟู้ดแอนด์เฮลท์", sector: "food", tierTh: "เครือค้าปลีกและสุขภาพ", baseTrust: 56, pricePremium: 0.03, paymentDays: 0, preferredProducts: ["artisan_bakery", "pastry_croissant_box", "plant_based_meat", "premium_cooking_oil", "ready_meal_box", "dairy_protein_shake", "herbalDrink", "energyProtein", "functionalShot", "probioticElixir"] },
       { id: "green_power", nameTh: "บจก. กรีนพาวเวอร์ โซลูชั่นส์ เอเชีย", sector: "energy", tierTh: "พันธมิตรพลังงานสะอาด BOI", baseTrust: 50, pricePremium: 0.07, paymentDays: 1, preferredProducts: ["solarCharger", "homeInverter", "batteryPack", "evFastCharger", "solid_state_powerwall"] },
       { id: "tokyo_elec", nameTh: "บจก. โตเกียว อิเล็กทรอนิกส์ (ประเทศไทย)", sector: "tech", tierTh: "คู่ค้าส่งออกญี่ปุ่น", baseTrust: 60, pricePremium: 0.08, paymentDays: 1, preferredProducts: ["iotController", "autoSensor", "smartMeter", "visionCamera", "servoActuator", "autonomous_cargo_drone"] },
-      { id: "metro_retail", nameTh: "บมจ. นครหลวง ดิสทริบิวชั่น", sector: "general", tierTh: "ศูนย์ค้าส่งทั่วประเทศ", baseTrust: 48, pricePremium: 0.02, paymentDays: 0, preferredProducts: ["speaker", "lamp", "herbalDrink", "solarCharger", "probioticElixir", "artisan_bakery", "pastry_croissant_box"] },
+      { id: "metro_retail", nameTh: "บมจ. นครหลวง ดิสทริบิวชั่น", sector: "general", tierTh: "ศูนย์ค้าส่งทั่วประเทศ", baseTrust: 48, pricePremium: 0.02, paymentDays: 0, preferredProducts: ["speaker", "lamp", "braided_fast_charge_kit", "artisan_chili_paste_jar", "herbalDrink", "solarCharger", "probioticElixir", "artisan_bakery", "pastry_croissant_box"] },
       { id: "biomed_siam", nameTh: "บมจ. สยามไบโอเมด แอนด์ เมดิคัล ดีไวซ์", sector: "biomed", tierTh: "เครือโรงพยาบาลและนวัตกรรมการแพทย์", baseTrust: 61, pricePremium: 0.09, paymentDays: 1, preferredProducts: ["synbiotic_medical_drink", "vital_signs_monitor", "probioticElixir", "functionalShot"] },
-      { id: "siam_aero_robotics", nameTh: "บจก. สยาม แอโรสเปซ แอนด์ ออโตโนมัส โรโบติกส์", sector: "aerospace_robotics", tierTh: "ผู้นำดีพเทคและโลจิสติกส์ทางอากาศ", baseTrust: 59, pricePremium: 0.1, paymentDays: 1, preferredProducts: ["autonomous_cargo_drone", "servoActuator", "ai_edge_module", "visionCamera"] }
+      { id: "siam_aero_robotics", nameTh: "บจก. สยาม แอโรสเปซ แอนด์ ออโตโนมัส โรโบติกส์", sector: "aerospace_robotics", tierTh: "ผู้นำดีพเทคและโลจิสติกส์ทางอากาศ", baseTrust: 59, pricePremium: 0.1, paymentDays: 1, preferredProducts: ["autonomous_cargo_drone", "servoActuator", "ai_edge_module", "visionCamera"] },
+      { id: "nusantara_nickel", nameTh: "บจก. นูซันตารา นิกเกิล แอนด์ อะลูมินา", sector: "energy", tierTh: "ยักษ์ใหญ่แร่แบตเตอรี่อาเซียน", baseTrust: 57, pricePremium: 0.06, paymentDays: 1, preferredProducts: ["solar_mounting_rail_kit", "industrial_switchgear_cabinet", "high_nickel_nmc_module", "evFastCharger"] },
+      { id: "pilbara_resources", nameTh: "บจก. พิลบารา ไอรอน แอนด์ ลิเธียม รีซอร์สเซส", sector: "automotive", tierTh: "เหมืองแร่เหล็กและลิเธียมออสเตรเลีย", baseTrust: 60, pricePremium: 0.07, paymentDays: 1, preferredProducts: ["ev_battery_tray_assembly", "industrial_switchgear_cabinet", "warehouse_agv_bot", "autonomous_cargo_drone"] },
+      { id: "bharat_biotech_it", nameTh: "บมจ. ภารตะ ไบโอเทค แอนด์ สมาร์ตกริด", sector: "biomed", tierTh: "พันธมิตรเวชภัณฑ์และสมาร์ตกริดอินเดีย", baseTrust: 59, pricePremium: 0.08, paymentDays: 1, preferredProducts: ["sterile_wound_dressing", "medical_saline_iv", "vital_signs_monitor", "solar_mounting_rail_kit", "industrial_switchgear_cabinet", "lfp_grid_rack"] },
+      { id: "singapore_port_3pl", nameTh: "บจก. สิงคโปร์ สเตรทส์ พอร์ต แอนด์ โคลด์เชน", sector: "general", tierTh: "ฮับโลจิสติกส์และเทรดดิ้งอาเซียน", baseTrust: 63, pricePremium: 0.08, paymentDays: 0, preferredProducts: ["pastry_croissant_box", "probiotic_yogurt_cup", "cold_chain_temp_logger", "solar_mounting_rail_kit", "high_nickel_nmc_module"] }
     ],
     suppliers: [
       { id: "shenzhen_semi", nameTh: "บจก. เซินเจิ้น เซมิคอนดักเตอร์ ซัพพลาย", originTh: "เซินเจิ้น / ท่าเรือแหลมฉบัง", specialtyTh: "แผงวงจร ชิป เลนส์ออปติคัล เวเฟอร์ และแร่ซิลิกา", materials: ["pcb", "microchip", "led", "sensor", "heat_sink", "optical_lens", "power_inverter_ic", "silica_bauxite_ore", "metallurgical_silicon", "silicon_wafer"], baseTrust: 50, creditTermsTh: "COD / Net 7" },
-      { id: "siam_metal", nameTh: "บจก. สยามเมทัล แอนด์ ฮาร์เนส อินดัสทรี", originTh: "นิคมอมตะซิตี้ ชลบุรี", specialtyTh: "แร่เหล็ก-ทองแดง แผ่นโลหะ ขดลวด ตัวถัง และชุดสายไฟ", materials: ["copper_iron_ore", "silica_bauxite_ore", "bauxite_ore", "lithium_brine_ore", "phosphate_potash_rock", "casing", "driver", "metal_sheet", "wire_harness", "heat_sink", "copper_coil", "polymer_resin", "natural_latex", "truck_tire"], baseTrust: 55, creditTermsTh: "Net 7" },
+      { id: "siam_metal", nameTh: "บจก. สยามเมทัล แอนด์ ฮาร์เนส อินดัสทรี", originTh: "นิคมอมตะซิตี้ ชลบุรี", specialtyTh: "แร่เหล็ก-ทองแดง แผ่นโลหะ เหล็กกล้า อะลูมิเนียม และชุดสายไฟ", materials: ["copper_iron_ore", "iron_ore", "silica_bauxite_ore", "bauxite_ore", "coke_reducing_flux", "alumina_billet", "structural_steel_plate", "nickel_cobalt_matte", "aluminum_extrusion_profile", "lithium_brine_ore", "phosphate_potash_rock", "casing", "driver", "metal_sheet", "wire_harness", "heat_sink", "copper_coil", "polymer_resin", "natural_latex", "truck_tire"], baseTrust: 55, creditTermsTh: "Net 7" },
+      { id: "nusantara_nickel", nameTh: "บจก. นูซันตารา นิกเกิล แอนด์ อะลูมินา อินโดนีเซีย", originTh: "สุลาเวสี / แหลมฉบัง", specialtyTh: "แร่บ็อกไซต์ นิกเกิล-โคบอลต์แมตต์ แท่งอะลูมินา และปาล์มดิบ", materials: ["bauxite_ore", "nickel_cobalt_matte", "alumina_billet", "coke_reducing_flux", "crude_palm", "copper_iron_ore"], baseTrust: 57, creditTermsTh: "Net 7" },
+      { id: "pilbara_resources", nameTh: "บจก. พิลบารา ไอรอน แอนด์ ลิเธียม รีซอร์สเซส", originTh: "พิลบารา ออสเตรเลีย / มาบตาพุด", specialtyTh: "แร่เหล็กธรรมชาติ แร่ลิเธียม ถ่านโค้กฟลักซ์ และเหล็กกล้าแผ่น", materials: ["iron_ore", "bauxite_ore", "lithium_brine_ore", "coke_reducing_flux", "structural_steel_plate", "silica_bauxite_ore"], baseTrust: 60, creditTermsTh: "Net 14" },
       { id: "thai_organic", nameTh: "สหกรณ์เกษตรอินทรีย์และสารสกัดไทย", originTh: "นครปฐม / เชียงใหม่", specialtyTh: "ผลผลิตเกษตรต้นน้ำ แป้งโม่ โดว์เนย สารสกัด และบรรจุภัณฑ์", materials: ["rice_seed", "cane_stalk_seed", "palm_seedling", "soybean_seed", "raw_water_m3", "npk_fertilizer", "organic_compost", "paddy_grain", "milled_rice", "rice_bran_husk", "crude_palm", "raw_cane", "soybean_crop", "fresh_milk_soy", "timber_bamboo_log", "raw_extract", "glass_bottle", "pack_carton", "probiotic_culture", "foil_pouch", "artisan_flour", "refined_palm_oil", "refined_sugar_syrup", "bakery_dough_butter"], baseTrust: 58, creditTermsTh: "COD / Net 7" },
       { id: "pacific_solar", nameTh: "บจก. แปซิฟิก โซลาร์ แอนด์ ลิเธียม เพาเวอร์", originTh: "นิคมอีสเทิร์นซีบอร์ด ระยอง", specialtyTh: "แร่ลิเธียม แคโทดอิเล็กโทรไลต์ แผงโซลาร์เซลล์ และแบตเตอรี่", materials: ["lithium_brine_ore", "cathode_electrolyte", "solar_cell", "battery", "power_inverter_ic", "copper_coil"], baseTrust: 48, creditTermsTh: "Net 14" },
       { id: "petro_chem_siam", nameTh: "บมจ. มาบตาพุด ปิโตรเคมี แอนด์ โพลีเมอร์", originTh: "นิคมมาบตาพุด ระยอง", specialtyTh: "สารตั้งต้นปิโตรเคมี น้ำยางพารา เม็ดพลาสติกเรซิน และฟอยล์", materials: ["crude_petro_feedstock", "diesel_liter", "truck_tire", "natural_latex", "polymer_resin", "foil_pouch", "pack_carton", "timber_bamboo_log", "raw_water_m3"], baseTrust: 54, creditTermsTh: "Net 7" }
@@ -4559,6 +5361,11 @@
       refined_palm_oil: { id: "refined_palm_oil", nameTh: "น้ำมันปาล์มบริสุทธิ์และเนยขาวเบเกอรี่ (แปรรูป T1)", unitCost: 4500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "oil_refining", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 5900 },
       refined_sugar_syrup: { id: "refined_sugar_syrup", nameTh: "น้ำตาลทรายบริสุทธิ์และไซรัปกลูโคส (แปรรูป T1)", unitCost: 3800, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "sugar_milling", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 5000 },
       raw_extract: { id: "raw_extract", nameTh: "สารสกัดสมุนไพรและโปรตีนถั่วเหลืองเข้มข้น (แปรรูป T1)", unitCost: 3500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "vacuum_extraction", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 4600 },
+      coke_reducing_flux: { id: "coke_reducing_flux", nameTh: "ถ่านโค้กโลหะวิทยาและหินปูนฟลักซ์ลดออกไซด์ (Metallurgical Coke & Limestone Flux T1)", unitCost: 2600, leadMinutes: 540, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "coke_calcination", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3500 },
+      alumina_billet: { id: "alumina_billet", nameTh: "แท่งอะลูมินาบริสุทธิ์และบิลเล็ตอะลูมิเนียม (Bayer Alumina & Hall-Héroult Billet T1)", unitCost: 5800, leadMinutes: 960, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "bayer_smelting", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 15, b2bSellPrice: 7800 },
+      structural_steel_plate: { id: "structural_steel_plate", nameTh: "เหล็กกล้าแผ่นรีดร้อนโครงสร้างกำลังสูง (High-Strength Structural Steel Plate T1)", unitCost: 6200, leadMinutes: 960, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "blast_furnace", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 15, b2bSellPrice: 8400 },
+      mineral_slag_mud: { id: "mineral_slag_mud", nameTh: "กากตะกรันเตาถลุงและโคลนแดงบอกไซต์ (Red Mud & Smelting Slag Byproduct — ต้องบำบัดหรือรีไซเคิล)", unitCost: 800, leadMinutes: 480, tier: 1, tierCode: "T1_REFINED", resourceClass: "byproduct_waste", resourceOrigin: "smelting_slag", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 1200 },
+      nickel_cobalt_matte: { id: "nickel_cobalt_matte", nameTh: "นิกเกิล-โคบอลต์แมตต์เกรดแบตเตอรี่ความบริสุทธิ์สูง (Battery-Grade Nickel-Cobalt Matte T1)", unitCost: 6600, leadMinutes: 1080, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "hpal_leaching", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 25, b2bSellPrice: 8900 },
       metal_sheet: { id: "metal_sheet", nameTh: "แผ่นโลหะและอะลูมิเนียมขึ้นรูป (แปรรูป T1)", unitCost: 7000, leadMinutes: 1440, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "ore_smelting", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 15, b2bSellPrice: 9100 },
       copper_coil: { id: "copper_coil", nameTh: "ขดลวดทองแดงเหนี่ยวนำเกรดอุตสาหกรรม (แปรรูป T1)", unitCost: 5500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "ore_smelting", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 15, b2bSellPrice: 7200 },
       polymer_resin: { id: "polymer_resin", nameTh: "เม็ดพลาสติกวิศวกรรมและเรซินทนความร้อน (แปรรูป T1)", unitCost: 4000, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "polymer_synthesis", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 10, b2bSellPrice: 5300 },
@@ -4572,6 +5379,7 @@
       foil_pouch: { id: "foil_pouch", nameTh: "ซองฟอยล์สุญญากาศเกรดการแพทย์และอาหาร (กลางน้ำ T2)", unitCost: 2200, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "foil_lamination", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 25, b2bSellPrice: 3000 },
       casing: { id: "casing", nameTh: "ตัวถังและโครงสร้างคอมโพสิต (กลางน้ำ T2)", unitCost: 5000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "cnc_molding", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 30, b2bSellPrice: 6500 },
       wire_harness: { id: "wire_harness", nameTh: "ชุดสายไฟแรงดันต่ำและขั้วต่อ (กลางน้ำ T2)", unitCost: 4500, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "harness_crimping", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 35, b2bSellPrice: 5900 },
+      aluminum_extrusion_profile: { id: "aluminum_extrusion_profile", nameTh: "โปรไฟล์อะลูมิเนียมอัดรีดชุบอโนไดซ์และรางโครงสร้างเบา (Anodized Aluminum Extrusion Profile T2)", unitCost: 7200, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "cnc_extrusion", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 35, b2bSellPrice: 9600 },
       heat_sink: { id: "heat_sink", nameTh: "ครีบระบายความร้อนอะลูมิเนียม (กลางน้ำ T2)", unitCost: 4000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "cnc_extrusion", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 40, b2bSellPrice: 5300 },
       optical_lens: { id: "optical_lens", nameTh: "เลนส์ออปติคัลและกระจกแซฟไฟร์ความละเอียดสูง (กลางน้ำ T2)", unitCost: 6500, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "optics_polishing", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 75, b2bSellPrice: 8500 },
       cathode_electrolyte: { id: "cathode_electrolyte", nameTh: "สารแคโทดลิเธียมและอิเล็กโทรไลต์บริสุทธิ์ (กลางน้ำ T2)", unitCost: 6800, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "battery_chemistry", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 85, b2bSellPrice: 8900 },
@@ -5185,6 +5993,118 @@
         preferredLine: "lineD",
         chainId: "chain_silica_wafer_semicon"
       },
+      solar_mounting_rail_kit: {
+        id: "solar_mounting_rail_kit",
+        nameTh: "ชุดรางอะลูมิเนียมอัดรีดและโครงยึดโซลาร์รูฟท็อปทนการกัดกร่อน (Anodized Solar Mounting Rail Kit)",
+        familyId: "clean_energy_grid",
+        tierStage: "established",
+        domainId: "metal_machining",
+        industry: "energy",
+        industryNameTh: "พลังงานสะอาดและกริดอัจฉริยะ",
+        productionMode: "cnc_mechanical",
+        preferredLine: "lineC",
+        chainId: "chain_bauxite_aluminum_extrusion",
+        bom: { aluminum_extrusion_profile: 2, structural_steel_plate: 1, pack_carton: 1 },
+        assemblyMinutes: 38,
+        qaMinutes: 16,
+        packingMinutes: 10,
+        priceMin: 64000,
+        priceMax: 84000,
+        researchRequired: 35
+      },
+      ev_battery_tray_assembly: {
+        id: "ev_battery_tray_assembly",
+        nameTh: "ถาดโครงสร้างอะลูมิเนียมกันกระแทกและเพลตหล่อเย็นแพ็กแบตเตอรี่ EV (EV Extruded Battery Tray & Cold-Plate)",
+        familyId: "ev_powertrain",
+        tierStage: "established",
+        domainId: "metal_machining",
+        industry: "automotive",
+        industryNameTh: "ยานยนต์ไฟฟ้าและฮาร์ดแวร์ขนส่ง",
+        productionMode: "cnc_mechanical",
+        preferredLine: "lineC",
+        chainId: "chain_bauxite_aluminum_extrusion",
+        bom: { aluminum_extrusion_profile: 2, structural_steel_plate: 1, heat_sink: 1, polymer_resin: 1 },
+        assemblyMinutes: 46,
+        qaMinutes: 18,
+        packingMinutes: 12,
+        priceMin: 86000,
+        priceMax: 112000,
+        researchRequired: 55
+      },
+      industrial_switchgear_cabinet: {
+        id: "industrial_switchgear_cabinet",
+        nameTh: "ตู้สวิตช์เกียร์เหล็กกล้าและรางบัสบาร์ทองแดงควบคุมกำลังไฟฟ้าโรงงาน (HV Industrial Switchgear & Busbar Cabinet)",
+        familyId: "clean_energy_grid",
+        tierStage: "advanced",
+        domainId: "power_electronics",
+        industry: "energy",
+        industryNameTh: "พลังงานสะอาดและกริดอัจฉริยะ",
+        productionMode: "high_voltage_cell",
+        preferredLine: "lineC",
+        chainId: "chain_ore_smelting_metal",
+        bom: { structural_steel_plate: 2, copper_coil: 2, wire_harness: 1, pcb: 1 },
+        assemblyMinutes: 50,
+        qaMinutes: 20,
+        packingMinutes: 12,
+        priceMin: 98000,
+        priceMax: 128000,
+        researchRequired: 80
+      },
+      high_nickel_nmc_module: {
+        id: "high_nickel_nmc_module",
+        nameTh: "โมดูลแบตเตอรี่ลิเธียมนิกเกิลความหนาแน่นพลังงานสูง NMC-811 (High-Nickel NMC-811 EV Module)",
+        familyId: "clean_energy_grid",
+        tierStage: "advanced",
+        domainId: "power_electronics",
+        industry: "energy",
+        industryNameTh: "พลังงานสะอาดและกริดอัจฉริยะ",
+        productionMode: "high_voltage_cell",
+        preferredLine: "lineD",
+        chainId: "chain_bauxite_aluminum_extrusion",
+        bom: { nickel_cobalt_matte: 1, cathode_electrolyte: 1, aluminum_extrusion_profile: 1, foil_pouch: 1 },
+        assemblyMinutes: 56,
+        qaMinutes: 22,
+        packingMinutes: 12,
+        priceMin: 125000,
+        priceMax: 162000,
+        researchRequired: 145
+      },
+      braided_fast_charge_kit: {
+        id: "braided_fast_charge_kit",
+        nameTh: "ชุดสายชาร์จถักอุตสาหกรรมและอะแดปเตอร์ชาร์จไว GaN 65W (SME Fast-Turnover Tech Kit)",
+        familyId: "iot_telemetry",
+        tierStage: "starter",
+        domainId: "embedded_iot",
+        industry: "tech",
+        industryNameTh: "อิเล็กทรอนิกส์และสมาร์ตเทค",
+        productionMode: "smt_precision",
+        preferredLine: "lineA",
+        bom: { pcb: 1, casing: 1, wire_harness: 1 },
+        assemblyMinutes: 24,
+        qaMinutes: 8,
+        packingMinutes: 5,
+        priceMin: 64000,
+        priceMax: 82000,
+        researchRequired: 10
+      },
+      artisan_chili_paste_jar: {
+        id: "artisan_chili_paste_jar",
+        nameTh: "น้ำพริกคั่วสมุนไพรโบราณและหอมเจียวกรอบบรรจุขวดแก้ว B2B (SME Starter Kitchen Line)",
+        familyId: "bakery_grain",
+        tierStage: "starter",
+        domainId: "food_fermentation",
+        industry: "food",
+        industryNameTh: "อาหารและเครื่องดื่มสุขภาพ",
+        productionMode: "cleanroom_batch",
+        preferredLine: "lineD",
+        bom: { raw_extract: 1, refined_palm_oil: 1, glass_bottle: 1 },
+        assemblyMinutes: 20,
+        qaMinutes: 7,
+        packingMinutes: 5,
+        priceMin: 52000,
+        priceMax: 68000,
+        researchRequired: 12
+      }
     },
     roles: {
       sales: { nameTh: "ฝ่ายขาย B2B", skill: "sales", division: "office" },
@@ -5226,6 +6146,12 @@
       pcb: 30,
       ambient_air_gas: 16,
       iron_ore: 8,
+      coke_reducing_flux: 4,
+      alumina_billet: 2,
+      structural_steel_plate: 2,
+      mineral_slag_mud: 0,
+      nickel_cobalt_matte: 0,
+      aluminum_extrusion_profile: 0,
       wheat_seed: 6,
       wheat_grain: 6,
       nitrogen_ammonia: 6,
@@ -5640,8 +6566,8 @@
     return e;
   }
   return Object.freeze({
-    VERSION: "2.0.0",
-    RELEASE_VERSION: "2.0.0",
+    VERSION: "2.2.0",
+    RELEASE_VERSION: "2.2.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -5654,6 +6580,12 @@
     PRODUCT_FAMILIES,
     GLOBAL_NATIONS,
     GEOPOLITICAL_EVENTS,
+    TRADE_CORRIDORS,
+    SME_GROWTH_STAGES,
+    SME_MILESTONE_CATALOG,
+    UTILITY_TARIFFS,
+    AFTER_WORK_CLUBS,
+    CULTURE_GOSSIP_TOPICS,
     TRUE_RESOURCE_CHAIN_TABLE,
     MATERIAL_TIERS,
     MATERIAL_RECIPES,

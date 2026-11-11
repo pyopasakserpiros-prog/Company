@@ -1151,6 +1151,9 @@
           capabilities: w.capabilities || null,
           executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
+          companyProgression: w.companyProgression || null,
+          utilities: w.utilities || null,
+          culture: w.culture || null,
           catalog: {
             rules: w.catalog.rules,
             resourceClasses: Object.values(D.RESOURCE_CLASSES || {}),
@@ -1165,6 +1168,12 @@
             productFamilies: Object.values(D.PRODUCT_FAMILIES || {}),
             globalNations: Object.values(D.GLOBAL_NATIONS || {}),
             geopoliticalEvents: Object.values(D.GEOPOLITICAL_EVENTS || {}),
+            tradeCorridors: Object.values(D.TRADE_CORRIDORS || {}),
+            smeGrowthStages: D.SME_GROWTH_STAGES || [],
+            smeMilestoneCatalog: D.SME_MILESTONE_CATALOG || [],
+            utilityTariffs: D.UTILITY_TARIFFS || {},
+            afterWorkClubs: D.AFTER_WORK_CLUBS || [],
+            cultureGossipTopics: D.CULTURE_GOSSIP_TOPICS || [],
             trueResourceChainTable: D.TRUE_RESOURCE_CHAIN_TABLE || [],
             materialTiers: Object.values(D.MATERIAL_TIERS || {}),
             materials: Object.values(w.catalog.materials).map((m) => {

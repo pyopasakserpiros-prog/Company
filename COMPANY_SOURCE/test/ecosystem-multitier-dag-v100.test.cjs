@@ -12,18 +12,18 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
   const prods = Object.values(cat.products);
 
   // 1. Verify 51 materials across Tiers 0-3 (with separated resourceClass), 32 recipes, and 28 finished products
-  assert.equal(mats.length, 58, "Catalog must contain 51 materials across True T0, Bio Seeds, Cultivated Crops, and Tiers 1-3");
-  assert.equal(prods.length, 36, "Catalog must contain 28 finished products (Tier 4)");
-  assert.equal(Object.keys(D.MATERIAL_RECIPES).length, 35, "All 32 craftable Tier 1-3 materials must have multi-stage recipes");
-  assert.equal(D.RELEASE_VERSION, "2.0.0");
+  assert.equal(mats.length, 64, "Catalog must contain 51 materials across True T0, Bio Seeds, Cultivated Crops, and Tiers 1-3");
+  assert.equal(prods.length, 42, "Catalog must contain 28 finished products (Tier 4)");
+  assert.equal(Object.keys(D.MATERIAL_RECIPES).length, 40, "All 32 craftable Tier 1-3 materials must have multi-stage recipes");
+  assert.equal(D.RELEASE_VERSION, "2.2.0");
 
   const tier0 = mats.filter((m) => m.tier === 0);
   const tier1 = mats.filter((m) => m.tier === 1);
   const tier2 = mats.filter((m) => m.tier === 2);
   const tier3 = mats.filter((m) => m.tier === 3);
   assert.equal(tier0.length, 9, "Only 7 genuine geological/environmental resources are Tier 0 (T0_NATURAL)");
-  assert.equal(tier1.length, 32, "27 Tier 1 materials (4 seeds + 7 cultivated crops + 16 stage-1 refined/soil/fuel/byproducts)");
-  assert.equal(tier2.length, 9, "9 Tier 2 second-stage advanced intermediates");
+  assert.equal(tier1.length, 37, "27 Tier 1 materials (4 seeds + 7 cultivated crops + 16 stage-1 refined/soil/fuel/byproducts)");
+  assert.equal(tier2.length, 10, "9 Tier 2 second-stage advanced intermediates");
   assert.equal(tier3.length, 8, "8 Tier 3 tech-gated high-tech components");
 
   // Verify Chapter 23 Rule: Rice, Sugar, Flour, Paper, and Milk are NEVER Tier 0 True Natural Resources!
@@ -83,7 +83,7 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
   S.command(w, { type: "directorEdit", action: "grantResearch", points: 320 });
 
   const corps = Object.values(w.externalWorld.corporations || {});
-  assert.equal(corps.length, 18, "External world must feature 18 living corporations");
+  assert.equal(corps.length, 22, "External world must feature 18 living corporations");
   assert.ok(corps.some((c) => c.roles.includes("client") && c.roles.includes("supplier")));
   assert.ok(corps.some((c) => c.roles.includes("competitor") && c.roles.includes("client")));
 
@@ -122,11 +122,11 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
 
   const app = API.create("v100-api-snap", { autonomous: true });
   const snap = app.snapshot();
-  assert.equal(snap.releaseVersion, "2.0.0");
+  assert.equal(snap.releaseVersion, "2.2.0");
   assert.equal(snap.catalog.materialTiers.length, 5);
-  assert.equal(snap.catalog.materialRecipes.length, 35);
-  assert.equal(snap.catalog.materials.length, 58);
-  assert.equal(snap.catalog.products.length, 36);
+  assert.equal(snap.catalog.materialRecipes.length, 40);
+  assert.equal(snap.catalog.materials.length, 64);
+  assert.equal(snap.catalog.products.length, 42);
 
   assert.deepEqual(S.audit(w), []);
   assert.deepEqual(Save.validate(w), []);

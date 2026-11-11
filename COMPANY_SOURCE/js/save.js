@@ -726,6 +726,50 @@
         if (m) max = Math.max(max, Number(m[1]));
       }
       add(w.sequence >= max, "sequence would reuse existing IDs");
+      if (w.executiveBoard !== undefined) {
+        add(
+          record(w.executiveBoard) &&
+            int(w.executiveBoard.committedBudgetSatang, 0) &&
+            (w.executiveBoard.paidCapitalTotalSatang === undefined || int(w.executiveBoard.paidCapitalTotalSatang, 0)) &&
+            record(w.executiveBoard.budgetPools) &&
+            int(w.executiveBoard.budgetPools.uncommittedCashSatang, 0) &&
+            Array.isArray(w.executiveBoard.decisionLedger),
+          "invalid executiveBoard state",
+        );
+      }
+      if (w.companyProgression !== undefined) {
+        add(
+          record(w.companyProgression) &&
+            typeof w.companyProgression.currentStageId === "string" &&
+            int(w.companyProgression.currentStageOrder, 1, 6) &&
+            record(w.companyProgression.achievedMilestones) &&
+            Array.isArray(w.companyProgression.growthJournal),
+          "invalid companyProgression state",
+        );
+      }
+      if (w.utilities !== undefined) {
+        add(
+          record(w.utilities) &&
+            int(w.utilities.accruedElectricSatang, 0) &&
+            int(w.utilities.accruedWaterSatang, 0) &&
+            int(w.utilities.totalPaidSatang, 0) &&
+            typeof w.utilities.brownoutActive === "boolean" &&
+            Array.isArray(w.utilities.history),
+          "invalid utilities state",
+        );
+      }
+      if (w.culture !== undefined) {
+        add(
+          record(w.culture) &&
+            finite(w.culture.cohesionScore, 0, 100) &&
+            Array.isArray(w.culture.recentGossip) &&
+            Array.isArray(w.culture.clubActivities) &&
+            Array.isArray(w.culture.townhallAwards) &&
+            Array.isArray(w.culture.alumniSpinoffs) &&
+            Array.isArray(w.culture.parkedVehicles),
+          "invalid culture state",
+        );
+      }
       if (errors.length) return errors;
       errors.push(...S.audit(w));
     } catch (e) {

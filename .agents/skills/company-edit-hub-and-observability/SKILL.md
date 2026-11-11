@@ -12,7 +12,7 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง v1.2.0 ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.2.0; ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
 - Source: `COMPANY_SOURCE/js/debug.js: edit modal; js/api.js: dispatch, snapshot views; js/sim.js: directorEdit, setTrait/grantCash/grantMaterial command branches` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
 - ตัวอย่างหลักฐานเดิม: `COMPANY_SOURCE/test/campus-behavior.test.cjs; autonomous-campus-v010.test.cjs; campus-browser.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)

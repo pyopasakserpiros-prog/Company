@@ -12,10 +12,10 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง source v2.0.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.2.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
-- Source: `COMPANY_SOURCE/js/data.js: GLOBAL_NATIONS, GEOPOLITICAL_EVENTS; COMPANY_SOURCE/js/sim.js: freshGeopolitics, recomputeGeopoliticalMultipliers, changeForeignRegime, triggerGeopoliticalEvent, freshExternalWorld, simulateOffsiteEcosystemDaily, updateExternalWorld, evaluateExternalAssetsDaily, sellMaterialB2B, setCorporationRelation` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
-- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/ecosystem-multitier-dag-v100.test.cjs; scale-logistics-external-v040.test.cjs; geopolitics-living-world-v200.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/). โลกปัจจุบันมี 8 ประเทศ/กลุ่มและ 12 เหตุการณ์; ตรวจผลส่งผ่านราคาจากการทดสอบจริง
+- Source: `COMPANY_SOURCE/js/data.js: GLOBAL_NATIONS, GEOPOLITICAL_EVENTS, EXTERNAL_CORPORATIONS, TRADE_CORRIDORS, FREIGHT_ROUTES; COMPANY_SOURCE/js/sim.js: freshGeopolitics, recomputeGeopoliticalMultipliers, changeForeignRegime, triggerGeopoliticalEvent, freshExternalWorld, simulateOffsiteEcosystemDaily, updateExternalWorld, evaluateExternalAssetsDaily, sellMaterialB2B, setCorporationRelation` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
+- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/ecosystem-multitier-dag-v100.test.cjs; scale-logistics-external-v040.test.cjs; geopolitics-living-world-v200.test.cjs; business-depth-world-corridors-v210.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/). โลกปัจจุบันมี 12 ประเทศ/กลุ่ม (`ID`, `AU`, `IN`, `SG` เพิ่มใน v2.1.0), 16 เหตุการณ์, 22 บริษัทภายนอก และ 4 ทางเดินการค้าภูมิภาค (`TRADE_CORRIDORS`); ตรวจผลส่งผ่านราคาจากการทดสอบจริง
 
 ## หัวข้อที่เสนอให้ขยาย
 

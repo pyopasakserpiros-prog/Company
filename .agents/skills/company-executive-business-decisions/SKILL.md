@@ -12,10 +12,10 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง source v2.0.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.2.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
-- Source: `COMPANY_SOURCE/js/sim.js: evaluateFacilityInvestment, evaluatePlotConstruction, evaluateDebtRepayment, acquireExternalAsset, evaluateNewBusinessOperationsDaily, computeFinancialPools, evaluateExecutiveBoardAndBusinessEntry, recordBoardDecision` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
-- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/campus-behavior.test.cjs; external-assets-production-chains-v060.test.cjs; product-depth-npc-board-v130.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/). ระบบบอร์ดและเงินสดอิสระมีแล้ว; ใช้สกิลนี้ออกแบบการต่อยอด ไม่เขียนเหมือนไม่มี call-site
+- Source: `COMPANY_SOURCE/js/sim.js: evaluateFacilityInvestment, evaluatePlotConstruction, evaluateDebtRepayment, acquireExternalAsset, acquireFleetVehicle, evaluateNewBusinessOperationsDaily, computeFinancialPools, reserveBoardBudget, consumeBoardReservation, cancelBoardReservation, evaluateExecutiveBoardAndBusinessEntry, recordBoardDecision` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน; ใน v2.1.0 บอร์ดประเมินเวลา 10:45 น. `tod(w) === 645`, แยกงบที่จองกับทุนที่จ่ายแล้ว, รองรับบริษัท <10 คน และบังคับใช้ `nextReviewDay`)
+- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/campus-behavior.test.cjs; external-assets-production-chains-v060.test.cjs; product-depth-npc-board-v130.test.cjs; business-depth-world-corridors-v210.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/). ระบบบอร์ดและเงินสดอิสระมีแล้ว; ใช้สกิลนี้ออกแบบการต่อยอด ไม่เขียนเหมือนไม่มี call-site
 
 ## หัวข้อที่เสนอให้ขยาย
 

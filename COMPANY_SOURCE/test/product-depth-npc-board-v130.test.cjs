@@ -8,11 +8,11 @@ const API = require("../js/api.js");
 
 test("v1.3.0 Chapter 28 & 30: 58 Materials with true physical/chemical origins (N-P-K from Nitrogen Ammonia + Phosphate/Potash), 36 Products across 10 Families, 9 Capability Domains, and 6 B2B Industrial Services", () => {
   const cat = D.createCatalog();
-  assert.strictEqual(D.RELEASE_VERSION, "2.0.0");
-  assert.strictEqual(Object.keys(cat.materials).length, 58, "Catalog has 58 materials");
-  assert.strictEqual(Object.keys(cat.products).length, 36, "Catalog has 36 products");
-  assert.strictEqual(Object.keys(D.MATERIAL_RECIPES).length, 35, "Catalog has 35 material recipes");
-  assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 6, "Catalog has 6 B2B industrial services");
+  assert.strictEqual(D.RELEASE_VERSION, "2.2.0");
+  assert.strictEqual(Object.keys(cat.materials).length, 64, "Catalog has 58 materials");
+  assert.strictEqual(Object.keys(cat.products).length, 42, "Catalog has 36 products");
+  assert.strictEqual(Object.keys(D.MATERIAL_RECIPES).length, 40, "Catalog has 35 material recipes");
+  assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 10, "Catalog has 6 B2B industrial services");
   assert.strictEqual(Object.keys(D.CAPABILITY_DOMAINS).length, 9, "Catalog has 9 capability domains");
   assert.strictEqual(Object.keys(D.PRODUCT_FAMILIES).length, 10, "Catalog has 10 product families");
   assert.deepStrictEqual(D.validateCatalog(cat), []);
@@ -143,9 +143,9 @@ test("v1.3.0 Chapter 29 & 31 Acceptance Scenarios: Executive Board Decision Ledg
 
   const app = API.create("v130-api-snapshot", { autonomous: true });
   const snap = app.snapshot();
-  assert.strictEqual(snap.releaseVersion, "2.0.0");
+  assert.strictEqual(snap.releaseVersion, "2.2.0");
   assert.strictEqual(snap.catalog.capabilityDomains.length, 9);
   assert.strictEqual(snap.catalog.productFamilies.length, 10);
-  assert.strictEqual(snap.catalog.industrialServices.length, 6);
+  assert.strictEqual(snap.catalog.industrialServices.length, 10);
   assert.ok(snap.executiveBoard && Array.isArray(snap.executiveBoard.decisionLedger));
 });

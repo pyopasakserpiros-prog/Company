@@ -728,6 +728,53 @@
       ctx.fillStyle = "#dfd3b6";
       ctx.fillRect(brX + 2, canalY, 2.5 * TS - 4, canalH);
 
+      // v2.2.0: Employee Personal Vehicle Parking Lot (ลานจอดรถพนักงานตามฐานะ) & Fleet Bay
+      const parkedVehicles = snap.culture?.parkedVehicles || [];
+      const parkX = ox - 4.8 * TS;
+      const parkY = oy + 4.5 * TS;
+      const parkW = 4.2 * TS;
+      const parkH = 11.5 * TS;
+      ctx.fillStyle = "#545d63";
+      roundRectPath(ctx, parkX, parkY, parkW, parkH, 8);
+      ctx.fill();
+      ctx.strokeStyle = "#d8c690";
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(22, 42, 36, 0.86)";
+      roundRectPath(ctx, parkX + 6, parkY + 6, parkW - 12, 20, 5);
+      ctx.fill();
+      ctx.fillStyle = "#ffe89e";
+      ctx.font = `700 9.5px ${FONT}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`🚗 ลานจอดรถ (${parkedVehicles.length})`, parkX + parkW / 2, parkY + 16);
+
+      const maxSlots = 12;
+      for (let i = 0; i < maxSlots; i++) {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const sx = parkX + 10 + col * 58;
+        const sy = parkY + 34 + row * 52;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx, sy, 48, 42);
+        const veh = parkedVehicles[i];
+        if (veh) {
+          ctx.fillStyle = veh.color || "#2980b9";
+          roundRectPath(ctx, sx + 4, sy + 5, 40, 22, 5);
+          ctx.fill();
+          ctx.fillStyle = "#f4efe1";
+          ctx.font = "12px sans-serif";
+          ctx.fillText(veh.icon || "🚗", sx + 24, sy + 16);
+          ctx.fillStyle = "#e8f8e0";
+          ctx.font = `700 7.5px ${FONT}`;
+          ctx.fillText((veh.ownerName || "").slice(0, 7), sx + 24, sy + 35);
+        }
+      }
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+
       ctx.strokeStyle = "#868b7a";
       ctx.lineWidth = 8;
       ctx.strokeRect(campX, campY, campW, campH);

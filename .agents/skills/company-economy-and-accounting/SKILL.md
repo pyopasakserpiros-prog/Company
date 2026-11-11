@@ -12,10 +12,10 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง v1.2.0 ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.2.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
-- Source: `COMPANY_SOURCE/js/economy.js: post, auditFinance; js/sim.js: pay, payBills, audit, sellMaterialB2B, acquireExternalAsset, directorEdit` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
-- ตัวอย่างหลักฐานเดิม: `COMPANY_SOURCE/test/layout-economy.test.cjs; continuity.test.cjs; simulation.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)
+- Source: `COMPANY_SOURCE/js/economy.js: post, auditFinance; js/sim.js: pay, payBills, audit, computeFinancialPools, reserveBoardBudget, consumeBoardReservation, sellMaterialB2B, acquireExternalAsset, acquireFleetVehicle, directorEdit` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
+- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/layout-economy.test.cjs; continuity.test.cjs; simulation.test.cjs; business-depth-world-corridors-v210.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)
 
 ## หัวข้อที่เสนอให้ขยาย
 

@@ -1,5 +1,43 @@
-# สถานะ Source ของ Company Simulation
+# สถานะ Company Simulation — รุ่นเกม v2.2.0 (Release-Ready Holistic Upgrade)
 
-เกมบน `main` เป็นรุ่น **v2.0.0**. เอกสารสถานะหลักที่รวบรวมระบบปัจจุบัน รายงานทุกแพตช์ ผลทดสอบ และ ideas ที่ยังเหลืออยู่คือ [project_status_and_ai_onboarding.md](../project_status_and_ai_onboarding.md)
+อัปเดตสถานะจาก source ของ `main` ที่ฐาน commit `6182e0a662bf1dfe47360e64e20e635ea07abeae` ผ่านแพตช์ `v2.1.0` และยกระดับสู่รุ่นพร้อมเล่น **v2.2.0** (`sme-living-progression-and-holistic-realism-2026-11`) วันที่ 11 พฤศจิกายน 2026 เอกสารนี้สรุปสิ่งที่ตรวจพบใน repo และชุดทดสอบจริง (`140/140` tests)
 
-ไฟล์นี้อยู่ใน `COMPANY_SOURCE/` เพื่อให้มากับ source/ZIP และป้องกันสำเนาสถานะเก่าขัดกับเอกสารหลัก ให้ใช้เอกสารหลักเป็นแหล่งข้อมูลปัจจุบัน อ่าน [AGENTS.md](../AGENTS.md), [START_HERE_FOR_AI.md](../START_HERE_FOR_AI.md) และ [ทะเบียนงาน](../docs/company/AGENT_WORK_STATUS.md) ก่อนเริ่มงาน
+## รุ่นและขอบเขต
+
+- **รุ่นเกม:** `D.VERSION` และ `D.RELEASE_VERSION` = `2.2.0` ใน `COMPANY_SOURCE/js/data.js` และ `COMPANY_SOURCE/js/sim.js`
+- **รุ่นข้อมูล catalog:** `1.2.0`; **รุ่น package.json:** `0.1.0`; **รุ่นสถานะโลกใน sim/save:** `0.1.0`; **Human Core:** `1.0.0` — ตัวเลขเหล่านี้เป็นคนละส่วน ไม่ใช่รุ่นเกม
+- เกมเป็นบริษัทจำลองหลายธุรกิจที่ NPC และผู้บริหารขับเคลื่อนกิจการเองตั้งแต่ระดับห้องแถว/เวิร์กช็อปตั้งต้น (Micro SME) ไปจนถึงกลุ่มบริษัทมหาชนระดับภูมิภาค ผู้เล่นเฝ้าดู ปรับเวลา/มุมมอง และใช้ Sandbox Edit Hub ทดลองแก้ข้อมูลบริษัท/ตัวละคร/ทรัพยากรเพื่อดูผลลูกโซ่ต่อโลก NPC
+- แกน `COMPANY_SOURCE/js/human-core.js` ถูกล็อก SHA-256 `fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32` ครอบคลุมบุคลิก 14 ค่า ค่านิยม 18 ค่า ความถนัด 30 ค่า และสภาวะ 12 ค่า
+
+## สิ่งที่มีในเกมปัจจุบัน (v2.2.0)
+
+| ระบบ | สิ่งที่ยืนยันได้ใน source/การทดสอบ |
+|---|---|
+| บันไดการเติบโต SME 6 ระยะ & 12 ก้าวสำคัญ (`w.companyProgression`) | เติบโตตามผลงานจริง 6 ระยะ (`D.SME_GROWTH_STAGES`: 1. ห้องแถว/เวิร์กช็อปตั้งต้น ➔ 2. โรงงาน SME มาตรฐาน ➔ 3. บริษัทผู้ผลิตขนาดกลาง ➔ 4. เครือข่ายซัพพลายเชนครบวงจร ➔ 5. บริษัทมหาชน PCL ➔ 6. กลุ่มบริษัทอุตสาหกรรมระดับภูมิภาค) พร้อมบันทึก 12 ก้าวแรกของกิจการ (`D.SME_MILESTONE_CATALOG`) และขยายตัวคูณวงเงินสินเชื่อ/ความเชื่อมั่น B2B |
+| นิคม อาคาร และลานจอดรถพนักงาน | แผนที่นิคม 56×34, แปลงก่อสร้าง 14 จุด, โครงสร้างองค์กร 4 ชั้นและสายอาชีพ 10 ระดับ พร้อมวาด **ลานจอดรถส่วนตัวของพนักงาน (`w.culture.parkedVehicles`)** บนผัง 2D Canvas ตามฐานะจริง (มอเตอร์ไซค์ 🏍️, อีโคคาร์ 🚗, รถกระบะ 🛻, รถซีดานผู้บริหาร 🚙) |
+| มิเตอร์ค่าไฟ-ค่าน้ำ โซลาร์รูฟท็อป และไฟตก (`w.utilities`) | คำนวณหน่วยไฟฟ้า (`dailyKwh`) ตามระดับอาคาร จำนวนไลน์ผลิต โหมดเดินเครื่อง (`craft_precision` ประหยัดไฟ vs `mass_throughput` กินไฟสูง) และชั่วโมง OT ช่วง Peak พร้อมหักลบไฟโซลาร์ (`solarPlant` / `offsite_solar_wind_farm`) และน้ำรีไซเคิล (`waterPlant`) เรียกเก็บทุก 7 วัน หากค้างชำระ 2 รอบเกิดภาวะ **ไฟตก (`brownoutActive`)** ลดความเร็วประกอบลง 20% |
+| วัฒนธรรมองค์กร ข่าวลือตู้กดน้ำ ชมรม และบริษัท Spin-off (`w.culture`) | พนักงานคุยข่าวลือข้างตู้กดน้ำตามสถานะจริงของบริษัท (`recentGossip`), ร่วมชมรมหลังเลิกงาน 3 ชมรม (`clubActivities`), รับรางวัลพนักงานดีเด่นประจำรอบ (`evaluateTownhallAwards`), และพนักงานอาวุโสที่มีทุน/แรงผลักดันสามารถแยกตัวไปตั้งบริษัท **Spin-off SME (`evaluateEmployeeSpinoff`)** ใน `w.externalWorld.corporations` ทั้งแบบพันธมิตรคู่ค้า (`partner`) และคู่แข่ง (`rival`) |
+| แค็ตตาล็อกอุตสาหกรรม | วัตถุดิบ **64** ชนิดใน 10 คลาส, สูตรแปรรูป **40** สูตร, สินค้า **42** ชนิดใน 10 ตระกูล (เพิ่มสินค้าตั้งต้นหมุนเงินไว `braided_fast_charge_kit` และ `artisan_chili_paste_jar`), ห่วงโซ่การผลิต **13** สาย และโดเมนความสามารถ 9 ด้าน |
+| บริการวิศวกรรมและค้าส่ง B2B ครบ 10 แบบ | **10 แบบ (`D.INDUSTRIAL_SERVICES`):** `calibration_lab`, `field_maintenance`, `industrial_recycling`, `battery_second_life_lab`, `returnable_pallet_pool`, `cold_storage_3pl`, `energy_epc_install`, `b2b_technical_academy`, `wholesale_distribution` (ค้าส่งและกระจายวัตถุดิบ B2B พร้อมกติกาป้องกันการซื้อขายวนกับคู่ค้ารายเดิม), และ `toll_smelting_extrusion` (รับจ้างถลุงแร่และรีดอะลูมิเนียมแยก Custody ลูกค้า พร้อมเกิดกากแร่ `mineral_slag_mud`) |
+| การตัดสินใจลงทุนของ NPC (`w.executiveBoard`) | ประเมินในเวลางานจริง (`10:45` น.), แยกงบที่จองไว้ (`committedBudgetSatang`) ออกจากทุนที่จ่ายแล้ว (`paidCapitalTotalSatang`), รองรับบริษัทเล็ก `<10` คน, จัดอันดับบริการ/ลูกค้าตามความพร้อม และบังคับใช้ `nextReviewDay` cooldown |
+| โลกภายนอก 12 ประเทศ & 4 ระเบียงการค้า | 12 ประเทศ (`TH`, `US`, `CN`, `JP`, `EU`, `ME`, `RU_EE`, `ASEAN`, `ID`, `AU`, `IN`, `SG`), 16 เหตุการณ์ภูมิรัฐศาสตร์, 22+ บริษัทภายนอก (รวมบริษัท Spin-off ศิษย์เก่า), 6 เส้นทางขนส่ง และ 4 ระเบียงการค้าภูมิภาค (`D.TRADE_CORRIDORS`) |
+| Edit Hub สำหรับผู้เล่นที่ไม่รู้โค้ด | แยกปุ่มเติมเงินบาทเข้า **บัญชีบริษัท (`grantCash`)** ออกจาก **กระเป๋าเงินออมส่วนตัวของพนักงาน (`grantPersonWallet`)** โดยรักษาสมการบัญชี 100%, มีตัวกรองหมวดวัตถุดิบ และแสดงคำอธิบายแนวโน้มพฤติกรรมเมื่อปรับนิสัย/ค่านิยม |
+
+## ผลตรวจล่าสุดใน checkout นี้ (v2.2.0)
+
+| คำสั่ง | ผล |
+|---|---|
+| `npm test` | ผ่าน **140/140 tests** (รวมชุดทดสอบ `test/business-depth-world-corridors-v210.test.cjs` และ `test/sme-growth-utilities-culture-v220.test.cjs`) |
+| `npm run check` | ผ่าน รวมการตรวจ Locked Human Core hash (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`) |
+| `npm run build` | ผ่าน; สร้างไฟล์ HTML เดี่ยว `1,455,926` UTF-8 bytes (`CompanyFoundation_single.html` และ `Company_single.html`) |
+| `node tools/benchmark.cjs` | ผ่าน; เฉลี่ย **0.987 ms/tick** (`p95 = 1.528 ms`) ที่ 500 NPC (ต่ำกว่าเพดาน `< 2.0 ms/tick`) |
+| `npm run test:browser` | ไม่ได้รันในคอนเทนเนอร์ออฟไลน์นี้เนื่องจากไม่มีแพ็กเกจ npm `playwright` ติดตั้งไว้ล่วงหน้า (รักษา DOM selectors และเงื่อนไขของ `test/campus-browser.cjs` ครบ 100%) |
+
+## ประวัติรุ่นและรายงานที่มี
+
+| รุ่น/รายงาน | สาระสำคัญ |
+|---|---|
+| v0.1.0 – v1.3.0 | โครงสร้างพื้นฐาน อาชีพ 10 ระดับ นิคม 56×34 ต้นน้ำเกษตร 8 โมเดลธุรกิจ และ NPC Executive Board — ดูดัชนีใน `docs/company/PATCH_REPORTS/` |
+| v2.0.0 | Master Skill สำหรับยุค 2.0 และโลกภูมิรัฐศาสตร์มีชีวิต 8 ประเทศ 12 เหตุการณ์ — [รายงาน v2.0.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.0.0.md) |
+| v2.1.0 | แก้บั๊ก NPC business-entry ครบ 7 จุด, สายโลหะ/อะลูมิเนียมขั้นบันได, 12 ประเทศ/16 เหตุการณ์โลก และทางเดินการค้า 4 สาย — [รายงาน v2.1.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.1.0.md) |
+| v2.2.0 | บันไดการเติบโต SME 6 ระยะ & 12 ก้าวสำคัญ, มิเตอร์ค่าไฟ-ค่าน้ำ/โซลาร์/ไฟตก Brownout, วัฒนธรรมองค์กร/ข่าวลือตู้กดน้ำ/ชมรม/ลานจอดรถ/บริษัท Spin-off ศิษย์เก่า, บริการ B2B ครบ 10 แบบ, สินค้าตั้งต้นหมุนเงินไว 42 ชนิด และ Edit Hub แยกบัญชีบริษัท/กระเป๋าพนักงาน — [รายงาน v2.2.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.2.0.md) |

@@ -12,7 +12,7 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง v1.2.0 ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.2.0; ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
 - Source: `COMPANY_SOURCE/js/data.js: registerSkill, registerRole, registerMaterial, registerProduct, registerTaskKind, validateCatalog; js/sim.js: addSkill/addRole/addMaterial/addProduct extension helpers` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
 - ตัวอย่างหลักฐานเดิม: `COMPANY_SOURCE/test/continuity.test.cjs; core-baseline.test.cjs; quota-and-multi-industry.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)

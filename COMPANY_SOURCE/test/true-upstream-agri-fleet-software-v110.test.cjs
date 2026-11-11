@@ -18,7 +18,7 @@ test("v1.1.0 Chapter 23 True Upstream & 8-Stage Agricultural Cycle: 2+ consecuti
   assert.equal(w.catalog.materials.pack_carton.isTrueNaturalResource, false);
   assert.equal(w.catalog.materials.silica_bauxite_ore.isTrueNaturalResource, true);
   assert.equal(w.catalog.materials.raw_water_m3.isTrueNaturalResource, true);
-  assert.equal(D.TRUE_RESOURCE_CHAIN_TABLE.length, 8, "Must expose 8 end-to-end true resource chain definitions");
+  assert.equal(D.TRUE_RESOURCE_CHAIN_TABLE.length, 9, "Must expose 8 end-to-end true resource chain definitions");
 
   // 2. Grant milled_rice and artisan_flour and verify they CANNOT be planted as seed or sorted into seed!
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "milled_rice", quantity: 10 });
@@ -296,10 +296,10 @@ test("v1.1.0 Chapter 20 Software & SaaS App Business: 30/40/30 milestone account
 
 test("8. Factory Sector Process Models (Food Spoilage -> Compost, Electronics RMA, Automotive Tooling Changeover, Biomed Sterile COA) & Industrial B2B Services (Calibration, Field SLA, Eco Recycling) preserve 100% audit invariants", () => {
   const w = S.create("sector-and-service-v120", { autonomous: true });
-  assert.strictEqual(D.RELEASE_VERSION, "2.0.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.2.0");
   assert.strictEqual(D.BUSINESS_PROCESS_MODELS.length, 8);
   assert.strictEqual(Object.keys(D.SECTOR_PROCESS_MODELS).length, 4);
-  assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 6);
+  assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 10);
 
   // Grant cash, research, and materials for comprehensive process testing
   S.command(w, { type: "directorEdit", action: "grantCash", amount: 18000000 });

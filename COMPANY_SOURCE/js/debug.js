@@ -304,6 +304,18 @@
           val: v.company.reputation.toFixed(0),
           cls: v.company.reputation >= 60 ? "ok" : "",
         },
+        {
+          ic: "🌱",
+          label: "ระดับกิจการ",
+          val: v.companyProgression?.currentStageBadgeTh || "🌱 ระยะที่ 1/6",
+          cls: (v.companyProgression?.currentStageOrder || 1) >= 3 ? "ok" : "",
+        },
+        {
+          ic: v.utilities?.brownoutActive ? "⚠️" : "⚡",
+          label: "ค่าไฟ/โซลาร์",
+          val: v.utilities?.brownoutActive ? "ไฟตก (Brownout)" : `${v.utilities?.netKwh || 0} kWh`,
+          cls: v.utilities?.brownoutActive ? "warn" : "ok",
+        },
       ];
       resRow.replaceChildren(
         ...pills.map((p) => {
@@ -2038,7 +2050,7 @@
         { id: "software", label: "💻 ซอฟต์แวร์ & SaaS (บท 20)" },
         { id: "logistics", label: "🏭 ไลน์ผลิต & โลจิสติกส์โรงงาน" },
         { id: "stock", label: `คลังวัตถุดิบ ${v.catalog?.materials?.length || 51} ชนิด` },
-        { id: "rnd", label: "แบบแปลนวิจัย 28 ชนิด" },
+        { id: "rnd", label: `แบบแปลนวิจัย ${v.catalog?.products?.length || 42} ชนิด` },
       ]);
       if (uiState.subTab === "chains") {
         body.replaceChildren(...renderExternalAssetsAndChainsView(v));
@@ -2387,12 +2399,66 @@
       byId("shTitle").textContent = "⚖️ กลยุทธ์ผู้บริหาร โลกภายนอก ตลาดหุ้น และนโยบายรัฐ";
       setSheetTabs([
         { id: "directives", label: "สถานะบริษัทและ CEO" },
-        { id: "geopolitics", label: "🌍 ภูมิรัฐศาสตร์โลก รัฐบาล 8 ประเทศ & พงศาวดารโลก (Era 2.0)" },
+        { id: "sme_culture", label: "🌱 การเติบโต SME 6 ระยะ & วัฒนธรรม/ค่าไฟน้ำ (v2.2)" },
+        { id: "geopolitics", label: "🌍 ภูมิรัฐศาสตร์โลก 12 ประเทศ & ระเบียงการค้า (v2.1)" },
         { id: "board_ledger", label: "🏛️ สมุดมติบอร์ดบริหาร & โดเมนความรู้ (บท 29/32)" },
         { id: "assets", label: "🌾 สินทรัพย์ภายนอก & ห่วงโซ่ลูกโซ่" },
         { id: "external", label: "🌐 คู่ค้า & คู่แข่ง" },
         { id: "macro", label: "📈 ตลาดหุ้น & รัฐบาล" },
       ]);
+      if (uiState.subTab === "sme_culture") {
+        const prog = v.companyProgression || { currentStageBadgeTh: "🌱 ระยะที่ 1/6", currentStageNameTh: "ห้องแถวและเวิร์กช็อปตั้งต้น", currentStageOrder: 1, achievedMilestones: {}, growthJournal: [] };
+        const util = v.utilities || { dailyKwh: 0, solarOffsetKwh: 0, netKwh: 0, dailyWaterM3: 0, waterOffsetM3: 0, netWaterM3: 0, accruedElectricSatang: 0, accruedWaterSatang: 0, totalPaidSatang: 0, totalSavedBySolarWaterSatang: 0, brownoutActive: false, history: [] };
+        const cult = v.culture || { cohesionScore: 68, recentGossip: [], clubActivities: [], townhallAwards: [], alumniSpinoffs: [], parkedVehicles: [] };
+
+        const stageCard = el("div", "card");
+        stageCard.append(
+          el("h3", "", `🌱 บันไดการเติบโตของกิจการ 6 ระยะ (SME-to-Conglomerate Growth Ladder — ปัจจุบัน: ${prog.currentStageBadgeTh} ${prog.currentStageNameTh})`),
+          el("div", "muted", prog.currentStageSummaryTh || "เฝ้าดูบริษัทเติบโตจากห้องแถวเล็กๆ สู่โรงงานมาตรฐาน เครือข่ายซัพพลายเชน และมหาชนตามผลงานจริง"),
+          el("div", "logrow", `🏦 ตัวคูณวงเงินสินเชื่อตามระดับกิจการ: ×${prog.creditLimitMultiplier || 1.0} • 🤝 โบนัสความเชื่อมั่นคู่ค้า B2B: +${prog.b2bTrustBonus || 0} คะแนน • 🏆 ก้าวสำคัญที่บรรลุแล้ว: ${Object.keys(prog.achievedMilestones || {}).length}/12 รายการ`)
+        );
+        for (const st of v.catalog?.smeGrowthStages || []) {
+          const isCur = st.order === prog.currentStageOrder;
+          const isDone = st.order < prog.currentStageOrder;
+          stageCard.append(
+            el("div", "logrow", `${isCur ? "🟢 [ระดับปัจจุบัน]" : isDone ? "✅ [ผ่านแล้ว]" : "⚪ [เป้าหมายถัดไป]"} ${st.badgeTh} ${st.nameTh} — เงื่อนไข: ทีมงาน ≥ ${st.minEmployees} คน, ส่งมอบ ≥ ${st.minOrdersPaid} ออเดอร์, ชื่อเสียง ≥ ${st.minReputation}, อาคารขยาย/สินทรัพย์ ≥ ${st.minPlotsOrAssets} แห่ง`)
+          );
+        }
+
+        const msCard = el("div", "card");
+        msCard.append(el("h3", "", "🏅 บันทึก 12 ก้าวแรกแห่งความสำเร็จของ SME (Organic SME Milestones & Timeline)"));
+        for (const mSpec of v.catalog?.smeMilestoneCatalog || []) {
+          const done = prog.achievedMilestones?.[mSpec.id];
+          msCard.append(
+            el("div", "logrow", `${done ? `✅ [สำเร็จวันที่ ${done.day}]` : "⏳ [รอปลดล็อกตามเหตุการณ์จริง]"} ${mSpec.icon} ${mSpec.titleTh} — ${mSpec.descTh}`)
+          );
+        }
+
+        const utilCard = el("div", "card");
+        utilCard.append(
+          el("h3", "", "⚡💧 ระบบมิเตอร์ไฟฟ้า-น้ำประปาโรงงาน โซลาร์รูฟท็อป และความเสี่ยงไฟตก (Real SME Utility Metering & Solar Offset)"),
+          el("div", "logrow", `🔌 ไฟฟ้ารายวัน: ใช้รวม ${util.dailyKwh} kWh | โซลาร์ช่วยผลิต ${util.solarOffsetKwh} kWh ➔ ใช้ไฟสุทธิ ${util.netKwh} kWh • 🚿 น้ำประปารายวัน: ใช้รวม ${util.dailyWaterM3} ลบ.ม. | น้ำรีไซเคิลช่วยลด ${util.waterOffsetM3} ลบ.ม. ➔ ใช้น้ำสุทธิ ${util.netWaterM3} ลบ.ม.`),
+          el("div", "logrow", `🧾 ยอดค่าไฟค้างชำระรอบนี้: ${moneyFull(util.accruedElectricSatang || 0)} • ยอดค่าน้ำค้างชำระ: ${moneyFull(util.accruedWaterSatang || 0)} • 💚 ประหยัดเงินสะสมจากโซลาร์และบำบัดน้ำ: +${moneyFull(util.totalSavedBySolarWaterSatang || 0)} • สถานะกระแสไฟ: ${util.brownoutActive ? "🔴 ไฟตก (Brownout -20% ความเร็วผลิต)" : "🟢 ปกติเต็มกำลัง"}`)
+        );
+
+        const cultCard = el("div", "card");
+        cultCard.append(
+          el("h3", "", `🍻 วัฒนธรรมองค์กร ข่าวลือข้างตู้กดน้ำ ชมรมหลังเลิกงาน ลานจอดรถ และบริษัท Spin-off ศิษย์เก่า (ดัชนีความผูกพัน ${cult.cohesionScore}/100)`),
+          el("div", "logrow", `🚗 รถส่วนตัวพนักงานในลานจอดรถวันนี้: ${(cult.parkedVehicles || []).length} คัน • 🏆 รางวัลพนักงานดีเด่นสะสม: ${(cult.townhallAwards || []).length} ครั้ง • 🚀 บริษัท Spin-off ที่ก่อตั้งโดยอดีตพนักงาน: ${(cult.alumniSpinoffs || []).length} แห่ง`)
+        );
+        for (const g of (cult.recentGossip || []).slice(0, 5)) {
+          cultCard.append(el("div", "logrow", `[วันที่ ${g.day}] ${g.badgeTh} (${g.speakerName} คุยกับ ${g.listenerName}): "${g.topicTh}"`));
+        }
+        for (const cl of (cult.clubActivities || []).slice(0, 4)) {
+          cultCard.append(el("div", "logrow", `[วันที่ ${cl.day}] ${cl.icon} ${cl.nameTh}: สมาชิกที่เข้าร่วม (${(cl.participantNames || []).join(", ")}) — ${cl.summaryTh}`));
+        }
+        for (const sp of (cult.alumniSpinoffs || []).slice(0, 5)) {
+          cultCard.append(el("div", "logrow", `🚀 [วันที่ ${sp.day}] ${sp.founderName} (${sp.roleNameTh}) ก่อตั้ง "${sp.corpNameTh}" สถานะ: ${sp.relationshipMode === "partner" ? "🤝 พันธมิตรคู่ค้า" : "⚔️ คู่แข่งในตลาด"} — ${sp.reasonTh}`));
+        }
+
+        body.replaceChildren(stageCard, msCard, utilCard, cultCard);
+        return;
+      }
       if (uiState.subTab === "geopolitics") {
         const geo = v.externalWorld?.geopolitics || { nations: {}, activeEvent: null, fxRateBahtPerUsd: 34.5, globalOilIndex: 1.0, materialPriceMultipliers: {}, sectorDemandMultipliers: {} };
         const wChron = v.externalWorld?.worldChronicle || [];
@@ -2426,8 +2492,20 @@
         activeEvCard.append(el("div", "logrow", `📊 ตัวคูณอุปสงค์และราคาส่งออกรายอุตสาหกรรม: ${secMultTxt}`));
 
         const nationsCard = el("div", "card");
+        const corridorsCard = el("div", "card");
+        corridorsCard.append(
+          el("h3", "", "🚢 ระเบียงการค้าและห่วงโซ่อุปทานภูมิภาคทั้ง 4 สาย (Regional Trade Corridors — v2.1.0)"),
+          el("div", "muted", "เชื่อมโยงการเปลี่ยนขั้วรัฐบาลและเหตุการณ์โลกเข้ากับภาษีศุลกากร เวลานำเข้าวัตถุดิบ และตัวคูณอุปสงค์รายอุตสาหกรรม")
+        );
+        for (const tc of Object.values(geo.tradeCorridors || {})) {
+          const stChip = tc.status === "restricted" ? "🔴 ตึงตัว/จำกัดโควตา" : tc.status === "booming" ? "🟢 คึกคักพิเศษ" : tc.status === "congested" ? "🟡 คับคั่ง" : "🟢 เปิดปกติ";
+          corridorsCard.append(
+            el("div", "logrow", `${tc.icon || "🚢"} ${tc.nameTh} [${stChip}] • ภาษีเฉลี่ย ${tc.tariffPct >= 0 ? "+" : ""}${tc.tariffPct}% • เวลานำเข้า ×${tc.leadTimeMod} • ตัวคูณอุปสงค์ ×${tc.demandMod} — ${tc.summaryTh}`)
+          );
+        }
+
         nationsCard.append(
-          el("h3", "", "🏛️ รัฐบาลและขั้วนโยบายของ 8 ประเทศมหาอำนาจและกลุ่มเศรษฐกิจคู่ค้า (Foreign Governments & Regimes)"),
+          el("h3", "", "🏛️ รัฐบาลและขั้วนโยบายของ 12 ประเทศมหาอำนาจและกลุ่มเศรษฐกิจคู่ค้า (Foreign Governments & Regimes)"),
           el("div", "muted", "เมื่อประเทศมหาอำนาจหรือคู่ค้าเปลี่ยนรัฐบาล (จากการเลือกตั้งหรือการปรับขั้วนโยบาย) จะเปลี่ยนกำแพงภาษีและราคาวัตถุดิบเฉพาะกลุ่มทันที"),
         );
         for (const nat of Object.values(geo.nations || {})) {
@@ -2461,7 +2539,7 @@
           );
         }
 
-        body.replaceChildren(activeEvCard, nationsCard, worldChronCard);
+        body.replaceChildren(activeEvCard, corridorsCard, nationsCard, worldChronCard);
         return;
       }
       if (uiState.subTab === "board_ledger") {
@@ -2485,7 +2563,7 @@
           el(
             "div",
             "logrow",
-            `🟢 เงินสดอิสระพร้อมพิจารณาลงทุน (Uncommitted Cash): ${moneyFull(pools.uncommittedCashSatang || 0)} • 📌 งบที่อนุมัติผูกพันแล้ว: ${moneyFull(eb.committedBudgetSatang || 0)} • 🧾 ลูกหนี้การค้ารอเรียกเก็บ: ${moneyFull(pools.receivableSatang || 0)}`,
+            `🟢 เงินสดอิสระพร้อมพิจารณาลงทุน (Uncommitted Cash): ${moneyFull(pools.uncommittedCashSatang || 0)} • 📌 งบจองรอดำเนินการ (Open Reservations): ${moneyFull(eb.committedBudgetSatang || 0)} • 🏗️ งบลงทุนที่จ่ายจริงสะสม: ${moneyFull(eb.paidCapitalTotalSatang || 0)} • 🧾 ลูกหนี้การค้ารอเรียกเก็บ: ${moneyFull(pools.receivableSatang || 0)}`,
           ),
         );
 
@@ -2553,7 +2631,7 @@
           el(
             "h3",
             "",
-            `🏢 ทำเนียบ 18 บริษัทภายนอกหลายบทบาท (เป็นทั้งคู่ค้า ซัพพลายเออร์ พันธมิตร และคู่แข่ง • ส่วนแบ่งตลาดของเรา ${ext.ourMarketSharePct || 2.0}%)`,
+            `🏢 ทำเนียบ 22 บริษัทภายนอกหลายบทบาท (เป็นทั้งคู่ค้า ซัพพลายเออร์ พันธมิตร และคู่แข่ง • ส่วนแบ่งตลาดของเรา ${ext.ourMarketSharePct || 2.0}%)`,
           ),
           el(
             "div",
@@ -2712,12 +2790,68 @@
       ]);
 
       if (uiState.subTab === "edit") {
+        const financeExperimentCard = el("div", "card edit-section");
+        financeExperimentCard.append(
+          el("h3", "", "💰 ทดลองมอบเงินบาท (แยกบัญชีเงินสดบริษัท vs กระเป๋าเงินออมส่วนตัวพนักงาน)"),
+          el("div", "muted", "เลือกเติมเงินหน่วยบาทเข้าบัญชีบริษัทเพื่อดูว่า CEO จะนำไปชำระหนี้หรือขยายธุรกิจใด หรือเติมเข้ากระเป๋าส่วนตัวของพนักงานที่เลือกเพื่อดูการซื้อรถ/ซื้อบ้าน/เปิดบริษัท Spin-off โดยไม่ปะปนสองบัญชี")
+        );
+        const compCashRow = el("div", "");
+        compCashRow.style.display = "flex";
+        compCashRow.style.flexWrap = "wrap";
+        compCashRow.style.gap = "6px";
+        compCashRow.style.marginTop = "6px";
+        for (const [labelBaht, satangAmt] of [
+          ["🏦 เติมเงินสดบริษัท +฿50,000", 5000000],
+          ["🏦 เติมเงินสดบริษัท +฿250,000", 25000000],
+          ["🏦 เติมเงินสดบริษัท +฿1,000,000", 100000000],
+        ]) {
+          const b = el("button", "btn pri", labelBaht);
+          b.type = "button";
+          b.onclick = () =>
+            dispatch(
+              { type: "directorEdit", action: "grantCash", amount: satangAmt },
+              `เพิ่มเงินสดบริษัทเรียบร้อยแล้ว (${labelBaht})`,
+            );
+          compCashRow.append(b);
+        }
+        financeExperimentCard.append(compCashRow);
+
         const inventory = el("div", "card edit-section");
         inventory.append(el("h3", "", "📦 เสกวัตถุดิบ"),
-          el("div", "muted", "เลือกชนิดและจำนวนเพื่อเพิ่มเข้าในคลัง"));
+          el("div", "muted", "กรองหมวดหมู่หรือเลือกชนิดวัตถุดิบและจำนวนเพื่อเพิ่มเข้าในคลัง (ไม่ต้องจำรหัส ID)"));
+        const matCatRow = el("div", "");
+        matCatRow.style.display = "flex";
+        matCatRow.style.flexWrap = "wrap";
+        matCatRow.style.gap = "4px";
+        matCatRow.style.marginBottom = "6px";
+        for (const [catKey, catLabel] of [
+          ["ALL", "ทุกหมวด (64 ชนิด)"],
+          ["T0", "⛏️ ต้นน้ำธรรมชาติ"],
+          ["AGRI", "🌱 พันธุ์พืช & เกษตร"],
+          ["METAL_CHEM", "⚙️ โลหะ & เคมีแปรรูป"],
+          ["HITECH", "🧠 ชิ้นส่วนไฮเทค"],
+        ]) {
+          const cb = el("button", "chip" + ((uiState.editMatCat || "ALL") === catKey ? " g" : ""), catLabel);
+          cb.type = "button";
+          cb.onclick = () => {
+            uiState.editMatCat = catKey;
+            renderActiveSheet(current);
+          };
+          matCatRow.append(cb);
+        }
+        inventory.append(matCatRow);
         const mat = el("select");
         mat.setAttribute("aria-label", "เลือกวัตถุดิบ");
-        for (const m of v.catalog.materials) {
+        const activeMatCat = uiState.editMatCat || "ALL";
+        const filteredMats = v.catalog.materials.filter((m) => {
+          if (activeMatCat === "ALL") return true;
+          if (activeMatCat === "T0") return m.resourceClass === "T0_NATURAL";
+          if (activeMatCat === "AGRI") return ["SEED_STOCK", "CULTIVATED_CROP"].includes(m.resourceClass);
+          if (activeMatCat === "METAL_CHEM") return ["T1_REFINED_RAW", "INDUSTRIAL_BYPRODUCT"].includes(m.resourceClass);
+          if (activeMatCat === "HITECH") return ["T2_COMPONENT", "T3_HITECH"].includes(m.resourceClass);
+          return true;
+        });
+        for (const m of (filteredMats.length ? filteredMats : v.catalog.materials)) {
           const option = el("option", "", m.nameTh + " • คงคลัง " + (v.inventory.materials[m.id] || 0));
           option.value = m.id;
           mat.append(option);
@@ -2793,7 +2927,50 @@
         const promoBtn = el("button", "btn", "⬆️ เลื่อนตำแหน่ง +1 ขั้น (Lv.1–Lv.10)");
         promoBtn.type = "button";
         promoBtn.onclick = () => dispatch({ type: "directorEdit", action: "promotePerson", personId: chooser.value }, "เลื่อนตำแหน่งตัวละครที่เลือกแล้ว");
-        personCard.append(chooser, nameInput, rename, trait, traitValue, saveTrait, skill, restore, train, promoBtn);
+
+        const tendencyBox = el("div", "muted", "");
+        tendencyBox.style.marginTop = "6px";
+        const updateTendencyPreview = () => {
+          const selected = current.people.find((p) => p.id === chooser.value);
+          const [, key] = (trait.value || "personality:sociability").split(":");
+          const val = Number(traitValue.value) || 50;
+          const levelWord = val >= 70 ? "สูงมาก" : val >= 55 ? "ค่อนข้างสูง" : val <= 30 ? "ต่ำ" : "ปานกลาง";
+          const hintMap = {
+            riskTaking: "ส่งผลต่อความกล้าเสนอเปิดธุรกิจใหม่และการรับงานท้าทายของ CEO/พนักงาน",
+            prudence: "ส่งผลต่อการกันเงินสำรองฉุกเฉินและการชั่งน้ำหนักความเสี่ยงก่อนลงทุน",
+            sociability: "ส่งผลต่อการชวนเพื่อนคุยข้างตู้กดน้ำ การเข้าชมรมหลังเลิกงาน และการประสานงาน",
+            ambition: "ส่งผลต่อแรงผลักดันเลื่อนขั้นและการออกไปตั้งบริษัท Spin-off เมื่อสะสมทุนครบ",
+            fairness: "ส่งผลต่อความโปร่งใสในการประเมินเลื่อนตำแหน่งและความไวต่อการเล่นพรรคเล่นพวก",
+          };
+          const walletBaht = ((selected?.pay?.wallet || 0) / 100).toLocaleString("th-TH");
+          tendencyBox.textContent = `💡 แนวโน้มพฤติกรรม (${levelWord} ${val}/100): ${hintMap[key] || "เปลี่ยนน้ำหนักการตัดสินใจเลือกงาน การพักผ่อน และปฏิสัมพันธ์ตามสถานการณ์จริง"} • เงินออมส่วนตัวปัจจุบัน: ฿${walletBaht}`;
+        };
+        const origSyncPerson = syncPerson;
+        chooser.onchange = () => { origSyncPerson(); updateTendencyPreview(); };
+        trait.onchange = () => { origSyncPerson(); updateTendencyPreview(); };
+        traitValue.oninput = updateTendencyPreview;
+        updateTendencyPreview();
+
+        const walletRow = el("div", "");
+        walletRow.style.display = "flex";
+        walletRow.style.flexWrap = "wrap";
+        walletRow.style.gap = "6px";
+        walletRow.style.marginTop = "6px";
+        for (const [wLb, wSatang] of [
+          ["👛 มอบเงินออมเข้ากระเป๋าคนนี้ +฿2,000", 200000],
+          ["👛 มอบเงินออมเข้ากระเป๋าคนนี้ +฿5,000 (พอซื้อรถ/ดาวน์บ้าน)", 500000],
+        ]) {
+          const wb = el("button", "btn", wLb);
+          wb.type = "button";
+          wb.onclick = () =>
+            dispatch(
+              { type: "directorEdit", action: "grantPersonWallet", personId: chooser.value, amount: wSatang },
+              `เพิ่มเงินออมเข้ากระเป๋าส่วนตัวพนักงานแล้ว (${wLb})`,
+            );
+          walletRow.append(wb);
+        }
+
+        personCard.append(chooser, nameInput, rename, trait, traitValue, saveTrait, tendencyBox, skill, restore, train, promoBtn, walletRow);
 
         const scaleCard = el("div", "card edit-section");
         scaleCard.append(
@@ -2883,6 +3060,11 @@
           ["🗳️ เปลี่ยนรัฐบาลสหรัฐฯ (ขึ้นกำแพงภาษี/กรีนดีล)", { type: "directorEdit", action: "changeForeignRegime", nationId: "US" }],
           ["🗳️ เปลี่ยนรัฐบาลจีน (จำกัดโควตาส่งออกลิเธียม)", { type: "directorEdit", action: "changeForeignRegime", nationId: "CN", regimeId: "strategic_resource_control" }],
           ["🤝 ลงนามสนธิสัญญาการค้าเสรี อาเซียน-ญี่ปุ่น-อียู", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "asean_jp_eu_free_trade_pact" }],
+          ["📦 เปิดใบงานค้าส่งและกระจายวัตถุดิบ B2B (Wholesale Hub)", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "wholesale_distribution", clientCorpId: "singapore_port_3pl" }],
+          ["🔥 เปิดใบงานรับจ้างถลุงแร่และรีดอะลูมิเนียม (Toll Smelting)", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "toll_smelting_extrusion", clientCorpId: "nusantara_nickel" }],
+          ["⚡💧 ชำระบิลค่าไฟฟ้าและน้ำประปาโรงงานรอบสัปดาห์", { type: "directorEdit", action: "payUtilityBills" }],
+          ["🏆 จัดพิธีมอบรางวัลพนักงานดีเด่นประจำรอบ (Townhall Award)", { type: "directorEdit", action: "evaluateTownhallAwards", payBonus: true }],
+          ["🚀 จำลองพนักงานอาวุโสแยกตัวเปิดบริษัท Spin-off ศิษย์เก่า", { type: "directorEdit", action: "evaluateEmployeeSpinoff", force: true }],
         ];
         for (const [labelTh, payload] of bpActions) {
           const btn = el("button", "btn", labelTh);
@@ -2891,7 +3073,7 @@
         }
         bizProcessEditCard.append(bpBtnRow);
 
-        body.replaceChildren(inventory, personCard, scaleCard, extAssetEditCard, bizProcessEditCard);
+        body.replaceChildren(financeExperimentCard, inventory, personCard, scaleCard, extAssetEditCard, bizProcessEditCard);
         return;
       }
 

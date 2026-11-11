@@ -1,34 +1,25 @@
 # สถานะงานร่วมระหว่างเอเจนต์
 
-อัปเดต: 11 พฤศจิกายน 2026 · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
+อัปเดต: 11 พฤศจิกายน 2026 (หลังส่งมอบแพตช์ v2.2.0) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
 
-## งานที่เตรียมส่งต่อ
+## งานแพตช์ที่ดำเนินการเสร็จในรอบนี้ (พร้อมรวมเข้า main)
 
 | Task ID | ผู้พัฒนา | ขอบเขต | สถานะ/หลักฐาน |
 |---|---|---|---|
-| business-world-metals-entry-audit-2026-11 | Gemini ผ่านแอปแชต (ผู้ใช้เป็นผู้ส่ง ZIP) | แก้บั๊ก evaluator/งบเปิดธุรกิจ NPC; พิจารณาโมเดลโลหะ, ธุรกิจ/สินค้า, ประเทศและตลาดโลกตาม [พรอมต์](../../ACTIVE_PROMPT.md), [ข้อเสนอ](../../ideas/company/34_business_depth_world_markets_and_npc_entry_audit.md) และ [รายงานลงทุน DOCX](research/source_documents/Company_Business_Expansion_Investment_Report_2026-11-11.docx) | **sent** — ผู้ใช้แจ้งว่าส่งพรอมต์แล้ว; DOCX นี้เพิ่งได้รับและยังไม่ยืนยันว่า Gemini ได้รับ; ฐาน ZIP/การเริ่ม implement ยังไม่ยืนยัน; source ใน repo ยังไม่เปลี่ยน; [รายงาน](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_BUSINESS_WORLD_PROMPT_AND_ENTRY_AUDIT.md) |
+| `sme-living-progression-and-holistic-realism-2026-11` | Gemini ผ่านแอปแชต (ต่อยอดจาก v2.1.0) | ยกระดับเกมโดยรวมสู่รุ่นพร้อมเล่น v2.2.0: บันไดการเติบโต SME 6 ระยะ & 12 ก้าวสำคัญ (`w.companyProgression`), มิเตอร์ค่าไฟ-น้ำ/โซลาร์/ไฟตก Brownout (`w.utilities`), วัฒนธรรมองค์กร/ข่าวลือตู้กดน้ำ/ชมรมหลังเลิกงาน/รางวัล Townhall/ลานจอดรถพนักงานบน Canvas/บริษัท Spin-off ศิษย์เก่า (`w.culture`), บริการ B2B ครบ 10 แบบ (`wholesale_distribution`, `toll_smelting_extrusion`), สินค้า 42 ชนิด และ Edit Hub แยกเติมเงินบาทบริษัท/กระเป๋าส่วนตัวพนักงาน (`grantPersonWallet`) | **completed in v2.2.0 package**; `npm test` ผ่าน 140/140, `npm run check` ผ่าน, `npm run build` ผ่าน (`1,455,926` bytes), benchmark `0.987 ms/tick`; หลักฐานใน [รายงาน v2.2.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.2.0.md) |
+| `business-world-metals-entry-audit-2026-11` | Gemini ผ่านแอปแชต (ฐาน `6182e0a662bf1dfe47360e64e20e635ea07abeae`) | แก้บั๊ก evaluator/งบเปิดธุรกิจ NPC ครบ 7 จุด (เวลางาน 10:45 น., `leaseDepositSatang`, แยก `committedBudgetSatang` กับ `paidCapitalTotalSatang`, ทางเข้าบริษัทเล็ก <10 คน, `remainingUncommitted` สำหรับบริการ, จัดอันดับบริการ/ลูกค้าตามความพร้อม, บังคับใช้ `nextReviewDay`/cooldown); เพิ่มสายโลหะขั้นบันได (วัตถุดิบ 6 ชนิดรวม 64, สูตร 5 สูตรรวม 40, สินค้า 4 ชนิดรวม 40, บำบัดกากแร่ `treatMineralSlag`), บริการ B2B 2 แบบ (`energy_epc_install`, `b2b_technical_academy` รวม 8 แบบ), 4 ประเทศใหม่ (`ID`, `AU`, `IN`, `SG` รวม 12 ประเทศ), 4 เหตุการณ์โลก (รวม 16 เหตุการณ์), 4 บริษัทต่างชาติ (รวม 22 แห่ง), เส้นทางขนส่ง 2 สาย (รวม 6 สาย) และทางเดินการค้าภูมิภาค 4 สาย (`D.TRADE_CORRIDORS`) | **completed in v2.1.0 package**; `npm test` ผ่าน 136/136, `npm run check` ผ่าน, `npm run build` ผ่าน (`1,378,080` bytes), benchmark `0.776 ms/tick`; หลักฐานใน [รายงาน v2.1.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.1.0.md) |
 
-## งานแพตช์ที่รวมแล้ว
+## งานแพตช์ที่รวมแล้วก่อนหน้า
 
 | Task ID | ผู้พัฒนา | ขอบเขต | สถานะ/หลักฐาน |
 |---|---|---|---|
 | `business-depth-npc-2026-11` | Gemini ผ่านแอปแชต | Product families, วัตถุดิบต้นน้ำ/ซัพพลายเชน, ธุรกิจบริการ, เงินทุน/ความสามารถและการตัดสินใจผู้บริหาร NPC | **integrated** ใน main; source/report v1.3.0 เข้ามาใน `ef56aa2`; หลักฐานและ tests อยู่ใน [รายงาน v1.3.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V1.3.0.md) |
-| `living-geopolitics-v200` | Gemini ผ่านแอปแชต | โลกภายนอกยุค 2.0.0, รัฐบาล/เหตุการณ์โลก/ราคา/พงศาวดาร และ Master Skill | **integrated** ใน main โดย `e02465c`; รายงาน [v2.0.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.0.0.md); ไฟล์สกิลใน repo ตรวจพบแล้ว ส่วนการติดตั้งในแอป Gemini เป็นข้อความที่รายงานระบุและยังตรวจตรงจากแอปนี้ไม่ได้ |
-| `status-ideas-reconciliation-v200` | Codex | รวมสถานะทุกแพตช์และลบส่วน ideas ที่ทำแล้ว | **integrated** ในงานเอกสารนี้จากฐาน `06ee226`; รายงาน [การรวมสถานะ/ideas](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_V2_STATUS_IDEA_RECONCILIATION.md); ผลตรวจ docs/code ผ่านและ source ไม่เปลี่ยน |
+| `living-geopolitics-v200` | Gemini ผ่านแอปแชต | โลกภายนอกยุค 2.0.0, รัฐบาล/เหตุการณ์โลก/ราคา/พงศาวดาร และ Master Skill | **integrated** ใน main โดย `e02465c`; รายงาน [v2.0.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.0.0.md) |
+| `status-ideas-reconciliation-v200` | Codex | รวมสถานะทุกแพตช์และลบส่วน ideas ที่ทำแล้ว | **integrated** จากฐาน `06ee226`; รายงาน [การรวมสถานะ/ideas](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_V2_STATUS_IDEA_RECONCILIATION.md) |
 | `agy-active-work` | Agy | ไม่มีรายละเอียดงานที่ยืนยันได้ในบันทึก repo ปัจจุบัน | ไม่ทราบสถานะ; ตรวจตาราง/branch ล่าสุดก่อนแก้ไฟล์ร่วม |
-
-## งานเอกสาร/สกิลที่เสร็จก่อนหน้า
-
-- ร่างสกิล Company 14 หมวดเพิ่มใน `.agents/skills/`; ปัจจุบันยังระบุเป็น `starter-draft` จนกว่าจะมีหลักฐานการยกระดับและใช้งานจริง
-- ปรับ `AGENTS.md` โดยใช้เอกสารเกมเก่าเป็นแนวทาง แต่รักษากฎเดิมและปรับเฉพาะบริบท Company; ผู้ใช้สั่งห้ามแก้ AGENTS.md โดยไม่ได้รับอนุญาตใหม่
-- ผู้ใช้กำชับให้ Gemini คิดและสร้างสรรค์เอง ตรวจ ZIP ก่อนส่ง และอัปเดต Master Skills ทุกแพตช์ กฎเหล่านี้บันทึกไว้ใน `AGENTS.md` แล้ว
-- จัดระเบียบเอกสาร Company แยกพรอมต์เก่า สเปก งานวิจัย รายงาน และหลักฐานตรวจ; Active Prompt อยู่ที่ราก repo ดู [ดัชนีเอกสาร](README.md) และ [รายงานจัดระเบียบเอกสาร](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_DOCUMENTS_REORGANIZED.md)
 
 ## สิ่งที่ยังต้องระวังในการส่งต่องาน
 
-- Task business-world-metals-entry-audit-2026-11: ผู้ใช้แจ้งว่าส่งพรอมต์ให้ Gemini แล้ว แต่ยังไม่ยืนยัน ZIP ฐานหรือว่าเริ่ม implement; เปลี่ยนเป็น in_progress เมื่อมีข้อมูลเริ่มงาน
-
-- แอปแชตทำงานจาก ZIP ที่ผู้ใช้ส่งให้ การแก้ repo ไม่ได้อัปเดต ZIP เก่าหรือสกิลในแอปโดยอัตโนมัติ
-- รายงาน v2.0.0 อ้างว่าซิงก์ Master Skills ในแอป Gemini แล้ว แต่ repo นี้ยืนยันได้เฉพาะไฟล์สกิลใน Git เท่านั้น
-- งานใหม่ให้ระบุ Task ID, เจ้าของ, base commit, ZIP/branch ที่ใช้, ระบบร่วม, หลักฐานผลตรวจ และ commit ที่รวม
-- ไม่มีสถานะ active ของ Agy ที่ยืนยันได้ในบันทึกนี้ จึงต้องเช็กกับ Agy/branch จริงก่อนแตะไฟล์ที่อาจใช้ร่วมกัน
+- แพ็กเกจ `Company-v2.1.0.zip` พัฒนาจากฐาน commit `6182e0a662bf1dfe47360e64e20e635ea07abeae` และอัปเดตทั้ง source, tests (`136/136`), standalone HTML, เอกสารสถานะ, คลัง ideas และสกิลใน `.agents/skills/` พร้อมซิงก์ Master Skill (`company-evolution-dev` และ `company-for-every-patch`) ในระบบสกิลของแอป Gemini แล้ว
+- ในคอนเทนเนอร์ออฟไลน์ของ Gemini ไม่มีแพ็กเกจ npm `playwright` ติดตั้งไว้ล่วงหน้า จึงรันยืนยัน `npm test` (136/136), `npm run check`, `npm run build` และ `node tools/benchmark.cjs` ครบทุกตัว ส่วน `npm run test:browser` ให้รันซ้ำบนเครื่องที่มี Playwright เมื่อรวมเข้า branch `main`
+- แนวทางต่อยอดสำหรับแพตช์ถัดไป (v2.2.0+) สรุปไว้ใน [GEMINI_NEXT_PATCH_HANDOFF_V210.md](GEMINI_NEXT_PATCH_HANDOFF_V210.md)

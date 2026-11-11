@@ -12,10 +12,10 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง source v2.0.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.2.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
-- Source: `COMPANY_SOURCE/js/data.js: RESOURCE_CLASSES, AGRICULTURE_CROPS, MATERIAL_RECIPES; js/sim.js: craftMaterialRecipe, plantCropPlot, careCropPlot, harvestCropPlot, saveSeedFromCrop, runMidstreamRefining, planPurchases` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน). แค็ตตาล็อกปัจจุบันมี 58 วัตถุดิบ/35 สูตร; เทียบ ID กับ source ก่อนใช้ข้อเสนอ
-- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/true-upstream-agri-fleet-software-v110.test.cjs; external-assets-production-chains-v060.test.cjs; product-depth-npc-board-v130.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)
+- Source: `COMPANY_SOURCE/js/data.js: RESOURCE_CLASSES, AGRICULTURE_CROPS, MATERIAL_RECIPES, PRODUCTION_CHAINS, TRUE_RESOURCE_CHAIN_TABLE; js/sim.js: craftMaterialRecipe, treatMineralSlag, plantCropPlot, careCropPlot, harvestCropPlot, saveSeedFromCrop, runMidstreamRefining, planPurchases` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน). แค็ตตาล็อกปัจจุบันมี 64 วัตถุดิบ/40 สูตร (รวมสายโลหะขั้นบันไดและกากแร่ `mineral_slag_mud`); เทียบ ID กับ source ก่อนใช้ข้อเสนอ
+- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/true-upstream-agri-fleet-software-v110.test.cjs; external-assets-production-chains-v060.test.cjs; product-depth-npc-board-v130.test.cjs; business-depth-world-corridors-v210.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)
 
 ## หัวข้อที่เสนอให้ขยาย
 
