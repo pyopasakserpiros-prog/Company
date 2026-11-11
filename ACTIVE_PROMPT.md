@@ -2,7 +2,7 @@
 
 > ฐานที่จัดทำพรอมต์: repo main v2.0.0, HEAD 6182e0a662bf1dfe47360e64e20e635ea07abeae
 > ผู้ใช้จะดาวน์โหลด main และส่ง ZIP/ไฟล์ให้ Gemini เอง ไฟล์นี้ยังไม่ได้ถูกส่งเข้าแอป Gemini โดยตรง
-> [คลังข้อเสนอประกอบ](../../ideas/company/34_business_depth_world_markets_and_npc_entry_audit.md)
+> [คลังข้อเสนอประกอบ](ideas/company/34_business_depth_world_markets_and_npc_entry_audit.md)
 
 ## งานที่ได้รับมอบหมาย
 

@@ -6,7 +6,7 @@
 
 | Task ID | ผู้พัฒนา | ขอบเขต | สถานะ/หลักฐาน |
 |---|---|---|---|
-| business-world-metals-entry-audit-2026-11 | Gemini ผ่านแอปแชต (ผู้ใช้เป็นผู้ส่ง ZIP) | แก้บั๊ก evaluator/งบเปิดธุรกิจ NPC; พิจารณาโมเดลโลหะ, ธุรกิจ/สินค้า, ประเทศและตลาดโลกตาม [พรอมต์](NEXT_PATCH_PROMPT_BUSINESS_DEPTH_WORLD_MARKETS_AND_NPC_BUGS.md) และ [ข้อเสนอ](../../ideas/company/34_business_depth_world_markets_and_npc_entry_audit.md) | **planned**; เอกสารเตรียมใน main จากฐาน 6182e0a; รอผู้ใช้ส่ง ZIP ให้ Gemini; source ยังไม่เปลี่ยน; [รายงาน](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_BUSINESS_WORLD_PROMPT_AND_ENTRY_AUDIT.md) |
+| business-world-metals-entry-audit-2026-11 | Gemini ผ่านแอปแชต (ผู้ใช้เป็นผู้ส่ง ZIP) | แก้บั๊ก evaluator/งบเปิดธุรกิจ NPC; พิจารณาโมเดลโลหะ, ธุรกิจ/สินค้า, ประเทศและตลาดโลกตาม [พรอมต์](../../ACTIVE_PROMPT.md) และ [ข้อเสนอ](../../ideas/company/34_business_depth_world_markets_and_npc_entry_audit.md) | **planned**; เอกสารเตรียมใน main จากฐาน 6182e0a; รอผู้ใช้ส่ง ZIP ให้ Gemini; source ยังไม่เปลี่ยน; [รายงาน](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_BUSINESS_WORLD_PROMPT_AND_ENTRY_AUDIT.md) |
 
 ## งานแพตช์ที่รวมแล้ว
 

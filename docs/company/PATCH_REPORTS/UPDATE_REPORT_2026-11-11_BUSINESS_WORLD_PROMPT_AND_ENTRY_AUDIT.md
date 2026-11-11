@@ -8,7 +8,7 @@
 ## สิ่งที่เปลี่ยน
 
 - เพิ่ม ideas/company/34_business_depth_world_markets_and_npc_entry_audit.md สรุปจุดซ้ำ/ช่องว่างของธุรกิจ, โมเดล Primary Metals ที่ปรับข้อกำหนดความสมจริง, ตัวเลือกประเทศและตลาดใหม่, audit NPC และแนวคิดเพิ่มจาก Codex
-- เพิ่ม docs/company/NEXT_PATCH_PROMPT_BUSINESS_DEPTH_WORLD_MARKETS_AND_NPC_BUGS.md เป็นพรอมต์พร้อมใช้ให้ Gemini ตรวจฐาน, แก้บั๊ก business-entry, ออกแบบธุรกิจ/สินค้า/ประเทศเพิ่มเติม, อัปเดต Master Skills และส่ง ZIP ที่ตรวจแล้ว
+- เพิ่ม ACTIVE_PROMPT.md ไว้ที่ราก repo เป็นพรอมต์พร้อมใช้ให้ Gemini ตรวจฐาน, แก้บั๊ก business-entry, ออกแบบธุรกิจ/สินค้า/ประเทศเพิ่มเติม, อัปเดต Master Skills และส่ง ZIP ที่ตรวจแล้ว
 - ปรับ ideas index, START_HERE และทะเบียนงานเพื่อให้พบพรอมต์และแยก planned ออกจากงานที่ Gemini เริ่มทำแล้ว
 - เพิ่มบั๊กที่ยืนยันแล้วใน project status เพื่อไม่ให้คำอธิบายระบบบริหาร NPC สื่อว่า live decision path ใช้งานได้ครบ
 
