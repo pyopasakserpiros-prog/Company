@@ -1,3 +1,4 @@
+const prepare=require("./knowledge-fixtures.cjs");
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -7,9 +8,9 @@ const Save = require("../js/save.js");
 const API = require("../js/api.js");
 
 test("v2.2.0 SME-to-Conglomerate 6-Stage Progression Ladder & 12 Organic Milestones", () => {
-  assert.strictEqual(D.VERSION, "2.2.0");
-  assert.strictEqual(D.RELEASE_VERSION, "2.2.0");
-  assert.strictEqual(S.RELEASE_VERSION, "2.2.0");
+  assert.strictEqual(D.VERSION, "2.3.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.3.0");
+  assert.strictEqual(S.RELEASE_VERSION, "2.3.0");
   assert.strictEqual(D.SME_GROWTH_STAGES.length, 6);
   assert.strictEqual(D.SME_MILESTONE_CATALOG.length, 12);
 
@@ -125,6 +126,7 @@ test("v2.2.0 Complete 10 B2B Services (Wholesale Anti-Arbitrage & Toll Smelting 
   assert.ok(cat.products.artisan_chili_paste_jar);
 
   const w = S.create("services-v220", { autonomous: true });
+  prepare(w,{subjects:["commerce","metal_machining"]});
   S.command(w, { type: "directorEdit", action: "grantCash", amount: 15000000 });
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "pack_carton", quantity: 10 });
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "metal_sheet", quantity: 10 });
@@ -166,7 +168,7 @@ test("v2.2.0 Complete 10 B2B Services (Wholesale Anti-Arbitrage & Toll Smelting 
 test("v2.2.0 Workplace Culture, Water-Cooler Gossip, Employee Wallet Grant, Parking Lot & Alumni Spin-Off Companies", () => {
   const app = API.create("culture-spinoff-v220", { autonomous: true });
   const initSnap = app.snapshot();
-  assert.strictEqual(initSnap.releaseVersion, "2.2.0");
+  assert.strictEqual(initSnap.releaseVersion, "2.3.0");
   const targetPerson = initSnap.people.find((p) => p.role === "engineer") || initSnap.people[0];
   const cashBefore = initSnap.company.cash;
 

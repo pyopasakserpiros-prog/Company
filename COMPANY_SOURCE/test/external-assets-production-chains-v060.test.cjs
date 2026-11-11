@@ -1,3 +1,4 @@
+const prepare=require("./knowledge-fixtures.cjs");
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -11,6 +12,8 @@ test("v0.6.0+ External Assets catalog (12 assets) initializes agricultural plots
   assert.equal(assets.length, 12, "Must have 12 External Assets across 4 categories");
 
   const w = S.create("v060-ext-assets", { autonomous: true });
+  prepare(w,{subjects:["agriculture","food_fermentation","chemical_processing"]});
+  prepare(w,{products:["artisan_bakery"],subjects:["food_fermentation","agriculture"]});
   S.command(w, { type: "directorEdit", action: "grantCash", amount: 50000000 });
 
   for (const aid of [
@@ -34,7 +37,7 @@ test("v0.6.0+ External Assets catalog (12 assets) initializes agricultural plots
   assert.ok(w.inventory.materials.artisan_flour >= 4, "After crop growth & milling, artisan_flour is produced in stock");
   assert.ok(w.inventory.materials.refined_palm_oil >= 4, "After crop growth & refining, refined_palm_oil is produced in stock");
   assert.ok(w.inventory.materials.refined_sugar_syrup >= 4, "After crop growth & milling, refined_sugar_syrup is produced in stock");
-  assert.ok(w.research.unlocked.includes("artisan_bakery"), "Acquiring grain/palm farm unlocks artisan_bakery");
+  assert.ok(w.research.unlocked.includes("artisan_bakery"), "Established bakery qualification is preserved after buying a farm");
 
   const upRes = S.command(w, { type: "acquireExternalAsset", assetId: "jasmine_rice_farm", upgrade: true });
   assert.equal(upRes.ok, true);
@@ -52,6 +55,7 @@ test("v0.6.0+ External Assets catalog (12 assets) initializes agricultural plots
 
 test("v0.6.0+ Multi-Stage Production Chain (Rice Farm -> Rice Mill -> Flour Mill -> Artisan Bakery) vs Asset-Light Make-or-Buy Strategy", () => {
   const wIntegrated = S.create("v060-vertical-bakery", { autonomous: true, initialHeadcount: 14 });
+  prepare(wIntegrated,{subjects:["agriculture","food_fermentation","chemical_processing"]});
   S.command(wIntegrated, { type: "directorEdit", action: "grantCash", amount: 40000000 });
   S.command(wIntegrated, { type: "setSupplyChainStrategy", strategyId: "vertical_integration" });
   S.command(wIntegrated, { type: "constructPlot", plotId: "refineryMill" });
@@ -72,6 +76,7 @@ test("v0.6.0+ Multi-Stage Production Chain (Rice Farm -> Rice Mill -> Flour Mill
 
   // Scenario B: Asset-Light Bakery (Owns 0 farms, skips automatic midstream refining, buys from market)
   const wLight = S.create("v060-asset-light-bakery", { autonomous: true, initialHeadcount: 12 });
+  prepare(wLight,{subjects:["agriculture","food_fermentation","chemical_processing"]});
   S.command(wLight, { type: "directorEdit", action: "grantCash", amount: 20000000 });
   S.command(wLight, { type: "directorEdit", action: "grantResearch", points: 100 });
   S.command(wLight, { type: "setSupplyChainStrategy", strategyId: "asset_light" });

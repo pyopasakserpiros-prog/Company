@@ -4,7 +4,7 @@
 
 ## สกิลหลัก
 
-- [`company-evolution-dev/SKILL.md`](company-evolution-dev/SKILL.md) — Master Skill ภาพรวมสถาปัตยกรรมและระบบที่ตรวจถึง v2.2.0; สำเนาระดับ root คือ [`SKILL.md`](../../SKILL.md), [`SKILL_COMPANY_EVOLUTION_DEV.md`](../../SKILL_COMPANY_EVOLUTION_DEV.md), และ [`SKILL_COMPANY_FOR_EVERY_PATCH.md`](../../SKILL_COMPANY_FOR_EVERY_PATCH.md) สำหรับการส่งต่อไฟล์
+- [`company-evolution-dev/SKILL.md`](company-evolution-dev/SKILL.md) — Master Skill ภาพรวมสถาปัตยกรรมและระบบที่ตรวจถึง v2.3.0; สำเนาระดับ root คือ [`SKILL.md`](../../SKILL.md), [`SKILL_COMPANY_EVOLUTION_DEV.md`](../../SKILL_COMPANY_EVOLUTION_DEV.md), และ [`SKILL_COMPANY_FOR_EVERY_PATCH.md`](../../SKILL_COMPANY_FOR_EVERY_PATCH.md) สำหรับการส่งต่อไฟล์
 - [`company-for-every-patch/SKILL.md`](company-for-every-patch/SKILL.md) — Evergreen workflow ก่อน/หลังแพตช์และรายการตรวจ Master Skill
 
 ## สกิลเฉพาะด้าน
@@ -29,3 +29,5 @@
 ## การดูแลสกิล
 
 ทุกแพตช์ให้ตรวจ Master Skill และสกิลเฉพาะด้านที่ได้รับผลกระทบกับ source/test จริง อัปเดตดัชนีและไฟล์ที่เกี่ยวข้อง พร้อมระบุผลในรายงาน สกิลใน repo ไม่ได้ซิงก์แอป Gemini โดยอัตโนมัติ
+
+การเพิ่มวิชา/แก้ความรู้: อ่าน [เทมเพลตวิชา](../../docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md), [คู่มือระบบ](../../docs/company/LEARNED_KNOWLEDGE_SYSTEM.md) และทะเบียนวิชาที่สร้างจาก source ทุกครั้ง

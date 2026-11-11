@@ -22,6 +22,8 @@
 
 ไม่พบรายงานแยกสำหรับ v0.7–v0.9, v1.1.0 หรือ v1.2.1 ในคลังปัจจุบัน; อ่าน [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) ก่อนสรุปรุ่นเหล่านั้น
 
+- [v2.3.0: วิชา NPC และเทคโนโลยีเฉพาะธุรกิจ](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md)
+
 ## รายงานอัปเดตเอกสาร
 
 - [ปรับ AGENTS.md ให้เข้ากับบริบท Company](UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md)

@@ -24,7 +24,7 @@
       train: "งานจัดซื้อและบัญชีที่อาคารสำนักงานใหญ่ / คลังวัตถุดิบ",
     },
     engineering: {
-      eff: "เพิ่มแต้มวิจัย R&D เพื่อปลดล็อกแบบแปลนผลิตภัณฑ์ใหม่และบำรุงรักษาเครื่องจักรโรงงาน",
+      eff: "ทำโครงการเฉพาะวิชา ทดสอบต้นแบบและตรวจรับกระบวนการ พร้อมบำรุงรักษาเครื่องจักร",
       train: "วิจัยและพัฒนาที่อาคารแล็บวิจัย (R&D Lab) & โรงซ่อมบำรุง",
     },
     assembly: {
@@ -420,6 +420,7 @@
         "identity",
         "aptitudes",
         "skills",
+        "knowledge",
         "relations",
         "wallet",
         "chronicle",
@@ -536,6 +537,7 @@
       { id: "identity", label: "ตัวตน/ค่านิยม" },
       { id: "aptitudes", label: "ความถนัด 30 ด้าน" },
       { id: "skills", label: "ทักษะ/สายงาน" },
+      { id: "knowledge", label: "ความรู้" },
       { id: "relations", label: "ความสัมพันธ์" },
       { id: "wallet", label: "กระเป๋า/เป้าหมาย" },
       { id: "chronicle", label: "บันทึกชีวิต" },
@@ -627,7 +629,7 @@
       switchRow.append(chip);
     }
     headCard.append(topRow, switchRow);
-    nodes.push(headCard);
+    if(uiState.subTab !== "knowledge") nodes.push(headCard);
 
     if (uiState.subTab === "vital") {
       const thoughtCard = el("div", "card");
@@ -789,6 +791,22 @@
         skCard.append(item);
       }
       nodes.push(skCard);
+    } else if (uiState.subTab === "knowledge") {
+      const ed=p.education || {subjects:{},practiceMinutes:{}},k=v.companyKnowledge;
+      const heading=el("div","card");
+      heading.append(el("h3","",`📚 ความรู้ของ ${p.name}`),el("div","muted","Lv1 เริ่มเรียน/พื้นฐาน • Lv2 ปฏิบัติได้ • Lv3 ขั้นสูง • Lv4 ผู้เชี่ยวชาญ • Lv5 เชี่ยวชาญสูง ทุกวิชาเป็นความรู้ส่วนตัว แม้บริษัทยังไม่มีงานที่ใช้"));
+      if(ed.course) heading.append(el("div","logrow",`กำลังเรียนเพื่อบริษัท: ${k.subjects[ed.course]} → ${ed.courseLevel || 40}/100`));
+      heading.append(el("div","muted",`ความสนใจส่วนตัว: ${(ed.interests || []).map(id=>k.subjects[id]).join(" • ") || "ยังไม่มีข้อมูล"} • ศึกษานอกงาน ${Math.floor((ed.personalStudyMinutes || 0)/60)} ชั่วโมง`));
+      nodes.push(heading);
+      const linked=v.companyKnowledge.people.find(q=>q.id===p.id);
+      for(const [id,level] of Object.entries(ed.subjects).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1])) {
+        const lv=level>=95 ? 5 : level>=80 ? 4 : level>=60 ? 3 : level>=40 ? 2 : 1;
+        const row=el("div","card");row.append(el("h3","",`${k.subjects[id]} · Lv${lv}`),makeBarRow("ความชำนาญ",level,null,false));
+        const spec=k.subjectSpecs.find(s=>s.id===id),insight=linked?.subjectInsights.find(s=>s.id===id);
+        const used=k.products.some(product=>product.ready&&Object.hasOwn(product.requirements || {},id));
+        row.append(el("div","muted",`ฝึก/ศึกษา ${Math.floor((ed.practiceMinutes[id] || 0)/60)} ชม. • งานจริง ${Math.floor((ed.appliedMinutes?.[id] || 0)/60)} ชม. • ความเหมาะสมจากความถนัด ${Math.round(insight?.talent || 0)}/100 • ${used ? "เกี่ยวข้องกับสินค้าที่ทีมพร้อมทำ" : "ความรู้ติดตัว; อาจใช้กับงานอื่นหรือโอกาสใหม่"}`),el("div","muted",spec.effectTh));
+        nodes.push(row);
+      }
     } else if (uiState.subTab === "relations") {
       const relCard = el("div", "card");
       relCard.append(el("h3", "", "🤝 ความสัมพันธ์และความไว้วางใจกับเพื่อนร่วมทีม"));
@@ -1144,7 +1162,7 @@
       } else if (b.id === "rnd") {
         specCard.append(el("h3", "", "🔬 ความก้าวหน้าการวิจัยและพัฒนา (R&D Lab)"));
         specCard.append(
-          makeBarRow("แต้มวิจัยสะสม (เป้าหมาย 360)", clamp((v.research.points / 360) * 100), 100, false),
+          el("div","muted",`โครงการเฉพาะทาง ${v.companyKnowledge?.projects?.length || 0} โครงการ — ดูที่หน้าบริษัท`),
         );
         for (const prod of v.catalog.products) {
           specCard.append(
@@ -1418,7 +1436,7 @@
       el(
         "div",
         "logrow",
-        `📦 ยอดขายส่งวัตถุดิบ/ชิ้นส่วน B2B สะสม: ${extWorld.totalB2BMaterialSalesUnits || 0} ชิ้น • 💵 รายได้จากการขายวัตถุดิบ B2B: ${moneyFull(extWorld.totalB2BMaterialRevenueSatang || 0)} • 🔬 แต้มวิจัย R&D ปัจจุบัน: ${Math.round(v.research?.points || 0)} แต้ม`,
+        `📦 ยอดขายส่งวัตถุดิบ/ชิ้นส่วน B2B สะสม: ${extWorld.totalB2BMaterialSalesUnits || 0} ชิ้น • 💵 รายได้ ${moneyFull(extWorld.totalB2BMaterialRevenueSatang || 0)} • โครงการความรู้ ${v.companyKnowledge?.projects?.length || 0} โครงการ`,
       ),
     );
 
@@ -1480,7 +1498,7 @@
       const badgeCls = rec.unlocked ? "ok" : "r";
       const gateTxt = rec.unlocked
         ? `✅ มีองค์ความรู้พร้อมผลิตเอง (T${rec.tier})`
-        : `🔒 ต้นเกมต้องซื้อตลาด (ต้องการวิจัย R&D ${rec.minResearch} แต้ม)`;
+        : "🔒 ยังต้องซื้อจากตลาดจนกว่ากระบวนการผ่านรับรองและทีมมีวิชาครบ";
       rTop.append(
         el("strong", "", `[Tier ${rec.tier}] ${rec.nameTh}`),
         el("span", "chip " + badgeCls, gateTxt),
@@ -1581,10 +1599,70 @@
   }
 
   /* ---------- 3. Bottom Nav Sheets (People, Campus, Log, Market, Policy, Menu/Edit Hub) ---------- */
+  function renderCompanySheet(v, body) {
+    byId("shTitle").textContent = "🏛️ บริษัท — กิจการ คน ความรู้ และแผนงาน";
+    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
+    setSheetTabs(tabs);
+    if (!tabs.some(t=>t.id===uiState.subTab)) uiState.subTab = "company_overview";
+    body.replaceChildren();
+    const card = el("div","card"); body.append(card);
+    const row = (title,text) => { const r=el("div","logrow");r.append(el("strong","",title),el("div","muted",text));card.append(r); };
+    const k=v.companyKnowledge || {people:[],projects:[],products:[],subjects:{}};
+    const tier=(n)=>(k.tiers || []).filter(t=>n>=t.level).at(-1)?.nameTh || "ยังไม่เคยเรียน";
+    const coverage=(rows)=>(rows || []).map(r=>`${r.ready ? "✓" : "ขาด"} ${r.nameTh} ${r.level} — ${r.holders.map(h=>h.name).join(", ") || "ยังไม่มีผู้รู้"}`).join(" • ");
+    const stages={literature:"ศึกษาความเป็นไปได้",prototype:"ทำต้นแบบ",validation:"ตรวจสอบกระบวนการ",qualified:"ผ่านการรับรอง"};
+    if(uiState.subTab==="company_overview") {
+      row("ฐานะบริษัท",`เงินสด ${money(v.company.cash)} • หนี้ ${money(v.company.debt)} • ลูกหนี้ ${money(v.company.receivable)} • เงินสำรองพอประมาณ ${v.company.runwayDays} วัน`);
+      row("กิจการขณะนี้",`${v.companyProgression?.currentStageNameTh || "บริษัทเริ่มต้น"} • ทีม ${k.people.length} คน • ออเดอร์ที่จ่ายแล้ว ${v.company.metrics.ordersPaid} • งานที่ยังเปิด ${v.orders.filter(o=>!["paid","cancelled"].includes(o.status)).length}`);
+      row("ความพร้อมเทคโนโลยี",`พร้อมดำเนินการ ${k.products.filter(p=>p.ready).length}/${k.products.length} สินค้า • โครงการเฉพาะทาง ${k.projects.filter(p=>p.status!=="qualified").length} โครงการ`);
+      row("แนวทางที่ผู้บริหารกำลังพิจารณา",k.decision);
+      row("สาธารณูปโภค",`ไฟฟ้า ${v.utilities?.dailyKwh || 0} kWh/วัน • น้ำ ${v.utilities?.dailyWaterM3 || 0} ลบ.ม./วัน • ${v.utilities?.brownoutActive ? "ไฟตก ต้องชำระบิล" : "ไม่มีไฟตก"}`);
+    } else if(uiState.subTab==="company_knowledge") {
+      row("ความรู้เป็นของคน เทคโนโลยีเป็นของกระบวนการ", "ต้องมีผู้เชี่ยวชาญเฉพาะวิชา ชั่วโมงทำต้นแบบ ระยะเวลาตรวจสอบ และผู้ตรวจคุณภาพ เงินหรือแต้มสะสมอย่างเดียวไม่ปลดล็อกข้ามอุตสาหกรรม หากผู้เชี่ยวชาญออกจากงาน ความพร้อมอาจหายไปได้");
+      row("แผนปัจจุบัน",k.decision);
+      for(const p of k.projects) row(`${p.nameTh} — ${stages[p.status] || p.status}`,`${p.route === "licensed_transfer" ? "ซื้อสิทธิถ่ายทอด" : "วิจัยเอง"} • วิชา${k.subjects[p.subject] || p.subject} • ${Math.floor(p.workMinutes/60)}/${p.requiredMinutes/60} ชั่วโมง • เริ่มวันที่ ${p.startedDay}, ใช้เวลาอย่างน้อย ${p.minDays} วัน • ใช้งบแล้ว ${money(p.spentSatang)} • ${p.lastReasonTh}`);
+      if(!k.projects.length) row("ยังไม่มีโครงการใหม่","ผู้บริหารจะพิจารณาตามความพร้อมทีม เงินสำรอง และโอกาสธุรกิจ ไม่วิจัยทุกสาขาพร้อมกัน");
+      for(const p of k.people) row(p.name,Object.entries(p.education.subjects).map(([id,n])=>`${k.subjects[id] || id} ${Math.floor(n)}/100 (${tier(n)})`).join(" • ")+(p.education.course ? ` • กำลังเรียน${k.subjects[p.education.course]}` : ""));
+    } else if(uiState.subTab==="company_curriculum") {
+      row(`หลักสูตร ${Object.keys(k.subjects).length} วิชา`,"พื้นฐาน 20 → ปฏิบัติงานได้ 40 → ขั้นสูง 60 → ผู้เชี่ยวชาญ 80 → เชี่ยวชาญสูง 95; เรียนขั้นสูงช้าลง และระดับผู้เชี่ยวชาญต้องมีประสบการณ์จริง ทุกวิชาเรียนได้ แม้บริษัทไม่มีงานที่ใช้วิชานั้น ความถนัดช่วยการเรียนแต่ไม่แทนความรู้");
+      const categories=[...new Set((k.subjectSpecs || []).map(s=>s.category))];
+      const filter=el("select",""); filter.setAttribute("aria-label","หมวดวิชา");
+      for(const c of categories) {const o=el("option","",c);o.value=c;filter.append(o);}
+      uiState.subjectCategory=categories.includes(uiState.subjectCategory) ? uiState.subjectCategory : categories[0];filter.value=uiState.subjectCategory;
+      filter.onchange=()=>{uiState.subjectCategory=filter.value;renderActiveSheet(current);};card.append(filter);
+      for(const subject of (k.subjectSpecs || []).filter(s=>s.category===uiState.subjectCategory)) {
+        row(subject.nameTh,`${subject.prerequisite ? `ต้องมีพื้นฐาน${k.subjects[subject.prerequisite]} ${subject.prerequisiteLevel} ก่อน • ` : ""}${subject.effectTh} • องค์ประกอบความถนัด: ${Object.entries(subject.aptitudes).map(([id,weight])=>`${v.catalog.dimensions.aptitudes.find(a=>a.id===id)?.nameTh || id} ${Math.round(weight*100)}%`).join(", ")}`);
+        const holders=k.people.filter(p=>(p.education.subjects[subject.id] || 0)>0);
+        for(const person of holders) {const insight=person.subjectInsights.find(s=>s.id===subject.id);row(person.name,`${tier(person.education.subjects[subject.id])} ${Math.floor(person.education.subjects[subject.id])}/100 • ประสบการณ์งานจริง ${Math.floor((person.education.appliedMinutes?.[subject.id] || 0)/60)} ชั่วโมง • ความเหมาะสมจากความถนัด ${Math.round(insight.talent)}/100`);}
+      }
+    } else if(uiState.subTab==="company_business") {
+      for(const p of k.products) row(`${p.ready ? "✅ พร้อม" : "🔒 ยังไม่พร้อม"} ${p.nameTh}`,`ผลิตแล้ว ${v.production.completed[p.id] || 0} ชิ้น • วิชา${p.subjectNameTh || "เฉพาะทาง"} • ${p.reasons.join(" / ") || "มีทีมและกระบวนการพร้อม; ฝ่ายขายยังต้องประเมินกำไรและคำสั่งซื้อ"} • ${coverage(p.coverage)}`);
+      for(const service of k.serviceReadiness || []) row(`${service.ready ? "✓ ทีมพร้อม" : "🔒 ขาดความรู้"} ${service.nameTh}`,coverage(service.coverage));
+      row("ธุรกิจบริการ / ขนส่ง / ซอฟต์แวร์",`งานบริการ ${Object.keys(v.serviceBusiness?.orders || {}).length} • สัญญาขนส่ง ${Object.keys(v.fleetTransport?.contracts || {}).length} • โครงการซอฟต์แวร์ ${Object.keys(v.softwareBusiness?.projects || {}).length}`);
+    } else if(uiState.subTab==="company_board") {
+      row("แผนเตรียมความสามารถ",k.decision);
+      const b=v.executiveBoard || {};
+      row("งบลงทุน",`งบที่จอง ${money(b.committedBudgetSatang)} • ทุนที่จ่ายแล้ว ${money(b.paidCapitalTotalSatang)} • เงินสำรองดำรงกิจการ ${money(b.budgetPools?.survivalReserveSatang)}`);
+      for(const d of b.decisionLedger || []) row(d.titleTh,`${d.reasonTh} • ผู้เสนอ ${d.proposerName || "บอร์ด"} • ทบทวนวันที่ ${d.nextReviewDay} • ${d.executionStatus}`);
+    } else if(uiState.subTab==="company_org") {
+      for(const p of v.people.filter(p=>p.employed)) {
+        const r=el("button","logrow");r.type="button";r.textContent=`${p.name} • ${p.roleName || p.role} • ${p.activityLabelTh || p.activity}`;r.onclick=()=>openPersonSheet(p.id);card.append(r);
+      }
+      for(const d of v.orgSummary?.departments || []) row(d.departmentTh || d.nameTh || "แผนก",`จำนวนคน ${d.count || d.headcount || 0}`);
+    } else {
+      for(const b of [...(v.campus.buildings || []),...(v.campus.expansionPlots || []).filter(p=>p.constructed)]) row(b.nameTh || b.id,`อาคาร • ระดับ ${b.level || 1}`);
+      for(const a of v.catalog.externalAssets || []) if(a.owned) row(a.nameTh,`สินทรัพย์ภายนอก • ระดับ ${a.level || 1}`);
+      for(const vehicle of Object.values(v.fleetTransport?.vehicles || {})) row(vehicle.nameTh || vehicle.plate || vehicle.id,`ยานพาหนะ • ${vehicle.status} • สภาพ ${vehicle.condition}%`);
+      row("วัตถุดิบในคลัง",v.catalog.materials.filter(m=>(v.inventory.materials[m.id] || 0)>0).map(m=>`${m.nameTh}: ${v.inventory.materials[m.id]}`).join(" • "));
+    }
+  }
+
   function renderActiveSheet(v) {
     if (!uiState.sheetOpen) return;
     const body = byId("shBody");
     if (!body) return;
+
+    if (uiState.sheetMode === "company") { renderCompanySheet(v,body); return; }
 
     if (uiState.sheetMode === "person") {
       renderCharacterSheet(v, body);
@@ -2344,7 +2422,7 @@
           const tierIcon = m.tier === 0 ? "🌾" : m.tier === 1 ? "⚗️" : m.tier === 2 ? "⚙️" : "🧠";
           cell.append(
             el("span", "inv-b-tl", `${m.tierBadgeTh || ("T" + (m.tier ?? 0))} · ${money(m.unitCost)}`),
-            el("span", "inv-b-tr", m.craftable ? (m.canCraftInHouse ? "✅ ผลิตเองได้" : `🔒 R&D ${m.minResearch}`) : "⛏️ ต้นน้ำแท้"),
+            el("span", "inv-b-tr", m.craftable ? (m.canCraftInHouse ? "✅ ผลิตเองได้" : "🔒 ต้องรับรองกระบวนการ") : "⛏️ ต้นน้ำแท้"),
             el("div", "ic", tierIcon),
             el("div", "nm", m.nameTh),
             el("span", "inv-b-br", `×${qty} (จอง ${res})`),
@@ -2354,12 +2432,12 @@
         c.append(grid);
       } else if (uiState.subTab === "rnd") {
         c.append(
-          el("h3", "", `🔬 คลังแบบแปลนผลิตภัณฑ์ 4 อุตสาหกรรม (${v.research.points.toFixed(0)} แต้มวิจัย)`),
-          makeBarRow("ความก้าวหน้าการวิจัยขั้นสูง (360 แต้ม)", clamp((v.research.points / 360) * 100), 100, false),
+          el("h3", "", "🔬 ความพร้อมสินค้าและกระบวนการ"),
+          el("div", "muted", "ดูทีมผู้รู้ โครงการต้นแบบ และแผนผู้บริหารได้ที่ บริษัท → องค์ความรู้ / R&D"),
         );
         for (const prod of v.catalog.products) {
           const req = prod.researchRequired || 0;
-          const statusTxt = prod.unlocked ? "✅ พร้อมผลิตและขาย" : `🔒 ต้องวิจัย ${req} แต้ม`;
+          const statusTxt = prod.unlocked ? "✅ ทีมและกระบวนการพร้อม" : `🔒 ${prod.readiness?.reasons?.join(" / ") || "ยังไม่ผ่านการรับรอง"}`;
           c.append(
             el(
               "div",
@@ -2970,6 +3048,15 @@
           walletRow.append(wb);
         }
 
+        const subjectChoice=el("select","");subjectChoice.setAttribute("aria-label","เลือกวิชาเรียนรู้");
+        for(const [id,name] of Object.entries(v.companyKnowledge.subjects)) {const o=el("option","",name);o.value=id;subjectChoice.append(o);}
+        const subjectValue=el("input","");subjectValue.type="number";subjectValue.min="0";subjectValue.max="100";subjectValue.value="0";subjectValue.setAttribute("aria-label","ระดับวิชาที่เรียนรู้");
+        const subjectInfo=el("div","muted", "เลือกพนักงานและวิชา แล้วกำหนดระดับ 0–100 เพื่อทดลอง; การรู้วิชาอย่างเดียวยังไม่แทนเครื่องมือและการรับรองกระบวนการ");
+        const syncSubject=()=>{subjectValue.value=String(current.people.find(p=>p.id===chooser.value)?.education?.subjects?.[subjectChoice.value] || 0);};
+        subjectChoice.onchange=syncSubject;syncSubject();
+        const saveSubject=el("button","btn","บันทึกวิชาให้พนักงานคนนี้");saveSubject.type="button";
+        saveSubject.onclick=()=>dispatch({type:"directorEdit",action:"setSubject",personId:chooser.value,subjectId:subjectChoice.value,level:Number(subjectValue.value)},"อัปเดตวิชาเฉพาะพนักงานแล้ว");
+        personCard.append(subjectInfo,subjectChoice,subjectValue,saveSubject);
         personCard.append(chooser, nameInput, rename, trait, traitValue, saveTrait, tendencyBox, skill, restore, train, promoBtn, walletRow);
 
         const scaleCard = el("div", "card edit-section");
@@ -3151,7 +3238,7 @@
     renderTopHud(v);
     renderSelectionBanner(v);
     syncCompatControls(v);
-    if (uiState.sheetOpen && !(uiState.sheetMode === "menu" && uiState.subTab === "edit")) renderActiveSheet(v);
+    if (uiState.sheetOpen && !(uiState.sheetMode === "menu" && uiState.subTab === "edit") && !(uiState.sheetMode === "company" && uiState.subTab === "company_curriculum" && document.activeElement?.tagName === "SELECT")) renderActiveSheet(v);
   }
 
   document.querySelectorAll("#speedBar button").forEach((btn) => {
@@ -3336,6 +3423,7 @@
 
   window.CompanyDebug = Object.freeze({
     app,
+    getCamera: () => renderer?.getCamera(),
     refresh: () => paint(app.snapshot()),
     openPersonSheet,
     openBuildingSheet,

@@ -37,3 +37,9 @@ Update Method; systematic-debugging; ecosystem tests ของ Company — ด�
 ## เมื่อทำเป็น Master Skill
 
 อ่าน AGENTS.md ก่อนและเคารพไฟล์ที่ล็อก อัปเดตสกิล/สถานะ/เอกสาร/รายงานตามแพตช์จริง เลือกชื่อ/ขอบเขตใหม่ รวม/แยก หรือเพิ่มสกิลอื่นได้ตามเหตุผล แล้วอัปเกรดไฟล์ร่างใน `.agents/skills/<name>/SKILL.md` หลังตรวจ พร้อมเปลี่ยน maturity ตามจริง ไม่เปลี่ยนแค่ชื่อให้ดูเป็น master
+
+## ตรวจเพิ่มใน v2.3.0
+
+reviewKnowledge reads actual geopolitics.sectorDemandMultipliers and government.demandMultiplier when ranking research candidates; do not invent a productDemandMultipliers field that the world never writes.
+
+อ่าน `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และกรณีตรวจ `test/knowledge-and-company.test.cjs`; สถานะร่างเดิมไม่เปลี่ยน maturity อัตโนมัติ

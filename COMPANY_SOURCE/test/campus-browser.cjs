@@ -195,3 +195,48 @@ test("desktop and standalone build boot without uncaught errors", async () => {
     } finally { await page.close(); }
   }
 });
+
+test("portrait camera fits the entire campus and can zoom out beyond the old clamp",async()=>{
+ const {page,errors}=await openGame({width:390,height:844});
+ try {
+  await page.locator('#fHome').click();await page.waitForTimeout(100);
+  const c=await page.evaluate(()=>CompanyDebug.getCamera());
+  assert.ok(c.zoom<.45);assert.ok(c.bounds.worldW*c.zoom<=c.viewportWidth);assert.ok(c.bounds.worldH*c.zoom<=c.viewportHeight-200);
+  for(let i=0;i<8;i++) await page.locator('#fZoomOut').click();
+  const out=await page.evaluate(()=>CompanyDebug.getCamera());assert.ok(out.zoom<c.zoom);assert.ok(out.zoom>=out.minimumZoom);
+  assert.deepEqual(errors,[]);
+ } finally {await page.close();}
+});
+
+test("company tabs expose team coverage, learned subjects and assets on a phone",async()=>{
+ const {page,errors}=await openGame();
+ try {
+  await page.locator('[data-nav="company"]').click();
+  await page.getByRole('button',{name:'องค์ความรู้ / R&D',exact:true}).click();
+  await page.getByRole('button',{name:'สารบัญวิชา',exact:true}).click();
+  assert.ok((await page.locator('#shBody').innerText()).includes('170 วิชา'));
+  await page.getByLabel('หมวดวิชา').selectOption('คณิตศาสตร์');
+  assert.ok((await page.locator('#shBody').innerText()).includes('คณิตศาสตร์ขั้นสูง'));
+  for(const name of ['ธุรกิจ / สินค้า','บอร์ด / แผน','โครงสร้าง / คน','ทรัพย์สิน / ทรัพยากร']) {
+   await page.getByRole('button',{name,exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).length>20);
+  }
+  if(process.env.COMPANY_SCREENSHOTS_DIR) await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'company-panel.png')});
+  assert.deepEqual(errors,[]);
+ } finally {await page.close();}
+});
+
+test("character knowledge tab shows personal subjects at Lv4 and Lv5",async()=>{
+ const {page,errors}=await openGame();
+ try {
+  await page.evaluate(()=>{
+   const id=CompanyDebug.app.snapshot().people[0].id;
+   for(const [subjectId,level] of [['algorithms',85],['mathematics',95]]) CompanyDebug.app.dispatch({type:'directorEdit',action:'setSubject',personId:id,subjectId,level});
+   CompanyDebug.refresh();CompanyDebug.openPersonSheet(id);
+  });
+  await page.getByRole('button',{name:'ความรู้',exact:true}).click();
+  const text=await page.locator('#shBody').innerText();
+  assert.ok(text.includes('อัลกอริทึมและการวิเคราะห์ประสิทธิภาพ · Lv4'));assert.ok(text.includes('คณิตศาสตร์พื้นฐาน · Lv5'));
+  if(process.env.COMPANY_SCREENSHOTS_DIR) await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'character-knowledge.png')});
+  assert.deepEqual(errors,[]);
+ } finally {await page.close();}
+});

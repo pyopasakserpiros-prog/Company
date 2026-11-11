@@ -9,6 +9,13 @@
 - [สถานะเกม](../../project_status_and_ai_onboarding.md) — ระบบที่ยืนยันใน source และงานที่ยังค้าง
 - [วิสัยทัศน์ผู้เล่น](PLAYER_VISION_AND_DESIGN_PRINCIPLES.md) — เป้าหมายเกมและหลักการออกแบบ
 
+## ระบบความรู้และเทมเพลต
+
+- [คู่มือวิชาและความพร้อมธุรกิจ](LEARNED_KNOWLEDGE_SYSTEM.md)
+- [ทะเบียนวิชาและตารางธุรกิจ](KNOWLEDGE_SUBJECT_CATALOG.md)
+- [เทมเพลตสร้างวิชา](templates/KNOWLEDGE_SUBJECT_TEMPLATE.md)
+- [แหล่งค้นคว้าจากหลักสูตร/กรอบอาชีพจริง](research/KNOWLEDGE_CURRICULUM_SOURCES.md)
+
 ## หมวดเอกสาร
 
 | หมวด | ใช้หาอะไร |

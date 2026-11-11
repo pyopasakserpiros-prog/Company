@@ -29,3 +29,9 @@
 - แพ็กเกจ `Company-v2.1.0.zip` พัฒนาจากฐาน commit `6182e0a662bf1dfe47360e64e20e635ea07abeae` และอัปเดตทั้ง source, tests (`136/136`), standalone HTML, เอกสารสถานะ, คลัง ideas และสกิลใน `.agents/skills/` พร้อมซิงก์ Master Skill (`company-evolution-dev` และ `company-for-every-patch`) ในระบบสกิลของแอป Gemini แล้ว
 - ในคอนเทนเนอร์ออฟไลน์ของ Gemini ไม่มีแพ็กเกจ npm `playwright` ติดตั้งไว้ล่วงหน้า จึงรันยืนยัน `npm test` (136/136), `npm run check`, `npm run build` และ `node tools/benchmark.cjs` ครบทุกตัว ส่วน `npm run test:browser` ให้รันซ้ำบนเครื่องที่มี Playwright เมื่อรวมเข้า branch `main`
 - แนวทางต่อยอดสำหรับแพตช์ถัดไป (v2.2.0+) สรุปไว้ใน [GEMINI_NEXT_PATCH_HANDOFF_V210.md](GEMINI_NEXT_PATCH_HANDOFF_V210.md)
+
+## งาน Codex — วิชาและความพร้อมธุรกิจ v2.3.0
+
+| Task ID | เจ้าของ / ฐาน | ขอบเขต | สถานะและหลักฐาน |
+|---|---|---|---|
+| `npc-knowledge-company-and-zoom-v230` | Codex / main `359bace` | ซูมมือถือ, หน้าบริษัท/ความรู้ตัวละคร, 170 วิชาและแกนมนุษย์, R&D/ซื้อเทคโนโลยี, เซฟเดิม, แหล่งหลักและเทมเพลตวิชา | ตรวจแล้วและส่งขึ้น main ใน changeset v2.3.0; [รายงาน](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md), [รับช่วง](GEMINI_NEXT_PATCH_HANDOFF_V230.md) — ไม่อ้างว่าซิงก์สกิลส่วนตัวในแอป Gemini แล้ว |

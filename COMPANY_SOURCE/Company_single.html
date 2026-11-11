@@ -970,6 +970,10 @@ canvas.pt {
   }
 }
 
+/* Company navigation remains reachable on narrow phones. */
+#hudBottom { overflow-x: auto; }
+#hudBottom button { flex: 1 0 52px; }
+
 </style>
   </head>
   <body>
@@ -1016,6 +1020,7 @@ canvas.pt {
 
       <!-- Bottom Navigation Bar (6 Tabs — JS2 Style) -->
       <nav id="hudBottom" role="navigation" aria-label="เมนูหลัก">
+        <button type="button" data-nav="company" aria-label="บริษัท"><span>🏛️</span>บริษัท</button>
         <button type="button" data-nav="people" aria-label="พนักงาน">
           <span>👥</span>ผู้คน
         </button>
@@ -9288,8 +9293,8 @@ canvas.pt {
     return e;
   }
   return Object.freeze({
-    VERSION: "2.2.0",
-    RELEASE_VERSION: "2.2.0",
+    VERSION: "2.3.0",
+    RELEASE_VERSION: "2.3.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -9742,7 +9747,7 @@ canvas.pt {
   function (H, D, L, E) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.2.0",
+      RELEASE_VERSION = "2.3.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -10210,6 +10215,423 @@ canvas.pt {
         },
         history: [],
       };
+    }
+
+    // Learned subjects and company process qualification live outside the locked Human Core.
+    const BASE_SUBJECTS = {
+      embedded_iot: "อิเล็กทรอนิกส์และระบบฝังตัว", food_fermentation: "อาหารและการหมัก",
+      bakery: "การอบขนมและธัญพืช", biomed_sterile: "เวชภัณฑ์และงานปลอดเชื้อ",
+      metal_machining: "โลหะวิทยาและเครื่องจักร", power_electronics: "ไฟฟ้ากำลังและแบตเตอรี่",
+      semiconductor_optics: "เซมิคอนดักเตอร์และหุ่นยนต์", software: "พัฒนาซอฟต์แวร์",
+      agriculture: "เกษตรและทรัพยากรชีวภาพ", logistics: "ขนส่งและคลังสินค้า",
+      quality: "มาตรวิทยาและระบบคุณภาพ", management: "บริหารกิจการ", commerce: "การค้าและบัญชี",
+    };
+    const SUBJECT_DETAILS = Object.freeze({
+      algorithms:["อัลกอริทึมและการวิเคราะห์ประสิทธิภาพ","ซอฟต์แวร์","discrete_math"], data_structures:["โครงสร้างข้อมูล","ซอฟต์แวร์","programming"], food_reheating:["การอุ่นอาหารอย่างปลอดภัย","อาหาร","food_safety"], food_preservation:["การถนอมอาหาร","อาหาร","food_safety"], household_budgeting:["วางแผนรายรับรายจ่ายส่วนบุคคล","สำนักงาน","mathematics"],
+      calculus:["แคลคูลัสและสมการเชิงอนุพันธ์","คณิตศาสตร์","applied_math"], linear_algebra:["พีชคณิตเชิงเส้น","คณิตศาสตร์","mathematics"], probability:["ความน่าจะเป็น","คณิตศาสตร์","mathematics"], numerical_methods:["วิธีเชิงตัวเลขและการคำนวณวิศวกรรม","คณิตศาสตร์","advanced_math"], discrete_math:["คณิตศาสตร์ไม่ต่อเนื่องและตรรกศาสตร์","คณิตศาสตร์","mathematics"], optimization:["การหาค่าเหมาะที่สุด","คณิตศาสตร์","linear_algebra"],
+      physical_chemistry:["เคมีเชิงฟิสิกส์","เคมี","chemical_processing"], organic_chemistry:["เคมีอินทรีย์","เคมี","chemical_processing"], analytical_chemistry:["เคมีวิเคราะห์และการทดสอบสาร","เคมี","chemical_processing"], thermodynamics:["อุณหพลศาสตร์","วิศวกรรมกระบวนการ","applied_math"], heat_transfer:["การถ่ายเทความร้อน","วิศวกรรมกระบวนการ","thermodynamics"], fluid_mechanics:["กลศาสตร์ของไหล","วิศวกรรมกระบวนการ","applied_math"], process_control:["ควบคุมกระบวนการอุตสาหกรรม","วิศวกรรมกระบวนการ","control_theory"], reaction_engineering:["วิศวกรรมปฏิกิริยาเคมี","วิศวกรรมกระบวนการ","physical_chemistry"],
+      materials_science:["วัสดุศาสตร์และสมบัติวัสดุ","โลหะ","chemical_processing"], corrosion:["การกัดกร่อนและป้องกันวัสดุ","โลหะ","materials_science"], casting:["กระบวนการหล่อโลหะ","โลหะ","metallurgy"], extrusion:["กระบวนการอัดรีดและขึ้นรูป","โลหะ","materials_science"], industrial_automation:["ระบบอัตโนมัติและ PLC","ไฟฟ้า","electrical_basics"], industrial_networks:["เครือข่ายสื่อสารอุตสาหกรรม","ไฟฟ้า","embedded_iot"], lean_manufacturing:["การผลิตแบบลีนและลดความสูญเปล่า","การผลิต","project_management"], statistical_quality:["ควบคุมคุณภาพเชิงสถิติ","คุณภาพ","statistics"], reliability_engineering:["ความเชื่อถือได้และวิเคราะห์ความล้มเหลว","คุณภาพ","probability"], measurement_uncertainty:["ความไม่แน่นอนของการวัด","คุณภาพ","statistics"], semiconductor_physics:["ฟิสิกส์สารกึ่งตัวนำและอุปกรณ์","เซมิคอนดักเตอร์","physical_chemistry"],
+      cost_accounting:["บัญชีต้นทุนการผลิตและบริการ","สำนักงาน","accounting"], taxation:["ภาษีอากรและเอกสารภาษีธุรกิจ","สำนักงาน","accounting"], budgeting:["จัดทำงบประมาณและติดตามผล","สำนักงาน","financial_planning"], treasury:["บริหารสภาพคล่องและความเสี่ยงการเงิน","สำนักงาน","financial_planning"], contract_management:["บริหารสัญญาและการเรียกร้องสิทธิ","สำนักงาน","business_law"], hr_recruitment:["สรรหาและประเมินบุคลากร","สำนักงาน","people_management"], employment_law:["กฎหมายแรงงานและแรงงานสัมพันธ์","สำนักงาน","business_law"], sustainability_accounting:["บัญชีสิ่งแวดล้อมและการรายงานความยั่งยืน","สำนักงาน","accounting"],
+      demand_forecasting:["พยากรณ์ความต้องการสินค้า","ขนส่ง","statistics"], production_planning:["วางแผนการผลิตและกำลังการผลิต","การผลิต","project_management"], supply_chain_risk:["บริหารความเสี่ยงซัพพลายเชน","ขนส่ง","procurement"], route_optimization:["คำนวณเส้นทางและจัดรถขนส่ง","ขนส่ง","operations_research"], international_trade:["การค้าระหว่างประเทศและเงื่อนไขส่งมอบ","ขนส่ง","business_law"], packaging_engineering:["วิศวกรรมบรรจุภัณฑ์และการป้องกันสินค้า","การผลิต","materials_science"], inventory_optimization:["วางนโยบายสต็อกและปริมาณสั่งซื้อ","ขนส่ง","statistics"],
+      data_modeling:["ออกแบบแบบจำลองข้อมูล","ซอฟต์แวร์","databases"], api_design:["ออกแบบ API และการเชื่อมระบบ","ซอฟต์แวร์","programming"], distributed_systems:["ระบบกระจายและความสอดคล้องข้อมูล","ซอฟต์แวร์","programming"], secure_coding:["การเขียนโปรแกรมอย่างปลอดภัย","ซอฟต์แวร์","cybersecurity"], ux_research:["วิจัยประสบการณ์และทดสอบกับผู้ใช้","ซอฟต์แวร์","requirements_analysis"], frontend_development:["พัฒนาส่วนติดต่อผู้ใช้เว็บและแอป","ซอฟต์แวร์","programming"], machine_learning:["การเรียนรู้ของเครื่องและประเมินโมเดล","ซอฟต์แวร์","linear_algebra"], computer_vision:["ประมวลผลภาพและการมองเห็นของเครื่อง","ซอฟต์แวร์","machine_learning"], devops:["ส่งมอบซอฟต์แวร์และดูแลระบบอัตโนมัติ","ซอฟต์แวร์","cloud_operations"],
+      plant_pathology:["โรคพืชและวินิจฉัยความผิดปกติ","เกษตร","agriculture"], integrated_pest_management:["จัดการศัตรูพืชแบบผสมผสาน","เกษตร","plant_pathology"], crop_nutrition:["โภชนาการพืชและจัดการปุ๋ย","เกษตร","soil_science"], hydroponics:["ปลูกพืชไร้ดินและควบคุมสารละลาย","เกษตร","crop_nutrition"], agri_machinery:["เครื่องจักรเกษตรและการบำรุงรักษา","เกษตร","maintenance"], aquaculture:["เพาะเลี้ยงสัตว์น้ำและระบบฟาร์ม","เกษตร","animal_husbandry"], fish_health:["สุขภาพสัตว์น้ำและคุณภาพน้ำฟาร์ม","เกษตร","aquaculture"], feed_formulation:["สูตรอาหารสัตว์และสมดุลสารอาหาร","เกษตร","animal_husbandry"], veterinary_basics:["พื้นฐานสัตวแพทย์และความปลอดภัยชีวภาพ","เกษตร","animal_health"],
+      sanitation:["สุขลักษณะโรงงานและการล้างฆ่าเชื้อ","อาหาร","food_safety"], haccp:["วิเคราะห์อันตรายและจุดควบคุมวิกฤตอาหาร","อาหาร","food_safety"], allergen_management:["ควบคุมสารก่อภูมิแพ้และฉลากอาหาร","อาหาร","food_safety"], food_microbiology:["จุลชีววิทยาอาหาร","อาหาร","food_fermentation"], thermal_processing:["แปรรูปอาหารด้วยความร้อน","อาหาร","heat_transfer"], nutrition_science:["โภชนศาสตร์และประเมินสารอาหาร","อาหาร","food_formulation"],
+      biomedical_instrumentation:["เครื่องมือวัดสัญญาณชีวการแพทย์","ชีวการแพทย์","electrical_basics"], pharmacology:["เภสัชวิทยาและกลไกสารออกฤทธิ์","ชีวการแพทย์","organic_chemistry"], pharmaceutical_quality:["คุณภาพเภสัชภัณฑ์และการตรวจสอบความใช้ได้","ชีวการแพทย์","aseptic_processing"], clinical_research:["วิจัยทางคลินิกและหลักฐานความปลอดภัย","ชีวการแพทย์","clinical_validation"],
+      solar_pv:["ระบบโฟโตโวลตาอิกและออกแบบโซลาร์","ไฟฟ้า","power_conversion"], water_chemistry:["เคมีน้ำและการตรวจคุณภาพน้ำ","เคมี","analytical_chemistry"], wastewater_process:["กระบวนการบำบัดน้ำเสียและตะกอน","เคมี","water_treatment"], hydrogen_safety:["ระบบไฮโดรเจนและความปลอดภัยก๊าซ","เคมี","chemical_processing"], energy_auditing:["ตรวจวัดและปรับปรุงประสิทธิภาพพลังงาน","ไฟฟ้า","electrical_basics"],
+      maritime_logistics:["ขนส่งทางทะเลและเอกสารเดินเรือ","ขนส่ง","international_trade"], port_operations:["ปฏิบัติการท่าเรือและขนถ่ายสินค้า","ขนส่ง","cargo_safety"], construction_materials:["วัสดุก่อสร้างและการทดสอบ","ก่อสร้าง","materials_science"], structural_analysis:["วิเคราะห์โครงสร้างรับแรง","ก่อสร้าง","applied_math"], geotechnics:["ปฐพีกลศาสตร์และฐานราก","ก่อสร้าง","soil_science"], hotel_operations:["บริหารโรงแรมและการให้บริการ","บริการ","people_management"], hospitality_service:["การบริการและดูแลประสบการณ์ลูกค้า","บริการ","sales_negotiation"],
+
+      mathematics:["คณิตศาสตร์พื้นฐาน","คณิตศาสตร์"], applied_math:["คณิตศาสตร์ประยุกต์","คณิตศาสตร์","mathematics"], advanced_math:["คณิตศาสตร์ขั้นสูง","คณิตศาสตร์","applied_math"], operations_research:["วิจัยดำเนินงานและหาค่าเหมาะที่สุด","คณิตศาสตร์","advanced_math"], control_theory:["ทฤษฎีควบคุมและระบบพลวัต","คณิตศาสตร์","advanced_math"],
+      accounting: ["บัญชีขั้นต้น", "สำนักงาน"], financial_planning: ["วางแผนการเงินและเงินทุนหมุนเวียน", "สำนักงาน", "accounting"], procurement: ["จัดซื้อและประเมินซัพพลายเออร์", "สำนักงาน"], inventory_control: ["บัญชีสินค้าและควบคุมสต็อก", "สำนักงาน", "accounting"], sales_negotiation: ["การขายและเจรจาสัญญา", "สำนักงาน"], market_analysis: ["วิเคราะห์ตลาดและความต้องการ", "สำนักงาน"], business_law: ["กฎหมายธุรกิจและสัญญา", "สำนักงาน"], project_management: ["บริหารโครงการ", "สำนักงาน"], people_management: ["บริหารทีมและพัฒนาคน", "สำนักงาน"], office_admin: ["งานเอกสารสำนักงาน", "สำนักงาน"], technical_training: ["ออกแบบหลักสูตรและถ่ายทอดวิชาชีพ", "สำนักงาน", "people_management"], research_methods: ["ระเบียบวิธีวิจัยและทดลอง", "งานวิจัย"], statistics: ["สถิติและออกแบบการทดลอง", "งานวิจัย", "mathematics"], product_design: ["ออกแบบผลิตภัณฑ์และเขียนแบบ", "งานวิจัย"], safety: ["ความปลอดภัยในการทำงาน", "พื้นฐาน"], quality_documentation: ["เอกสารคุณภาพและสอบกลับล็อต", "คุณภาพ"], metrology: ["มาตรวิทยาและสอบเทียบ", "คุณภาพ", "quality"], electrical_basics: ["ไฟฟ้าเบื้องต้น", "ไฟฟ้า"], electrical_safety: ["ความปลอดภัยไฟฟ้าและแรงดันสูง", "ไฟฟ้า", "electrical_basics"], circuit_design: ["ออกแบบวงจรและแผง PCB", "ไฟฟ้า", "electrical_basics"], embedded_firmware: ["เฟิร์มแวร์และไมโครคอนโทรลเลอร์", "ไฟฟ้า", "software"], power_conversion: ["วงจรแปลงไฟและอินเวอร์เตอร์", "ไฟฟ้า", "circuit_design"], battery_chemistry: ["เคมีแบตเตอรี่และการคัดเกรดเซลล์", "ไฟฟ้า", "chemical_processing"], grid_integration: ["ระบบโครงข่ายและติดตั้งพลังงาน", "ไฟฟ้า", "electrical_safety"], smt_process: ["กระบวนการ SMT และประกอบแผงวงจร", "ไฟฟ้า", "electrical_basics"], programming: ["เขียนโปรแกรมเชิงโครงสร้าง", "ซอฟต์แวร์", "software"], requirements_analysis: ["วิเคราะห์ความต้องการผู้ใช้", "ซอฟต์แวร์"], databases: ["ฐานข้อมูลและความถูกต้องของข้อมูล", "ซอฟต์แวร์", "programming"], software_testing: ["ทดสอบซอฟต์แวร์และตรวจรับงาน", "ซอฟต์แวร์", "programming"], version_control: ["จัดการรุ่นซอร์สและงานร่วมทีม", "ซอฟต์แวร์"], cloud_operations: ["ระบบคลาวด์และดูแลบริการ", "ซอฟต์แวร์", "programming"], cybersecurity: ["ความปลอดภัยระบบและข้อมูล", "ซอฟต์แวร์", "programming"], machining: ["ตัดกลึงและ CNC", "โลหะ", "metal_machining"], metallurgy: ["โลหะวิทยาและการถลุง", "โลหะ", "chemical_processing"], welding: ["เชื่อมประกอบและตรวจแนวเชื่อม", "โลหะ", "metal_machining"], mechanical_design: ["ออกแบบกลไกและชิ้นส่วนเครื่องจักร", "โลหะ", "product_design"], tooling: ["แม่พิมพ์ จิ๊ก และตั้งเครื่อง", "โลหะ", "machining"], maintenance: ["บำรุงรักษาและวิเคราะห์ความเสียหาย", "โลหะ", "metal_machining"], robotics_control: ["ควบคุมหุ่นยนต์และระบบอัตโนมัติ", "หุ่นยนต์", "programming"], optical_engineering: ["เลนส์และระบบออปติก", "เซมิคอนดักเตอร์"], semiconductor_process: ["กระบวนการเวเฟอร์และลิโธกราฟี", "เซมิคอนดักเตอร์", "chemical_processing"], cleanroom_operations: ["ปฏิบัติงานคลีนรูมและควบคุมฝุ่น", "เซมิคอนดักเตอร์", "safety"], chemical_processing: ["เคมีอุตสาหกรรมและการแปรรูป", "เคมี"], polymer_processing: ["แปรรูปพอลิเมอร์และยาง", "เคมี", "chemical_processing"], water_treatment: ["คุณภาพน้ำและบำบัดน้ำเสีย", "เคมี", "chemical_processing"], waste_management: ["จัดการของเสียและมลพิษ", "เคมี", "safety"], food_safety: ["สุขอนามัยและความปลอดภัยอาหาร", "อาหาร"], baking_process: ["วัตถุดิบ โดว์ และกระบวนการอบ", "อาหาร", "bakery"], fermentation: ["จุลชีววิทยาและการหมัก", "อาหาร", "food_fermentation"], food_formulation: ["พัฒนาสูตรและกระบวนการอาหาร", "อาหาร", "food_fermentation"], dairy_processing: ["แปรรูปนมและพาสเจอไรซ์", "อาหาร", "food_safety"], shelf_life: ["อายุเก็บรักษาและทดสอบเสถียรภาพ", "อาหาร", "food_safety"], aseptic_processing: ["กระบวนการปลอดเชื้อและตรวจปล่อย", "ชีวการแพทย์", "biomed_sterile"], clinical_validation: ["ทดสอบและตรวจรับเครื่องมือแพทย์", "ชีวการแพทย์", "quality"], regulatory_affairs: ["มาตรฐานผลิตภัณฑ์และทะเบียนกำกับ", "ชีวการแพทย์", "quality_documentation"], soil_science: ["ดินและธาตุอาหารพืช", "เกษตร", "agriculture"], crop_propagation: ["เมล็ดพันธุ์และขยายพันธุ์พืช", "เกษตร", "agriculture"], irrigation: ["ให้น้ำและจัดการทรัพยากรน้ำ", "เกษตร", "agriculture"], animal_husbandry: ["เลี้ยงสัตว์และสวัสดิภาพสัตว์", "เกษตร"], animal_health: ["สุขภาพสัตว์และป้องกันโรค", "เกษตร", "animal_husbandry"], postharvest: ["เก็บเกี่ยวและจัดการผลผลิต", "เกษตร", "agriculture"], warehouse_operations: ["บริหารคลังและเบิกจ่าย", "ขนส่ง", "logistics"], freight_planning: ["วางแผนขนส่งและเส้นทาง", "ขนส่ง", "logistics"], driving: ["ขับรถขนส่งและตรวจรถก่อนใช้", "ขนส่ง", "safety"], cold_chain: ["ควบคุมโซ่ความเย็น", "ขนส่ง", "logistics"], customs: ["ศุลกากรและการค้าระหว่างประเทศ", "ขนส่ง", "business_law"], cargo_safety: ["ความปลอดภัยสินค้าและการรับฝาก", "ขนส่ง", "safety"]
+    });
+    const SUBJECT_PREREQUISITES = Object.fromEntries(Object.entries(SUBJECT_DETAILS).filter(([,v])=>v[2]).map(([id,v])=>[id,v[2]]));
+    const SUBJECT_PREREQUISITE_LEVELS=Object.freeze({applied_math:40,advanced_math:60,operations_research:60,control_theory:60,statistics:30,battery_chemistry:40,semiconductor_process:40,aseptic_processing:40,robotics_control:40});
+    const prerequisiteLevel=id=>SUBJECT_PREREQUISITE_LEVELS[id] || 25;
+    const researchDisciplines=p=>Object.keys(p.requirements).filter(id=>!["quality","quality_documentation","metrology","regulatory_affairs"].includes(id));
+    const FAMILY_SUBJECTS = Object.freeze({
+      smart_audio_lighting: {embedded_iot:40,electrical_basics:30,smt_process:30,quality:30},
+      industrial_iot: {embedded_iot:40,circuit_design:35,embedded_firmware:30,electrical_safety:30,quality:30},
+      ai_vision_edge: {semiconductor_optics:45,optical_engineering:40,programming:40,cleanroom_operations:35,quality:40},
+      ev_powertrain: {metal_machining:45,mechanical_design:35,electrical_safety:40,tooling:35,quality:40},
+      robotics_automation: {semiconductor_optics:45,robotics_control:40,mechanical_design:40,electrical_safety:40,software_testing:35},
+      herbal_functional_bev: {food_fermentation:40,food_formulation:35,food_safety:40,shelf_life:35,quality:30},
+      bakery_grain: {bakery:40,baking_process:35,food_safety:40,shelf_life:30,quality:30},
+      dairy_fermented: {food_fermentation:40,dairy_processing:40,fermentation:40,cold_chain:35,food_safety:45},
+      clinical_sterile: {biomed_sterile:50,aseptic_processing:45,clinical_validation:45,regulatory_affairs:40,quality_documentation:45},
+      clean_energy_grid: {power_electronics:45,power_conversion:40,electrical_safety:45,grid_integration:35,quality:40}
+    });
+    const SERVICE_SUBJECTS = Object.freeze({
+      calibration_lab:{quality:45,metrology:45,statistics:35,quality_documentation:40},
+      field_maintenance:{metal_machining:40,maintenance:40,electrical_safety:35,safety:35},
+      industrial_recycling:{metal_machining:40,waste_management:40,chemical_processing:35,safety:40},
+      battery_second_life_lab:{power_electronics:45,battery_chemistry:45,electrical_safety:45,waste_management:35,metrology:35},
+      returnable_pallet_pool:{logistics:40,warehouse_operations:35,inventory_control:30,cargo_safety:30},
+      cold_storage_3pl:{logistics:40,cold_chain:45,food_safety:35,warehouse_operations:35},
+      energy_epc_install:{power_electronics:45,grid_integration:40,electrical_safety:45,project_management:35,business_law:25},
+      b2b_technical_academy:{management:40,technical_training:40,project_management:30,quality_documentation:30},
+      wholesale_distribution:{commerce:40,procurement:35,inventory_control:30,sales_negotiation:35,accounting:30},
+      toll_smelting_extrusion:{metal_machining:45,metallurgy:45,machining:35,waste_management:40,quality:40}
+    });
+    function productRequirements(w,id) {
+      const p=w.catalog.products[id];
+      const family=Object.values(D.PRODUCT_FAMILIES || {}).find(f=>f.products.includes(id));
+      const req={...(FAMILY_SUBJECTS[family?.id] || {[productSubject(w,id)]:40,research_methods:30,quality:30})};
+      // The initial workshop assembles purchased speaker kits; designing its own products needs the full family.
+      if (!(p?.researchRequired > 0)) return {embedded_iot:30,safety:20,quality:25};
+      if(id==="visionCamera") req.computer_vision=40;
+      if(id==="ai_edge_module") req.machine_learning=45;
+      if(id==="probiotic_yogurt_cup" || id==="probioticElixir") req.food_microbiology=40;
+      if(id==="medical_saline_iv") req.pharmaceutical_quality=45;
+      if(id==="solarCharger" || id==="solar_mounting_rail_kit") req.solar_pv=35;
+      if(id==="ev_battery_tray_assembly") req.extrusion=35;
+      if ((p?.researchRequired || 0) >= 300) req.applied_math=40;
+      if (id === "solid_state_powerwall" || id === "autonomous_cargo_drone") req.advanced_math=40;
+      return req;
+    }
+    function materialRequirements(w,id) {
+      const subject=materialSubject(w,id), rec=D.MATERIAL_RECIPES?.[id];
+      if(!rec) return {};
+      const req={[subject]:rec.tier >= 3 ? 50 : 35,safety:25};
+      if(/npk|nitrogen|ammonia/.test(id)) req.chemical_processing=35;
+      if(rec.tier>=2) req.quality=35;
+      if(/wafer|microchip|silicon/.test(id)) {req.semiconductor_process=45;req.cleanroom_operations=40;req.semiconductor_physics=40;}
+      else if(/alum|steel|metal|copper|nickel|coke/.test(id)) req.metallurgy=40;
+      else if(/flour|dough/.test(id)) req.food_safety=35;
+      else if(/saline|culture/.test(id)) req.aseptic_processing=40;
+      else if(/cathode|battery/.test(id)) req.battery_chemistry=45;
+      else if(/resin|tire|casing/.test(id)) req.polymer_processing=40;
+      return req;
+    }
+    function teamCoverage(w,requirements) {
+      return Object.entries(requirements).map(([id,level])=>{
+        const holders=w.people.filter(p=>p.employed && subjectLevel(p,id)>=level);
+        return {id,nameTh:SUBJECTS[id],level,ready:holders.length>0,holders:holders.map(p=>({id:p.id,name:p.name,level:subjectLevel(p,id)}))};
+      });
+    }
+    function teamReady(w,requirements) { return Object.entries(requirements).every(([id,level])=>subjectReady(w,id,level)); }
+
+    const SUBJECTS = Object.freeze({...BASE_SUBJECTS,...Object.fromEntries(Object.entries(SUBJECT_DETAILS).map(([id,v])=>[id,v[0]]))});
+    const SUBJECT_APTITUDE_MODELS = Object.freeze({
+      mathematical:{numerical:.35,analytical:.3,memory:.2,uncertaintyReasoning:.15},
+      accounting:{numerical:.3,precision:.25,organization:.25,attention:.2},
+      engineering:{analytical:.3,spatial:.25,precision:.25,problemSensitivity:.2},
+      software:{analytical:.35,memory:.2,problemSensitivity:.25,organization:.2},
+      craft:{dexterity:.25,precision:.3,sensory:.2,coordination:.25},
+      culinary:{tasteSmell:.25,precision:.25,attention:.25,dexterity:.25},
+      biological:{sensory:.2,memory:.25,problemSensitivity:.3,attention:.25},
+      laboratory:{precision:.3,attention:.25,analytical:.25,visualAcuity:.2},
+      commercial:{communication:.3,verbal:.25,uncertaintyReasoning:.25,emotionalInsight:.2},
+      management:{organization:.3,communication:.25,uncertaintyReasoning:.25,emotionalInsight:.2},
+      transport:{spatial:.25,reactionSpeed:.25,attention:.3,coordination:.2},
+      safety:{attention:.3,problemSensitivity:.3,composure:.2,memory:.2},
+      chemical:{analytical:.3,memory:.25,precision:.25,problemSensitivity:.2},
+    });
+    function subjectSpec(id) {
+      const detail=SUBJECT_DETAILS[id];
+      const category=detail?.[1] || ({bakery:"อาหาร",food_fermentation:"อาหาร",software:"ซอฟต์แวร์",metal_machining:"โลหะ",quality:"คุณภาพ",management:"สำนักงาน",commerce:"สำนักงาน",logistics:"ขนส่ง",agriculture:"เกษตร",power_electronics:"ไฟฟ้า",embedded_iot:"ไฟฟ้า",semiconductor_optics:"เซมิคอนดักเตอร์",biomed_sterile:"ชีวการแพทย์"})[id] || "พื้นฐาน";
+      let model=({คณิตศาสตร์:"mathematical",ซอฟต์แวร์:"software",ไฟฟ้า:"engineering",โลหะ:"craft",อาหาร:"culinary",เกษตร:"biological",คุณภาพ:"laboratory",เซมิคอนดักเตอร์:"laboratory",ชีวการแพทย์:"laboratory",เคมี:"chemical",ขนส่ง:"transport",สำนักงาน:"management",วิศวกรรมกระบวนการ:"engineering",การผลิต:"engineering",ก่อสร้าง:"engineering",บริการ:"commercial",หุ่นยนต์:"engineering",งานวิจัย:"engineering",พื้นฐาน:"safety"})[category];
+      if(["accounting","inventory_control","financial_planning","cost_accounting","taxation","budgeting","treasury","sustainability_accounting","statistics"].includes(id)) model=id==="statistics" ? "mathematical" : "accounting";
+      if(["sales_negotiation","market_analysis","business_law","procurement","commerce"].includes(id)) model="commercial";
+      if(["electrical_safety","food_safety","cargo_safety","waste_management","regulatory_affairs","safety"].includes(id)) model="safety";
+      if(["mechanical_design","tooling","metal_machining","product_design"].includes(id)) model="engineering";
+      if(id==="fermentation"||id==="shelf_life") model="biological";
+      return {id,nameTh:SUBJECTS[id],category,prerequisite:SUBJECT_PREREQUISITES[id] || null,prerequisiteLevel:prerequisiteLevel(id),aptitudes:SUBJECT_APTITUDE_MODELS[model],model,
+        effectTh: ({mathematical:"ความแม่นยำการคำนวณ วิเคราะห์ความไม่แน่นอน และออกแบบแบบจำลอง",accounting:"ความถูกต้องของเอกสาร การจัดซื้อ และควบคุมเงิน/สต็อก",engineering:"ความเร็วแก้ปัญหา ออกแบบและประกอบชิ้นงาน",software:"การเขียนและทดสอบระบบ ลดข้อผิดพลาดและงานแก้",craft:"ความเร็วลงมือและคุณภาพการประกอบ",culinary:"การควบคุมกระบวนการอาหารและลดของเสีย",biological:"การสังเกตชีวภาพ ควบคุมกระบวนการและความแปรปรวน",laboratory:"ความแม่นยำการทดสอบและตรวจรับคุณภาพ",commercial:"ประสิทธิภาพงานขาย/จัดซื้อและการเจรจา",management:"เตรียมโครงการ จัดทีม และถ่ายทอดความรู้",transport:"การวางแผน จัดการสินค้าและทำงานขนส่ง",safety:"เงื่อนไขอนุญาตทำงานเสี่ยงและคุณภาพกระบวนการ",chemical:"การควบคุมสูตรและกระบวนการแปรรูป"})[model]};
+    }
+    function subjectTalent(p,id) {
+      const weights=subjectSpec(id).aptitudes;
+      return Object.entries(weights).reduce((sum,[axis,weight])=>sum+(p.profile.aptitudes[axis] ?? 50)*weight,0);
+    }
+    function subjectPotential(p,id) {
+      return Object.entries(subjectSpec(id).aptitudes).reduce((sum,[axis,weight])=>sum+(p.profile.potential?.[axis] ?? p.profile.aptitudes[axis] ?? 50)*weight,0);
+    }
+    function subjectPerformance(p,id) {
+      const level=subjectLevel(p,id), practice=Math.min(100,Math.sqrt((p.education?.appliedMinutes?.[id] || 0)/60)*5);
+      const talent=subjectTalent(p,id), fatigue=Math.max(0,40-(p.state.energy ?? 80))*.35+Math.max(0,(p.state.stress ?? 0)-60)*.25;
+      return clamp(level*.65+talent*.2+practice*.15-fatigue,0,100);
+    }
+    function jobSubject(w,j) {
+      if(j.unitId && ["assembly","rework"].includes(j.kind)) return productSubject(w,w.units[j.unitId]?.productId);
+      if(j.kind==="research") return j.courseSubject || j.researchSubject || w.knowledge?.projects[j.knowledgeProjectId]?.subject || "research_methods";
+      return ({qa:"quality",purchase:"procurement",invoice:"accounting",sales:"sales_negotiation",shipping:"logistics",packing:"warehouse_operations"})[j.kind] || null;
+    }
+
+    function educationFor(p) {
+      if (p.education) return p.education;
+      const roleSubject = { assembler: "embedded_iot", engineer: "embedded_iot", inspector: "quality", logistics: "logistics", coordinator: "management", admin: "commerce", sales: "commerce" };
+      // Candidates can bring one documented speciality; a generic engineer never knows every industry.
+      const specialties = ["embedded_iot", "food_fermentation", "bakery", "metal_machining", "software", "power_electronics", "biomed_sterile", "agriculture"];
+      const subject = p.role === "engineer" && p.id.startsWith("candidate") ? specialties[seedHash(p.id) % specialties.length] : roleSubject[p.role] || "logistics";
+      const common={safety:25,mathematics:25};
+      const backgrounds={
+        coordinator:{accounting:35,financial_planning:40,people_management:45,project_management:40,business_law:30},
+        admin:{accounting:45,procurement:45,office_admin:45,inventory_control:35,financial_planning:35},
+        sales:{sales_negotiation:45,market_analysis:40,business_law:25},
+        engineer:{electrical_basics:45,circuit_design:40,smt_process:35,embedded_firmware:35,software:30,research_methods:45,product_design:40,electrical_safety:35,applied_math:40},
+        assembler:{electrical_basics:35,smt_process:35,electrical_safety:30},
+        inspector:{metrology:45,statistics:35,quality_documentation:45},
+        logistics:{warehouse_operations:45,freight_planning:40,driving:40,cargo_safety:35,inventory_control:30}
+      };
+      const specialistExtras={bakery:{baking_process:40,food_safety:45,shelf_life:35},food_fermentation:{food_formulation:40,food_safety:40,fermentation:35},metal_machining:{machining:40,metallurgy:35,mechanical_design:35},software:{programming:45,version_control:40,software_testing:35,requirements_analysis:35,algorithms:35,data_structures:35},power_electronics:{power_conversion:40,electrical_safety:45,grid_integration:35},biomed_sterile:{aseptic_processing:45,regulatory_affairs:35,clinical_validation:40},agriculture:{soil_science:40,crop_propagation:40,irrigation:35}};
+      const extra=p.role==="engineer"&&subject!=="embedded_iot" ? specialistExtras[subject] || {} : backgrounds[p.role] || {};
+      const learned={...common,...extra,[subject]:45};
+      const all=Object.keys(SUBJECTS),h=seedHash(`${p.profile.seed}:${p.id}:personal-study`);
+      const interests=[all[h%all.length],all[Math.floor(h/101)%all.length]];
+      // A person can bring knowledge unrelated to their current job. No subject is locked by company type.
+      const hobby=interests[0],background=subjectTalent(p,hobby)>65 && h%19===0 ? 55 : 5+h%26;
+      learned[hobby]=Math.max(learned[hobby] || 0,background);
+      let prior=hobby,desired=background;const seen=new Set();
+      while(SUBJECT_PREREQUISITES[prior] && desired>=20 && !seen.has(prior)) {seen.add(prior);desired=prerequisiteLevel(prior);prior=SUBJECT_PREREQUISITES[prior];learned[prior]=Math.max(learned[prior] || 0,desired);}
+      return {subjects:learned,interests,practiceMinutes:{},course:null};
+    }
+    function ensureKnowledge(w) {
+      if (!w.knowledge) {
+        const historical = [...w.research.unlocked];
+        w.knowledge = { version: 1, projects: {}, lastReviewDay: 0, decision: "เริ่มจากความรู้และงานที่ทีมถนัด", materialsConsumed: {}, historicalBlueprints: historical };
+        // Existing contracts are honoured; old pooled points do not license new industries.
+        w.research.unlocked = historical.filter((id) => (w.catalog.products[id]?.researchRequired || 0) === 0);
+        for (const o of Object.values(w.orders)) if (!["paid", "cancelled"].includes(o.status)) o.legacyQualification = true;
+        for (const [id,j] of Object.entries(w.jobs)) if (j.kind === "research") {
+          for (const p of w.people) if (p.taskId === id) { p.taskId = null; p.stationId = null; }
+          delete w.jobs[id];
+        }
+      }
+      for (const p of w.people) if (!p.education) p.education = educationFor(p);
+      return w.knowledge;
+    }
+    function productSubject(w, id) {
+      const p = w.catalog.products[id];
+      const family = Object.values(D.PRODUCT_FAMILIES || {}).find((f) => f.products.includes(id));
+      if (family?.id === "bakery_grain") return "bakery";
+      return family?.domainId || ({ tech: "embedded_iot", electronics: "embedded_iot", food: "food_fermentation", automotive: "metal_machining", biomed: "biomed_sterile", energy: "power_electronics", aerospace_robotics: "semiconductor_optics" })[p?.industry] || "embedded_iot";
+    }
+    function subjectLevel(p, subject) { return educationFor(p).subjects[subject] || 0; }
+    function subjectReady(w, subject, level = 40) {
+      return w.people.some((p) => p.employed && subjectLevel(p, subject) >= level);
+    }
+    const MATERIAL_SUBJECTS=Object.freeze({
+      milled_rice:"food_fermentation",artisan_flour:"food_fermentation",wheat_flour:"food_fermentation",nitrogen_ammonia:"chemical_processing",npk_fertilizer:"chemical_processing",pharma_saline_water:"biomed_sterile",organic_compost:"agriculture",diesel_liter:"chemical_processing",truck_tire:"polymer_processing",refined_palm_oil:"food_fermentation",refined_sugar_syrup:"food_fermentation",raw_extract:"food_fermentation",coke_reducing_flux:"metal_machining",alumina_billet:"metal_machining",structural_steel_plate:"metal_machining",nickel_cobalt_matte:"metal_machining",metal_sheet:"metal_machining",copper_coil:"metal_machining",polymer_resin:"polymer_processing",pack_carton:"materials_science",glass_bottle:"chemical_processing",metallurgical_silicon:"semiconductor_optics",bakery_dough_butter:"bakery",probiotic_culture:"food_fermentation",foil_pouch:"polymer_processing",casing:"polymer_processing",wire_harness:"electrical_basics",aluminum_extrusion_profile:"metal_machining",heat_sink:"metal_machining",optical_lens:"optical_engineering",cathode_electrolyte:"battery_chemistry",silicon_wafer:"semiconductor_optics",driver:"embedded_iot",pcb:"embedded_iot",led:"embedded_iot",sensor:"embedded_iot",solar_cell:"power_electronics",battery:"battery_chemistry",microchip:"semiconductor_optics",power_inverter_ic:"power_electronics"
+    });
+    function materialSubject(w,id) { return MATERIAL_SUBJECTS[id] || "chemical_processing"; }
+    function productReadiness(w, id) {
+      const p = w.catalog.products[id];
+      if (!p) return { ready: false, reasons: ["ไม่พบสินค้า"] };
+      const subject = productSubject(w, id), reasons = [];
+      const starter = (p.researchRequired || 0) === 0;
+      if (!starter && w.knowledge?.projects[`product:${id}`]?.status !== "qualified") reasons.push("ยังไม่ผ่านโครงการต้นแบบและตรวจรับกระบวนการเฉพาะสินค้านี้");
+      const requirements={...productRequirements(w,id),accounting:25};
+      const coverage=teamCoverage(w,requirements);
+      for(const r of coverage) if(!r.ready) reasons.push(`ขาดวิชา${r.nameTh} ระดับ ${r.level}`);
+      if ((w.facilities?.machineCondition ?? 100) < 35) reasons.push("เครื่องจักรต้องซ่อมก่อนเดินไลน์");
+      if (w.finance.cash < 100000) reasons.push("เงินหมุนเวียนต่ำกว่า 1,000 บาท");
+      return { ready: !reasons.length, subject, subjectNameTh: SUBJECTS[subject], requirements, coverage, reasons };
+    }
+    function materialReady(w, id) {
+      const rec = D.MATERIAL_RECIPES?.[id];
+      if (!rec) return true;
+      if (!(rec.minResearch > 0)) return teamReady(w,materialRequirements(w,id));
+      return w.knowledge?.projects[`material:${id}`]?.status === "qualified" && teamReady(w, materialRequirements(w,id));
+    }
+    function beginKnowledgeProject(w, targetId, kind = "product") {
+      const k = ensureKnowledge(w), spec = kind === "material" ? D.MATERIAL_RECIPES?.[targetId] : w.catalog.products[targetId];
+      if (!spec || !["product", "material"].includes(kind)) return { ok: false, code: "unknownKnowledgeTarget" };
+      const key = `${kind}:${targetId}`;
+      if (k.projects[key]) return { ok: false, code: "projectExists" };
+      if (Object.values(k.projects).some((p) => p.status !== "qualified")) return { ok: false, code: "researchCapacityFull", message: "ทีมวิจัยกำลังรับผิดชอบโครงการเดิม" };
+      const subject = kind === "material" ? materialSubject(w, targetId) : productSubject(w, targetId);
+      const complexity = Math.max(1, Math.ceil((spec.researchRequired || spec.minResearch || 20) / 80));
+      k.projects[key] = { id: key, targetId, kind, subject, requirements: kind === "material" ? materialRequirements(w,targetId) : productRequirements(w,targetId), nameTh: spec.nameTh || w.catalog.materials[targetId]?.nameTh || targetId, startedDay: day(w), minDays: 14 + complexity * 7, requiredLevel: Math.min(70,35+complexity*5), requiredMinutes: (60 + complexity * 40) * 60, workMinutes: 0, spentSatang: 0, status: "literature", lastReasonTh: "เตรียมผู้เชี่ยวชาญและงบโครงการ", contributors: {} };
+      k.projects[key].requirements[subject]=Math.max(k.projects[key].requirements[subject] || 0,k.projects[key].requiredLevel);
+      const disciplines=researchDisciplines(k.projects[key]);
+      k.projects[key].requiredMinutes=Math.ceil(k.projects[key].requiredMinutes/disciplines.length)*disciplines.length;
+      k.projects[key].disciplineMinutes={};
+      event(w, "researchProjectStarted", `เปิดโครงการเฉพาะทาง ${k.projects[key].nameTh}`, { targetId, subject });
+      return { ok: true, projectId: key };
+    }
+    const OPERATIONS_SUBJECTS=Object.freeze({
+      software:{software:40,programming:40,requirements_analysis:30,software_testing:35,version_control:30,algorithms:30},
+      freight:{logistics:40,freight_planning:35,driving:35,cargo_safety:30},
+      agriculture:{agriculture:30,soil_science:25,crop_propagation:25,irrigation:25},
+      harvest:{agriculture:30,postharvest:25,safety:25},
+      livestock:{animal_husbandry:35,animal_health:25,food_safety:25}
+    });
+    function operationReadiness(w,kind) {
+      const req=OPERATIONS_SUBJECTS[kind] || {};
+      const coverage=teamCoverage(w,req);
+      return {ready:coverage.every(r=>r.ready),coverage,reasonTh:coverage.filter(r=>!r.ready).map(r=>`${r.nameTh} ${r.level}`).join(", ")};
+    }
+    function acquireTechnologyLicense(w,targetId,kind="product") {
+      const spec=kind==="material" ? D.MATERIAL_RECIPES?.[targetId] : w.catalog.products[targetId];
+      if(!spec || !["product","material"].includes(kind)) return {ok:false,code:"unknownKnowledgeTarget"};
+      const complexity=Math.max(1,Math.ceil((spec.researchRequired || spec.minResearch || 20)/80));
+      const cost=(60+complexity*40)*60*150*3;
+      const k=ensureKnowledge(w),key=`${kind}:${targetId}`;
+      if(k.projects[key]) return {ok:false,code:"projectExists"};
+      if(w.finance.cash<computeFinancialPools(w).survivalReserveSatang+cost) return {ok:false,code:"insufficientLicenseCapital",message:"ค่าซื้อเทคโนโลยีสูงและต้องเหลือเงินดำรงกิจการ"};
+      const result=beginKnowledgeProject(w,targetId,kind);
+      if(!result.ok) return result;
+      const project=k.projects[key],n=researchDisciplines(project).length;
+      project.route="licensed_transfer";project.licenseCostSatang=cost;project.minDays=7+complexity*3;
+      project.requiredMinutes=Math.ceil(project.requiredMinutes*.4/n)*n;
+      post(w,"equipment",-cost,`technologyLicense:${key}`);project.spentSatang+=cost;
+      w.capabilities.licenses[key]={targetId,kind,paidSatang:cost,acquiredDay:day(w),scopeTh:"สิทธิถ่ายทอดเทคโนโลยีเฉพาะเป้าหมาย ต้องทดสอบและตรวจรับก่อนผลิต"};
+      event(w,"technologyLicenseAcquired",`ซื้อสิทธิถ่ายทอด ${project.nameTh}; ยังไม่ผ่านการรับรองผลิต`,{projectId:key,costSatang:cost});
+      return {...result,costSatang:cost};
+    }
+
+    const poolsForTechnology=w=>computeFinancialPools(w).survivalReserveSatang;
+    function reviewKnowledge(w) {
+      const k = ensureKnowledge(w);
+      if (k.lastReviewDay === day(w)) return;
+      k.lastReviewDay = day(w);
+      const active = Object.values(k.projects).find((p) => p.status !== "qualified");
+      const hasFarm=Object.keys(w.agriculture?.plots || {}).length>0;
+      const hasHerd=Object.keys(w.agriculture?.livestock || {}).some(id=>w.externalWorld?.assetPortfolio?.ownedAssets?.[id]);
+      if((hasFarm || hasHerd) && w.policies.autoAccept && day(w)%3===0) {
+        const gaps=[...(hasFarm ? [...operationReadiness(w,"agriculture").coverage,...operationReadiness(w,"harvest").coverage] : []),...(hasHerd ? operationReadiness(w,"livestock").coverage : [])].filter(r=>!r.ready);
+        const learner=w.people.filter(p=>p.employed&&!p.education.course).sort((a,b)=>subjectLevel(b,"agriculture")-subjectLevel(a,"agriculture"))[0];
+        if(gaps.length && learner) {const gap=gaps[0],prereq=SUBJECT_PREREQUISITES[gap.id];learner.education.course=prereq&&subjectLevel(learner,prereq)<prerequisiteLevel(gap.id) ? prereq : gap.id;learner.education.courseLevel=learner.education.course===gap.id ? gap.level : prerequisiteLevel(gap.id);}
+      }
+      if (active) {
+        const missing=teamCoverage(w,active.requirements).filter(r=>!r.ready);
+        if (missing.length) {
+          for(const gap of missing.slice(0,2)) {
+            const learner=w.people.filter(p=>p.employed&&!p.education.course).sort((a,b)=>subjectLevel(b,gap.id)-subjectLevel(a,gap.id))[0];
+            if(learner) { const prerequisite=SUBJECT_PREREQUISITES[gap.id]; let course=gap.id,desired=gap.level; const seen=new Set(); while(SUBJECT_PREREQUISITES[course] && subjectLevel(learner,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course) && !seen.has(course)) {seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];} learner.education.course=course; learner.education.courseLevel=desired; }
+          }
+          k.decision = `เตรียมทีมก่อนลงทุน ${active.nameTh}: ยังขาด ${missing.map(r=>`${r.nameTh} ${r.level}`).join(", ")}`;
+        } else k.decision = `ทำ ${active.nameTh} ต่อ: ตรวจต้นแบบ เวลา เงิน และคุณภาพก่อนขยายธุรกิจ`;
+        return;
+      }
+      const ceo = w.people.find((p) => p.employed && p.role === "coordinator");
+      if (!ceo || !w.policies.autoAccept || w.finance.cash < computeFinancialPools(w).survivalReserveSatang + 500000) {
+        k.decision = "รักษาเงินสดสำรองและทำงานเดิมก่อนเริ่มโครงการใหม่"; return;
+      }
+      const risk = ceo.profile.personality.riskTaking ?? 50;
+      if (day(w) % (risk > 65 ? 3 : 5) !== 0) return;
+      const targets = Object.values(w.catalog.products).filter((p) => p.researchRequired > 0 && !k.projects[`product:${p.id}`]);
+      const score=(p)=>{
+        const req=productRequirements(w,p.id), rows=teamCoverage(w,req);
+        const fit=rows.filter(r=>r.ready).length/rows.length;
+        const market=(w.externalWorld?.geopolitics?.sectorDemandMultipliers?.[({tech:"electronics",aerospace_robotics:"automotive"})[p.industry] || p.industry] || 1)*(w.externalWorld?.government?.demandMultiplier || 1);
+        const bomCost=Object.entries(p.bom).reduce((sum,[id,q])=>sum+w.catalog.materials[id].unitCost*q,0);
+        const margin=((p.priceMin || 0)-bomCost)/Math.max(1,p.priceMin || 1);
+        return fit*(risk>65 ? 35 : 65)+market*15+margin*15-(p.researchRequired || 0)/40;
+      };
+      targets.sort((a,b)=>score(b)-score(a)||a.id.localeCompare(b.id));
+      let target=targets[0], kind="product";
+      // Vertical integration competes with buying intermediates; asset-light firms keep buying.
+      if(w.externalWorld?.assetPortfolio?.supplyChainStrategy !== "asset_light" && risk>55) {
+        const needed=Object.values(D.MATERIAL_RECIPES || {}).filter(r=>r.minResearch>0 && !k.projects[`material:${r.id}`] && (w.inventory.purchased[r.id] || 0)>=10).sort((a,b)=>b.minResearch-a.minResearch)[0];
+        if(needed) {target=needed;kind="material";}
+      }
+      if (target) {
+        const complexity=Math.max(1,Math.ceil((target.researchRequired || target.minResearch || 20)/80));
+        const licenseCost=(60+complexity*40)*60*150*3;
+        const buy=risk>65 && w.finance.cash>poolsForTechnology(w)+licenseCost*4;
+        if(buy) acquireTechnologyLicense(w,target.id,kind); else beginKnowledgeProject(w,target.id,kind);
+        k.decision = `เลือก${buy ? "ซื้อสิทธิถ่ายทอด" : "วิจัยเอง"} ${target.nameTh}: ประเมินความรู้ทีม ตลาด ส่วนต่างต้นทุนและเงินสำรองแล้ว; ยังไม่อนุมัติเปิดไลน์จริง`;
+        recordBoardDecision(w,{ category: "research", targetId: target.id, titleTh: `ศึกษา ${target.nameTh}`, reasonTh: k.decision, resolution: "prepare_capability", executionStatus: "researching", nextReviewDay: day(w)+5 });
+      }
+    }
+
+    function learnSubject(p,subject,minutes,study=false) {
+      if(!subject || !p.education || minutes<=0) return;
+      const ed=p.education;
+      ed.practiceMinutes[subject]=(ed.practiceMinutes[subject] || 0)+minutes;
+      const level=subjectLevel(p,subject), aptitude=p.profile.aptitudes;
+      const talent=subjectTalent(p,subject), ceiling=Math.min(100,75+subjectPotential(p,subject)*.25);
+      const prerequisite=SUBJECT_PREREQUISITES[subject], applied=ed.appliedMinutes?.[subject] || 0;
+      const cap=Math.min(ceiling,applied<2400 ? 80 : applied<12000 ? 95 : 100);
+      const rate=level<40 ? .25 : level<60 ? .14 : level<80 ? .06 : level<95 ? .025 : .008;
+      const condition=clamp(.5+(p.state.energy ?? 80)*.006-(p.state.stress ?? 0)*.003,.25,1.15);
+      const motivation=.85+(p.profile.personality.conscientiousness ?? 50)*.003;
+      if(!prerequisite || subjectLevel(p,prerequisite)>=prerequisiteLevel(subject)) ed.subjects[subject]=Math.max(level,Math.min(cap,level+minutes/60*rate*(study ? 1 : .35)*(.65+(aptitude.learningSpeed ?? 50)/100+talent/200)*condition*motivation));
+      if(!study) {if(!ed.appliedMinutes) ed.appliedMinutes={};ed.appliedMinutes[subject]=applied+minutes;}
+    }
+
+    function personalStudyTick(w,p) {
+      const ed=p.education;
+      if(!ed || tod(w)<1200 || tod(w)>=1260 || p.state.energy<35 || p.state.stress>80 || p.pay.wallet<10*TICK) return false;
+      const openness=p.profile.personality.openness ?? 50;
+      if(seedHash(`${w.seed}:${p.id}:study:${day(w)}`)%100>openness*.6+(p.profile.aptitudes.learningSpeed ?? 50)*.2) return false;
+      const interests=ed.interests?.length ? ed.interests : [Object.keys(SUBJECTS)[seedHash(p.id)%Object.keys(SUBJECTS).length]];
+      let subject=interests[day(w)%interests.length];const seen=new Set();
+      while(SUBJECT_PREREQUISITES[subject] && subjectLevel(p,SUBJECT_PREREQUISITES[subject])<prerequisiteLevel(subject) && !seen.has(subject)) {seen.add(subject);subject=SUBJECT_PREREQUISITES[subject];}
+      p.pay.wallet-=10*TICK;p.pay.outsideSpending+=10*TICK;
+      ed.personalStudyMinutes=(ed.personalStudyMinutes || 0)+TICK;ed.personalStudyCostSatang=(ed.personalStudyCostSatang || 0)+10*TICK;
+      learnSubject(p,subject,TICK,true);
+      p.activity="selfStudy";p.intent={code:"personalStudy",reasons:[subject]};
+      p.state=H.tickState(p.profile,p.state,{activity:"learn",minutes:TICK});
+      return true;
+    }
+
+    function knowledgeWork(w, p, j) {
+      if (!p.employed) return;
+      const k = ensureKnowledge(w), project = k.projects[j.knowledgeProjectId || j.validationProjectId];
+      if (j.validationProjectId) {
+        if (!project || project.status === "qualified" || p.role !== "inspector" || subjectLevel(p,"quality") < 40 || !subjectReady(w,project.subject,project.requiredLevel) || !teamReady(w,project.requirements)) return;
+        if (day(w) - project.startedDay < project.minDays || project.workMinutes < project.requiredMinutes || !project.prototypeConsumed) return;
+        project.qaMinutes = (project.qaMinutes || 0) + Math.min(j.elapsedMinutes || 0,120);
+        project.reviewerId = p.id;
+        if (project.qaMinutes >= 240 && !project.contributors[p.id]) {
+          project.validationAttempts=(project.validationAttempts || 0)+1;
+          const quality=project.workMinutes>0 ? (project.qualitySum || project.workMinutes*50)/project.workMinutes : 0;
+          const chance=clamp(.45+(quality+subjectPerformance(p,"quality"))*.003, .35,.95);
+          if(random(w)>chance) {
+            project.qaMinutes=0; project.workMinutes=0;
+            for(const subject of Object.keys(project.disciplineMinutes || {})) {project.disciplineMinutes[subject]=Math.floor(project.disciplineMinutes[subject]*.8);project.workMinutes+=project.disciplineMinutes[subject];} project.prototypeConsumed=false; project.status="prototype";
+            project.qualitySum=(project.qualitySum || 0)*.8;
+            project.lastReasonTh="ต้นแบบยังไม่ผ่านตรวจรับ ต้องแก้ไขและใช้วัตถุดิบทดสอบรอบใหม่";
+            event(w,"researchValidationFailed",`${project.nameTh}: ส่งกลับแก้ต้นแบบ`,{projectId:project.id});
+            return;
+          }
+          project.status = "qualified"; project.qualifiedDay = day(w); project.lastReasonTh = "ผ่านต้นแบบและการตรวจรับโดยฝ่ายคุณภาพ";
+          if (project.kind === "product" && !w.research.unlocked.includes(project.targetId)) w.research.unlocked.push(project.targetId);
+          event(w,"productQualified",`ผ่านการรับรองกระบวนการ ${project.nameTh}`,{projectId:project.id});
+        }
+        return;
+      }
+      if (project && project.workMinutes >= project.requiredMinutes) return;
+      if (project && project.workMinutes >= project.requiredMinutes * 0.3 && !project.prototypeConsumed) {
+        const inputs = project.kind === "product" ? w.catalog.products[project.targetId].bom : D.MATERIAL_RECIPES[project.targetId].inputs;
+        if (Object.entries(inputs || {}).some(([id,q]) => (w.inventory.materials[id] - w.inventory.reserved[id]) < q)) {
+          project.lastReasonTh = "รอวัตถุดิบต้นแบบจากฝ่ายจัดซื้อ"; return;
+        }
+        for (const [id,q] of Object.entries(inputs || {})) {
+          w.inventory.materials[id] -= q; w.inventory.consumed[id] += q;
+          k.materialsConsumed[id] = (k.materialsConsumed[id] || 0) + q;
+        }
+        project.prototypeConsumed = true;
+      }
+      const subject = j.courseSubject || j.researchSubject || project?.subject;
+      if (!subject || (!j.courseSubject && (!project || subjectLevel(p,subject) < (project.requirements[subject] || 40) || !teamReady(w,project.requirements)))) return;
+      const ed = p.education;
+      if (ed.workDay !== day(w)) { ed.workDay = day(w); ed.dailyMinutes = 0; }
+      const quota=project ? project.requiredMinutes/researchDisciplines(project).length : Infinity;
+      const remaining=project ? Math.max(0,quota-(project.disciplineMinutes?.[subject] || 0)) : Infinity;
+      const minutes = Math.max(0, Math.min(j.elapsedMinutes || 60, 120, 480 - (ed.dailyMinutes || 0),remaining));
+      const cost = Math.ceil(minutes * (j.courseSubject ? 80 : 150));
+      if (!minutes || w.finance.cash < computeFinancialPools(w).survivalReserveSatang + cost) {
+        if (project) project.lastReasonTh = "พักโครงการ: รักษาเงินสดสำรอง/ครบชั่วโมงทำงานวันนี้";
+        return;
+      }
+      post(w, "equipment", -cost, `knowledge:${j.id}`);
+      ed.dailyMinutes = (ed.dailyMinutes || 0) + minutes;
+      learnSubject(p,subject,minutes,Boolean(j.courseSubject));
+      if (j.courseSubject) { if (ed.subjects[subject] >= (ed.courseLevel || 40)) ed.course = null; return; }
+      if(!project.disciplineMinutes) project.disciplineMinutes={};
+      project.disciplineMinutes[subject]=(project.disciplineMinutes[subject] || 0)+minutes;
+      project.qualitySum=(project.qualitySum || 0)+minutes*subjectPerformance(p,subject);
+      project.workMinutes = Math.min(project.requiredMinutes, project.workMinutes + minutes);
+      project.spentSatang += cost;
+      project.contributors[p.id] = (project.contributors[p.id] || 0) + minutes;
+      const pct = project.workMinutes/project.requiredMinutes;
+      project.status = pct < 0.3 ? "literature" : pct < 0.75 ? "prototype" : "validation";
+      project.lastReasonTh = `สะสมชั่วโมงงานจริง ${Math.floor(project.workMinutes/60)}/${project.requiredMinutes/60}; ต้องใช้เวลาอย่างน้อย ${project.minDays} วัน`;
+      if (pct >= 1) project.lastReasonTh = day(w)-project.startedDay < project.minDays ? "รอสังเกตผลการทดสอบตามระยะเวลา" : "รอผู้ตรวจคุณภาพคนละคนกับผู้ทำต้นแบบ";
+    }
+    function companyKnowledgeView(w) {
+      return { subjects: SUBJECTS, tiers: [{level:0,nameTh:"ยังไม่เคยเรียน"},{level:1,nameTh:"เริ่มเรียน"},{level:20,nameTh:"พื้นฐาน"},{level:40,nameTh:"ปฏิบัติงานได้"},{level:60,nameTh:"ขั้นสูง"},{level:80,nameTh:"ผู้เชี่ยวชาญ"},{level:95,nameTh:"เชี่ยวชาญสูง"}], subjectDetails: SUBJECT_DETAILS, subjectSpecs: Object.keys(SUBJECTS).map(subjectSpec), prerequisites: SUBJECT_PREREQUISITES, operationReadiness: Object.keys(OPERATIONS_SUBJECTS).map(id=>({id,...operationReadiness(w,id)})), serviceReadiness: Object.entries(SERVICE_SUBJECTS).map(([id,req])=>({id,nameTh:D.INDUSTRIAL_SERVICES[id].nameTh,ready:teamReady(w,req),coverage:teamCoverage(w,req)})), projects: Object.values(w.knowledge?.projects || {}), decision: w.knowledge?.decision || "ยังไม่มีแผนใหม่", people: w.people.filter(p=>p.employed).map(p=>({id:p.id,name:p.name,role:p.role,education:educationFor(p),subjectInsights:Object.keys(educationFor(p).subjects).map(id=>({id,talent:subjectTalent(p,id),performance:subjectPerformance(p,id),ceiling:Math.min(100,75+subjectPotential(p,id)*.25)}))})), products: Object.values(w.catalog.products).map(p=>({id:p.id,nameTh:p.nameTh,...productReadiness(w,p.id)})) };
     }
 
     function freshCapabilities() {
@@ -10920,6 +11342,7 @@ canvas.pt {
       person.career.badge = step.badge;
       person.career.titleTh = isFirstCEO ? `ผู้บริหารสูงสุด / CEO (${step.titleTh})` : step.titleTh;
       updateSatisfactionAndKpi(w, person, 1);
+      person.education = educationFor(person);
       return person;
     }
 
@@ -11090,11 +11513,11 @@ canvas.pt {
       if (!w.capabilities) w.capabilities = freshCapabilities();
       const reqResearch = recipe.minResearch || 0;
       const chainUnlocked = Boolean(recipe.chainId && w.capabilities?.unlockedChains?.[recipe.chainId]);
-      if (!options.ignoreTechGate && !chainUnlocked && (w.research?.points || 0) < reqResearch) {
+      if (!options.ignoreTechGate && !materialReady(w, materialId)) {
         return {
           ok: false,
           code: "insufficientResearch",
-          message: `ยังขาดองค์ความรู้และเทคโนโลยีสำหรับผลิต "${matSpec.nameTh}" (Tier ${recipe.tier}) — ต้องการแต้มวิจัย ${reqResearch} แต้ม (ปัจจุบันมี ${Math.round(w.research?.points || 0)} แต้ม ต้องสั่งซื้อจากซัพพลายเออร์ภายนอกไปก่อน)`,
+          message: `ยังไม่ผ่านการรับรองกระบวนการผลิต "${matSpec.nameTh}" และต้องมีผู้รู้สาขาที่เกี่ยวข้อง — ซื้อจากซัพพลายเออร์ได้ระหว่างพัฒนาทีม`,
         };
       }
       const capReq = recipe.capitalRequirement || 0;
@@ -11234,6 +11657,8 @@ canvas.pt {
     }
 
     function plantCropPlot(w, plotId, options = {}) {
+      const ready=operationReadiness(w,"agriculture");
+      if(!ready.ready) return {ok:false,code:"missingAgricultureSubjects",message:`ขาดวิชา: ${ready.reasonTh}`};
       const ag = ensureAgriculture(w);
       let plot = ag.plots[plotId];
       if (!plot && options.cropId && D.AGRICULTURE_CROPS?.[options.cropId]) {
@@ -11376,6 +11801,8 @@ canvas.pt {
     }
 
     function harvestCropPlot(w, plotId, options = {}) {
+      const ready=operationReadiness(w,"harvest");
+      if(!ready.ready) return {ok:false,code:"missingHarvestSubjects",message:`ขาดวิชา: ${ready.reasonTh}`};
       const ag = ensureAgriculture(w);
       const plot = ag.plots[plotId];
       if (!plot) return { ok: false, code: "unknownPlot", message: "ไม่พบแปลงเกษตรที่ระบุ" };
@@ -11612,6 +12039,8 @@ canvas.pt {
     }
 
     function feedLivestockHerd(w, assetId = "dairy_soy_farm", options = {}) {
+      const ready=operationReadiness(w,"livestock");
+      if(!ready.ready) return {ok:false,code:"missingLivestockSubjects",message:`ขาดวิชา: ${ready.reasonTh}`};
       const ag = ensureAgriculture(w);
       if (!ag.livestock) ag.livestock = freshAgriculture().livestock;
       const herd = ag.livestock[assetId] || ag.livestock.dairy_soy_farm;
@@ -12381,7 +12810,7 @@ canvas.pt {
         const cfg = ap.chainSettings[chain.id];
         if (!cfg || (!cfg.enabled && !options.force)) continue;
         const reqResearch = chain.minResearch || 0;
-        if (!options.ignoreTechGate && (w.research?.points || 0) < reqResearch) continue;
+        if (!options.ignoreTechGate && !Object.keys(chain.outputs || {}).every(id => materialReady(w,id))) continue;
 
         const maxDailyBatches = options.maxBatches || (hasMill ? chain.batchesPerDayBase * 2 : chain.batchesPerDayBase);
         let possibleBatches = maxDailyBatches;
@@ -12520,14 +12949,7 @@ canvas.pt {
           w.capabilities.unlockedChains[spec.linkedChainId] = true;
           w.capabilities.domains.agri_soil_science = Math.min(100, (w.capabilities.domains.agri_soil_science || 25) + 10);
           const ch = D.PRODUCTION_CHAINS[spec.linkedChainId];
-          for (const prodId of ch.downstreamProducts || []) {
-            const prodSpec = w.catalog.products[prodId];
-            if (prodSpec && !w.research.unlocked.includes(prodId)) {
-              // Unlock ONLY the specific linked downstream product via domain/asset capability without inflating global research.points!
-              w.capabilities.unlockedProducts[prodId] = true;
-              w.research.unlocked.push(prodId);
-            }
-          }
+
         }
       } else {
         existing.level = targetLevel;
@@ -12930,6 +13352,8 @@ canvas.pt {
     }
 
     function acceptFreightContract(w, quoteId, options = {}) {
+      const ready=operationReadiness(w,"freight");
+      if(!ready.ready) return {ok:false,code:"missingFreightSubjects",message:`ขาดวิชา: ${ready.reasonTh}`};
       const ft = ensureFleetTransport(w);
       const quote = ft.openQuotes.find((q) => q.id === quoteId && q.status === "quoted");
       if (!quote) {
@@ -12978,7 +13402,7 @@ canvas.pt {
         : w.people.find((p) => p.employed && p.role === "logistics" && !busyDriverIds.has(p.id)) ||
           w.people.find((p) => p.employed && p.role === "coordinator" && !busyDriverIds.has(p.id)) ||
           w.people.find((p) => p.employed && !busyDriverIds.has(p.id));
-      if (!driver) {
+      if (!driver || subjectLevel(driver,"driving")<35) {
         return { ok: false, code: "noAvailableDriver", message: "ไม่มีพนักงานขับรถที่ว่างสำหรับเที่ยววิ่งนี้ (ห้ามคนขับคนเดียวขับรถ 2 คันพร้อมกัน)" };
       }
 
@@ -13274,6 +13698,7 @@ canvas.pt {
 
     function startSoftwareProject(w, appId = "pos_retail", clientCorpId = "cp_health", options = {}) {
       const sb = ensureSoftwareBusiness(w);
+      if (!operationReadiness(w,"software").ready) return { ok:false, code:"missingSubject", message:"ขาดผู้รู้วิชาพัฒนาซอฟต์แวร์ ระดับ 40" };
       const spec = D.SOFTWARE_APPS?.[appId];
       if (!spec) return { ok: false, code: "unknownApp", message: "ไม่พบประเภทแอปพลิเคชันที่ระบุ" };
 
@@ -13286,11 +13711,9 @@ canvas.pt {
       if (busyDevIds.size >= (sb.workstations.totalStations || 3)) {
         return { ok: false, code: "workstationCapacityFull", message: "โต๊ะคอมพิวเตอร์นักพัฒนา (dev_workstation) ถูกจองเต็มทุกเครื่องแล้ว" };
       }
-      const dev = options.developerPersonId
-        ? w.people.find((p) => p.id === options.developerPersonId && p.employed && !busyDevIds.has(p.id))
-        : w.people.find((p) => p.employed && p.role === "engineer" && !busyDevIds.has(p.id)) ||
-          w.people.find((p) => p.employed && !busyDevIds.has(p.id) && (p.skills?.research?.level || 0) >= 28);
-      if (!dev) {
+      const availableDev=p=>p.employed && !busyDevIds.has(p.id) && subjectLevel(p,"programming")>=40 && subjectLevel(p,"software")>=40;
+      const dev = options.developerPersonId ? w.people.find(p=>p.id===options.developerPersonId && availableDev(p)) : w.people.find(availableDev);
+      if (!dev || subjectLevel(dev,"software") < 40) {
         return { ok: false, code: "noAvailableDeveloper", message: "ไม่มีวิศวกรหรือนักพัฒนาที่ว่างสำหรับรับโครงการใหม่ (ห้ามขายชั่วโมงคนเดียวซ้ำหลายโครงการ)" };
       }
 
@@ -13856,6 +14279,8 @@ canvas.pt {
 
     function startServiceOrder(w, serviceTypeId = "calibration_lab", clientCorpId = null, options = {}) {
       const sv = ensureServiceBusiness(w);
+      const serviceSubject = ({calibration_lab:"quality",field_maintenance:"metal_machining",industrial_recycling:"metal_machining",battery_second_life_lab:"power_electronics",returnable_pallet_pool:"logistics",cold_storage_3pl:"logistics",energy_epc_install:"power_electronics",b2b_technical_academy:"management",wholesale_distribution:"commerce",toll_smelting_extrusion:"metal_machining"})[serviceTypeId];
+      if (serviceSubject && !teamReady(w,SERVICE_SUBJECTS[serviceTypeId])) return {ok:false,code:"missingSubject",message:`ทีมยังขาดวิชา: ${teamCoverage(w,SERVICE_SUBJECTS[serviceTypeId]).filter(r=>!r.ready).map(r=>r.nameTh).join(", ")}`};
       const spec = D.INDUSTRIAL_SERVICES?.[serviceTypeId];
       if (!spec) return { ok: false, code: "unknownServiceType", message: "ไม่พบรูปแบบธุรกิจบริการวิศวกรรมที่ระบุ" };
 
@@ -13870,12 +14295,12 @@ canvas.pt {
         (p) =>
           p.employed &&
           !busyIds.has(p.id) &&
-          ((Array.isArray(spec.requiredRoles) && spec.requiredRoles.includes(p.role)) || spec.requiredRole === p.role || ["engineer", "inspector", "assembler", "logistics"].includes(p.role)),
+          (!serviceSubject || subjectLevel(p,serviceSubject) >= SERVICE_SUBJECTS[serviceTypeId][serviceSubject]),
       );
       const specialist = options.specialistId
         ? w.people.find((p) => p.employed && p.id === options.specialistId && !busyIds.has(p.id))
         : candidates[0];
-      if (!specialist) {
+      if (!specialist || (serviceSubject && subjectLevel(specialist,serviceSubject) < SERVICE_SUBJECTS[serviceTypeId][serviceSubject])) {
         return {
           ok: false,
           code: "noAvailableSpecialist",
@@ -14387,7 +14812,7 @@ canvas.pt {
           const rec = D.MATERIAL_RECIPES?.[mId];
           if (
             rec &&
-            (rec.minResearch || 0) > (w.research?.points || 0) &&
+            !materialReady(w,mId) &&
             !cap.unlockedChains[rec.chainId] &&
             !isTopicOnCooldown(w, "make_or_buy", mId, completedDay, options)
           ) {
@@ -14408,7 +14833,7 @@ canvas.pt {
                 projectedRunwayDays: runwayDays,
                 scoreBreakdown: { marketScore: 72, capabilityScore: 35, personalityMod: personalityDrive, totalScore: 64 },
                 resolution: "pilot_or_buy_inputs",
-                reasonTh: `บริษัทมีเทคโนโลยีประกอบ "${prodSpec.nameTh}" แต่ยังไม่มีเทคโนโลยีผลิต "${w.catalog.materials[mId]?.nameTh || mId}" ต้นทาง (ต้องการ R&D ${rec.minResearch} แต้ม มีอยู่ ${Math.round(w.research?.points || 0)} แต้ม) จึงอนุมัติให้ฝ่ายจัดซื้อสั่งซื้อชิ้นส่วนจากซัพพลายเออร์มาประกอบแทนการเสกเทคฟรี`,
+                reasonTh: `บริษัทมีเทคโนโลยีประกอบ "${prodSpec.nameTh}" แต่ยังไม่มีเทคโนโลยีผลิต "${w.catalog.materials[mId]?.nameTh || mId}" ต้นทาง (ยังขาดการรับรองกระบวนการหรือวิชาของทีม) จึงอนุมัติให้ฝ่ายจัดซื้อสั่งซื้อชิ้นส่วนจากซัพพลายเออร์มาประกอบแทนการเสกเทคฟรี`,
                 reviewCooldownDays: 3,
                 executionStatus: "active_make_or_buy",
               }),
@@ -14897,13 +15322,13 @@ canvas.pt {
           stressedCorridor.id === "corridor_indo_australia_mineral" &&
           safeAvailableToDeduct(w, "bauxite_ore") >= 2 &&
           safeAvailableToDeduct(w, "raw_water_m3") >= 1 &&
-          (w.research?.points || 0) >= 15
+          materialReady(w,"alumina_billet")
         ) {
           craftMaterialRecipe(w, "alumina_billet", 1, { silent: true, ignoreCapitalGate: true });
         } else if (
           stressedCorridor.id === "corridor_indo_australia_mineral" &&
           safeAvailableToDeduct(w, "iron_ore") >= 2 &&
-          (w.research?.points || 0) >= 15
+          materialReady(w,"structural_steel_plate")
         ) {
           craftMaterialRecipe(w, "structural_steel_plate", 1, { silent: true, ignoreCapitalGate: true });
         }
@@ -15248,6 +15673,7 @@ canvas.pt {
         const s = catalog.starters[i];
         w.people.push(createPerson(w, "employee-" + (i + 1), s.name, s.role, s.dailyWage));
       }
+      ensureKnowledge(w);
       const first = w.research.unlocked[0];
       makeOffer(w, first, 8, 6);
       makeOffer(w, first, 10, 8);
@@ -15421,6 +15847,10 @@ canvas.pt {
           speedMultiplier: +(base.speedMultiplier * 0.8).toFixed(4),
         };
       }
+      if(context.subject) {
+        const score=subjectPerformance(p,context.subject);
+        return {...base,speedMultiplier:base.speedMultiplier*(.8+score*.004),qualityChance:clamp(base.qualityChance+(score-50)*.001, .05,.995),subjectScore:score};
+      }
       return base;
     }
     function orderOpen(o) {
@@ -15439,14 +15869,19 @@ canvas.pt {
         Object.values(w.offers).filter((o) => o.status === "open").length < maxOpenOffers
       )
         job(w, "sales", { required: 150 });
-      const researchStations = Object.values(w.layout.stations)
-          .filter((s) => s.kind === "research")
-          .reduce((n, s) => n + Math.min(4, s.capacity), 0),
-        activeResearch = Object.values(w.jobs).filter(
-          (j) => j.kind === "research",
-        ).length;
-      for (let i = activeResearch; i < Math.max(1, researchStations); i++)
-        job(w, "research", { required: 60 });
+      const k = ensureKnowledge(w);
+      const project = Object.values(k.projects).find(p => p.status !== "qualified");
+      if (!Object.values(w.jobs).some(j => j.kind === "research")) {
+        const learner = w.people.find(p => p.employed && p.education?.course);
+        if (learner) job(w, "research", { required: 120, learnerId: learner.id, courseSubject: learner.education.course });
+        else if (project && project.workMinutes >= project.requiredMinutes && day(w)-project.startedDay >= project.minDays && teamReady(w,project.requirements)) {
+          const inspector = w.people.find(p=>p.employed && p.role === "inspector" && !project.contributors[p.id]);
+          if (inspector) job(w,"research",{required:120,learnerId:inspector.id,validationProjectId:project.id});
+        } else if (project && project.workMinutes < project.requiredMinutes && teamReady(w,project.requirements)) {
+          const researchSubject=researchDisciplines(project).find(id=>(project.disciplineMinutes?.[id] || 0)<project.requiredMinutes/researchDisciplines(project).length);
+          if(researchSubject) job(w,"research",{required:120,knowledgeProjectId:project.id,researchSubject});
+        }
+      }
       for (const o of activeOrders(w)) {
         if (o.status === "accepted") {
           const units = Object.values(w.units).filter(
@@ -15481,7 +15916,7 @@ canvas.pt {
       for (const tierLevel of [1, 2, 3]) {
         for (const rec of Object.values(D.MATERIAL_RECIPES || {})) {
           if (rec.tier !== tierLevel) continue;
-          if ((w.research?.points || 0) < (rec.minResearch || 0)) continue;
+          if (!materialReady(w, rec.outputMaterialId || rec.id)) continue;
           const outMat = rec.outputMaterialId || rec.id;
           const short = (needed[outMat] || 0) - (w.inventory.materials[outMat] || 0);
           if (short <= 0) continue;
@@ -15516,6 +15951,10 @@ canvas.pt {
             w.catalog.products[u.productId].bom,
           ))
             needed[m] += n;
+      for (const project of Object.values(w.knowledge?.projects || {})) if (project.status !== "qualified" && !project.prototypeConsumed && project.workMinutes >= project.requiredMinutes * 0.25) {
+        const inputs = project.kind === "product" ? w.catalog.products[project.targetId]?.bom : D.MATERIAL_RECIPES[project.targetId]?.inputs;
+        for (const [id,q] of Object.entries(inputs || {})) needed[id] += q;
+      }
       const employed = w.people.filter((p) => p.employed),
         reserveCash = employed.reduce((s, p) => s + p.pay.dailyWage, 0) * 2;
       if (
@@ -15630,6 +16069,7 @@ canvas.pt {
       return p;
     }
     function accept(w, offer, actor = null, decision = null) {
+      if (!productReadiness(w, offer.productId).ready) return null;
       const total = offer.quantity * offer.unitPrice,
         deposit = Math.floor(total * offer.depositPct);
       if (
@@ -15736,7 +16176,7 @@ canvas.pt {
       const personality = salesPerson.profile.personality;
       const evaluated = Object.values(w.offers).filter((o) =>
         o.status === "open" && o.deadline > now(w) + 1440 &&
-        w.research.unlocked.includes(o.productId) &&
+        productReadiness(w, o.productId).ready &&
         queued + o.quantity <= w.catalog.rules.maxUnits,
       ).map((offer) => {
         const product = w.catalog.products[offer.productId];
@@ -16406,25 +16846,7 @@ canvas.pt {
           }
         }
       } else if (j.kind === "research") {
-        const bonus = Math.max(0, Math.round((a.qualityChance - 0.65) * 12));
-        const dirId = w.externalWorld?.ceoDirective?.updatedDay > 1 ? w.externalWorld?.ceoDirective?.id : null;
-        const sprintBonus = dirId === "rnd_sprint" ? 6 : 0;
-        w.research.points += 25 + bonus + sprintBonus;
-        for (const prod of Object.values(w.catalog.products))
-          if (
-            prod.researchRequired <= w.research.points &&
-            !w.research.unlocked.includes(prod.id)
-          ) {
-            w.research.unlocked.push(prod.id);
-            event(
-              w,
-              "productUnlocked",
-              `ห้องแล็บ R&D (${p.name}) วิจัยแบบแปลน "${prod.nameTh}" สำเร็จ!`,
-              {
-                productId: prod.id,
-              },
-            );
-          }
+        knowledgeWork(w, p, j);
       } else if (j.kind === "sales") {
         const products = w.research.unlocked,
           productId = products[Math.floor(random(w) * products.length)];
@@ -16440,12 +16862,6 @@ canvas.pt {
         const spec = w.catalog.taskKinds[j.kind];
         if (spec.researchPoints > 0) {
           w.research.points += spec.researchPoints;
-          for (const prod of Object.values(w.catalog.products))
-            if (
-              prod.researchRequired <= w.research.points &&
-              !w.research.unlocked.includes(prod.id)
-            )
-              w.research.unlocked.push(prod.id);
         }
         if (spec.reputationDelta)
           w.reputation = clamp(w.reputation + spec.reputationDelta, 0, 100);
@@ -16455,6 +16871,12 @@ canvas.pt {
           kind: j.kind,
           personId: p.id,
         });
+      }
+      if(j.kind !== "research" && p.education) {
+        const appliedSubject=(["assembly","rework"].includes(j.kind) && j.unitId ? productSubject(w,w.units[j.unitId].productId) : ({assembly:"embedded_iot",rework:"embedded_iot",qa:"quality",packing:"warehouse_operations",shipping:"logistics",purchase:"procurement",invoice:"accounting",sales:"sales_negotiation"})[j.kind]);
+        if(appliedSubject && subjectLevel(p,appliedSubject)>0) {
+          learnSubject(p,appliedSubject,Math.min(j.elapsedMinutes || 0,480));
+        }
       }
       w.history.tasks.push({
         id: j.id,
@@ -16559,6 +16981,10 @@ canvas.pt {
 
       for (const j of Object.values(w.jobs)) {
         if (j.assignee) continue;
+        if (j.kind === "research") {
+          const kp = w.knowledge?.projects[j.knowledgeProjectId];
+          if (j.learnerId ? j.learnerId !== p.id : !kp || subjectLevel(p,j.researchSubject || kp.subject) < (kp.requirements[j.researchSubject || kp.subject] || kp.requiredLevel)) continue;
+        }
         if (seenBatchKeys) {
           const batchKey = j.kind + ":" + (j.orderId || "") + ":" + j.createdAt;
           if (seenBatchKeys.has(batchKey)) continue;
@@ -16577,13 +17003,17 @@ canvas.pt {
           )
             continue;
         }
+        if (["assembly","rework"].includes(j.kind) && j.unitId) {
+          const subject=productSubject(w,w.units[j.unitId].productId);
+          if(subjectLevel(p,subject)<20) continue;
+        }
         const available = stations(w, j.stationKind, stationLoadMap);
         if (!available.length) continue;
         if (seenBatchKeys) {
           seenBatchKeys.add(j.kind + ":" + (j.orderId || "") + ":" + j.createdAt);
         }
         const demand = own(w.catalog.taskKinds, j.kind) || {},
-          a = ability(w, p, j.skill, demand),
+          a = ability(w, p, j.skill, {...demand,subject:jobSubject(w,j)}),
           primary = w.catalog.roles[p.role].skill === j.skill,
           per = p.profile.personality,
           v = p.profile.values,
@@ -16782,6 +17212,7 @@ canvas.pt {
       if (!active) {
         release(w, p, stationLoadMap);
         p.atWork = false;
+        if(personalStudyTick(w,p)) {p.position={...w.layout.entrance};p.previousPosition={...p.position};return;}
         p.activity = time >= 1320 || time < 360 ? "sleeping" : "offDuty";
         p.position = { ...w.layout.entrance };
         p.previousPosition = { ...p.position };
@@ -17061,7 +17492,7 @@ canvas.pt {
       const u = w.units[j.unitId];
       if (u && !u.materialConsumed) consume(w, u);
       const demand = own(w.catalog.taskKinds, j.kind) || {},
-        a = ability(w, p, j.skill, demand),
+        a = ability(w, p, j.skill, {...demand,subject:jobSubject(w,j)}),
         helpers = tickCtx && tickCtx.firstHelperByTarget
           ? (tickCtx.firstHelperByTarget.has(p.id) ? [tickCtx.firstHelperByTarget.get(p.id)] : [])
           : w.people.filter(
@@ -17133,6 +17564,7 @@ canvas.pt {
           plotBonus -= (75 - mCond) * 0.005;
         }
       }
+      j.elapsedMinutes = (j.elapsedMinutes || 0) + TICK;
       j.progress = Math.min(
         j.required,
         j.progress + TICK * a.speedMultiplier * help *
@@ -18604,6 +19036,8 @@ canvas.pt {
 
     function step(w) {
       if (w.status !== "running") return false;
+      ensureKnowledge(w);
+      if (tod(w) === 640) reviewKnowledge(w);
       if (w.people.length > 10) syncStationCapacitiesForScale(w);
       if (tod(w) === 570) evaluateDebtRepayment(w);
       if (tod(w) === 600) evaluateFacilityInvestment(w);
@@ -18737,6 +19171,8 @@ canvas.pt {
         ? w.people.find((p) => p.id === c.personId && p.employed)
         : null;
       switch (c.type) {
+        case "beginKnowledgeProject": return beginKnowledgeProject(w,c.targetId,c.kind || "product");
+        case "acquireTechnologyLicense": return acquireTechnologyLicense(w,c.targetId,c.kind || "product");
         case "setPolicy": {
           const valid = {
             autoBuy: typeof c.value === "boolean",
@@ -19174,7 +19610,7 @@ canvas.pt {
           for (const tierLv of [1, 2, 3]) {
             for (const rec of Object.values(D.MATERIAL_RECIPES || {})) {
               if (rec.tier !== tierLv) continue;
-              if ((w.research?.points || 0) < (rec.minResearch || 0)) continue;
+              if (!materialReady(w, rec.outputMaterialId || rec.id)) continue;
               const res = craftMaterialRecipe(w, rec.id, c.batches || 2, { silent: true });
               if (res.ok) {
                 totalBatches += res.batches;
@@ -19388,17 +19824,16 @@ canvas.pt {
             }
             return { ok: true };
           }
+          if (c.action === "setSubject") {
+            const person=w.people.find(p=>p.id===c.personId);
+            if(!person || !Object.hasOwn(SUBJECTS,c.subjectId) || !Number.isFinite(c.level) || c.level<0 || c.level>100) return failure("invalidSubject","เลือกพนักงาน วิชา และระดับ 0–100 ให้ถูกต้อง");
+            ensureKnowledge(w); person.education.subjects[c.subjectId]=c.level;
+            event(w,"directorEdit",`[ศูนย์แก้ไข] ${person.name}: วิชา${SUBJECTS[c.subjectId]} ระดับ ${c.level}`,{action:"setSubject",personId:person.id,subjectId:c.subjectId,level:c.level});
+            return {ok:true};
+          }
           if (c.action === "grantResearch" || c.action === "addResearch") {
             const pts = int(c.points, 1, 5000) ? c.points : 100;
             w.research.points += pts;
-            for (const prod of Object.values(w.catalog.products)) {
-              if (
-                prod.researchRequired <= w.research.points &&
-                !w.research.unlocked.includes(prod.id)
-              ) {
-                w.research.unlocked.push(prod.id);
-              }
-            }
             event(
               w,
               "directorEdit",
@@ -19659,8 +20094,7 @@ canvas.pt {
       w.production.scrapped[productSpec.id] = 0;
       w.production.shipped[productSpec.id] = 0;
       if (
-        w.catalog.products[productSpec.id].researchRequired <=
-          w.research.points &&
+        w.catalog.products[productSpec.id].researchRequired === 0 &&
         !w.research.unlocked.includes(productSpec.id)
       )
         w.research.unlocked.push(productSpec.id);
@@ -19733,7 +20167,7 @@ canvas.pt {
           (n, p) => n + (p.bom[m] || 0) * w.production.started[p.id],
           0,
         );
-        if (consumed !== w.inventory.consumed[m])
+        if (consumed + (w.knowledge?.materialsConsumed?.[m] || 0) !== w.inventory.consumed[m])
           errors.push("material allocation " + m);
         const received = Object.values(w.purchases)
           .filter((p) => p.materialId === m && p.status === "received")
@@ -19833,7 +20267,9 @@ canvas.pt {
       RELEASE_VERSION,
       SCHEMA,
       TICK,
+      MATERIAL_SUBJECTS, SUBJECTS, SUBJECT_DETAILS, SUBJECT_PREREQUISITES, SUBJECT_PREREQUISITE_LEVELS, researchDisciplines, subjectSpec, subjectTalent, subjectPotential, subjectPerformance, learnSubject, personalStudyTick,
       FACILITY_RULES,
+      ensureKnowledge, productReadiness, materialReady, companyKnowledgeView, beginKnowledgeProject, reviewKnowledge, knowledgeWork, productRequirements, materialRequirements, teamCoverage, acquireTechnologyLicense, operationReadiness, OPERATIONS_SUBJECTS,
       create,
       step,
       advance,
@@ -20005,6 +20441,7 @@ canvas.pt {
                 (copy.production?.scrapped?.[o.productId] || 0) > 0);
           }
     }
+    S.ensureKnowledge(copy);
     return copy;
   }
   function validate(w) {
@@ -20287,11 +20724,26 @@ canvas.pt {
         w.research.unlocked.every(
           (id) =>
             Object.hasOwn(w.catalog.products || {}, id) &&
-            (w.catalog.products[id].researchRequired <= w.research.points ||
-              Boolean(w.capabilities?.unlockedProducts?.[id])),
+            (w.catalog.products[id].researchRequired === 0 ||
+              w.knowledge?.projects?.[`product:${id}`]?.status === "qualified"),
         ),
       "invalid research",
     );
+    const knownSubjects = S.SUBJECTS;
+    const validSubjectMap = (v) => record(v) && Object.entries(v).every(([id,n])=>Object.hasOwn(knownSubjects,id) && finite(n,0,100));
+    add(record(w.knowledge) && w.knowledge.version === 1 && record(w.knowledge.projects) && record(w.knowledge.materialsConsumed),"invalid knowledge schema");
+    if(record(w.knowledge)) {
+      add(Object.entries(w.knowledge.materialsConsumed || {}).every(([id,n])=>Object.hasOwn(w.catalog.materials,id) && int(n)),"invalid research material ledger");
+      add(Object.keys(w.knowledge.projects || {}).length <= 1000,"too many knowledge projects");
+      for(const [key,p] of Object.entries(w.knowledge.projects || {})) {
+        if(!record(p)) {add(false,"invalid knowledge project");continue;}
+        add(Object.hasOwn(p.kind === "product" ? w.catalog.products : w.catalog.materials,p.targetId),"unknown knowledge target");
+        if(p.disciplineMinutes) add(record(p.disciplineMinutes) && Object.entries(p.disciplineMinutes).every(([id,n])=>Object.hasOwn(p.requirements,id) && finite(n)),"invalid research discipline hours");
+        add(record(p) && ["product","material"].includes(p.kind) && key === `${p.kind}:${p.targetId}` && Object.hasOwn(knownSubjects,p.subject) && validSubjectMap(p.requirements) && finite(p.workMinutes) && finite(p.requiredMinutes,1) && int(p.spentSatang) && finite(p.startedDay,-1000000) && int(p.minDays) && ["literature","prototype","validation","qualified"].includes(p.status),"invalid knowledge project");
+        if(p.status === "qualified") add(p.workMinutes>=p.requiredMinutes && p.qaMinutes>=240 && p.prototypeConsumed===true && p.qualifiedDay>=p.startedDay+p.minDays && record(p.contributors) && !Object.hasOwn(p.contributors,p.reviewerId),"invalid qualification evidence");
+      }
+    }
+    for(const p of w.people) add(record(p.education) && validSubjectMap(p.education.subjects) && record(p.education.practiceMinutes) && (p.education.course === null || Object.hasOwn(knownSubjects,p.education.course)),"invalid learned subjects");
     const customTaskKinds = record(w.catalog.taskKinds)
       ? Object.keys(w.catalog.taskKinds)
       : [];
@@ -20719,8 +21171,8 @@ canvas.pt {
       record(world) &&
       world.version === S.VERSION &&
       world.schema === S.SCHEMA &&
-      world.coreVersion !== H.VERSION &&
-      (H.COMPATIBLE_VERSIONS || []).includes(world.coreVersion)
+      ((world.coreVersion !== H.VERSION &&
+      (H.COMPATIBLE_VERSIONS || []).includes(world.coreVersion)) || (world.coreVersion === H.VERSION && !world.knowledge))
     )
       world = migrate(world);
     const errors = validate(world);
@@ -21122,12 +21574,12 @@ canvas.pt {
           code === "reworkNeeded"
             ? "ผู้ตรวจ QC พบจุดบกพร่อง ส่งกลับให้ช่างซ่อมแซมตามขั้นตอนควบคุมคุณภาพ"
             : "ชิ้นงานซ่อมไม่ผ่านเกินโควตา ต้องตัดเป็นของเสียและเสียต้นทุนวัตถุดิบไป";
-      } else if (code === "productUnlocked") {
+      } else if (["productUnlocked","productQualified","researchProjectStarted","researchValidationFailed"].includes(code)) {
         category = "RND";
         categoryLabelTh = "วิจัย R&D";
         isMajor = true;
         meaningTh =
-          "วิศวกรสะสมแต้มวิจัยครบเกณฑ์ ปลดล็อกแบบแปลนสินค้าอุตสาหกรรมใหม่ที่มีอัตรากำไรสูงขึ้น";
+          "การรับรองกระบวนการต้องอาศัยวิชาเฉพาะทีม ชั่วโมงต้นแบบ วัตถุดิบ และการตรวจรับคุณภาพ";
       } else if (["employeeLifeMilestone", "turnaroundMilestone", "ceoDirectiveChanged"].includes(code)) {
         category = code === "employeeLifeMilestone" ? "HR_CULTURE" : "FINANCE";
         categoryLabelTh =
@@ -21588,6 +22040,7 @@ canvas.pt {
           affect,
           aspirations,
           skills: p.skills,
+          education: p.education || null,
           experience: p.experience,
           relationships: p.relationships,
           concern: p.concern,
@@ -21892,6 +22345,7 @@ canvas.pt {
           sectorProcesses: w.sectorProcesses || null,
           serviceBusiness: w.serviceBusiness || null,
           capabilities: w.capabilities || null,
+          companyKnowledge: S.companyKnowledgeView(w),
           executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
           companyProgression: w.companyProgression || null,
@@ -21925,7 +22379,7 @@ canvas.pt {
               const rec = D.MATERIAL_RECIPES?.[m.id] || null;
               const minRes = rec ? (rec.minResearch || 0) : (m.minResearch || 0);
               const craftable = Boolean(m.craftable && rec);
-              const canCraftInHouse = Boolean(craftable && (w.research?.points || 0) >= minRes);
+              const canCraftInHouse = Boolean(craftable && S.materialReady(w, m.id));
               const stock = w.inventory.materials[m.id] || 0;
               const reserved = w.inventory.reserved[m.id] || 0;
               const freeStock = Math.max(0, stock - reserved);
@@ -21952,7 +22406,7 @@ canvas.pt {
               };
             }),
             materialRecipes: Object.values(D.MATERIAL_RECIPES || {}).map((rec) => {
-              const unlocked = (w.research?.points || 0) >= (rec.minResearch || 0);
+              const unlocked = S.materialReady(w,rec.outputMaterialId || rec.id);
               const stats = w.externalWorld?.assetPortfolio?.recipeStats?.[rec.id] || {
                 batches: 0,
                 unitsProduced: 0,
@@ -21980,7 +22434,8 @@ canvas.pt {
                 (n, [m, q]) => n + w.catalog.materials[m].unitCost * q,
                 0,
               ),
-              unlocked: w.research.unlocked.includes(p.id),
+              unlocked: S.productReadiness(w,p.id).ready,
+              readiness: S.productReadiness(w,p.id),
             })),
             skills: Object.values(w.catalog.skills),
             roles: Object.entries(w.catalog.roles).map(([id, r]) => ({
@@ -22694,13 +23149,20 @@ canvas.pt {
       };
     }
 
+    function minimumZoom() {
+      if (!currentSnap) return 0.05;
+      const b = getWorldBounds(currentSnap);
+      return Math.max(0.02, Math.min((canvas.clientWidth || 360) / b.worldW, Math.max(100, (canvas.clientHeight || 640) - 260) / b.worldH) * 0.65);
+    }
+
     function centerCamera(snap) {
       const bounds = getWorldBounds(snap);
       const vw = canvas?.clientWidth || window.innerWidth || 1280;
       const vh = canvas?.clientHeight || window.innerHeight || 800;
-      cam.zoom = vw < 600 ? 0.72 : Math.min(1.12, Math.max(0.78, vw / (bounds.worldW * 0.92)));
+      cam.followId = null;
+      cam.zoom = Math.min(vw / (bounds.worldW + 32), Math.max(100, vh - 260) / (bounds.worldH + 32));
       cam.x = bounds.worldW * 0.5;
-      cam.y = bounds.worldH * 0.47;
+      cam.y = bounds.worldH * 0.5 - 60 / cam.zoom;
       cam.initialized = true;
     }
 
@@ -23768,7 +24230,7 @@ canvas.pt {
           const rect = canvas.getBoundingClientRect();
           const midX = (a.x + b.x) / 2 - rect.left;
           const midY = (a.y + b.y) / 2 - rect.top;
-          cam.zoom = clamp(pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / pinch.distance, 0.45, 2.2);
+          cam.zoom = clamp(pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / pinch.distance, minimumZoom(), 2.2);
           cam.x = pinch.anchor.x - (midX - (canvas.clientWidth || rect.width) / 2) / cam.zoom;
           cam.y = pinch.anchor.y - (midY - (canvas.clientHeight || rect.height) / 2) / cam.zoom;
           return;
@@ -23841,7 +24303,7 @@ canvas.pt {
         (e) => {
           e.preventDefault();
           const factor = e.deltaY < 0 ? 1.12 : 0.9;
-          cam.zoom = clamp(cam.zoom * factor, 0.45, 2.2);
+          cam.zoom = clamp(cam.zoom * factor, minimumZoom(), 2.2);
         },
         { passive: false },
       );
@@ -23864,8 +24326,9 @@ canvas.pt {
       render,
       bindInteractions,
       centerCamera: () => currentSnap && centerCamera(currentSnap),
+      getCamera: () => ({ ...cam, minimumZoom: minimumZoom(), bounds: currentSnap ? getWorldBounds(currentSnap) : null, viewportWidth: canvas.clientWidth, viewportHeight: canvas.clientHeight }),
       zoomBy: (factor) => {
-        cam.zoom = clamp(cam.zoom * factor, 0.45, 2.2);
+        cam.zoom = clamp(cam.zoom * factor, minimumZoom(), 2.2);
       },
       setFollow: (personId) => {
         cam.followId = cam.followId === personId ? null : personId;
@@ -23925,7 +24388,7 @@ canvas.pt {
       train: "งานจัดซื้อและบัญชีที่อาคารสำนักงานใหญ่ / คลังวัตถุดิบ",
     },
     engineering: {
-      eff: "เพิ่มแต้มวิจัย R&D เพื่อปลดล็อกแบบแปลนผลิตภัณฑ์ใหม่และบำรุงรักษาเครื่องจักรโรงงาน",
+      eff: "ทำโครงการเฉพาะวิชา ทดสอบต้นแบบและตรวจรับกระบวนการ พร้อมบำรุงรักษาเครื่องจักร",
       train: "วิจัยและพัฒนาที่อาคารแล็บวิจัย (R&D Lab) & โรงซ่อมบำรุง",
     },
     assembly: {
@@ -24321,6 +24784,7 @@ canvas.pt {
         "identity",
         "aptitudes",
         "skills",
+        "knowledge",
         "relations",
         "wallet",
         "chronicle",
@@ -24437,6 +24901,7 @@ canvas.pt {
       { id: "identity", label: "ตัวตน/ค่านิยม" },
       { id: "aptitudes", label: "ความถนัด 30 ด้าน" },
       { id: "skills", label: "ทักษะ/สายงาน" },
+      { id: "knowledge", label: "ความรู้" },
       { id: "relations", label: "ความสัมพันธ์" },
       { id: "wallet", label: "กระเป๋า/เป้าหมาย" },
       { id: "chronicle", label: "บันทึกชีวิต" },
@@ -24528,7 +24993,7 @@ canvas.pt {
       switchRow.append(chip);
     }
     headCard.append(topRow, switchRow);
-    nodes.push(headCard);
+    if(uiState.subTab !== "knowledge") nodes.push(headCard);
 
     if (uiState.subTab === "vital") {
       const thoughtCard = el("div", "card");
@@ -24690,6 +25155,22 @@ canvas.pt {
         skCard.append(item);
       }
       nodes.push(skCard);
+    } else if (uiState.subTab === "knowledge") {
+      const ed=p.education || {subjects:{},practiceMinutes:{}},k=v.companyKnowledge;
+      const heading=el("div","card");
+      heading.append(el("h3","",`📚 ความรู้ของ ${p.name}`),el("div","muted","Lv1 เริ่มเรียน/พื้นฐาน • Lv2 ปฏิบัติได้ • Lv3 ขั้นสูง • Lv4 ผู้เชี่ยวชาญ • Lv5 เชี่ยวชาญสูง ทุกวิชาเป็นความรู้ส่วนตัว แม้บริษัทยังไม่มีงานที่ใช้"));
+      if(ed.course) heading.append(el("div","logrow",`กำลังเรียนเพื่อบริษัท: ${k.subjects[ed.course]} → ${ed.courseLevel || 40}/100`));
+      heading.append(el("div","muted",`ความสนใจส่วนตัว: ${(ed.interests || []).map(id=>k.subjects[id]).join(" • ") || "ยังไม่มีข้อมูล"} • ศึกษานอกงาน ${Math.floor((ed.personalStudyMinutes || 0)/60)} ชั่วโมง`));
+      nodes.push(heading);
+      const linked=v.companyKnowledge.people.find(q=>q.id===p.id);
+      for(const [id,level] of Object.entries(ed.subjects).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1])) {
+        const lv=level>=95 ? 5 : level>=80 ? 4 : level>=60 ? 3 : level>=40 ? 2 : 1;
+        const row=el("div","card");row.append(el("h3","",`${k.subjects[id]} · Lv${lv}`),makeBarRow("ความชำนาญ",level,null,false));
+        const spec=k.subjectSpecs.find(s=>s.id===id),insight=linked?.subjectInsights.find(s=>s.id===id);
+        const used=k.products.some(product=>product.ready&&Object.hasOwn(product.requirements || {},id));
+        row.append(el("div","muted",`ฝึก/ศึกษา ${Math.floor((ed.practiceMinutes[id] || 0)/60)} ชม. • งานจริง ${Math.floor((ed.appliedMinutes?.[id] || 0)/60)} ชม. • ความเหมาะสมจากความถนัด ${Math.round(insight?.talent || 0)}/100 • ${used ? "เกี่ยวข้องกับสินค้าที่ทีมพร้อมทำ" : "ความรู้ติดตัว; อาจใช้กับงานอื่นหรือโอกาสใหม่"}`),el("div","muted",spec.effectTh));
+        nodes.push(row);
+      }
     } else if (uiState.subTab === "relations") {
       const relCard = el("div", "card");
       relCard.append(el("h3", "", "🤝 ความสัมพันธ์และความไว้วางใจกับเพื่อนร่วมทีม"));
@@ -25045,7 +25526,7 @@ canvas.pt {
       } else if (b.id === "rnd") {
         specCard.append(el("h3", "", "🔬 ความก้าวหน้าการวิจัยและพัฒนา (R&D Lab)"));
         specCard.append(
-          makeBarRow("แต้มวิจัยสะสม (เป้าหมาย 360)", clamp((v.research.points / 360) * 100), 100, false),
+          el("div","muted",`โครงการเฉพาะทาง ${v.companyKnowledge?.projects?.length || 0} โครงการ — ดูที่หน้าบริษัท`),
         );
         for (const prod of v.catalog.products) {
           specCard.append(
@@ -25319,7 +25800,7 @@ canvas.pt {
       el(
         "div",
         "logrow",
-        `📦 ยอดขายส่งวัตถุดิบ/ชิ้นส่วน B2B สะสม: ${extWorld.totalB2BMaterialSalesUnits || 0} ชิ้น • 💵 รายได้จากการขายวัตถุดิบ B2B: ${moneyFull(extWorld.totalB2BMaterialRevenueSatang || 0)} • 🔬 แต้มวิจัย R&D ปัจจุบัน: ${Math.round(v.research?.points || 0)} แต้ม`,
+        `📦 ยอดขายส่งวัตถุดิบ/ชิ้นส่วน B2B สะสม: ${extWorld.totalB2BMaterialSalesUnits || 0} ชิ้น • 💵 รายได้ ${moneyFull(extWorld.totalB2BMaterialRevenueSatang || 0)} • โครงการความรู้ ${v.companyKnowledge?.projects?.length || 0} โครงการ`,
       ),
     );
 
@@ -25381,7 +25862,7 @@ canvas.pt {
       const badgeCls = rec.unlocked ? "ok" : "r";
       const gateTxt = rec.unlocked
         ? `✅ มีองค์ความรู้พร้อมผลิตเอง (T${rec.tier})`
-        : `🔒 ต้นเกมต้องซื้อตลาด (ต้องการวิจัย R&D ${rec.minResearch} แต้ม)`;
+        : "🔒 ยังต้องซื้อจากตลาดจนกว่ากระบวนการผ่านรับรองและทีมมีวิชาครบ";
       rTop.append(
         el("strong", "", `[Tier ${rec.tier}] ${rec.nameTh}`),
         el("span", "chip " + badgeCls, gateTxt),
@@ -25482,10 +25963,70 @@ canvas.pt {
   }
 
   /* ---------- 3. Bottom Nav Sheets (People, Campus, Log, Market, Policy, Menu/Edit Hub) ---------- */
+  function renderCompanySheet(v, body) {
+    byId("shTitle").textContent = "🏛️ บริษัท — กิจการ คน ความรู้ และแผนงาน";
+    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
+    setSheetTabs(tabs);
+    if (!tabs.some(t=>t.id===uiState.subTab)) uiState.subTab = "company_overview";
+    body.replaceChildren();
+    const card = el("div","card"); body.append(card);
+    const row = (title,text) => { const r=el("div","logrow");r.append(el("strong","",title),el("div","muted",text));card.append(r); };
+    const k=v.companyKnowledge || {people:[],projects:[],products:[],subjects:{}};
+    const tier=(n)=>(k.tiers || []).filter(t=>n>=t.level).at(-1)?.nameTh || "ยังไม่เคยเรียน";
+    const coverage=(rows)=>(rows || []).map(r=>`${r.ready ? "✓" : "ขาด"} ${r.nameTh} ${r.level} — ${r.holders.map(h=>h.name).join(", ") || "ยังไม่มีผู้รู้"}`).join(" • ");
+    const stages={literature:"ศึกษาความเป็นไปได้",prototype:"ทำต้นแบบ",validation:"ตรวจสอบกระบวนการ",qualified:"ผ่านการรับรอง"};
+    if(uiState.subTab==="company_overview") {
+      row("ฐานะบริษัท",`เงินสด ${money(v.company.cash)} • หนี้ ${money(v.company.debt)} • ลูกหนี้ ${money(v.company.receivable)} • เงินสำรองพอประมาณ ${v.company.runwayDays} วัน`);
+      row("กิจการขณะนี้",`${v.companyProgression?.currentStageNameTh || "บริษัทเริ่มต้น"} • ทีม ${k.people.length} คน • ออเดอร์ที่จ่ายแล้ว ${v.company.metrics.ordersPaid} • งานที่ยังเปิด ${v.orders.filter(o=>!["paid","cancelled"].includes(o.status)).length}`);
+      row("ความพร้อมเทคโนโลยี",`พร้อมดำเนินการ ${k.products.filter(p=>p.ready).length}/${k.products.length} สินค้า • โครงการเฉพาะทาง ${k.projects.filter(p=>p.status!=="qualified").length} โครงการ`);
+      row("แนวทางที่ผู้บริหารกำลังพิจารณา",k.decision);
+      row("สาธารณูปโภค",`ไฟฟ้า ${v.utilities?.dailyKwh || 0} kWh/วัน • น้ำ ${v.utilities?.dailyWaterM3 || 0} ลบ.ม./วัน • ${v.utilities?.brownoutActive ? "ไฟตก ต้องชำระบิล" : "ไม่มีไฟตก"}`);
+    } else if(uiState.subTab==="company_knowledge") {
+      row("ความรู้เป็นของคน เทคโนโลยีเป็นของกระบวนการ", "ต้องมีผู้เชี่ยวชาญเฉพาะวิชา ชั่วโมงทำต้นแบบ ระยะเวลาตรวจสอบ และผู้ตรวจคุณภาพ เงินหรือแต้มสะสมอย่างเดียวไม่ปลดล็อกข้ามอุตสาหกรรม หากผู้เชี่ยวชาญออกจากงาน ความพร้อมอาจหายไปได้");
+      row("แผนปัจจุบัน",k.decision);
+      for(const p of k.projects) row(`${p.nameTh} — ${stages[p.status] || p.status}`,`${p.route === "licensed_transfer" ? "ซื้อสิทธิถ่ายทอด" : "วิจัยเอง"} • วิชา${k.subjects[p.subject] || p.subject} • ${Math.floor(p.workMinutes/60)}/${p.requiredMinutes/60} ชั่วโมง • เริ่มวันที่ ${p.startedDay}, ใช้เวลาอย่างน้อย ${p.minDays} วัน • ใช้งบแล้ว ${money(p.spentSatang)} • ${p.lastReasonTh}`);
+      if(!k.projects.length) row("ยังไม่มีโครงการใหม่","ผู้บริหารจะพิจารณาตามความพร้อมทีม เงินสำรอง และโอกาสธุรกิจ ไม่วิจัยทุกสาขาพร้อมกัน");
+      for(const p of k.people) row(p.name,Object.entries(p.education.subjects).map(([id,n])=>`${k.subjects[id] || id} ${Math.floor(n)}/100 (${tier(n)})`).join(" • ")+(p.education.course ? ` • กำลังเรียน${k.subjects[p.education.course]}` : ""));
+    } else if(uiState.subTab==="company_curriculum") {
+      row(`หลักสูตร ${Object.keys(k.subjects).length} วิชา`,"พื้นฐาน 20 → ปฏิบัติงานได้ 40 → ขั้นสูง 60 → ผู้เชี่ยวชาญ 80 → เชี่ยวชาญสูง 95; เรียนขั้นสูงช้าลง และระดับผู้เชี่ยวชาญต้องมีประสบการณ์จริง ทุกวิชาเรียนได้ แม้บริษัทไม่มีงานที่ใช้วิชานั้น ความถนัดช่วยการเรียนแต่ไม่แทนความรู้");
+      const categories=[...new Set((k.subjectSpecs || []).map(s=>s.category))];
+      const filter=el("select",""); filter.setAttribute("aria-label","หมวดวิชา");
+      for(const c of categories) {const o=el("option","",c);o.value=c;filter.append(o);}
+      uiState.subjectCategory=categories.includes(uiState.subjectCategory) ? uiState.subjectCategory : categories[0];filter.value=uiState.subjectCategory;
+      filter.onchange=()=>{uiState.subjectCategory=filter.value;renderActiveSheet(current);};card.append(filter);
+      for(const subject of (k.subjectSpecs || []).filter(s=>s.category===uiState.subjectCategory)) {
+        row(subject.nameTh,`${subject.prerequisite ? `ต้องมีพื้นฐาน${k.subjects[subject.prerequisite]} ${subject.prerequisiteLevel} ก่อน • ` : ""}${subject.effectTh} • องค์ประกอบความถนัด: ${Object.entries(subject.aptitudes).map(([id,weight])=>`${v.catalog.dimensions.aptitudes.find(a=>a.id===id)?.nameTh || id} ${Math.round(weight*100)}%`).join(", ")}`);
+        const holders=k.people.filter(p=>(p.education.subjects[subject.id] || 0)>0);
+        for(const person of holders) {const insight=person.subjectInsights.find(s=>s.id===subject.id);row(person.name,`${tier(person.education.subjects[subject.id])} ${Math.floor(person.education.subjects[subject.id])}/100 • ประสบการณ์งานจริง ${Math.floor((person.education.appliedMinutes?.[subject.id] || 0)/60)} ชั่วโมง • ความเหมาะสมจากความถนัด ${Math.round(insight.talent)}/100`);}
+      }
+    } else if(uiState.subTab==="company_business") {
+      for(const p of k.products) row(`${p.ready ? "✅ พร้อม" : "🔒 ยังไม่พร้อม"} ${p.nameTh}`,`ผลิตแล้ว ${v.production.completed[p.id] || 0} ชิ้น • วิชา${p.subjectNameTh || "เฉพาะทาง"} • ${p.reasons.join(" / ") || "มีทีมและกระบวนการพร้อม; ฝ่ายขายยังต้องประเมินกำไรและคำสั่งซื้อ"} • ${coverage(p.coverage)}`);
+      for(const service of k.serviceReadiness || []) row(`${service.ready ? "✓ ทีมพร้อม" : "🔒 ขาดความรู้"} ${service.nameTh}`,coverage(service.coverage));
+      row("ธุรกิจบริการ / ขนส่ง / ซอฟต์แวร์",`งานบริการ ${Object.keys(v.serviceBusiness?.orders || {}).length} • สัญญาขนส่ง ${Object.keys(v.fleetTransport?.contracts || {}).length} • โครงการซอฟต์แวร์ ${Object.keys(v.softwareBusiness?.projects || {}).length}`);
+    } else if(uiState.subTab==="company_board") {
+      row("แผนเตรียมความสามารถ",k.decision);
+      const b=v.executiveBoard || {};
+      row("งบลงทุน",`งบที่จอง ${money(b.committedBudgetSatang)} • ทุนที่จ่ายแล้ว ${money(b.paidCapitalTotalSatang)} • เงินสำรองดำรงกิจการ ${money(b.budgetPools?.survivalReserveSatang)}`);
+      for(const d of b.decisionLedger || []) row(d.titleTh,`${d.reasonTh} • ผู้เสนอ ${d.proposerName || "บอร์ด"} • ทบทวนวันที่ ${d.nextReviewDay} • ${d.executionStatus}`);
+    } else if(uiState.subTab==="company_org") {
+      for(const p of v.people.filter(p=>p.employed)) {
+        const r=el("button","logrow");r.type="button";r.textContent=`${p.name} • ${p.roleName || p.role} • ${p.activityLabelTh || p.activity}`;r.onclick=()=>openPersonSheet(p.id);card.append(r);
+      }
+      for(const d of v.orgSummary?.departments || []) row(d.departmentTh || d.nameTh || "แผนก",`จำนวนคน ${d.count || d.headcount || 0}`);
+    } else {
+      for(const b of [...(v.campus.buildings || []),...(v.campus.expansionPlots || []).filter(p=>p.constructed)]) row(b.nameTh || b.id,`อาคาร • ระดับ ${b.level || 1}`);
+      for(const a of v.catalog.externalAssets || []) if(a.owned) row(a.nameTh,`สินทรัพย์ภายนอก • ระดับ ${a.level || 1}`);
+      for(const vehicle of Object.values(v.fleetTransport?.vehicles || {})) row(vehicle.nameTh || vehicle.plate || vehicle.id,`ยานพาหนะ • ${vehicle.status} • สภาพ ${vehicle.condition}%`);
+      row("วัตถุดิบในคลัง",v.catalog.materials.filter(m=>(v.inventory.materials[m.id] || 0)>0).map(m=>`${m.nameTh}: ${v.inventory.materials[m.id]}`).join(" • "));
+    }
+  }
+
   function renderActiveSheet(v) {
     if (!uiState.sheetOpen) return;
     const body = byId("shBody");
     if (!body) return;
+
+    if (uiState.sheetMode === "company") { renderCompanySheet(v,body); return; }
 
     if (uiState.sheetMode === "person") {
       renderCharacterSheet(v, body);
@@ -26245,7 +26786,7 @@ canvas.pt {
           const tierIcon = m.tier === 0 ? "🌾" : m.tier === 1 ? "⚗️" : m.tier === 2 ? "⚙️" : "🧠";
           cell.append(
             el("span", "inv-b-tl", `${m.tierBadgeTh || ("T" + (m.tier ?? 0))} · ${money(m.unitCost)}`),
-            el("span", "inv-b-tr", m.craftable ? (m.canCraftInHouse ? "✅ ผลิตเองได้" : `🔒 R&D ${m.minResearch}`) : "⛏️ ต้นน้ำแท้"),
+            el("span", "inv-b-tr", m.craftable ? (m.canCraftInHouse ? "✅ ผลิตเองได้" : "🔒 ต้องรับรองกระบวนการ") : "⛏️ ต้นน้ำแท้"),
             el("div", "ic", tierIcon),
             el("div", "nm", m.nameTh),
             el("span", "inv-b-br", `×${qty} (จอง ${res})`),
@@ -26255,12 +26796,12 @@ canvas.pt {
         c.append(grid);
       } else if (uiState.subTab === "rnd") {
         c.append(
-          el("h3", "", `🔬 คลังแบบแปลนผลิตภัณฑ์ 4 อุตสาหกรรม (${v.research.points.toFixed(0)} แต้มวิจัย)`),
-          makeBarRow("ความก้าวหน้าการวิจัยขั้นสูง (360 แต้ม)", clamp((v.research.points / 360) * 100), 100, false),
+          el("h3", "", "🔬 ความพร้อมสินค้าและกระบวนการ"),
+          el("div", "muted", "ดูทีมผู้รู้ โครงการต้นแบบ และแผนผู้บริหารได้ที่ บริษัท → องค์ความรู้ / R&D"),
         );
         for (const prod of v.catalog.products) {
           const req = prod.researchRequired || 0;
-          const statusTxt = prod.unlocked ? "✅ พร้อมผลิตและขาย" : `🔒 ต้องวิจัย ${req} แต้ม`;
+          const statusTxt = prod.unlocked ? "✅ ทีมและกระบวนการพร้อม" : `🔒 ${prod.readiness?.reasons?.join(" / ") || "ยังไม่ผ่านการรับรอง"}`;
           c.append(
             el(
               "div",
@@ -26871,6 +27412,15 @@ canvas.pt {
           walletRow.append(wb);
         }
 
+        const subjectChoice=el("select","");subjectChoice.setAttribute("aria-label","เลือกวิชาเรียนรู้");
+        for(const [id,name] of Object.entries(v.companyKnowledge.subjects)) {const o=el("option","",name);o.value=id;subjectChoice.append(o);}
+        const subjectValue=el("input","");subjectValue.type="number";subjectValue.min="0";subjectValue.max="100";subjectValue.value="0";subjectValue.setAttribute("aria-label","ระดับวิชาที่เรียนรู้");
+        const subjectInfo=el("div","muted", "เลือกพนักงานและวิชา แล้วกำหนดระดับ 0–100 เพื่อทดลอง; การรู้วิชาอย่างเดียวยังไม่แทนเครื่องมือและการรับรองกระบวนการ");
+        const syncSubject=()=>{subjectValue.value=String(current.people.find(p=>p.id===chooser.value)?.education?.subjects?.[subjectChoice.value] || 0);};
+        subjectChoice.onchange=syncSubject;syncSubject();
+        const saveSubject=el("button","btn","บันทึกวิชาให้พนักงานคนนี้");saveSubject.type="button";
+        saveSubject.onclick=()=>dispatch({type:"directorEdit",action:"setSubject",personId:chooser.value,subjectId:subjectChoice.value,level:Number(subjectValue.value)},"อัปเดตวิชาเฉพาะพนักงานแล้ว");
+        personCard.append(subjectInfo,subjectChoice,subjectValue,saveSubject);
         personCard.append(chooser, nameInput, rename, trait, traitValue, saveTrait, tendencyBox, skill, restore, train, promoBtn, walletRow);
 
         const scaleCard = el("div", "card edit-section");
@@ -27052,7 +27602,7 @@ canvas.pt {
     renderTopHud(v);
     renderSelectionBanner(v);
     syncCompatControls(v);
-    if (uiState.sheetOpen && !(uiState.sheetMode === "menu" && uiState.subTab === "edit")) renderActiveSheet(v);
+    if (uiState.sheetOpen && !(uiState.sheetMode === "menu" && uiState.subTab === "edit") && !(uiState.sheetMode === "company" && uiState.subTab === "company_curriculum" && document.activeElement?.tagName === "SELECT")) renderActiveSheet(v);
   }
 
   document.querySelectorAll("#speedBar button").forEach((btn) => {
@@ -27237,6 +27787,7 @@ canvas.pt {
 
   window.CompanyDebug = Object.freeze({
     app,
+    getCamera: () => renderer?.getCamera(),
     refresh: () => paint(app.snapshot()),
     openPersonSheet,
     openBuildingSheet,

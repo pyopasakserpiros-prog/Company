@@ -957,3 +957,7 @@ canvas.pt {
     grid-template-columns: 108px 1fr minmax(32px, auto);
   }
 }
+
+/* Company navigation remains reachable on narrow phones. */
+#hudBottom { overflow-x: auto; }
+#hudBottom button { flex: 1 0 52px; }

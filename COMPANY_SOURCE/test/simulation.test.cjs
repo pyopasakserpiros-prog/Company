@@ -175,13 +175,13 @@ check(
   },
 );
 check(
-  "research unlocks additional production without editing the human core",
+  "pooled points cannot unlock production without qualified people and process",
   () => {
     const w = S.create("research");
     send(w, "setPolicy", { key: "workPriority", value: "research" });
     run(w, 10);
-    assert(w.research.points >= 300);
-    assert(w.research.unlocked.includes("lamp"));
+    assert(!w.research.unlocked.includes("lamp"));
+    assert.equal(w.research.points, 0);
     assert.equal(S.audit(w).length, 0);
   },
 );

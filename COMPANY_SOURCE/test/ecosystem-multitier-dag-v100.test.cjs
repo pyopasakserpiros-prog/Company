@@ -1,3 +1,4 @@
+const prepare=require("./knowledge-fixtures.cjs");
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -15,7 +16,7 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
   assert.equal(mats.length, 64, "Catalog must contain 51 materials across True T0, Bio Seeds, Cultivated Crops, and Tiers 1-3");
   assert.equal(prods.length, 42, "Catalog must contain 28 finished products (Tier 4)");
   assert.equal(Object.keys(D.MATERIAL_RECIPES).length, 40, "All 32 craftable Tier 1-3 materials must have multi-stage recipes");
-  assert.equal(D.RELEASE_VERSION, "2.2.0");
+  assert.equal(D.RELEASE_VERSION, "2.3.0");
 
   const tier0 = mats.filter((m) => m.tier === 0);
   const tier1 = mats.filter((m) => m.tier === 1);
@@ -57,7 +58,7 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
   assert.equal(earlyChipAttempt.code, "insufficientResearch");
 
   // 4. Multi-Step Semiconductor Value Chain: Quartz Sand (T0) -> Metallurgical Silicon MG-Si (T1) -> Silicon Wafer (T2) -> Microchip (T3)
-  S.command(w, { type: "directorEdit", action: "grantResearch", points: 300 });
+  prepare(w,{materials:["metallurgical_silicon","silicon_wafer","microchip"],subjects:["embedded_iot"]});
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "silica_bauxite_ore", quantity: 10 });
 
   const step1 = S.command(w, { type: "craftMaterial", materialId: "metallurgical_silicon", batches: 3 });
@@ -80,7 +81,7 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
 test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecosystem (18 Multi-Role Corporations)", () => {
   const w = S.create("v100-ecosystem-b2b", { autonomous: true, initialHeadcount: 14 });
   S.command(w, { type: "directorEdit", action: "grantCash", amount: 30000000 });
-  S.command(w, { type: "directorEdit", action: "grantResearch", points: 320 });
+  prepare(w,{products:["artisan_bakery"],materials:["bakery_dough_butter"],subjects:["food_fermentation","agriculture"]});
 
   const corps = Object.values(w.externalWorld.corporations || {});
   assert.equal(corps.length, 22, "External world must feature 18 living corporations");
@@ -122,7 +123,7 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
 
   const app = API.create("v100-api-snap", { autonomous: true });
   const snap = app.snapshot();
-  assert.equal(snap.releaseVersion, "2.2.0");
+  assert.equal(snap.releaseVersion, "2.3.0");
   assert.equal(snap.catalog.materialTiers.length, 5);
   assert.equal(snap.catalog.materialRecipes.length, 40);
   assert.equal(snap.catalog.materials.length, 64);

@@ -1,3 +1,4 @@
+const prepare=require("./knowledge-fixtures.cjs");
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -8,6 +9,7 @@ const API = require("../js/api.js");
 
 test("v1.1.0 Chapter 23 True Upstream & 8-Stage Agricultural Cycle: 2+ consecutive crop cycles, seed saving from paddy_grain, and strict rejection of milled_rice/artisan_flour as seed", () => {
   const w = S.create("v110-agri-true-upstream", { autonomous: false });
+  prepare(w,{subjects:["agriculture","food_fermentation","chemical_processing"]});
   const plotId = "plot_jasmine_rice_farm";
 
   // 1. Verify True Natural Upstream separation (Sugar, Flour, Paper, and Rice are NOT T0_NATURAL)
@@ -97,6 +99,7 @@ test("v1.1.0 Chapter 23 True Upstream & 8-Stage Agricultural Cycle: 2+ consecuti
 
 test("v1.1.0 Chapter 23 Edge Cases: missing seed blocks planting, low water/nutrients reduce yield, finite mine depletes reserveRemaining, and renewable forest tracks treeStock", () => {
   const w = S.create("v110-resource-limits", { autonomous: false });
+  prepare(w,{subjects:["agriculture","food_fermentation","chemical_processing"]});
   S.command(w, { type: "directorEdit", action: "grantCash", amount: 50000000 });
   // Disable auto midstream refining so we can inspect raw extracted ores and logs directly
   S.command(w, { type: "setSupplyChainStrategy", strategyId: "asset_light" });
@@ -212,6 +215,7 @@ test("v1.1.0 Chapter 19 Fleet Freight Transport Business: round-trip fuel & empt
 
 test("v1.1.0 Chapter 20 Software & SaaS App Business: 30/40/30 milestone accounting, unearned deposit separation, QA defect gate, Blocked project freeze, and 0-subscriber SaaS rule", () => {
   const w = S.create("v110-software-saas", { autonomous: false });
+  prepare(w,{subjects:["software"]});
   S.command(w, { type: "directorEdit", action: "grantCash", amount: 25000000 });
 
   // 1. SaaS with 0 subscribers must generate 0 revenue when billing cycle runs!
@@ -296,14 +300,14 @@ test("v1.1.0 Chapter 20 Software & SaaS App Business: 30/40/30 milestone account
 
 test("8. Factory Sector Process Models (Food Spoilage -> Compost, Electronics RMA, Automotive Tooling Changeover, Biomed Sterile COA) & Industrial B2B Services (Calibration, Field SLA, Eco Recycling) preserve 100% audit invariants", () => {
   const w = S.create("sector-and-service-v120", { autonomous: true });
-  assert.strictEqual(D.RELEASE_VERSION, "2.2.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.3.0");
   assert.strictEqual(D.BUSINESS_PROCESS_MODELS.length, 8);
   assert.strictEqual(Object.keys(D.SECTOR_PROCESS_MODELS).length, 4);
   assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 10);
 
   // Grant cash, research, and materials for comprehensive process testing
   S.command(w, { type: "directorEdit", action: "grantCash", amount: 18000000 });
-  S.command(w, { type: "directorEdit", action: "grantResearch", points: 100 });
+  prepare(w,{products:["herbalDrink"],subjects:["food_fermentation","quality","metal_machining","animal_husbandry"]});
   S.command(w, { type: "directorEdit", action: "addMaterials", quantity: 10 });
 
   // 8A. Model 1 (Food & Bakery Batch): Bake/ready a food unit, then test shelf-life expiration -> converts to +1 organic_compost while keeping product & material conservation 100% valid

@@ -37,3 +37,9 @@ webapp-testing; systematic-debugging; Playwright best practices; skill-creator �
 ## เมื่อทำเป็น Master Skill
 
 อ่าน AGENTS.md ก่อนและเคารพไฟล์ที่ล็อก อัปเดตสกิล/สถานะ/เอกสาร/รายงานตามแพตช์จริง เลือกชื่อ/ขอบเขตใหม่ รวม/แยก หรือเพิ่มสกิลอื่นได้ตามเหตุผล แล้วอัปเกรดไฟล์ร่างใน `.agents/skills/<name>/SKILL.md` หลังตรวจ พร้อมเปลี่ยน maturity ตามจริง ไม่เปลี่ยนแค่ชื่อให้ดูเป็น master
+
+## ตรวจเพิ่มใน v2.3.0
+
+New tests: knowledge-and-company.test.cjs and added mobile browser cases cover real qualification, licensing, personal learning, aptitude differences, legacy saves and full-map zoom. Build regenerates all three HTML aliases; inspect final ZIP/CRC and extracted checks.
+
+หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ

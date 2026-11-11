@@ -472,13 +472,20 @@
       };
     }
 
+    function minimumZoom() {
+      if (!currentSnap) return 0.05;
+      const b = getWorldBounds(currentSnap);
+      return Math.max(0.02, Math.min((canvas.clientWidth || 360) / b.worldW, Math.max(100, (canvas.clientHeight || 640) - 260) / b.worldH) * 0.65);
+    }
+
     function centerCamera(snap) {
       const bounds = getWorldBounds(snap);
       const vw = canvas?.clientWidth || window.innerWidth || 1280;
       const vh = canvas?.clientHeight || window.innerHeight || 800;
-      cam.zoom = vw < 600 ? 0.72 : Math.min(1.12, Math.max(0.78, vw / (bounds.worldW * 0.92)));
+      cam.followId = null;
+      cam.zoom = Math.min(vw / (bounds.worldW + 32), Math.max(100, vh - 260) / (bounds.worldH + 32));
       cam.x = bounds.worldW * 0.5;
-      cam.y = bounds.worldH * 0.47;
+      cam.y = bounds.worldH * 0.5 - 60 / cam.zoom;
       cam.initialized = true;
     }
 
@@ -1546,7 +1553,7 @@
           const rect = canvas.getBoundingClientRect();
           const midX = (a.x + b.x) / 2 - rect.left;
           const midY = (a.y + b.y) / 2 - rect.top;
-          cam.zoom = clamp(pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / pinch.distance, 0.45, 2.2);
+          cam.zoom = clamp(pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / pinch.distance, minimumZoom(), 2.2);
           cam.x = pinch.anchor.x - (midX - (canvas.clientWidth || rect.width) / 2) / cam.zoom;
           cam.y = pinch.anchor.y - (midY - (canvas.clientHeight || rect.height) / 2) / cam.zoom;
           return;
@@ -1619,7 +1626,7 @@
         (e) => {
           e.preventDefault();
           const factor = e.deltaY < 0 ? 1.12 : 0.9;
-          cam.zoom = clamp(cam.zoom * factor, 0.45, 2.2);
+          cam.zoom = clamp(cam.zoom * factor, minimumZoom(), 2.2);
         },
         { passive: false },
       );
@@ -1642,8 +1649,9 @@
       render,
       bindInteractions,
       centerCamera: () => currentSnap && centerCamera(currentSnap),
+      getCamera: () => ({ ...cam, minimumZoom: minimumZoom(), bounds: currentSnap ? getWorldBounds(currentSnap) : null, viewportWidth: canvas.clientWidth, viewportHeight: canvas.clientHeight }),
       zoomBy: (factor) => {
-        cam.zoom = clamp(cam.zoom * factor, 0.45, 2.2);
+        cam.zoom = clamp(cam.zoom * factor, minimumZoom(), 2.2);
       },
       setFollow: (personId) => {
         cam.followId = cam.followId === personId ? null : personId;

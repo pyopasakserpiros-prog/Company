@@ -37,3 +37,9 @@ systematic-debugging; webapp-testing สำหรับผลที่แสด�
 ## เมื่อทำเป็น Master Skill
 
 อ่าน AGENTS.md ก่อนและเคารพไฟล์ที่ล็อก อัปเดตสกิล/สถานะ/เอกสาร/รายงานตามแพตช์จริง เลือกชื่อ/ขอบเขตใหม่ รวม/แยก หรือเพิ่มสกิลอื่นได้ตามเหตุผล แล้วอัปเกรดไฟล์ร่างใน `.agents/skills/<name>/SKILL.md` หลังตรวจ พร้อมเปลี่ยน maturity ตามจริง ไม่เปลี่ยนแค่ชื่อให้ดูเป็น master
+
+## ตรวจเพิ่มใน v2.3.0
+
+productReadiness, materialReady, SERVICE_SUBJECTS and software/field-operation matrices enforce learned knowledge. Prototype samples add to inventory.consumed and knowledge.materialsConsumed, reconciled in audit.
+
+หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ

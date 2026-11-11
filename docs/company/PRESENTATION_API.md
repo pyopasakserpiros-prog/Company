@@ -11,3 +11,9 @@ Simulation จัดการ CEO ลงทุนอาคารจากเง�
 UI แสดงข้อมูลและส่งคำสั่ง Edit Hub สำหรับเสกวัตถุดิบ แก้ชื่อ นิสัย ค่านิยม ฟื้นฟู หรือฝึกทักษะตัวละคร; ปุ่มควบคุมเวลา/กล้องเป็นการดู simulation ไม่มีปุ่มให้ผู้เล่นอนุมัติออเดอร์หรือสั่ง CEO ลงทุน
 
 layout เป็นกริดการเดินและสถานีที่ simulation ใช้จริง ส่วนภาพอาคารและประตูสร้างจากข้อมูล presentation: ยังไม่ใช่ระบบจำลองภายในอาคารหรือระบบชนผนังเต็มรูปแบบ อย่าอ้างว่ารองรับสิ่งเหล่านี้แล้ว
+
+## Learned knowledge / company inspection
+
+`companyKnowledge` exposes subjects, subjectSpecs, tiers, people with subjectInsights, projects, operationReadiness, serviceReadiness and per-product coverage/reasons. `people[].education` is personal learned state; `catalog.products[].readiness` is current operational eligibility. `research.points` is a legacy statistic, never a substitute for readiness.
+
+Commands: `beginKnowledgeProject {targetId, kind:"product"|"material"}`, `acquireTechnologyLicense {targetId,kind}`, and sandbox `directorEdit {action:"setSubject",personId,subjectId,level:0..100}`. UI remains observational for normal operations. Read [system contract](LEARNED_KNOWLEDGE_SYSTEM.md) and [subject authoring template](templates/KNOWLEDGE_SUBJECT_TEMPLATE.md).

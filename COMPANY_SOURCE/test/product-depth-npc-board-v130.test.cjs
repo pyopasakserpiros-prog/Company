@@ -1,3 +1,4 @@
+const prepare=require("./knowledge-fixtures.cjs");
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -8,7 +9,7 @@ const API = require("../js/api.js");
 
 test("v1.3.0 Chapter 28 & 30: 58 Materials with true physical/chemical origins (N-P-K from Nitrogen Ammonia + Phosphate/Potash), 36 Products across 10 Families, 9 Capability Domains, and 6 B2B Industrial Services", () => {
   const cat = D.createCatalog();
-  assert.strictEqual(D.RELEASE_VERSION, "2.2.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.3.0");
   assert.strictEqual(Object.keys(cat.materials).length, 64, "Catalog has 58 materials");
   assert.strictEqual(Object.keys(cat.products).length, 42, "Catalog has 36 products");
   assert.strictEqual(Object.keys(D.MATERIAL_RECIPES).length, 40, "Catalog has 35 material recipes");
@@ -19,6 +20,7 @@ test("v1.3.0 Chapter 28 & 30: 58 Materials with true physical/chemical origins (
 
   // Verify N-P-K elemental conservation: nitrogen_ammonia is synthesized from ambient_air_gas + raw_water_m3, and npk_fertilizer uses nitrogen_ammonia + phosphate_potash_rock
   const w = S.create("v130-elemental-npk", { autonomous: false });
+  prepare(w,{subjects:["chemical_processing","agriculture"]});
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "phosphate_potash_rock", quantity: 4 });
   const nh3Res = S.command(w, { type: "craftMaterial", materialId: "nitrogen_ammonia", batches: 1 });
   assert.strictEqual(nh3Res.ok, true, "nitrogen_ammonia crafted from ambient_air_gas + raw_water_m3");
@@ -36,6 +38,7 @@ test("v1.3.0 Chapter 28 & 30: 58 Materials with true physical/chemical origins (
 
 test("v1.3.0 Chapter 31 Audit Fixes: (1) Working capital gate on craftMaterialRecipe, (2) acquireExternalAsset does NOT grant free global R&D points, (3) Operating farms do NOT print phantom daily dividend sales", () => {
   const w = S.create("v130-audit-fixes", { autonomous: false });
+  prepare(w,{materials:["wheat_flour"],subjects:["food_fermentation"]});
   assert.strictEqual(w.research.points, 0);
 
   // 1. Working capital gate: if cash is below recipe working-capital floor, craftMaterialRecipe blocks with insufficientWorkingCapital
@@ -52,7 +55,7 @@ test("v1.3.0 Chapter 31 Audit Fixes: (1) Working capital gate on craftMaterialRe
   const acqRes = S.command(w, { type: "acquireExternalAsset", assetId: "jasmine_rice_farm" });
   assert.strictEqual(acqRes.ok, true);
   assert.strictEqual(w.research.points, 0, "Buying a rice farm must NOT inflate global research.points");
-  assert.strictEqual(w.research.unlocked.includes("artisan_bakery"), true, "Specific linked downstream product is unlocked");
+  assert.strictEqual(w.research.unlocked.includes("artisan_bakery"), false, "Buying farmland does not teach bakery engineering");
   assert.strictEqual(w.research.unlocked.includes("ai_edge_module"), false, "Unrelated high-tech semiconductor product remains locked");
 
   // 3. Operating farm produces harvest after growth, NOT phantom daily cash dividend sales
@@ -79,6 +82,7 @@ test("v1.3.0 Chapter 29 & 31 Acceptance Scenarios: Executive Board Decision Ledg
 
   // Scenario B: Missing spare parts blocks advanceServiceOrder (never completes service for free without deducting parts!)
   const wSrv = S.create("v130-service-gate", { autonomous: false });
+  prepare(wSrv,{subjects:["metal_machining","power_electronics"]});
   // Ensure metal_sheet is 0
   assert.strictEqual(wSrv.inventory.materials.metal_sheet, 0);
   const srvStart = S.command(wSrv, { type: "startServiceOrder", serviceTypeId: "field_maintenance", clientCorpId: "siam_metal" });
@@ -143,7 +147,7 @@ test("v1.3.0 Chapter 29 & 31 Acceptance Scenarios: Executive Board Decision Ledg
 
   const app = API.create("v130-api-snapshot", { autonomous: true });
   const snap = app.snapshot();
-  assert.strictEqual(snap.releaseVersion, "2.2.0");
+  assert.strictEqual(snap.releaseVersion, "2.3.0");
   assert.strictEqual(snap.catalog.capabilityDomains.length, 9);
   assert.strictEqual(snap.catalog.productFamilies.length, 10);
   assert.strictEqual(snap.catalog.industrialServices.length, 10);

@@ -1,11 +1,11 @@
 # เริ่มงานกับ Company Simulation
 
-สถานะ source ของ branch `main` ล่าสุดคือ **รุ่นเกม v2.2.0** อ่าน [project status](project_status_and_ai_onboarding.md) เพื่อดูระบบที่ตรวจแล้ว ผลทดสอบ (140/140 tests) และรายงานทุกแพตช์
+สถานะ source ของ branch `main` ล่าสุดคือ **รุ่นเกม v2.3.0** อ่าน [project status](project_status_and_ai_onboarding.md) เพื่อดูระบบที่ตรวจแล้ว ผลทดสอบ (152/152 tests) และรายงานทุกแพตช์
 
 ## อ่านก่อนเริ่มทุกครั้ง
 
 1. [AGENTS.md](AGENTS.md) — กฎเหล็ก; ห้ามแก้โดยไม่ได้รับอนุญาตจากผู้ใช้โดยตรง
-2. [สถานะโครงการ](project_status_and_ai_onboarding.md) — ความสามารถที่มีจริง รุ่นเกม v2.2.0 และผลตรวจล่าสุด
+2. [สถานะโครงการ](project_status_and_ai_onboarding.md) — ความสามารถที่มีจริง รุ่นเกม v2.3.0 และผลตรวจล่าสุด
 3. [Workflow ทำงานร่วมกัน](docs/company/AGENT_COLLABORATION_WORKFLOW.md) และ [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
 4. [Master Skills และดัชนีสกิล](.agents/skills/README.md) พร้อม `SKILL.md` ที่เกี่ยวข้องกับงาน
 5. อ่าน source/test จริงใน `COMPANY_SOURCE/` ก่อนยืนยันพฤติกรรม
@@ -33,7 +33,13 @@ Gemini/ChatGPT ที่ทำงานผ่านแอปแชตรับ Z
 
 ## รายงานและงานล่าสุด
 
+- [รายงาน v2.3.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md) และ [รับช่วงจากแพตช์นี้](docs/company/GEMINI_NEXT_PATCH_HANDOFF_V230.md) — วิชา NPC ความรู้บริษัท เทคโนโลยี และซูมมือถือ
+
 - [รายงานแพตช์ v2.2.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.2.0.md) — สรุปการยกระดับเกมสู่รุ่นพร้อมเล่น v2.2.0 (บันได SME 6 ระยะ, มิเตอร์ค่าไฟ-น้ำ/โซลาร์, วัฒนธรรมองค์กร/ลานจอดรถ/บริษัท Spin-off, บริการ B2B ครบ 10 แบบ และ Edit Hub แยกกระเป๋าเงิน)
 - [เอกสารข้อเสนอ PDF 9 ฉบับ](docs/company/research/source_documents/business_expansion_2026-11/README.md) และ [บทสังเคราะห์ใน ideas](ideas/company/35_business_expansion_nine_pdfs_synthesis.md) — ข้อเสนอเทียบกับ main v2.2.0 แล้ว; ไม่ใช่รายการที่มีในเกมหรือคำสั่ง implement
 - [รายงานแพตช์ v2.1.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.1.0.md) — สรุปการแก้บั๊ก NPC Business-Entry Audit ทั้ง 7 จุด, สายโลหะ/อะลูมิเนียมขั้นบันได, บริการ B2B 8 แบบ, 12 ประเทศ/16 เหตุการณ์โลก และทางเดินการค้าภูมิภาค 4 สาย
 - [เอกสารส่งต่องานถัดไปหลัง v2.1.0](docs/company/GEMINI_NEXT_PATCH_HANDOFF_V210.md) และ [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
+
+## ความรู้และวิชา NPC
+
+อ่าน [ระบบความรู้](docs/company/LEARNED_KNOWLEDGE_SYSTEM.md) และ [ทะเบียนวิชา](docs/company/KNOWLEDGE_SUBJECT_CATALOG.md) ก่อนแก้ธุรกิจ/การวิจัย เพิ่มวิชาโดยใช้ [เทมเพลต](docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md) ทุกครั้ง ดู [รายงาน v2.3.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md) สำหรับหลักฐานและข้อจำกัด

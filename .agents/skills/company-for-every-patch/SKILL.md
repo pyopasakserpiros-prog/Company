@@ -44,3 +44,11 @@ Before finishing ANY patch turn:
    - Call `skills:update_skill` for **both** `company-evolution-dev` and `company-for-every-patch` so the Master Skill in Gemini is always synchronized with the latest patch.
 3. **Write Patch Implementation Report & Package Full Project ZIP**:
    - Create `PATCH_IMPLEMENTATION_REPORT_COMPANY_V<X.Y.Z>.md` and package `Company-v<X.Y.Z>.zip` (excluding `.git` and `node_modules`), then extract and verify the packaged ZIP in a clean temp folder before delivery.
+
+## Learned subject and business-entry maintenance
+
+For any new or revised subject, use `docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md`. Check prerequisites/levels, weighted Human Core components (read-only), individual learning/experience, actual work effects, every consumer/gate, NPC preparation, snapshot/UI and save validation. All subjects remain learnable even when no company business uses them.
+
+Regenerate `docs/company/KNOWLEDGE_SUBJECT_CATALOG.md` using `node COMPANY_SOURCE/tools/knowledge-catalog.cjs`; update the system guide and research evidence when needed. Verify raw money/points do not bypass qualification, buying technology still needs staff and transfer, and legacy saves do not turn everybody into universal experts. `tools/build.cjs` now updates the three official HTML aliases directly.
+
+When an app-specific `skills:update_skill` tool is not available to the current agent, keep both repository master copies current and report Gemini-app sync as unavailable; never fabricate that update.

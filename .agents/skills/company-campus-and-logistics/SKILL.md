@@ -37,3 +37,9 @@ Update Method; source layout/freight ของ Company — ดู [รายก�
 ## เมื่อทำเป็น Master Skill
 
 อ่าน AGENTS.md ก่อนและเคารพไฟล์ที่ล็อก อัปเดตสกิล/สถานะ/เอกสาร/รายงานตามแพตช์จริง เลือกชื่อ/ขอบเขตใหม่ รวม/แยก หรือเพิ่มสกิลอื่นได้ตามเหตุผล แล้วอัปเกรดไฟล์ร่างใน `.agents/skills/<name>/SKILL.md` หลังตรวจ พร้อมเปลี่ยน maturity ตามจริง ไม่เปลี่ยนแค่ชื่อให้ดูเป็น master
+
+## ตรวจเพิ่มใน v2.3.0
+
+operationReadiness checks freight knowledge and the assigned driver's driving level; centerCamera/minimumZoom fit the current viewport and both map axes.
+
+อ่าน `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และกรณีตรวจ `test/knowledge-and-company.test.cjs`; สถานะร่างเดิมไม่เปลี่ยน maturity อัตโนมัติ

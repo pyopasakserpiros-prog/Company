@@ -21,7 +21,7 @@ html = html.replace(
 );
 if (/<script[^>]+src=|<link[^>]+rel="stylesheet"/.test(html))
   throw Error("external source dependency remains");
-fs.writeFileSync(path.join(root, "CompanyFoundation_single.html"), html);
+for (const target of [path.join(root,"CompanyFoundation_single.html"),path.join(root,"Company_single.html"),path.join(root,"..","Company_single.html")]) fs.writeFileSync(target,html);
 console.log(
   "Built CompanyFoundation_single.html:",
   Buffer.byteLength(html),

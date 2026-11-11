@@ -79,7 +79,7 @@ test("v0.1.0 Sandbox Edit Hub (directorEdit) preserves closed-loop accounting an
 
   const snap = app.snapshot();
   assert.equal(snap.company.reputation, 85);
-  assert.ok(snap.research.unlockedProducts.includes("lamp"), "300+ research points unlocks lamp");
+  assert.ok(!snap.research.unlockedProducts.includes("lamp"), "Research grants cannot replace a qualified process");
   assert.deepEqual(app.audit(), [], "All Edit Hub actions must pass full audit");
 });
 

@@ -1,3 +1,4 @@
+const prepare=require("./knowledge-fixtures.cjs");
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -9,7 +10,7 @@ const API = require("../js/api.js");
 
 test("7-Expert Audit #1: Plant Manager & Systems Analyst — wearReductionPct, modeSpec.speedModifier, OEE machineCondition & maintainMachines work in simulation", () => {
   const w1 = S.create("wear-baseline", { autonomous: true });
-  const w2 = S.create("wear-rubber-estate", { autonomous: true });
+  const w2 = S.create("wear-baseline", { autonomous: true });
   S.command(w2, { type: "directorEdit", action: "grantCash", amount: 10000000 });
   S.command(w2, { type: "acquireExternalAsset", assetId: "rubber_polymer_estate" });
 
@@ -44,7 +45,7 @@ test("7-Expert Audit #2: Corporate Strategist & Economist — ceoDirective (6 mo
   }
 
   // 2. Test Batch Craft All (T1 -> T2 -> T3) command
-  S.command(w, { type: "directorEdit", action: "grantResearch", points: 300 });
+  prepare(w,{materials:["metallurgical_silicon","silicon_wafer","microchip"],subjects:["chemical_processing","metal_machining","agriculture","food_fermentation"]});
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "silica_bauxite_ore", quantity: 12 });
   const batchRes = S.command(w, { type: "batchCraftAll", batches: 2 });
   assert.equal(batchRes.ok, true);

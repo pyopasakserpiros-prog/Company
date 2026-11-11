@@ -40,3 +40,17 @@ node tools/build.cjs
 node tools/benchmark.cjs
 ```
 - All **140/140** unit tests pass with 0 failures (`~0.987 ms/tick` at 500 concurrent NPCs).
+
+## v2.3.0 — Learned knowledge, company inspection, and technology entry
+
+Current release adds 170 learned subjects outside the locked Human Core. Read `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md`, the generated `KNOWLEDGE_SUBJECT_CATALOG.md`, and `docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md` before changing any subject or business requirement. Research sources are in `docs/company/research/KNOWLEDGE_CURRICULUM_SOURCES.md`.
+
+- `sim.js`: SUBJECT_DETAILS, SUBJECT_PREREQUISITE_LEVELS, subjectSpec, subjectTalent, subjectPotential, learnSubject, subjectPerformance, productRequirements, MATERIAL_SUBJECTS/materialRequirements, SERVICE_SUBJECTS, OPERATIONS_SUBJECTS. Knowledge is personal (`p.education`); it is never locked by employer business type. Personal interests and paid after-work study can develop unrelated subjects.
+- `w.knowledge.projects`: per-target qualification, team prerequisites, disciplineMinutes, real sample inputs in `materialsConsumed`, elapsed days, independent QA and failure/rework. Pooled research.points no longer unlocks anything; buying an asset does not grant product knowledge.
+- `beginKnowledgeProject` and `acquireTechnologyLicense`: the latter pays 3× base research fee, reduces work to 40%, and still requires transfer time, qualified staff, samples and QA. `reviewKnowledge` chooses preparation/learning/buying/research using actual cash, workforce, market, cost and CEO risk.
+- `API.snapshot().companyKnowledge`, `catalog.products[].readiness`, `people[].education`: company tabs and character ความรู้/Lv1–Lv5 must report actual state. `directorEdit/setSubject` only edits the selected person and creates an event.
+- `save.js`: legacy saves without knowledge migrate; prior point unlocks are archived, contracts/finance/inventory retained. Reject invalid subjects and qualification evidence. Do not reset a valid current knowledge state on load.
+- `campus-render.js`: centerCamera fits both map dimensions; minimum zoom derives from viewport/world size, including phones. Build updates all three standalone aliases.
+- Verify with `test/knowledge-and-company.test.cjs`, `test/campus-browser.cjs`, normal check/test/build and benchmark. Regenerate the subject reference with `node tools/knowledge-catalog.cjs` from COMPANY_SOURCE. Never copy old global-point-unlock fixtures into production logic.
+
+Repo skill updates do not update the Gemini app automatically. Record app-sync status truthfully if that app's skill update tool is unavailable.

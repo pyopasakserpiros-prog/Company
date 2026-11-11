@@ -379,12 +379,12 @@
           code === "reworkNeeded"
             ? "ผู้ตรวจ QC พบจุดบกพร่อง ส่งกลับให้ช่างซ่อมแซมตามขั้นตอนควบคุมคุณภาพ"
             : "ชิ้นงานซ่อมไม่ผ่านเกินโควตา ต้องตัดเป็นของเสียและเสียต้นทุนวัตถุดิบไป";
-      } else if (code === "productUnlocked") {
+      } else if (["productUnlocked","productQualified","researchProjectStarted","researchValidationFailed"].includes(code)) {
         category = "RND";
         categoryLabelTh = "วิจัย R&D";
         isMajor = true;
         meaningTh =
-          "วิศวกรสะสมแต้มวิจัยครบเกณฑ์ ปลดล็อกแบบแปลนสินค้าอุตสาหกรรมใหม่ที่มีอัตรากำไรสูงขึ้น";
+          "การรับรองกระบวนการต้องอาศัยวิชาเฉพาะทีม ชั่วโมงต้นแบบ วัตถุดิบ และการตรวจรับคุณภาพ";
       } else if (["employeeLifeMilestone", "turnaroundMilestone", "ceoDirectiveChanged"].includes(code)) {
         category = code === "employeeLifeMilestone" ? "HR_CULTURE" : "FINANCE";
         categoryLabelTh =
@@ -845,6 +845,7 @@
           affect,
           aspirations,
           skills: p.skills,
+          education: p.education || null,
           experience: p.experience,
           relationships: p.relationships,
           concern: p.concern,
@@ -1149,6 +1150,7 @@
           sectorProcesses: w.sectorProcesses || null,
           serviceBusiness: w.serviceBusiness || null,
           capabilities: w.capabilities || null,
+          companyKnowledge: S.companyKnowledgeView(w),
           executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
           companyProgression: w.companyProgression || null,
@@ -1182,7 +1184,7 @@
               const rec = D.MATERIAL_RECIPES?.[m.id] || null;
               const minRes = rec ? (rec.minResearch || 0) : (m.minResearch || 0);
               const craftable = Boolean(m.craftable && rec);
-              const canCraftInHouse = Boolean(craftable && (w.research?.points || 0) >= minRes);
+              const canCraftInHouse = Boolean(craftable && S.materialReady(w, m.id));
               const stock = w.inventory.materials[m.id] || 0;
               const reserved = w.inventory.reserved[m.id] || 0;
               const freeStock = Math.max(0, stock - reserved);
@@ -1209,7 +1211,7 @@
               };
             }),
             materialRecipes: Object.values(D.MATERIAL_RECIPES || {}).map((rec) => {
-              const unlocked = (w.research?.points || 0) >= (rec.minResearch || 0);
+              const unlocked = S.materialReady(w,rec.outputMaterialId || rec.id);
               const stats = w.externalWorld?.assetPortfolio?.recipeStats?.[rec.id] || {
                 batches: 0,
                 unitsProduced: 0,
@@ -1237,7 +1239,8 @@
                 (n, [m, q]) => n + w.catalog.materials[m].unitCost * q,
                 0,
               ),
-              unlocked: w.research.unlocked.includes(p.id),
+              unlocked: S.productReadiness(w,p.id).ready,
+              readiness: S.productReadiness(w,p.id),
             })),
             skills: Object.values(w.catalog.skills),
             roles: Object.entries(w.catalog.roles).map(([id, r]) => ({

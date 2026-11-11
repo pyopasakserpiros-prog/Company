@@ -89,6 +89,7 @@
                 (copy.production?.scrapped?.[o.productId] || 0) > 0);
           }
     }
+    S.ensureKnowledge(copy);
     return copy;
   }
   function validate(w) {
@@ -371,11 +372,26 @@
         w.research.unlocked.every(
           (id) =>
             Object.hasOwn(w.catalog.products || {}, id) &&
-            (w.catalog.products[id].researchRequired <= w.research.points ||
-              Boolean(w.capabilities?.unlockedProducts?.[id])),
+            (w.catalog.products[id].researchRequired === 0 ||
+              w.knowledge?.projects?.[`product:${id}`]?.status === "qualified"),
         ),
       "invalid research",
     );
+    const knownSubjects = S.SUBJECTS;
+    const validSubjectMap = (v) => record(v) && Object.entries(v).every(([id,n])=>Object.hasOwn(knownSubjects,id) && finite(n,0,100));
+    add(record(w.knowledge) && w.knowledge.version === 1 && record(w.knowledge.projects) && record(w.knowledge.materialsConsumed),"invalid knowledge schema");
+    if(record(w.knowledge)) {
+      add(Object.entries(w.knowledge.materialsConsumed || {}).every(([id,n])=>Object.hasOwn(w.catalog.materials,id) && int(n)),"invalid research material ledger");
+      add(Object.keys(w.knowledge.projects || {}).length <= 1000,"too many knowledge projects");
+      for(const [key,p] of Object.entries(w.knowledge.projects || {})) {
+        if(!record(p)) {add(false,"invalid knowledge project");continue;}
+        add(Object.hasOwn(p.kind === "product" ? w.catalog.products : w.catalog.materials,p.targetId),"unknown knowledge target");
+        if(p.disciplineMinutes) add(record(p.disciplineMinutes) && Object.entries(p.disciplineMinutes).every(([id,n])=>Object.hasOwn(p.requirements,id) && finite(n)),"invalid research discipline hours");
+        add(record(p) && ["product","material"].includes(p.kind) && key === `${p.kind}:${p.targetId}` && Object.hasOwn(knownSubjects,p.subject) && validSubjectMap(p.requirements) && finite(p.workMinutes) && finite(p.requiredMinutes,1) && int(p.spentSatang) && finite(p.startedDay,-1000000) && int(p.minDays) && ["literature","prototype","validation","qualified"].includes(p.status),"invalid knowledge project");
+        if(p.status === "qualified") add(p.workMinutes>=p.requiredMinutes && p.qaMinutes>=240 && p.prototypeConsumed===true && p.qualifiedDay>=p.startedDay+p.minDays && record(p.contributors) && !Object.hasOwn(p.contributors,p.reviewerId),"invalid qualification evidence");
+      }
+    }
+    for(const p of w.people) add(record(p.education) && validSubjectMap(p.education.subjects) && record(p.education.practiceMinutes) && (p.education.course === null || Object.hasOwn(knownSubjects,p.education.course)),"invalid learned subjects");
     const customTaskKinds = record(w.catalog.taskKinds)
       ? Object.keys(w.catalog.taskKinds)
       : [];
@@ -803,8 +819,8 @@
       record(world) &&
       world.version === S.VERSION &&
       world.schema === S.SCHEMA &&
-      world.coreVersion !== H.VERSION &&
-      (H.COMPATIBLE_VERSIONS || []).includes(world.coreVersion)
+      ((world.coreVersion !== H.VERSION &&
+      (H.COMPATIBLE_VERSIONS || []).includes(world.coreVersion)) || (world.coreVersion === H.VERSION && !world.knowledge))
     )
       world = migrate(world);
     const errors = validate(world);
