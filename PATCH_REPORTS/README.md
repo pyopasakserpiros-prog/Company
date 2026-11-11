@@ -1,24 +1,26 @@
-# 📑 สารบัญรายงานผลการพัฒนาทุกแพตช์ (Company Simulation Patch Reports)
+# ดัชนีรายงาน Company Simulation
 
-> [!NOTE]
-> โฟลเดอร์นี้รวบรวมรายงานผลการพัฒนาและการตรวจสอบระบบ (Patch Implementation Reports) ตั้งแต่เริ่มต้นจนถึงรุ่นปัจจุบัน **v1.0.0 (7-Expert Audit & Debug Release)** อย่างครบถ้วน
+รวมรายงานแพตช์และการเปลี่ยนแปลงเอกสารที่อยู่ใน repo ปัจจุบัน รายงานเก็บผลทดสอบที่ผู้พัฒนารันในเวลานั้น; อ่าน project status เพื่อแยกผลย้อนหลังออกจากผลตรวจล่าสุด
 
----
+## รายงานแพตช์เกม
 
-## 📜 รายการรายงานผลการพัฒนาตามลำดับรุ่น:
+| รุ่น | หัวข้อ | รายงานหลัก |
+|---|---|---|
+| v0.1.0 foundation | รายงานวางรากฐาน | [Foundation report](../docs/company/history/FOUNDATION_REPORT.md) |
+| v0.2.0 | UI/ข้อมูลบุคคล/อาชีพ/ชีวิตพนักงาน | [รายงาน v0.2.0](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_2_0.md) |
+| v0.3.0 | โควตาองค์กร/ประเมินโดยหัวหน้า/หลายอุตสาหกรรม | [รายงาน v0.3.0](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_3_0.md) |
+| v0.4.0 | ขยายบริษัท/อาคาร/ขนส่ง/โลกภายนอก | [รายงาน v0.4.0](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_4_0.md) |
+| v0.5.0 | อาชีพ 10 ระดับ/องค์กร/การขยายพื้นที่ | [รายงาน v0.5.0](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_5_0.md) |
+| v0.6.0 | สินทรัพย์ภายนอก/ห่วงโซ่ผลิต/make-or-buy | [รายงาน v0.6.0](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_6_0.md) |
+| v1.0.0 | ห่วงโซ่หลายระดับ/ระบบนิเวศภายนอก | [รายงาน v1.0.0](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V1_0_0.md) |
+| v1.0.0 debug | ตรวจและแก้การเชื่อมระบบ | [รายงาน v1.0.0 debug](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V1_0_0_DEBUG.md) |
+| v1.2.0 | ต้นน้ำแท้/วงจรเกษตร/8 โมเดลธุรกิจ | [รายงาน v1.2.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V1.2.0.md) |
 
-| ลำดับรุ่น | ชื่อเอกสารรายงาน | ขอบเขตและฟีเจอร์หลักที่พัฒนา |
-| :--- | :--- | :--- |
-| **v0.2.0** | [`PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_2_0.md`](PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_2_0.md) | • ระบบทัศนคติและการทำงานของพนักงานตามหลักจิตวิทยาจริง<br>• การกำหนดโควตาเป้าหมายและการทำงานล่วงเวลา (OT) |
-| **v0.3.0** | [`PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_3_0.md`](PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_3_0.md) | • การขยายขอบเขตสู่อุตสาหกรรมหลากหลาย (Multi-Industry)<br>• การบริหารคำสั่งซื้อและโควตาการผลิตอัตโนมัติ |
-| **v0.4.0** | [`PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_4_0.md`](PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_4_0.md) | • อาคารขยายนิคมบนแผนที่จริง (Constructible Expansion Facilities)<br>• การเจรจาการค้า B2B และฟลีทรถบรรทุกขนส่งสินค้า<br>• รองรับพนักงานพร้อมกัน 300 ถึง 500 คนอย่างลื่นไหล |
-| **v0.5.0** | [`PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_5_0.md`](PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_5_0.md) | • บันไดความก้าวหน้าในอาชีพ 10 ระดับ (10-Level Career Hierarchy)<br>• การเลื่อนขั้นสู่ผู้จัดการและโฟร์แมน<br>• โครงการขยายโรงงานใหม่แบบ Greenfield |
-| **v0.6.0** | [`PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_6_0.md`](PATCH_IMPLEMENTATION_REPORT_COMPANY_V0_6_0.md) | • สินทรัพย์ภายนอก 12 แห่ง (`EXTERNAL_ASSETS`: ฟาร์ม, ไร่, สวนปาล์ม, สวนยาง, เหมือง, ท่าเรือ)<br>• ห่วงโซ่การผลิตแบบลูกโซ่ 8 สาย (ต้นน้ำ ➔ กลางน้ำ ➔ ปลายน้ำ)<br>• กลยุทธ์ Make-or-Buy (ซื้อสำเร็จรูป vs บูรณาการแนวดิ่งผลิตเอง) |
-| **v1.0.0** | [`PATCH_IMPLEMENTATION_REPORT_COMPANY_V1_0_0.md`](PATCH_IMPLEMENTATION_REPORT_COMPANY_V1_0_0.md) | • **ห่วงโซ่อุปทาน 5 ระดับ (5-Tier Value Chain DAG)**: วัตถุดิบ 37 ชนิด, สินค้า 28 รายการ<br>• **ระบบนิเวศ 18 บริษัทภายนอก (Living Corporate Ecosystem)**: ค้าขาย, สงครามราคา, ร่วมทุน, วิกฤตวัตถุดิบ<br>• **การตรวจสอบเชิงลึกโดยทีมผู้เชี่ยวชาญ 7 สาขา (7-Expert Audit & Debug)**: กำจัด Code Zero, ระบบสภาพเครื่องจักร OEE & การซ่อมบำรุง, เข็มทิศกลยุทธ์ CEO 6 โหมด, เป้าหมายชีวิตส่วนตัวพนักงาน (ซื้อรถ/บ้าน), ระบบพี่เลี้ยงสอนงาน, โหมด Endless Empire |
+ไม่พบรายงานรุ่น v0.7–v0.9, v1.1.0 หรือ v1.2.1 ในคลังรายงานปัจจุบัน
 
+## รายงานเอกสารและงานรับช่วง
 
-## งานเอกสารและร่างสกิล
+- [เพิ่มร่าง 14 Company skills](UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md)
+- [ปรับ AGENTS.md จากเกมเก่าให้เข้ากับ Company](UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md)
 
-- [UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md](UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md): เพิ่มร่าง 14 หมวดให้ Gemini ยกระดับ ไม่มีการเปลี่ยน source เกม
-
-- [UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md](UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md): ปรับกฎทำงานจากเอกสารเกมเก่าเป็นบริบท Company โดยรักษาข้อเดิม ไม่มีการเปลี่ยนเกม
+สถานะฐานเกมล่าสุดและงานที่กำลังรอรับช่วงอยู่ใน [project status](../project_status_and_ai_onboarding.md) และ [ทะเบียนงาน](../docs/company/AGENT_WORK_STATUS.md)
