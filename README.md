@@ -4,7 +4,7 @@
 
 เปิดเล่น COMPANY_SOURCE/CompanyFoundation_single.html ได้แบบออฟไลน์ หรือเปิด COMPANY_SOURCE/index.html ผ่าน local server ดูวิธีรันและทดสอบใน COMPANY_SOURCE/README.md
 
-เริ่มรับช่วงที่ START_HERE_FOR_AI.md แล้วอ่าน AGENTS.md และ project_status_and_ai_onboarding.md สำหรับข้อกำหนดและสถานะปัจจุบัน
+ทุกครั้งที่เริ่มงาน ต้องเปิดอ่าน AGENTS.md ฉบับปัจจุบันก่อน จากนั้นอ่าน START_HERE_FOR_AI.md และ project_status_and_ai_onboarding.md สำหรับข้อกำหนดและสถานะปัจจุบัน
 
 Human Core 1.0.0 ถูกล็อกถาวร ห้ามแก้ไฟล์แกนหรือ hash; เพิ่มระบบภายนอกแกนได้ เกม Company ปัจจุบันอยู่ branch main; ข้อความ branch ในเอกสารเก่าต้องเทียบกับ repo จริง
 
