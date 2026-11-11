@@ -17,6 +17,8 @@
 | v1.2.0 | ต้นน้ำแท้และ 8 โมเดลธุรกิจ | [รายงาน v1.2.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V1.2.0.md) |
 | v1.3.0 | ความลึกสินค้า/วัตถุดิบและ NPC executive board | [รายงาน v1.3.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V1.3.0.md) |
 | v2.0.0 | โลกภูมิรัฐศาสตร์มีชีวิตและ Master Skills | [รายงาน v2.0.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.0.0.md) |
+| v2.1.0 | NPC business-entry, โลหะขั้นบันได, ตลาดโลก และระเบียงการค้า | [รายงาน v2.1.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.1.0.md) |
+| v2.2.0 | การเติบโต SME, utilities, วัฒนธรรมองค์กร และบริการ B2B | [รายงาน v2.2.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.2.0.md) |
 
 ไม่พบรายงานแยกสำหรับ v0.7–v0.9, v1.1.0 หรือ v1.2.1 ในคลังปัจจุบัน; อ่าน [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) ก่อนสรุปรุ่นเหล่านั้น
 
@@ -25,5 +27,6 @@
 - [ปรับ AGENTS.md ให้เข้ากับบริบท Company](UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md)
 - [เผยแพร่ร่าง 14 Company Skills](UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md)
 - [รวมสถานะ v2.0.0 และย้าย ideas ที่ทำแล้ว](UPDATE_REPORT_2026-11-11_V2_STATUS_IDEA_RECONCILIATION.md)
+- [จัดเก็บและสังเคราะห์ข้อเสนอ PDF 9 ฉบับ](UPDATE_REPORT_2026-11-11_NINE_PDF_IDEA_SYNTHESIS.md)
 
 ทะเบียนงานและ workflow: [AGENT_WORK_STATUS.md](../AGENT_WORK_STATUS.md) · [AGENT_COLLABORATION_WORKFLOW.md](../AGENT_COLLABORATION_WORKFLOW.md)

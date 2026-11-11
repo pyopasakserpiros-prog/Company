@@ -25,6 +25,7 @@
 | 31 | Audit/coverage และ acceptance tests | ประเด็น v1.3 และ v2.1.0 ที่แก้แล้วถูกย้ายไป status; เหลือข้อเสนอการตรวจระยะยาวใน [บท 31](31_audit_evidence_and_acceptance_scenarios.md) |
 | 32 | ข้อเสนอเสริมและตัวอย่างมติ | ย้าย capability domains, budget pools และบริการที่ทำแล้วออก; คงเฉพาะส่วนต่อยอดใน [บท 32](32_additional_design_proposals_and_decision_examples.md) |
 | 34 | ส่วนต่อยอดหลัง v2.1.0 (สายโลหะขั้นสูง/ผู้ค้าส่ง/ตลาดเพิ่มเติม) | บั๊ก NPC business-entry ทั้ง 7 จุด, สายโลหะขั้นบันได, บริการพลังงาน/ศูนย์ฝึก และ 4 ประเทศ (`ID`, `AU`, `IN`, `SG`) ทำเสร็จและย้ายไป status แล้ว; คงเฉพาะข้อเสนอระยะถัดไปใน [บท 34](34_business_depth_world_markets_and_npc_entry_audit.md) |
+| 35 | สังเคราะห์ PDF ข้อเสนอธุรกิจ 9 ฉบับ (190 หน้า) | เอกสารต้นฉบับอ้าง v2.0.0; คัดของที่มีใน v2.2.0 ออกแล้ว เหลือข้อเสนอ tooling job shop, เช่าเครื่องจักรหนัก, น้ำระหว่างบริษัท และวงจรยาง/แก้วใน [บท 35](35_business_expansion_nine_pdfs_synthesis.md) |
 
 ## เอกสารที่ย้ายออกหลังทำครบ
 

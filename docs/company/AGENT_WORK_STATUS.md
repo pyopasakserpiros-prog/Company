@@ -18,6 +18,12 @@
 | `status-ideas-reconciliation-v200` | Codex | รวมสถานะทุกแพตช์และลบส่วน ideas ที่ทำแล้ว | **integrated** จากฐาน `06ee226`; รายงาน [การรวมสถานะ/ideas](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_V2_STATUS_IDEA_RECONCILIATION.md) |
 | `agy-active-work` | Agy | ไม่มีรายละเอียดงานที่ยืนยันได้ในบันทึก repo ปัจจุบัน | ไม่ทราบสถานะ; ตรวจตาราง/branch ล่าสุดก่อนแก้ไฟล์ร่วม |
 
+## งานเอกสารวิจัยที่จัดเก็บแล้ว (ไม่ใช่แพตช์เกม)
+
+| งาน | สิ่งที่จัดทำ | สถานะ/ขอบเขต |
+|---|---|---|
+| `business-expansion-nine-pdf-synthesis-2026-11` | จัดเก็บ PDF 9 ฉบับ (190 หน้า) และสังเคราะห์เป็น [ideas/company บท 35](../../ideas/company/35_business_expansion_nine_pdfs_synthesis.md) โดยเทียบกับ main v2.2.0 | **เอกสารเสร็จแล้ว**; ไม่มีการแก้ source, ไม่ถือว่า Gemini ได้รับไฟล์ และข้อเสนอไม่ใช่ความสามารถในเกม |
+
 ## สิ่งที่ยังต้องระวังในการส่งต่องาน
 
 - แพ็กเกจ `Company-v2.1.0.zip` พัฒนาจากฐาน commit `6182e0a662bf1dfe47360e64e20e635ea07abeae` และอัปเดตทั้ง source, tests (`136/136`), standalone HTML, เอกสารสถานะ, คลัง ideas และสกิลใน `.agents/skills/` พร้อมซิงก์ Master Skill (`company-evolution-dev` และ `company-for-every-patch`) ในระบบสกิลของแอป Gemini แล้ว
