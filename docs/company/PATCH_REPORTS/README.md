@@ -20,3 +20,5 @@
 ## งานเอกสารและร่างสกิล
 
 - [UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md](UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md): เพิ่มร่าง 14 หมวดให้ Gemini ยกระดับ ไม่มีการเปลี่ยน source เกม
+
+- [UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md](UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md): ปรับกฎทำงานจากเอกสารเกมเก่าเป็นบริบท Company โดยรักษาข้อเดิม ไม่มีการเปลี่ยนเกม
