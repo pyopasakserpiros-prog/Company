@@ -1355,7 +1355,14 @@
           );
         actionWrap.append(buyBtn);
       } else {
-        actionWrap.append(el("span", "chip ok", `✅ ถือครอง Lv.${a.level}/3 (เก็บเกี่ยวสะสม ${a.totalHarvested} ชิ้น)`));
+        const resExtra = a.reserveRemaining !== null && a.reserveRemaining !== undefined
+          ? ` • ปริมาณสำรองแร่เหลือ ${a.reserveRemaining} หน่วย (กากแร่ ${a.tailingsGenerated || 0})`
+          : a.treeStock !== null && a.treeStock !== undefined
+            ? ` • ต้นไม้โตเต็มวัยเหลือ ${a.treeStock} ต้น (กล้าไม้รอโต ${a.saplingCohortsCount || 0} รุ่น)`
+            : a.herdCount !== null && a.herdCount !== undefined
+              ? ` • ฝูงโคนม ${a.herdCount} ตัว`
+              : "";
+        actionWrap.append(el("span", "chip ok", `✅ ถือครอง Lv.${a.level}/3 (ผลผลิตสะสม ${a.totalHarvested} หน่วย${resExtra})`));
         if (a.upgradeCost) {
           const upBtn = el("button", "btn", `⬆️ ขยายเป็น Lv.${a.level + 1} (${money(a.upgradeCost)})`);
           upBtn.onclick = () =>
@@ -1495,7 +1502,70 @@
       dagCard.append(rRow);
     }
 
-    return [stratCard, dagCard, chainCard, assetCard];
+    // Card 0A: 8-Stage Agricultural Cultivation & Seed Cycle Dashboard (Chapter 23)
+    const agri = v.agriculture || { plots: {}, seedBatches: {}, waterSource: {} };
+    const agriCard = el("div", "card");
+    agriCard.append(
+      el("h3", "", "🌱 ระบบวงจรเกษตร 8 ขั้นตอน การคัดเมล็ดพันธุ์ และสมดุลธาตุอาหารดิน (Chapter 23 True Agriculture)"),
+      el(
+        "div",
+        "muted",
+        "เกษตรกรและผู้บริหารดำเนินวงจรเพาะปลูกอัตโนมัติ: เตรียมแปลง ➔ หักเมล็ดพันธุ์ปลูกลงดิน ➔ ดูแลน้ำดิบและปุ๋ยธาตุอาหาร ➔ เก็บเกี่ยวผลผลิต ➔ คัดแยกข้าวเปลือกที่ยังงอกได้เก็บเป็นเมล็ดพันธุ์รอบถัดไป (ข้าวสารที่สีแล้วและแป้งโม่ใช้ปลูกไม่ได้!) • ดินและน้ำมีสถานะต่อเนื่อง ไม่รีเซ็ตฟรีหลังเก็บเกี่ยว",
+      ),
+      el(
+        "div",
+        "logrow",
+        `🌾 รอบเพาะปลูกสำเร็จสะสม: ${agri.totalCyclesCompleted || 0} รอบ • 🌱 เมล็ดพันธุ์ใช้ปลูกสะสม: ${agri.totalSeedUsed || 0} หน่วย • 🌾 คัดเก็บเมล็ดพันธุ์จากผลผลิต: ${agri.totalSeedSavedFromHarvest || 0} หน่วย • 💧 น้ำดิบใช้ดูแลแปลง: ${agri.totalWaterUsed || 0} ลบ.ม. • 🧪 ปุ๋ยบำรุงดินที่ใช้: ${agri.totalFertilizerUsed || 0} ถุง`,
+      ),
+    );
+    for (const plot of Object.values(agri.plots || {})) {
+      const pRow = el("div", "logrow");
+      const lh = plot.lastHarvest;
+      pRow.append(
+        el(
+          "strong",
+          "",
+          `${plot.icon || "🌾"} ${plot.nameTh} [${plot.id}] — สถานะแปลง: ${plot.stage} (ปลูกรอบที่ ${plot.cycleCount || 0})`,
+        ),
+        el(
+          "div",
+          "",
+          `• สภาพดินต่อเนื่อง: ธาตุอาหารดิน ${plot.soilNutrients}% | ความชื้นดิน ${plot.soilMoisture}% | อัตราการงอกเมล็ดพันธุ์ ${Math.round((plot.germinationRate || 0.92) * 100)}% | สัดส่วนกันเมล็ดพันธุ์รอบหน้า ${Math.round((plot.seedSaveRatio || 0.25) * 100)}%`,
+        ),
+        el(
+          "div",
+          "muted",
+          lh
+            ? `• ผลเก็บเกี่ยวรอบล่าสุด (รอบที่ ${lh.cycle}): ผลผลิตรวม ${lh.grossYield} หน่วย ➔ สูญเสีย ${lh.spoiledLoss} | คัดเก็บเป็นเมล็ดพันธุ์ (${lh.savedSeedMatId}) +${lh.savedSeedQty} | ส่งเข้าคลังแปรรูป/ขาย (${lh.harvestMatId}) +${lh.warehouseCropQty} | ผลพลอยได้ +${lh.byproductQty}`
+            : `• เหตุผล/สถานะปัจจุบัน: ${plot.lastReasonTh}`,
+        ),
+      );
+      agriCard.append(pRow);
+    }
+
+    // Card 0B: True Natural Source -> Extraction/Cultivation -> Midstream -> Downstream Table (Chapter 23 Section 9)
+    const trueTableCard = el("div", "card");
+    trueTableCard.append(
+      el("h3", "", "🗺️ ตารางห่วงโซ่ต้นน้ำแท้จริง ➔ การสกัด/เพาะปลูก ➔ กลางน้ำ ➔ สินค้าปลายน้ำ (True Upstream Provenance)"),
+      el(
+        "div",
+        "muted",
+        "แยกประเภทแหล่งกำเนิดทรัพยากร (resourceClass) ออกจากลำดับการแปรรูป (Tier): น้ำตาล แป้ง กระดาษ นมโค และข้าวไม่ใช่ทรัพยากรธรรมชาติ T0 แท้จริง แต่เกิดจากวงจรเพาะปลูก เลี้ยงสัตว์ ป่าปลูก หรือการแปรรูปที่มีต้นทุนและเวลาจริง",
+      ),
+    );
+    for (const row of v.catalog?.trueResourceChainTable || []) {
+      const tr = el("div", "logrow");
+      tr.append(
+        el("strong", "", `🔗 ${row.nameTh}`),
+        el("div", "", `1) ต้นน้ำธรรมชาติแท้จริง: ${row.trueNaturalSourceTh} | พันธุ์/แหล่งสำรอง: ${row.propaguleOrDepositTh}`),
+        el("div", "", `2) การสกัด/เพาะปลูก: ${row.cultivationOrExtractionTh}`),
+        el("div", "", `3) แปรรูปกลางน้ำ: ${row.midstreamProcessingTh} ➔ 4) ปลายน้ำ: ${row.downstreamProductTh}`),
+        el("div", "muted", `↳ ขอบเขตการจำลอง: ${row.simulationScopeNoteTh}`),
+      );
+      trueTableCard.append(tr);
+    }
+
+    return [stratCard, agriCard, trueTableCard, dagCard, chainCard, assetCard];
   }
 
   /* ---------- 3. Bottom Nav Sheets (People, Campus, Log, Market, Policy, Menu/Edit Hub) ---------- */
@@ -1961,13 +2031,201 @@
       byId("shTitle").textContent = "📦 ตลาด B2B โลจิสติกส์ซัพพลายเชน และแบบแปลน R&D";
       setSheetTabs([
         { id: "orders", label: "🤝 ดีลฝ่ายขาย & ออเดอร์ B2B" },
-        { id: "chains", label: "🌾 สินทรัพย์ภายนอก & ห่วงโซ่ลูกโซ่" },
-        { id: "logistics", label: "🚛 โลจิสติกส์ & ไลน์ผลิต" },
-        { id: "stock", label: "คลังวัตถุดิบ 37 ชนิด (T0–T3)" },
-        { id: "rnd", label: "แบบแปลนวิจัย 28 ชนิด (6 หมวด)" },
+        { id: "chains", label: "🌾 ต้นน้ำแท้จริง & วงจรเกษตร" },
+        { id: "biz_processes", label: "🏛️ โปรเซส 8 โมเดลธุรกิจ & บริการ B2B (บท 21)" },
+        { id: "fleet", label: "🚛 กองรถขนส่ง B2B (บท 19)" },
+        { id: "software", label: "💻 ซอฟต์แวร์ & SaaS (บท 20)" },
+        { id: "logistics", label: "🏭 ไลน์ผลิต & โลจิสติกส์โรงงาน" },
+        { id: "stock", label: `คลังวัตถุดิบ ${v.catalog?.materials?.length || 51} ชนิด` },
+        { id: "rnd", label: "แบบแปลนวิจัย 28 ชนิด" },
       ]);
       if (uiState.subTab === "chains") {
         body.replaceChildren(...renderExternalAssetsAndChainsView(v));
+        return;
+      }
+      if (uiState.subTab === "biz_processes") {
+        const sp = v.sectorProcesses || {};
+        const fb = sp.foodBakery || {};
+        const er = sp.electronicsRma || {};
+        const ao = sp.automotiveOem || {};
+        const bm = sp.biomedSterile || {};
+        const sv = v.serviceBusiness || { orders: {}, instrumentCustody: {}, metrics: {}, history: [] };
+        const svm = sv.metrics || {};
+
+        const overviewCard = el("div", "card");
+        overviewCard.append(
+          el("h3", "", "🏛️ สถาปัตยกรรม 8 โมเดลธุรกิจที่มีโปรเซสเฉพาะตัวแตกต่างกันจริง (8 Distinct Business Process Models)"),
+          el(
+            "div",
+            "muted",
+            "ทุกกลุ่มธุรกิจในเกมไม่ได้เปลี่ยนแค่ชื่อกับตัวเลขรายได้ แต่มี State Machine, ทรัพยากรคอขวด, กฎการรับรู้รายได้ และความเสี่ยงเฉพาะทางของตนเองตามความเป็นจริง",
+          ),
+        );
+        for (const m of v.catalog?.businessProcessModels || []) {
+          overviewCard.append(
+            el(
+              "div",
+              "logrow",
+              `🔹 [${m.id}] ${m.nameTh} — โปรเซส: ${m.keyProcessTh} • รายได้จาก: ${m.revenueDriverTh} • ต้นทุนหลัก: ${m.costDriverTh} • ความเสี่ยงเฉพาะ: ${m.failureRiskTh}`,
+            ),
+          );
+        }
+
+        const sectorCard = el("div", "card");
+        sectorCard.append(
+          el("h3", "", "🏭 สถานะโปรเซสเฉพาะทางของโรงงานทั้ง 4 อุตสาหกรรม (4 Distinct Factory Sector Process Engines)"),
+          el(
+            "div",
+            "logrow",
+            `🥖 [1. อาหารและเบเกอรี่ — Batch Shelf-Life & Cold-Chain] ห้องเย็น Cold-Chain: ${fb.coldChainActive ? "🟢 เปิดใช้งาน (ยืดอายุ 7 วัน)" : "⚪ มาตรฐาน (อายุ 3 วัน)"} • ล็อตอาหารสดในคลัง: ${Object.keys(fb.activeBatches || {}).length} ล็อต • ส่งมอบสดใหม่: ${fb.freshShippedCount || 0} ชิ้น | ส่งช่วงลดราคา: ${fb.markdownShippedCount || 0} ชิ้น • หมดอายุคัดทิ้ง: ${fb.spoiledUnitsCount || 0} ชิ้น (แปรรูปเป็นปุ๋ยหมักชีวภาพ +${fb.compostRecoveredUnits || 0} ถุง) — ${fb.lastSpoilageEventTh || "-"}`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `🔬 [2. อิเล็กทรอนิกส์และเซมิคอนดักเตอร์ — SMT Burn-In & RMA Warranty] เฟิร์มแวร์ปัจจุบัน: ${er.firmwareRevision || "Rev.1.2"} • ผ่านทดสอบ Burn-In: ${er.burnInPassCount || 0} เครื่อง • ล็อตอยู่ในระยะประกันหลังการขาย: ${(er.warrantyLots || []).length} ล็อต • ใบเคลม RMA สะสม: ${er.totalRmaClaims || 0} รายการ (ซ่อม/ชดเชยแล้ว ${er.resolvedRmaCount || 0} รายการ • ต้นทุนเคลมประกัน -${moneyFull(er.warrantyCostSatang || 0)}) — ${er.lastRmaSummaryTh || "-"}`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `🦾 [3. ยานยนต์ไฟฟ้า พลังงาน และหุ่นยนต์ — Heavy OEM Die & Jig Changeover] สลับแม่พิมพ์/จิ๊กสะสม: ${ao.totalChangeovers || 0} ครั้ง (ต้นทุนตั้งจิ๊ก -${moneyFull(ao.toolingChangeoverCostSatang || 0)}) • ผ่านทดสอบโหลดจริง Dyno: ${ao.dynoCertifiedCount || 0} เครื่อง • โบนัสเดินเครื่องรุ่นเดิมต่อเนื่อง (Rhythm Bonus): ${ao.rhythmBonusUnits || 0} ชิ้น — ${ao.lastToolingSummaryTh || "-"}`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `🧬 [4. การแพทย์และเวชภัณฑ์คลีนรูม — ISO Class-5 Sterile Quarantine & Clinical Release] ดัชนีความปลอดเชื้อคลีนรูม: ${bm.sterilityIndex ?? 96}% (${bm.cleanroomClass || "ISO Class-5"}) • ออกใบรับรอง Clinical COA: ${bm.clinicalCertificatesIssued || 0} ล็อต • กักกัน/ระงับล็อตปนเปื้อน: ${bm.sterilityRejectedLots || 0} ล็อต — ${bm.lastSterileSummaryTh || "-"}`,
+          ),
+        );
+
+        const serviceCard = el("div", "card");
+        serviceCard.append(
+          el("h3", "", "🔬🛠️♻️ ธุรกิจบริการวิศวกรรมและสิ่งแวดล้อม B2B ทั้ง 3 โมเดล (Industrial Services — บทที่ 21)"),
+          el(
+            "div",
+            "muted",
+            "1) ห้องแล็บสอบเทียบและออกใบรับรอง ISO (รับฝากเครื่องมือลูกค้าเข้าแล็บ ไม่ปนสต็อกบริษัท) • 2) บริการซ่อมบำรุงเครื่องจักรนอกสถานที่ตาม SLA (เบิกอะไหล่จริง หากเกินเวลา SLA ถูกหักค่าปรับ) • 3) บริการบำบัดของเสียและรีไซเคิลอุตสาหกรรม (รับค่าบำบัด + สกัดได้แผ่นโลหะ กล่องกระดาษ และปุ๋ยหมักกลับเข้าคลังจริง)",
+          ),
+          el(
+            "div",
+            "logrow",
+            `✅ งานบริการส่งมอบสำเร็จ: ${svm.completedOrders || 0} ใบงาน • 🔬 ใบรับรองสอบเทียบ ISO: ${svm.calibrationCertificatesIssued || 0} ใบ • 🛠️ ซ่อมทันเวลา SLA: ${svm.slaOnTimeCount || 0} งาน (ผิดเวลา SLA: ${svm.slaBreachCount || 0} งาน) • ♻️ รีไซเคิลกากของเสีย: ${svm.recycledTonsProcessed || 0} ตัน (กู้คืนวัตถุดิบเข้าคลัง +${svm.recoveredMaterialsUnits || 0} ชิ้น)`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `💵 รายได้ธุรกิจบริการรวม: ${moneyFull(svm.serviceRevenueSatang || 0)} • 🧪 ต้นทุนสารมาตรฐาน/อะไหล่บริการ: -${moneyFull(svm.serviceCostSatang || 0)} • ⚠️ ค่าปรับผิดสัญญา SLA: -${moneyFull(svm.slaPenaltyPaidSatang || 0)} • 📦 เครื่องมือลูกค้าฝากสอบเทียบในแล็บ: ${Object.keys(sv.instrumentCustody || {}).length} ชิ้น`,
+          ),
+        );
+        for (const o of Object.values(sv.orders || {})) {
+          serviceCard.append(
+            el(
+              "div",
+              "logrow",
+              `${o.icon || "🔬"} [${o.id}] ${o.serviceNameTh} (${o.clientNameTh}) — สถานะ: ${o.status} • ผู้เชี่ยวชาญ: ${o.specialistName || "-"} • ค่าบริการ ${moneyFull(o.feeSatang)}${o.slaBreached ? " • ⚠️ เกินกำหนด SLA" : ""}`,
+            ),
+          );
+        }
+        body.replaceChildren(overviewCard, sectorCard, serviceCard);
+        return;
+      }
+      if (uiState.subTab === "fleet") {
+        const ft = v.fleetTransport || { vehicles: {}, openQuotes: [], contracts: {}, cargoCustody: {}, metrics: {}, history: [] };
+        const m = ft.metrics || {};
+        const fleetSummaryCard = el("div", "card");
+        fleetSummaryCard.append(
+          el("h3", "", "🚛 ธุรกิจขนส่งด้วยกองรถของบริษัท (Fleet Freight Transport Business — บทที่ 19)"),
+          el(
+            "div",
+            "muted",
+            "ฝ่ายโลจิสติกส์และ CEO บริหารกองรถบรรทุกอัตโนมัติ: ประเมินระยะทางไปจุดรับ + ขนส่ง + รถเปล่าขากลับ (Backhaul) หักน้ำมันดีเซล (diesel_liter) ค่าผ่านทาง และจองรถ+คนขับโดยไม่ชนกับงานส่งสินค้าภายในบริษัท สินค้าฝากขนของลูกค้าแยกออกจากสต็อกบริษัท 100%",
+          ),
+          el(
+            "div",
+            "logrow",
+            `🚚 รถบรรทุกในกองรถ: ${Object.keys(ft.vehicles || {}).length} คัน • ✅ เที่ยววิ่งสำเร็จ: ${m.completedTrips || 0} เที่ยว • 🛣️ ระยะทางรวม: ${m.totalDistanceKm || 0} กม. (รถเปล่าขากลับ ${m.emptyBackhaulKm || 0} กม.) • ⛽ น้ำมันใช้สะสม: ${m.fuelConsumedLiters || 0} ลิตร`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `💵 รายได้ค่าขนส่งรับรู้: ${moneyFull(m.freightRevenueSatang || 0)} • 🧾 ลูกหนี้ค่าขนส่งค้างรับ: ${moneyFull(m.receivablesSatang || 0)} • ⛽ ต้นทุนน้ำมัน+ค่าผ่านทางจริง: -${moneyFull(m.tollAndFuelCostSatang || 0)} • 🔧 ค่าซ่อมบำรุงรถ/ยาง: -${moneyFull(m.maintenanceCostSatang || 0)}`,
+          ),
+        );
+        for (const veh of Object.values(ft.vehicles || {})) {
+          fleetSummaryCard.append(
+            el(
+              "div",
+              "logrow",
+              `🚛 [${veh.plate}] ${veh.nameTh} (${veh.ownership === "leased" ? "รถเช่า" : "รถบริษัท"}) — สถานะ: ${veh.status} • ความจุ ${veh.maxWeightKg} กก. / ${veh.maxVolumeM3} ลบ.ม. • สภาพเครื่อง ${veh.condition}% | สภาพยาง ${veh.tireCondition}% • เลขไมล์ ${veh.odometerKm} กม. • คนขับ: ${veh.assignedDriverName || "ว่างพร้อมรับงาน"}`,
+            ),
+          );
+        }
+
+        const contractsCard = el("div", "card");
+        contractsCard.append(el("h3", "", "📋 ใบงานสัญญารับจ้างขนส่งและข้อเสนอเส้นทาง (Freight Contracts & Route Quotes)"));
+        for (const c of Object.values(ft.contracts || {})) {
+          contractsCard.append(
+            el(
+              "div",
+              "logrow",
+              `📦 [${c.id}] ${c.nameTh} (${c.clientNameTh}) — สถานะ: ${c.status} • สินค้าฝากขน: ${c.cargoNameTh} (${c.weightKg} กก.) • ไป-กลับ ${c.totalRoundTripKm} กม. (ขากลับรถเปล่า ${c.backhaulEmptyKm} กม.) • ค่าขนส่ง ${moneyFull(c.agreedRateSatang)} | น้ำมัน ${c.fuelLiters} ลิตร (${moneyFull(c.fuelCostSatang)}) + ค่าผ่านทาง ${moneyFull(c.tollFeeSatang)} ➔ ส่วนเกินก่อนโสหุ้ย ${moneyFull(c.expectedMarginBeforeOverheadSatang)}`,
+            ),
+          );
+        }
+        for (const q of (ft.openQuotes || []).filter((x) => x.status === "quoted")) {
+          contractsCard.append(
+            el(
+              "div",
+              "logrow",
+              `📢 [ข้อเสนอรอประเมิน ${q.id}] ${q.nameTh}: ${q.cargoNameTh} (${q.weightKg} กก., ${q.volumeM3} ลบ.ม., ประเภท ${q.cargoType}) • ระยะรวมไป-กลับ ${q.totalRoundTripKm} กม. • เสนอค่าจ้าง ${moneyFull(q.offeredRateSatang)}`,
+            ),
+          );
+        }
+        body.replaceChildren(fleetSummaryCard, contractsCard);
+        return;
+      }
+      if (uiState.subTab === "software") {
+        const sb = v.softwareBusiness || { workstations: {}, projects: {}, saasProducts: {}, metrics: {}, history: [] };
+        const sm = sb.metrics || {};
+        const swCard = el("div", "card");
+        swCard.append(
+          el("h3", "", "💻 ธุรกิจซอฟต์แวร์และแอปพลิเคชัน: รับจ้างพัฒนา & บริการสมาชิก SaaS (บทที่ 20)"),
+          el(
+            "div",
+            "muted",
+            "ทีมวิศวกรและฝ่ายขายดำเนินโครงการซอฟต์แวร์ตามขั้นตอนจริง: เก็บความต้องการ ➔ สัญญา/มัดจำ 30% (บันทึกเป็นเงินรับล่วงหน้า ไม่นับเป็นกำไรทันที) ➔ พัฒนา ➔ ทดสอบ QA/แก้บั๊ก ➔ ลูกค้ารับมอบ (UAT 40%) ➔ เปิดใช้งานจริง (30%) • แอป SaaS คิดรายได้ตามจำนวนบัญชีผู้ใช้จริงเท่านั้น (0 ผู้ใช้ = 0 รายได้)",
+          ),
+          el(
+            "div",
+            "logrow",
+            `🖥️ โต๊ะนักพัฒนา (dev_workstation): จอง ${(sb.workstations?.occupiedByPersonIds || []).length}/${sb.workstations?.totalStations || 3} เครื่อง • ☁️ ความจุเซิร์ฟเวอร์รองรับ: ${sb.workstations?.serverCapacityUsers || 60} บัญชี • ✅ โครงการส่งมอบสำเร็จ: ${sm.projectsCompleted || 0} โครงการ`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `💰 รายได้โครงการรับจ้างรับรู้แล้ว: ${moneyFull(sm.totalContractRevenueSatang || 0)} • ☁️ รายได้สมาชิกรายรอบ SaaS: ${moneyFull(sm.totalSaasRevenueSatang || 0)} • ⏳ เงินมัดจำรับล่วงหน้ารอส่งมอบ: ${moneyFull(sm.totalUnearnedDepositSatang || 0)} • 🖧 ต้นทุน Cloud/QA/Server: -${moneyFull(sm.totalComputeAndServerCostSatang || 0)}`,
+          ),
+        );
+        for (const proj of Object.values(sb.projects || {})) {
+          swCard.append(
+            el(
+              "div",
+              "logrow",
+              `🛠️ [${proj.id}] ${proj.titleTh} (v${proj.targetVersion}) — สถานะ: ${proj.status} • ผู้พัฒนา: ${proj.assignedDeveloperName || "-"} • ความคืบหน้า Dev ${proj.progressMinutes}/${proj.requiredDevMinutes}m | QA ${proj.qaProgressMinutes}/${proj.requiredQaMinutes}m (บั๊กพบ ${proj.defectsFound} แก้แล้ว ${proj.defectsFixed}) • มูลค่าสัญญา ${moneyFull(proj.contractPriceSatang)} (รับรู้รายได้แล้ว ${moneyFull(proj.recognizedRevenueSatang)} | มัดจำรอรับรู้ ${moneyFull(proj.unearnedDepositSatang)})`,
+            ),
+          );
+        }
+
+        const saasCard = el("div", "card");
+        saasCard.append(el("h3", "", "☁️ ผลิตภัณฑ์แอปพลิเคชัน SaaS ทั้ง 8 ประเภท (SaaS Product Portfolio & Internal Dogfooding)"));
+        for (const app of Object.values(sb.saasProducts || {})) {
+          saasCard.append(
+            el(
+              "div",
+              "logrow",
+              `${app.icon || "📱"} ${app.nameTh} (v${app.version}) — สถานะ: ${app.status}${app.installedInternally ? " • 🟢 ติดตั้งใช้งานภายในบริษัทแล้ว" : ""} • Lead รอแปลง: ${app.leadCount} | ผู้ใช้จ่ายจริง: ${app.activeSubscribers} บัญชี (ค่าบริการ ${moneyFull(app.monthlyFeePerUserSatang)}/บัญชี/รอบ) • รายได้สะสม ${moneyFull(app.totalRevenueSatang)} — ${app.lastBillingSummaryTh}`,
+            ),
+          );
+        }
+        body.replaceChildren(swCard, saasCard);
         return;
       }
       const c = el("div", "card");
@@ -2467,7 +2725,35 @@
         }
         extAssetEditCard.append(assetBtnRow);
 
-        body.replaceChildren(inventory, personCard, scaleCard, extAssetEditCard);
+        const bizProcessEditCard = el("div", "card");
+        bizProcessEditCard.append(
+          el("h3", "", "🏛️ ศูนย์ทดสอบโปรเซส 8 โมเดลธุรกิจจริง (Sandbox Business Process Triggers)"),
+          el("div", "muted", "ใช้สำหรับทดสอบกลไกโปรเซสเฉพาะทางของแต่ละธุรกิจในโหมดผู้กำกับ (Sandbox Edit Hub) โดยรักษาสมการบัญชีและสต็อก 100%"),
+        );
+        const bpBtnRow = el("div", "");
+        bpBtnRow.style.display = "flex";
+        bpBtnRow.style.flexWrap = "wrap";
+        bpBtnRow.style.gap = "6px";
+        bpBtnRow.style.marginTop = "6px";
+        const bpActions = [
+          ["🌱 ปลูกข้าวหอมมะลิลงแปลง", { type: "directorEdit", action: "plantCropPlot", plotId: "plot_jasmine_rice_farm" }],
+          ["🐄 เลี้ยงอาหาร & รีดนมฝูงโคนม", { type: "directorEdit", action: "feedLivestockHerd", assetId: "dairy_soy_farm", freeFeed: true }],
+          ["⛏️ เจาะสำรวจสายแร่ใหม่ (+180 ตัน)", { type: "directorEdit", action: "surveyNewMineVein", assetId: "copper_bauxite_mine", freeSurvey: true }],
+          ["🥖 ทดสอบอาหารหมดอายุ ➔ ปุ๋ยหมัก", { type: "directorEdit", action: "expireFoodBatch" }],
+          ["🔬 เปิดใบเคลมบอร์ด RMA", { type: "directorEdit", action: "triggerRmaClaim", productId: "controller" }],
+          ["🦾 สลับแม่พิมพ์ Die & Jig (Line A)", { type: "directorEdit", action: "triggerToolingChangeover", lineId: "lineA", productId: "ev_battery_pack", force: true }],
+          ["🧬 ออกใบรับรองปลอดเชื้อ Clinical COA", { type: "directorEdit", action: "certifyBiomedLot", productId: "vital_monitor" }],
+          ["🔬 รับงานแล็บสอบเทียบ ISO", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "calibration_lab", clientCorpId: "siam_auto" }],
+          ["♻️ รับงานรีไซเคิลกากของเสีย ➔ กู้คืนวัตถุดิบ", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "industrial_recycling", clientCorpId: "eastern_chem" }],
+        ];
+        for (const [labelTh, payload] of bpActions) {
+          const btn = el("button", "btn", labelTh);
+          btn.onclick = () => dispatch(payload, `สั่งดำเนินการ: ${labelTh}`);
+          bpBtnRow.append(btn);
+        }
+        bizProcessEditCard.append(bpBtnRow);
+
+        body.replaceChildren(inventory, personCard, scaleCard, extAssetEditCard, bizProcessEditCard);
         return;
       }
 

@@ -14,7 +14,7 @@
   function (H, D, L, E) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "1.0.0",
+      RELEASE_VERSION = "1.2.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -124,6 +124,365 @@
       totalInboundReceived: 0,
       totalOutboundDispatched: 0,
     });
+
+    function createAgriPlotState(cropId, assetId, customId = null) {
+      const cropSpec = D.AGRICULTURE_CROPS?.[cropId] || D.AGRICULTURE_CROPS?.jasmine_rice;
+      const pid = customId || ("plot_" + (assetId || cropId));
+      return {
+        id: pid,
+        assetId: assetId || cropSpec.assetId,
+        cropId: cropSpec.id,
+        nameTh: cropSpec.nameTh,
+        icon: cropSpec.icon || "🌾",
+        areaRai: 12,
+        stage: "idle", // idle -> preparing -> planted -> growing -> ready_to_harvest -> harvesting -> sorting_seed -> fallow
+        soilNutrients: 82,
+        soilMoisture: 78,
+        seedMatId: cropSpec.seedMaterialId,
+        harvestMatId: cropSpec.harvestMaterialId,
+        byproductMatId: cropSpec.byproductMaterialId,
+        seedRequired: cropSpec.seedRequired || 2,
+        waterRequired: cropSpec.waterRequired || 2,
+        seedSaveRatio: cropSpec.defaultSeedSaveRatio ?? 0.25,
+        seedBatchAgeDays: 0,
+        germinationRate: 0.94,
+        plantedAt: null,
+        growthMinutes: 0,
+        targetGrowthMinutes: cropSpec.growthMinutes || 1440,
+        cycleCount: 0,
+        waterShortageEvents: 0,
+        nutrientShortageEvents: 0,
+        fertilizerAppliedCount: 0,
+        waterAppliedUnits: 0,
+        totalSeedPlanted: 0,
+        totalGrossHarvested: 0,
+        totalSeedSaved: 0,
+        totalNetCropToWarehouse: 0,
+        totalByproductYielded: 0,
+        totalSpoiledLoss: 0,
+        assignedWorkerId: null,
+        assignedWorkerName: null,
+        lastReasonTh: "แปลงเกษตรพร้อมเริ่มเตรียมดินและเพาะปลูกเมื่อมีเมล็ดพันธุ์และน้ำดิบ",
+        lastHarvest: null,
+        history: [],
+      };
+    }
+
+    function freshAgriculture() {
+      return {
+        plots: {
+          plot_jasmine_rice_farm: createAgriPlotState("jasmine_rice", "jasmine_rice_farm", "plot_jasmine_rice_farm"),
+        },
+        seedBatches: {
+          rice_seed: { materialId: "rice_seed", ageDays: 0, quality: 95, germinationRate: 0.94 },
+          cane_stalk_seed: { materialId: "cane_stalk_seed", ageDays: 0, quality: 94, germinationRate: 0.93 },
+          palm_seedling: { materialId: "palm_seedling", ageDays: 0, quality: 95, germinationRate: 0.94 },
+          soybean_seed: { materialId: "soybean_seed", ageDays: 0, quality: 94, germinationRate: 0.93 },
+        },
+        waterSource: {
+          dailyFlowCap: 12,
+          usedToday: 0,
+          pumpCondition: 100,
+          wastewaterPending: 0,
+          wastewaterTreated: 0,
+        },
+        totalCyclesCompleted: 0,
+        totalSeedUsed: 0,
+        totalSeedSavedFromHarvest: 0,
+        totalCropHarvested: 0,
+        totalWaterUsed: 0,
+        totalFertilizerUsed: 0,
+        lastSeedSortAt: -1,
+        livestock: {
+          dairy_soy_farm: {
+            assetId: "dairy_soy_farm",
+            herdCount: 18,
+            herdHealth: 96,
+            feedReserveUnits: 12,
+            milkingStage: "ready_to_milk", // feeding | digesting | ready_to_milk | resting
+            dailyMilkYield: 4,
+            dailyManureYield: 2,
+            totalMilkProduced: 0,
+            totalManureProduced: 0,
+          },
+        },
+        mining: {
+          copper_bauxite_mine: {
+            assetId: "copper_bauxite_mine",
+            miningStage: "drilling_blasting", // surveying | drilling_blasting | hauling_crushing | depleted_vein
+            reserveRemaining: 360,
+            reserveMax: 360,
+            oreGrade: 92,
+            tailingsGenerated: 0,
+            veinsSurveyed: 1,
+            totalOreExtracted: 0,
+          },
+          silica_quartz_quarry: {
+            assetId: "silica_quartz_quarry",
+            miningStage: "drilling_blasting",
+            reserveRemaining: 420,
+            reserveMax: 420,
+            oreGrade: 94,
+            tailingsGenerated: 0,
+            veinsSurveyed: 1,
+            totalOreExtracted: 0,
+          },
+          lithium_rare_earth: {
+            assetId: "lithium_rare_earth",
+            miningStage: "drilling_blasting",
+            reserveRemaining: 280,
+            reserveMax: 280,
+            oreGrade: 90,
+            tailingsGenerated: 0,
+            veinsSurveyed: 1,
+            totalOreExtracted: 0,
+          },
+          petro_resin_plant: {
+            assetId: "petro_resin_plant",
+            miningStage: "drilling_blasting",
+            reserveRemaining: 500,
+            reserveMax: 500,
+            oreGrade: 95,
+            tailingsGenerated: 0,
+            veinsSurveyed: 1,
+            totalOreExtracted: 0,
+          },
+        },
+        forestry: {
+          timber_packaging_mill: {
+            assetId: "timber_packaging_mill",
+            saplingsYear1: 45,
+            growingTreesYear2: 40,
+            matureTreesReady: 35,
+            totalLogsFelled: 0,
+            totalSaplingsReplanted: 0,
+          },
+        },
+      };
+    }
+
+    function freshFleetTransport(seedStr = "company") {
+      const routes = D.FREIGHT_ROUTES || [];
+      const openQuotes = routes.map((r, idx) => ({
+        id: `fquote-${idx + 1}`,
+        routeId: r.id,
+        nameTh: r.nameTh,
+        originTh: r.originTh,
+        destinationTh: r.destinationTh,
+        pickupEmptyKm: r.pickupEmptyKm,
+        outboundLoadedKm: r.outboundLoadedKm,
+        backhaulEmptyKm: r.backhaulEmptyKm,
+        totalRoundTripKm: r.pickupEmptyKm + r.outboundLoadedKm + r.backhaulEmptyKm,
+        tollFeeSatang: r.tollFeeSatang,
+        offeredRateSatang: r.baseRateSatang,
+        cargoType: r.cargoType,
+        cargoNameTh: r.cargoNameTh,
+        weightKg: r.weightKg,
+        volumeM3: r.volumeM3,
+        cargoValueSatang: r.cargoValueSatang,
+        clientCorpId: r.clientCorpId,
+        status: "quoted",
+        createdAt: 540,
+      }));
+      return {
+        vehicles: {
+          "truck-1": {
+            id: "truck-1",
+            typeId: "dry_6w",
+            nameTh: "รถบรรทุกตู้ทึบ 6 ล้อ ISUZU NPR #1",
+            plate: "70-1042 กทม.",
+            ownership: "owned",
+            maxWeightKg: 6500,
+            maxVolumeM3: 28,
+            baseLitersPerKm: 0.18,
+            supportedCargoTypes: ["dry", "general", "packaging"],
+            condition: 100,
+            tireCondition: 100,
+            odometerKm: 1200,
+            status: "idle", // idle | loading | outbound | delivering | returning | maintenance | broken
+            assignedDriverId: null,
+            assignedDriverName: null,
+            activeContractId: null,
+            internalOrderId: null,
+            returnRemainingKm: 0,
+            tripsCompleted: 0,
+          },
+        },
+        openQuotes,
+        contracts: {},
+        cargoCustody: {},
+        metrics: {
+          completedTrips: 0,
+          cancelledTrips: 0,
+          failedTrips: 0,
+          totalDistanceKm: 0,
+          emptyBackhaulKm: 0,
+          fuelConsumedLiters: 0,
+          freightRevenueSatang: 0,
+          receivablesSatang: 0,
+          tollAndFuelCostSatang: 0,
+          maintenanceCostSatang: 0,
+          allocatedLaborSatang: 0,
+          claimsPaidSatang: 0,
+        },
+        history: [],
+      };
+    }
+
+    function freshSoftwareBusiness() {
+      const apps = D.SOFTWARE_APPS || {};
+      const saasProducts = {};
+      for (const [appId, spec] of Object.entries(apps)) {
+        saasProducts[appId] = {
+          appId,
+          nameTh: spec.nameTh,
+          icon: spec.icon,
+          status: appId === "pos_retail" ? "live" : "concept", // concept | developing_mvp | live | retired
+          version: appId === "pos_retail" ? "1.0.0" : "0.1.0",
+          mvpProgressMinutes: appId === "pos_retail" ? spec.devWorkMinutes : 0,
+          mvpRequiredMinutes: spec.devWorkMinutes,
+          leadCount: appId === "pos_retail" ? 12 : 0,
+          activeSubscribers: 0, // Must start at 0 so launching an app never generates free subscription money without real converted users!
+          totalConvertedUsers: 0,
+          totalChurnedUsers: 0,
+          monthlyFeePerUserSatang: spec.saasMonthlyFeePerUserSatang,
+          nextBillingMinute: 540 + 1440 * 3,
+          billingCycleMinutes: 1440 * 3,
+          installedInternally: false,
+          openSupportTickets: 0,
+          knownDefects: 0,
+          totalRevenueSatang: 0,
+          totalServerCostSatang: 0,
+          lastBillingSummaryTh: "ยังไม่มีรอบเรียกเก็บเงินสมาชิก (ต้องมีผู้ใช้จริงก่อนจึงจะเกิดรายได้)",
+        };
+      }
+      return {
+        workstations: {
+          totalStations: 3,
+          occupiedByPersonIds: [],
+          testDevices: ["web_pos_terminal", "android_handheld", "ios_tablet"],
+          serverCapacityUsers: 60,
+        },
+        projects: {
+          "swproj-1": {
+            id: "swproj-1",
+            appId: "pos_retail",
+            titleTh: "โครงการพัฒนาระบบ Smart POS & ตัดสต็อกสาขาให้ บมจ. เจริญผล ฟู้ดแอนด์เฮลท์",
+            clientCorpId: "cp_health",
+            clientNameTh: "บมจ. เจริญผล ฟู้ดแอนด์เฮลท์ โกลบอล",
+            status: "discovery", // discovery -> contracted -> designed -> implementing -> testing -> customer_acceptance -> deployed -> supporting -> closed | blocked | cancelled
+            targetVersion: "1.0.0",
+            deliveredVersion: null,
+            contractPriceSatang: 12000000, // ฿120,000
+            depositPct: 0.3,
+            uatMilestonePct: 0.4,
+            deployMilestonePct: 0.3,
+            depositCollectedSatang: 0,
+            unearnedDepositSatang: 0,
+            recognizedRevenueSatang: 0,
+            billedReceivableSatang: 0,
+            cashCollectedSatang: 0,
+            allocatedLaborSatang: 0,
+            computeCostSatang: 0,
+            externalQaCostSatang: 0,
+            reworkCostSatang: 0,
+            progressMinutes: 0,
+            requiredDevMinutes: 120,
+            qaProgressMinutes: 0,
+            requiredQaMinutes: 40,
+            defectsFound: 0,
+            defectsFixed: 0,
+            qaCertificateIssued: false,
+            assignedDeveloperId: null,
+            assignedDeveloperName: null,
+            createdAt: 540,
+            completedAt: null,
+            lastReasonTh: "ฝ่ายขายและนักวิเคราะห์กำลังสำรวจความต้องการลูกค้าและประเมินขอบเขตงาน",
+          },
+        },
+        saasProducts,
+        metrics: {
+          projectsCompleted: 0,
+          projectsCancelled: 0,
+          totalContractRevenueSatang: 0,
+          totalSaasRevenueSatang: 0,
+          totalUnearnedDepositSatang: 0,
+          totalComputeAndServerCostSatang: 0,
+          totalDefectsResolved: 0,
+        },
+        history: [],
+      };
+    }
+
+    function freshSectorProcesses() {
+      return {
+        foodBakery: {
+          modelId: "food_bakery_batch",
+          coldChainActive: false,
+          activeBatches: {}, // unitId -> { unitId, productId, bakedAt, freshnessPct, shelfLifeDays, coldChainProtected }
+          freshShippedCount: 0,
+          markdownShippedCount: 0,
+          spoiledUnitsCount: 0,
+          compostRecoveredUnits: 0,
+          freshnessBonusRevenueSatang: 0,
+          lastSpoilageEventTh: "ยังไม่มีล็อตอาหารหมดอายุ (ระบบ FIFO & Cold-Chain ทำงานปกติ)",
+        },
+        electronicsRma: {
+          modelId: "electronics_smt_rma",
+          firmwareRevision: "Rev.1.2",
+          burnInPassCount: 0,
+          warrantyLots: [], // { lotId, orderId, productId, quantity, shippedDay, expiresDay, firmwareRev, qualityScore }
+          rmaClaims: {}, // claimId -> { id, productId, orderId, defectiveQty, status, createdAt, resolvedAt, resolutionMode }
+          totalRmaClaims: 0,
+          resolvedRmaCount: 0,
+          warrantyCostSatang: 0,
+          lastRmaSummaryTh: "ยังไม่มีเคลมบอร์ดอิเล็กทรอนิกส์ (RMA = 0 รายการ)",
+        },
+        automotiveOem: {
+          modelId: "automotive_oem_tooling",
+          lineTooling: {
+            lineA: { lineId: "lineA", currentToolingProductId: null, consecutiveSameModelCount: 0, changeoverCount: 0 },
+            lineB: { lineId: "lineB", currentToolingProductId: null, consecutiveSameModelCount: 0, changeoverCount: 0 },
+            lineC: { lineId: "lineC", currentToolingProductId: null, consecutiveSameModelCount: 0, changeoverCount: 0 },
+            lineD: { lineId: "lineD", currentToolingProductId: null, consecutiveSameModelCount: 0, changeoverCount: 0 },
+          },
+          totalChangeovers: 0,
+          toolingChangeoverCostSatang: 0,
+          dynoCertifiedCount: 0,
+          rhythmBonusUnits: 0,
+          lastToolingSummaryTh: "แม่พิมพ์และจิ๊กประกอบพร้อมสลับรุ่น (Die & Jig Ready)",
+        },
+        biomedSterile: {
+          modelId: "biomed_sterile_lot",
+          sterilityIndex: 96, // 0..100
+          cleanroomClass: "ISO Class-5",
+          quarantineLots: {}, // lotId -> { id, productId, unitId, status: "quarantine"|"certified"|"rejected", sterilityScore, assayAt }
+          clinicalCertificatesIssued: 0,
+          sterilityRejectedLots: 0,
+          clinicalPremiumSatang: 0,
+          lastSterileSummaryTh: "ห้องคลีนรูมปลอดเชื้อ (Sterility 96% • ผ่านเกณฑ์ อย./ISO)",
+        },
+      };
+    }
+
+    function freshServiceBusiness() {
+      return {
+        orders: {},
+        instrumentCustody: {}, // custodyId -> { id, orderId, clientNameTh, equipmentNameTh, status }
+        metrics: {
+          completedOrders: 0,
+          calibrationCertificatesIssued: 0,
+          slaOnTimeCount: 0,
+          slaBreachCount: 0,
+          recycledTonsProcessed: 0,
+          recoveredMaterialsUnits: 0,
+          serviceRevenueSatang: 0,
+          serviceCostSatang: 0,
+          slaPenaltyPaidSatang: 0,
+        },
+        history: [],
+      };
+    }
     function freshExternalWorld(seedStr = "company") {
       const ext = D.EXTERNAL_WORLD_DEFAULTS || {
         clients: [],
@@ -773,6 +1132,12 @@
       return Math.max(0, Math.min(freeStock, fromOpening + fromPurchases));
     }
 
+    function grantUnpurchasedMaterial(w, matId, qty) {
+      if (!Object.hasOwn(w.inventory.materials, matId) || qty <= 0) return;
+      w.inventory.opening[matId] += qty;
+      w.inventory.materials[matId] += qty;
+    }
+
     function safeDeductMaterial(w, matId, deductQty) {
       let rem = deductQty;
       const fromOpening = Math.min(w.inventory.opening[matId] || 0, rem);
@@ -806,7 +1171,7 @@
         return {
           ok: false,
           code: "uncraftableMaterial",
-          message: `"${matSpec.nameTh}" เป็นทรัพยากรธรรมชาติต้นน้ำ (Tier 0) ไม่สามารถสังเคราะห์เองได้ ต้องเก็บเกี่ยวจากสินทรัพย์ภายนอกหรือสั่งซื้อจากซัพพลายเออร์`,
+          message: `"${matSpec.nameTh}" เป็นทรัพยากรต้นน้ำหรือผลผลิตจากการเพาะปลูก/ขุดสกัด (${matSpec.resourceClass || "raw"}) ไม่สามารถเสกด้วยสูตรแปรรูปโรงงานได้โดยตรง ต้องเพาะปลูกในแปลงเกษตร ขุดจากเหมือง หรือสั่งซื้อจากซัพพลายเออร์`,
         };
       }
       const reqResearch = recipe.minResearch || 0;
@@ -818,8 +1183,21 @@
         };
       }
       const reqBatches = Math.max(1, Math.min(50, Math.floor(Number(batches) || 1)));
+
+      // Special Two-Step Milling Support for artisan_flour:
+      // If milling artisan_flour and milled_rice stock is low while paddy_grain is available, automatically mill paddy_grain -> milled_rice + rice_bran_husk first!
+      if (materialId === "artisan_flour" && safeAvailableToDeduct(w, "milled_rice") < reqBatches * 2) {
+        const neededRice = reqBatches * 2 - safeAvailableToDeduct(w, "milled_rice");
+        const paddyBatches = Math.min(reqBatches, Math.floor(safeAvailableToDeduct(w, "paddy_grain") / 2));
+        if (paddyBatches > 0 && neededRice > 0) {
+          craftMaterialRecipe(w, "milled_rice", paddyBatches, { silent: true, ignoreTechGate: true });
+        }
+      }
+
+      // Check primary inputs or fallbackRawInputs (e.g. raw_extract can use soybean_crop if raw_cane+fresh_milk_soy are absent)
+      let activeInputs = recipe.inputs || {};
       let possibleBatches = reqBatches;
-      for (const [inMat, inQty] of Object.entries(recipe.inputs || {})) {
+      for (const [inMat, inQty] of Object.entries(activeInputs)) {
         if (!Object.hasOwn(w.inventory.materials, inMat)) {
           possibleBatches = 0;
           break;
@@ -827,6 +1205,18 @@
         const avail = safeAvailableToDeduct(w, inMat);
         possibleBatches = Math.min(possibleBatches, Math.floor(avail / inQty));
       }
+      if (possibleBatches <= 0 && recipe.fallbackRawInputs) {
+        let fbBatches = reqBatches;
+        for (const [inMat, inQty] of Object.entries(recipe.fallbackRawInputs)) {
+          const avail = safeAvailableToDeduct(w, inMat);
+          fbBatches = Math.min(fbBatches, Math.floor(avail / inQty));
+        }
+        if (fbBatches > 0) {
+          activeInputs = recipe.fallbackRawInputs;
+          possibleBatches = fbBatches;
+        }
+      }
+
       if (possibleBatches <= 0) {
         const neededStr = Object.entries(recipe.inputs || {})
           .map(([m, q]) => `${w.catalog.materials[m]?.nameTh || m} ×${q}`)
@@ -839,7 +1229,7 @@
       }
 
       let inputValueSatang = 0;
-      for (const [inMat, inQty] of Object.entries(recipe.inputs || {})) {
+      for (const [inMat, inQty] of Object.entries(activeInputs)) {
         const deduct = inQty * possibleBatches;
         safeDeductMaterial(w, inMat, deduct);
         inputValueSatang += (w.catalog.materials[inMat]?.unitCost || 2000) * deduct;
@@ -902,6 +1292,460 @@
         unitsProduced: totalUnitsOut,
         savedSatang: saved,
       };
+    }
+
+    // === CHAPTER 23: 8-Stage Agricultural Cultivation, Seed Saving & Soil Nutrient Engine ===
+    function ensureAgriculture(w) {
+      if (!w.agriculture || typeof w.agriculture !== "object") {
+        w.agriculture = freshAgriculture();
+      }
+      if (!w.agriculture.plots) w.agriculture.plots = {};
+      if (!w.agriculture.seedBatches) w.agriculture.seedBatches = freshAgriculture().seedBatches;
+      if (!w.agriculture.waterSource) w.agriculture.waterSource = freshAgriculture().waterSource;
+      return w.agriculture;
+    }
+
+    function plantCropPlot(w, plotId, options = {}) {
+      const ag = ensureAgriculture(w);
+      let plot = ag.plots[plotId];
+      if (!plot && options.cropId && D.AGRICULTURE_CROPS?.[options.cropId]) {
+        plot = createAgriPlotState(options.cropId, options.assetId || D.AGRICULTURE_CROPS[options.cropId].assetId, plotId);
+        ag.plots[plotId] = plot;
+      }
+      if (!plot) {
+        return { ok: false, code: "unknownPlot", message: "ไม่พบแปลงเกษตรที่ระบุ" };
+      }
+      if (["planted", "growing", "ready_to_harvest", "harvesting"].includes(plot.stage)) {
+        return { ok: false, code: "plotBusy", message: "แปลงเกษตรกำลังอยู่ระหว่างเพาะปลูก ไม่สามารถปลูกซ้อนทับได้" };
+      }
+      const cropSpec = D.AGRICULTURE_CROPS?.[plot.cropId] || D.AGRICULTURE_CROPS.jasmine_rice;
+      const requestedSeedId = options.seedMaterialId || plot.seedMatId;
+      const seedMatSpec = w.catalog.materials?.[requestedSeedId];
+
+      // Hard Biological Rule (Chapter 23 Section 4): Milled rice (milled_rice), flour (artisan_flour), or any non-seed material CANNOT be planted!
+      if (
+        !seedMatSpec ||
+        requestedSeedId === "milled_rice" ||
+        requestedSeedId === "artisan_flour" ||
+        (cropSpec.forbiddenSeedIds || []).includes(requestedSeedId) ||
+        seedMatSpec.canPlantCrop !== true ||
+        requestedSeedId !== cropSpec.seedMaterialId
+      ) {
+        return {
+          ok: false,
+          code: "invalidSeedMaterial",
+          message: `ไม่สามารถใช้ "${seedMatSpec?.nameTh || requestedSeedId}" เป็นเมล็ดพันธุ์เพาะปลูกได้! ข้าวสารที่ขัดสีแล้วหรือแป้งโม่ไม่สามารถงอกเป็นต้นพืชได้ ต้องใช้ "${w.catalog.materials[cropSpec.seedMaterialId]?.nameTh || cropSpec.seedMaterialId}" เท่านั้น`,
+        };
+      }
+
+      const seedReq = plot.seedRequired || cropSpec.seedRequired || 2;
+      const availSeed = safeAvailableToDeduct(w, requestedSeedId);
+      if (availSeed < seedReq) {
+        plot.lastReasonTh = `รอเมล็ดพันธุ์ (${seedMatSpec.nameTh} ขาดอีก ${seedReq - availSeed} หน่วย)`;
+        return {
+          ok: false,
+          code: "insufficientSeed",
+          message: `เมล็ดพันธุ์ "${seedMatSpec.nameTh}" ในคลังไม่พอสำหรับเพาะปลูก (ต้องใช้ ${seedReq} หน่วย มี ${availSeed} หน่วย)`,
+        };
+      }
+
+      // Stage 3 & 4: Prepare plot & deduct seed from stock
+      safeDeductMaterial(w, requestedSeedId, seedReq);
+      ag.totalSeedUsed = (ag.totalSeedUsed || 0) + seedReq;
+      plot.totalSeedPlanted = (plot.totalSeedPlanted || 0) + seedReq;
+
+      // Apply water if available; otherwise record water shortage which lowers soil moisture and yield
+      const waterReq = Math.max(1, Math.floor((plot.waterRequired || 2) / 2));
+      const availWater = safeAvailableToDeduct(w, "raw_water_m3");
+      if (availWater >= waterReq) {
+        safeDeductMaterial(w, "raw_water_m3", waterReq);
+        ag.totalWaterUsed = (ag.totalWaterUsed || 0) + waterReq;
+        plot.waterAppliedUnits = (plot.waterAppliedUnits || 0) + waterReq;
+        plot.soilMoisture = clamp(plot.soilMoisture + 14, 10, 100);
+      } else {
+        plot.soilMoisture = clamp(plot.soilMoisture - 15, 5, 100);
+        plot.waterShortageEvents = (plot.waterShortageEvents || 0) + 1;
+      }
+
+      const seedBatch = ag.seedBatches?.[requestedSeedId] || { ageDays: 0, quality: 94 };
+      const germRate = clamp(0.95 - (seedBatch.ageDays || 0) * 0.03, 0.45, 0.96);
+      plot.seedBatchAgeDays = seedBatch.ageDays || 0;
+      plot.germinationRate = Math.round(germRate * 100) / 100;
+      plot.stage = "growing";
+      plot.plantedAt = now(w);
+      plot.growthMinutes = 0;
+      if (typeof options.seedSaveRatio === "number" && Number.isFinite(options.seedSaveRatio)) {
+        plot.seedSaveRatio = clamp(options.seedSaveRatio, 0, 0.85);
+      }
+      const worker = w.people.find((p) => p.employed && ["logistics", "assembler", "coordinator"].includes(p.role)) || w.people[0];
+      plot.assignedWorkerId = worker ? worker.id : null;
+      plot.assignedWorkerName = worker ? worker.name : "ทีมเกษตร";
+      plot.lastReasonTh = `${plot.assignedWorkerName} เตรียมแปลงและลงปลูก ${seedMatSpec.nameTh} ×${seedReq} หน่วย (อัตราการงอก ${Math.round(plot.germinationRate * 100)}% • ความชื้นดิน ${plot.soilMoisture}% • ธาตุอาหารดิน ${plot.soilNutrients}%)`;
+
+      if (!options.silent) {
+        event(
+          w,
+          "cropPlanted",
+          `🌱 เริ่มรอบเพาะปลูก "${plot.nameTh}": หัก ${seedMatSpec.nameTh} ×${seedReq} หน่วย ลงแปลงปลูกจริง (ความชื้นดิน ${plot.soilMoisture}% • ธาตุอาหาร ${plot.soilNutrients}%)`,
+          { plotId: plot.id, cropId: plot.cropId, seedUsed: seedReq, soilNutrients: plot.soilNutrients, soilMoisture: plot.soilMoisture },
+        );
+      }
+      return {
+        ok: true,
+        plotId: plot.id,
+        cropId: plot.cropId,
+        seedDeducted: seedReq,
+        stage: plot.stage,
+        soilNutrients: plot.soilNutrients,
+        soilMoisture: plot.soilMoisture,
+      };
+    }
+
+    function careCropPlot(w, plotId, options = {}) {
+      const ag = ensureAgriculture(w);
+      const plot = ag.plots[plotId];
+      if (!plot) return { ok: false, code: "unknownPlot", message: "ไม่พบแปลงเกษตรที่ระบุ" };
+
+      let waterAdded = 0;
+      let fertAdded = 0;
+      if (options.applyWater !== false) {
+        const wQty = Math.max(1, Math.min(10, Math.floor(Number(options.waterUnits) || 1)));
+        if (safeAvailableToDeduct(w, "raw_water_m3") >= wQty) {
+          safeDeductMaterial(w, "raw_water_m3", wQty);
+          ag.totalWaterUsed = (ag.totalWaterUsed || 0) + wQty;
+          plot.waterAppliedUnits = (plot.waterAppliedUnits || 0) + wQty;
+          plot.soilMoisture = clamp(plot.soilMoisture + wQty * 22, 5, 100);
+          waterAdded = wQty;
+        } else if (options.requireWater) {
+          return { ok: false, code: "insufficientWater", message: "น้ำดิบ (raw_water_m3) ในคลังไม่พอสำหรับให้น้ำแปลงเกษตร" };
+        }
+      }
+      if (options.applyFertilizer) {
+        const fertId = options.fertilizerMaterialId || (safeAvailableToDeduct(w, "npk_fertilizer") >= 1 ? "npk_fertilizer" : "organic_compost");
+        if (!["npk_fertilizer", "organic_compost"].includes(fertId) || safeAvailableToDeduct(w, fertId) < 1) {
+          return { ok: false, code: "insufficientFertilizer", message: "ไม่มีปุ๋ย N-P-K หรือปุ๋ยหมักอินทรีย์ในคลังสำหรับบำรุงดิน" };
+        }
+        safeDeductMaterial(w, fertId, 1);
+        ag.totalFertilizerUsed = (ag.totalFertilizerUsed || 0) + 1;
+        plot.fertilizerAppliedCount = (plot.fertilizerAppliedCount || 0) + 1;
+        // Diminishing returns when soilNutrients is already high (cannot exceed 100 or boost yield infinitely)
+        const gain = fertId === "npk_fertilizer" ? 26 : 20;
+        plot.soilNutrients = clamp(plot.soilNutrients + gain, 5, 100);
+        if (fertId === "organic_compost") {
+          plot.soilMoisture = clamp(plot.soilMoisture + 8, 5, 100);
+        }
+        fertAdded = 1;
+      }
+      plot.lastReasonTh = `ดูแลแปลงเกษตร: ความชื้นดิน ${plot.soilMoisture}% • ธาตุอาหารดิน ${plot.soilNutrients}%`;
+      return {
+        ok: true,
+        plotId: plot.id,
+        waterAdded,
+        fertilizerAdded: fertAdded,
+        soilMoisture: plot.soilMoisture,
+        soilNutrients: plot.soilNutrients,
+      };
+    }
+
+    function harvestCropPlot(w, plotId, options = {}) {
+      const ag = ensureAgriculture(w);
+      const plot = ag.plots[plotId];
+      if (!plot) return { ok: false, code: "unknownPlot", message: "ไม่พบแปลงเกษตรที่ระบุ" };
+      if (!["growing", "ready_to_harvest", "harvesting"].includes(plot.stage)) {
+        return { ok: false, code: "notPlanted", message: "แปลงเกษตรยังไม่ได้เพาะปลูก ไม่สามารถเก็บเกี่ยวได้" };
+      }
+      if (plot.growthMinutes < plot.targetGrowthMinutes && !options.forceRipe) {
+        return {
+          ok: false,
+          code: "cropNotRipe",
+          message: `พืชผลยังเติบโตไม่ครบรอบเก็บเกี่ยว (${plot.growthMinutes}/${plot.targetGrowthMinutes} นาที) ห้ามเก็บเกี่ยวใน tick เดียวกับที่ปลูก`,
+        };
+      }
+      if (plot.plantedAt !== null && now(w) <= plot.plantedAt && !options.allowSameTickForSetup) {
+        return {
+          ok: false,
+          code: "sameTickHarvestForbidden",
+          message: "ห้ามปลูกและเก็บเกี่ยวในเวลาเดียวกันเพื่อปั๊มเมล็ดพันธุ์",
+        };
+      }
+
+      const cropSpec = D.AGRICULTURE_CROPS?.[plot.cropId] || D.AGRICULTURE_CROPS.jasmine_rice;
+      const assetLv = w.externalWorld?.assetPortfolio?.ownedAssets?.[plot.assetId]?.level || 1;
+      const lvMult = 1 + (assetLv - 1) * 0.35;
+
+      // Calculate yield based on soil moisture, soil nutrients, and seed germination
+      const moistureFactor = plot.soilMoisture >= 55 ? 1.0 : plot.soilMoisture >= 35 ? 0.72 : 0.38;
+      const nutrientFactor = plot.soilNutrients >= 55 ? 1.0 : plot.soilNutrients >= 35 ? 0.70 : 0.36;
+      const germFactor = clamp(plot.germinationRate || 0.92, 0.45, 0.98);
+      if (plot.soilMoisture < 40) plot.waterShortageEvents = (plot.waterShortageEvents || 0) + 1;
+      if (plot.soilNutrients < 40) plot.nutrientShortageEvents = (plot.nutrientShortageEvents || 0) + 1;
+
+      const grossYield = Math.max(
+        1,
+        Math.round((cropSpec.baseGrossYield || 12) * lvMult * moistureFactor * nutrientFactor * germFactor),
+      );
+      const lossRatio = plot.soilMoisture < 35 || plot.soilNutrients < 35 ? 0.25 : 0.08;
+      const spoiledLoss = Math.min(grossYield - 1, Math.max(1, Math.round(grossYield * lossRatio)));
+      const netUsable = Math.max(1, grossYield - spoiledLoss);
+
+      const saveRatio = clamp(
+        typeof options.seedSaveRatio === "number" ? options.seedSaveRatio : (plot.seedSaveRatio ?? 0.25),
+        0,
+        0.85,
+      );
+      plot.seedSaveRatio = saveRatio;
+      const savedSeedQty = Math.min(netUsable, Math.round(netUsable * saveRatio));
+      const warehouseCropQty = Math.max(0, netUsable - savedSeedQty);
+      const byproductQty = warehouseCropQty > 0 ? Math.max(1, Math.round((cropSpec.byproductYield || 2) * moistureFactor)) : 0;
+
+      // Add saved seed back into inventory (Stage 7: คัดและเก็บพันธุ์รอบต่อไป)
+      if (savedSeedQty > 0 && Object.hasOwn(w.inventory.materials, plot.seedMatId)) {
+        w.inventory.opening[plot.seedMatId] += savedSeedQty;
+        w.inventory.materials[plot.seedMatId] += savedSeedQty;
+        ag.totalSeedSavedFromHarvest = (ag.totalSeedSavedFromHarvest || 0) + savedSeedQty;
+        plot.totalSeedSaved = (plot.totalSeedSaved || 0) + savedSeedQty;
+        if (ag.seedBatches?.[plot.seedMatId]) {
+          ag.seedBatches[plot.seedMatId].ageDays = 0;
+          ag.seedBatches[plot.seedMatId].quality = Math.round(clamp(75 + nutrientFactor * 20, 60, 98));
+          ag.seedBatches[plot.seedMatId].germinationRate = Math.round(clamp(0.84 + nutrientFactor * 0.1, 0.65, 0.96) * 100) / 100;
+        }
+      }
+
+      // Add remaining harvested crop to warehouse (for selling or milling)
+      if (warehouseCropQty > 0 && Object.hasOwn(w.inventory.materials, plot.harvestMatId)) {
+        w.inventory.opening[plot.harvestMatId] += warehouseCropQty;
+        w.inventory.materials[plot.harvestMatId] += warehouseCropQty;
+        ag.totalCropHarvested = (ag.totalCropHarvested || 0) + warehouseCropQty;
+        plot.totalNetCropToWarehouse = (plot.totalNetCropToWarehouse || 0) + warehouseCropQty;
+      }
+
+      // Add agricultural byproduct (straw/bran/compost feedstock)
+      if (byproductQty > 0 && plot.byproductMatId && Object.hasOwn(w.inventory.materials, plot.byproductMatId)) {
+        w.inventory.opening[plot.byproductMatId] += byproductQty;
+        w.inventory.materials[plot.byproductMatId] += byproductQty;
+        plot.totalByproductYielded = (plot.totalByproductYielded || 0) + byproductQty;
+      }
+
+      plot.totalGrossHarvested = (plot.totalGrossHarvested || 0) + grossYield;
+      plot.totalSpoiledLoss = (plot.totalSpoiledLoss || 0) + spoiledLoss;
+
+      // Stage 8: Continuous Soil Nutrient & Moisture Depletion (NEVER resets to 100% for free!)
+      plot.soilNutrients = clamp(plot.soilNutrients - (cropSpec.nutrientDrainPerCycle || 22), 5, 100);
+      plot.soilMoisture = clamp(plot.soilMoisture - (cropSpec.moistureDrainPerCycle || 18), 5, 100);
+      plot.cycleCount = (plot.cycleCount || 0) + 1;
+      ag.totalCyclesCompleted = (ag.totalCyclesCompleted || 0) + 1;
+      plot.stage = "fallow";
+      plot.growthMinutes = 0;
+
+      const ap = ensureAssetPortfolio(w);
+      ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + warehouseCropQty + savedSeedQty;
+      if (ap.ownedAssets?.[plot.assetId]) {
+        ap.ownedAssets[plot.assetId].totalHarvested =
+          (ap.ownedAssets[plot.assetId].totalHarvested || 0) + warehouseCropQty + savedSeedQty;
+      }
+
+      const harvestRecord = {
+        day: day(w),
+        at: now(w),
+        plotId: plot.id,
+        cropId: plot.cropId,
+        cycle: plot.cycleCount,
+        grossYield,
+        spoiledLoss,
+        netUsable,
+        savedSeedMatId: plot.seedMatId,
+        savedSeedQty,
+        harvestMatId: plot.harvestMatId,
+        warehouseCropQty,
+        byproductMatId: plot.byproductMatId,
+        byproductQty,
+        soilNutrientsAfter: plot.soilNutrients,
+        soilMoistureAfter: plot.soilMoisture,
+      };
+      plot.lastHarvest = harvestRecord;
+      plot.history.unshift(harvestRecord);
+      if (plot.history.length > 20) plot.history.pop();
+      plot.lastReasonTh = `เก็บเกี่ยวรอบที่ ${plot.cycleCount} สำเร็จ: ผลผลิตรวม ${grossYield} (สูญเสีย ${spoiledLoss} • คัดเก็บเป็นเมล็ดพันธุ์ ${savedSeedQty} • ส่งเข้าคลังแปรรูป/ขาย ${warehouseCropQty}) • ดินเหลือธาตุอาหาร ${plot.soilNutrients}%`;
+
+      ap.harvestHistory.unshift({
+        day: day(w),
+        assetId: plot.assetId,
+        assetNameTh: plot.nameTh,
+        yieldsTh: `${w.catalog.materials[plot.harvestMatId]?.nameTh || plot.harvestMatId} +${warehouseCropQty}, คัดเก็บพันธุ์ ${w.catalog.materials[plot.seedMatId]?.nameTh || plot.seedMatId} +${savedSeedQty} (สูญเสีย ${spoiledLoss})`,
+      });
+      if (ap.harvestHistory.length > 40) ap.harvestHistory.pop();
+
+      if (!options.silent) {
+        event(
+          w,
+          "cropHarvested",
+          `🌾 เก็บเกี่ยว "${plot.nameTh}" (รอบที่ ${plot.cycleCount}): ได้ผลผลิตสุทธิ ${netUsable} หน่วย ➔ คัดเก็บเป็นเมล็ดพันธุ์รอบหน้า ${savedSeedQty} หน่วย + เข้าคลังโรงงาน ${warehouseCropQty} หน่วย (ดินเหลือธาตุอาหาร ${plot.soilNutrients}%)`,
+          harvestRecord,
+        );
+      }
+      return { ok: true, ...harvestRecord };
+    }
+
+    function saveSeedFromCrop(w, cropMaterialId, quantity = 2) {
+      const ag = ensureAgriculture(w);
+      const matSpec = w.catalog.materials?.[cropMaterialId];
+      if (!matSpec || cropMaterialId === "milled_rice" || cropMaterialId === "artisan_flour" || !matSpec.canSaveAsSeed || !matSpec.seedMaterialId) {
+        return {
+          ok: false,
+          code: "cannotSaveAsSeed",
+          message: `ไม่สามารถนำ "${matSpec?.nameTh || cropMaterialId}" มาคัดเป็นเมล็ดพันธุ์เพาะปลูกได้! (ข้าวสารที่สีแล้วหรือแป้งโม่ไม่มีจมูกข้าว ไม่สามารถงอกได้)`,
+        };
+      }
+      const qty = Math.max(2, Math.min(100, Math.floor(Number(quantity) || 2)));
+      const avail = safeAvailableToDeduct(w, cropMaterialId);
+      if (avail < qty) {
+        return {
+          ok: false,
+          code: "insufficientCropStock",
+          message: `ผลผลิต "${matSpec.nameTh}" ในคลังมีไม่พอสำหรับคัดแยกเป็นเมล็ดพันธุ์ (ต้องการ ${qty} มี ${avail})`,
+        };
+      }
+      // Sorting takes a 20% screening loss (non-viable grains become rice_bran_husk byproduct), preventing any 1:1 infinite conversion loop
+      const seedOutId = matSpec.seedMaterialId;
+      const seedYield = Math.max(1, Math.floor(qty * 0.75));
+      const rejectByproduct = Math.max(0, qty - seedYield);
+
+      safeDeductMaterial(w, cropMaterialId, qty);
+      w.inventory.opening[seedOutId] += seedYield;
+      w.inventory.materials[seedOutId] += seedYield;
+      if (rejectByproduct > 0 && Object.hasOwn(w.inventory.materials, "rice_bran_husk")) {
+        w.inventory.opening.rice_bran_husk += rejectByproduct;
+        w.inventory.materials.rice_bran_husk += rejectByproduct;
+      }
+      ag.totalSeedSavedFromHarvest = (ag.totalSeedSavedFromHarvest || 0) + seedYield;
+      ag.lastSeedSortAt = now(w);
+
+      event(
+        w,
+        "seedSavedFromCrop",
+        `🌱 คัดแยกเมล็ดพันธุ์จาก "${matSpec.nameTh}" ×${qty} หน่วย ➔ ได้ "${w.catalog.materials[seedOutId]?.nameTh || seedOutId}" ×${seedYield} หน่วย เข้าคลังเมล็ดพันธุ์ (คัดออกเป็นรำ/แกลบ ${rejectByproduct} หน่วย)`,
+        { cropMaterialId, quantityIn: qty, seedMaterialId: seedOutId, seedYield, rejectByproduct },
+      );
+      return { ok: true, cropMaterialId, quantityIn: qty, seedMaterialId: seedOutId, seedYield, rejectByproduct };
+    }
+
+    function stepAgricultureAndResources(w) {
+      const ag = ensureAgriculture(w);
+      for (const plot of Object.values(ag.plots || {})) {
+        if (plot.stage === "growing") {
+          plot.growthMinutes = (plot.growthMinutes || 0) + TICK;
+          // Halfway through growth, autonomous farm care checks moisture & nutrients
+          if (plot.growthMinutes === Math.floor(plot.targetGrowthMinutes / 2)) {
+            if (plot.soilMoisture < 60 && safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
+              careCropPlot(w, plot.id, { applyWater: true, waterUnits: 1, applyFertilizer: false });
+            }
+            if (
+              plot.soilNutrients < 55 &&
+              (safeAvailableToDeduct(w, "npk_fertilizer") >= 1 || safeAvailableToDeduct(w, "organic_compost") >= 1)
+            ) {
+              careCropPlot(w, plot.id, { applyWater: false, applyFertilizer: true });
+            }
+          }
+          if (plot.growthMinutes >= plot.targetGrowthMinutes) {
+            plot.stage = "ready_to_harvest";
+            // Autonomous NPC harvest & replant when owned asset is active
+            if (w.externalWorld?.assetPortfolio?.ownedAssets?.[plot.assetId]?.active) {
+              harvestCropPlot(w, plot.id, { silent: false });
+              // Replenish soil if needed before replanting next cycle
+              if (
+                plot.soilNutrients < 55 &&
+                (safeAvailableToDeduct(w, "npk_fertilizer") >= 1 || safeAvailableToDeduct(w, "organic_compost") >= 1)
+              ) {
+                careCropPlot(w, plot.id, { applyWater: false, applyFertilizer: true });
+              }
+              if (plot.soilMoisture < 55 && safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
+                careCropPlot(w, plot.id, { applyWater: true, waterUnits: 1, applyFertilizer: false });
+              }
+              plantCropPlot(w, plot.id, { silent: false });
+              runMidstreamRefining(w);
+            }
+          }
+        } else if (
+          (plot.stage === "idle" || plot.stage === "fallow") &&
+          w.externalWorld?.assetPortfolio?.ownedAssets?.[plot.assetId]?.active
+        ) {
+          // Autonomous farmer NPC replants fallow plot if seed is available
+          if (safeAvailableToDeduct(w, plot.seedMatId) >= (plot.seedRequired || 2)) {
+            if (
+              plot.soilNutrients < 55 &&
+              (safeAvailableToDeduct(w, "npk_fertilizer") >= 1 || safeAvailableToDeduct(w, "organic_compost") >= 1)
+            ) {
+              careCropPlot(w, plot.id, { applyWater: false, applyFertilizer: true });
+            }
+            plantCropPlot(w, plot.id, { silent: true });
+          }
+        }
+      }
+    }
+
+    function feedLivestockHerd(w, assetId = "dairy_soy_farm", options = {}) {
+      const ag = ensureAgriculture(w);
+      if (!ag.livestock) ag.livestock = freshAgriculture().livestock;
+      const herd = ag.livestock[assetId] || ag.livestock.dairy_soy_farm;
+      if (!herd) return { ok: false, code: "unknownHerd", message: "ไม่พบฟาร์มปศุสัตว์" };
+      const feedMat = safeAvailableToDeduct(w, "rice_bran_husk") >= 1
+        ? "rice_bran_husk"
+        : safeAvailableToDeduct(w, "soybean_crop") >= 1
+          ? "soybean_crop"
+          : null;
+      if (!feedMat && !options.freeFeed) {
+        herd.herdHealth = clamp((herd.herdHealth || 90) - 6, 35, 100);
+        return { ok: false, code: "insufficientFeed", message: "ขาดแคลนอาหารสัตว์ (รำข้าว/แกลบ หรือ ถั่วเหลือง) สำหรับเลี้ยงโคนม" };
+      }
+      if (feedMat) safeDeductMaterial(w, feedMat, 1);
+      if (safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
+        safeDeductMaterial(w, "raw_water_m3", 1);
+        ag.totalWaterUsed = (ag.totalWaterUsed || 0) + 1;
+      }
+      herd.herdHealth = clamp((herd.herdHealth || 90) + 5, 40, 100);
+      herd.milkingStage = "ready_to_milk";
+      const milkYield = Math.max(1, Math.round(herd.dailyMilkYield * (herd.herdHealth / 95)));
+      const manureYield = herd.dailyManureYield || 2;
+      grantUnpurchasedMaterial(w, "fresh_milk_soy", milkYield);
+      grantUnpurchasedMaterial(w, "organic_compost", manureYield);
+      herd.totalMilkProduced = (herd.totalMilkProduced || 0) + milkYield;
+      herd.totalManureProduced = (herd.totalManureProduced || 0) + manureYield;
+      if (!options.silent) {
+        event(
+          w,
+          "livestockMilked",
+          `🐄 ฟาร์มโคนมรีดนมสดพาสเจอร์ไรส์ได้ +${milkYield} ถัง และได้ปุ๋ยหมักมูลสัตว์ +${manureYield} ถุง (สุขภาพฝูงโคนม ${herd.herdHealth}%)`,
+          { assetId, milkYield, manureYield, herdHealth: herd.herdHealth },
+        );
+      }
+      return { ok: true, assetId, milkYield, manureYield, herdHealth: herd.herdHealth };
+    }
+
+    function surveyNewMineVein(w, assetId = "copper_bauxite_mine", options = {}) {
+      const ag = ensureAgriculture(w);
+      if (!ag.mining) ag.mining = freshAgriculture().mining;
+      const mine = ag.mining[assetId];
+      if (!mine) return { ok: false, code: "unknownMine", message: "ไม่พบสัมปทานเหมืองแร่ที่ระบุ" };
+      const surveyCost = options.freeSurvey ? 0 : 85000;
+      if (surveyCost > 0 && w.finance.cash < surveyCost) {
+        return { ok: false, code: "insufficientCash", message: "เงินสดไม่พอจ่ายค่าเจาะสำรวจสายแร่ใหม่" };
+      }
+      if (surveyCost > 0) {
+        post(w, "equipment", -surveyCost, `mineSurvey:${assetId}:${++w.sequence}`);
+      }
+      const addedReserve = 180;
+      mine.reserveRemaining = (mine.reserveRemaining || 0) + addedReserve;
+      mine.reserveMax = Math.max(mine.reserveMax || 360, mine.reserveRemaining);
+      mine.oreGrade = clamp((mine.oreGrade || 85) + 4, 70, 98);
+      mine.miningStage = "drilling_blasting";
+      mine.veinsSurveyed = (mine.veinsSurveyed || 1) + 1;
+      event(
+        w,
+        "mineVeinSurveyed",
+        `⛏️ ทีมธรณีวิทยาเจาะสำรวจพบสายแร่ใหม่ใน "${assetId}": ปริมาณสำรองแร่เพิ่มขึ้น +${addedReserve} ตัน (คงเหลือ ${mine.reserveRemaining} ตัน • ความบริสุทธิ์แร่ ${mine.oreGrade}%)`,
+        { assetId, reserveRemaining: mine.reserveRemaining, oreGrade: mine.oreGrade },
+      );
+      return { ok: true, assetId, reserveRemaining: mine.reserveRemaining, oreGrade: mine.oreGrade };
     }
 
     function sellMaterialB2B(w, materialId, quantity = 2, buyerCorpId = null, options = {}) {
@@ -1318,6 +2162,7 @@
 
     function acquireExternalAsset(w, assetId, options = {}) {
       const ap = ensureAssetPortfolio(w);
+      const ag = ensureAgriculture(w);
       const spec = D.EXTERNAL_ASSETS?.[assetId];
       if (!spec) return { ok: false, code: "unknownAsset", message: "ไม่พบสินทรัพย์ภายนอกที่ระบุ" };
 
@@ -1349,6 +2194,7 @@
           nameTh: spec.nameTh,
           shortNameTh: spec.shortNameTh,
           category: spec.category,
+          resourceType: spec.resourceType || "general",
           icon: spec.icon,
           level: 1,
           acquiredDay: day(w),
@@ -1356,6 +2202,17 @@
           active: true,
           totalHarvested: 0,
           totalDividendSatang: 0,
+          // Resource-specific state (Chapter 23: Finite Mine Reserve, Renewable Forest Tree Stock, Livestock Herd, Flow Cap)
+          reserveRemaining: spec.resourceType === "finite_mine" ? (spec.initialReserveUnits || 420) : null,
+          oreGrade: spec.resourceType === "finite_mine" ? (spec.oreGrade || 0.9) : null,
+          tailingsGenerated: spec.resourceType === "finite_mine" ? 0 : null,
+          treeStock:
+            spec.resourceType === "renewable_forest" || spec.resourceType === "plantation_tapping"
+              ? (spec.initialTreeStock || 120)
+              : null,
+          saplingCohorts: spec.resourceType === "renewable_forest" ? [] : null,
+          herdCount: spec.resourceType === "livestock_herd" ? (spec.initialHerdCount || 24) : null,
+          dailyFlowCap: spec.resourceType === "environmental_flow" ? (spec.dailyWaterFlowCap || 10) : null,
         };
         if (spec.fleetBonus && w.logistics) {
           w.logistics.fleetCount = (w.logistics.fleetCount || 2) + spec.fleetBonus;
@@ -1367,7 +2224,6 @@
           w.externalWorld.ourMarketSharePct =
             Math.round(clamp((w.externalWorld.ourMarketSharePct || 2.0) + spec.marketShareBonus, 1, 60) * 10) / 10;
         }
-        // Unlock linked downstream products (such as artisan_bakery or premium_cooking_oil) when acquiring their upstream farm/plantation
         if (spec.linkedChainId && D.PRODUCTION_CHAINS?.[spec.linkedChainId]) {
           const ch = D.PRODUCTION_CHAINS[spec.linkedChainId];
           for (const prodId of ch.downstreamProducts || []) {
@@ -1383,37 +2239,42 @@
       } else {
         existing.level = targetLevel;
         existing.condition = 100;
+        if (spec.resourceType === "finite_mine") {
+          existing.reserveRemaining = (existing.reserveRemaining || 0) + 220;
+        } else if (spec.resourceType === "renewable_forest" || spec.resourceType === "plantation_tapping") {
+          existing.treeStock = (existing.treeStock || 80) + 60;
+        } else if (spec.resourceType === "livestock_herd") {
+          existing.herdCount = (existing.herdCount || 24) + 12;
+        }
         if (spec.esgBonus) {
           w.reputation = clamp(w.reputation + 1, 0, 100);
         }
       }
 
-      // Immediate welcome harvest batch upon acquisition/upgrade so the factory can immediately run the production chain
-      const harvestSummary = [];
-      for (const [matId, baseQty] of Object.entries(spec.harvestYields || {})) {
+      // Grant starter seed / water stock included with the farm deed (NOT finished goods or instant free harvest!)
+      const starterList = [];
+      for (const [matId, baseQty] of Object.entries(spec.starterSeeds || {})) {
         if (!Object.hasOwn(w.inventory.materials, matId)) continue;
-        const qty = Math.round(baseQty * (1 + (targetLevel - 1) * 0.5));
-        w.inventory.opening[matId] += qty;
-        w.inventory.materials[matId] += qty;
-        ap.ownedAssets[assetId].totalHarvested += qty;
-        ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + qty;
-        harvestSummary.push(`${w.catalog.materials[matId]?.nameTh || matId} +${qty}`);
+        w.inventory.opening[matId] += baseQty;
+        w.inventory.materials[matId] += baseQty;
+        starterList.push(`${w.catalog.materials[matId]?.nameTh || matId} +${baseQty}`);
       }
-      if (harvestSummary.length > 0) {
-        ap.harvestHistory.unshift({
-          day: day(w),
-          assetId,
-          assetNameTh: spec.shortNameTh,
-          yieldsTh: harvestSummary.join(", "),
-        });
-        if (ap.harvestHistory.length > 40) ap.harvestHistory.pop();
-        runMidstreamRefining(w);
+
+      // If this is an agricultural plot asset, register its plot in w.agriculture and start planting using the seed stock!
+      if (spec.resourceType === "agricultural_plot" && spec.cropId) {
+        const plotId = "plot_" + assetId;
+        if (!ag.plots[plotId]) {
+          ag.plots[plotId] = createAgriPlotState(spec.cropId, assetId, plotId);
+        }
+        if (ag.plots[plotId].stage === "idle" || ag.plots[plotId].stage === "fallow") {
+          plantCropPlot(w, plotId, { silent: true });
+        }
       }
 
       event(
         w,
         existing ? "externalAssetUpgraded" : "externalAssetAcquired",
-        `${spec.icon} ${ceo ? ceo.name : "ผู้บริหาร"} ${existing ? "ขยายกำลังการผลิต" : "เข้าซื้อกิจการสินทรัพย์ภายนอก"} "${spec.nameTh}" (Lv.${targetLevel}) สำเร็จ!${harvestSummary.length ? " รับผลผลิตล็อตแรกเข้าคลัง: " + harvestSummary.join(", ") : ""}`,
+        `${spec.icon} ${ceo ? ceo.name : "ผู้บริหาร"} ${existing ? "ขยายกำลังการผลิต" : "เข้าซื้อกิจการสินทรัพย์ภายนอก"} "${spec.nameTh}" (Lv.${targetLevel}) สำเร็จ!${starterList.length ? " รับเมล็ดพันธุ์และปัจจัยตั้งต้นเข้าคลัง: " + starterList.join(", ") : ""}`,
         {
           assetId,
           level: targetLevel,
@@ -1426,30 +2287,152 @@
 
     function evaluateExternalAssetsDaily(w, completedDay) {
       const ap = ensureAssetPortfolio(w);
+      const ag = ensureAgriculture(w);
       const ownedList = Object.values(ap.ownedAssets || {});
 
-      // 1. Update fluctuating commodity market price indices (0.85x - 1.28x)
+      // 1. Update fluctuating commodity market price indices (0.88x - 1.25x)
       for (const matId of Object.keys(w.catalog.materials || {})) {
         const h = seedHash(`${w.seed}:matIdx:${matId}:${completedDay}`);
         ap.marketPriceIndex[matId] = Math.round((0.88 + (h % 38) / 100) * 100) / 100;
       }
 
-      // 2. Harvest upstream raw materials & collect dividends from owned External Assets
+      // Age stored seed batches slightly each day (Chapter 23 Section 4: germination degrades with storage age)
+      for (const sb of Object.values(ag.seedBatches || {})) {
+        sb.ageDays = (sb.ageDays || 0) + 1;
+        sb.germinationRate = Math.round(clamp(0.95 - sb.ageDays * 0.02, 0.5, 0.96) * 100) / 100;
+      }
+      ag.waterSource.usedToday = 0;
+
+      // 2. Process Non-Crop Resource Assets according to their true physical/biological mechanism (Chapter 23 Section 2)
       for (const rec of ownedList) {
         if (!rec || !rec.active) continue;
         const spec = D.EXTERNAL_ASSETS?.[rec.id];
         if (!spec) continue;
-        const lvMult = 1 + ((rec.level || 1) - 1) * 0.5;
+        const lvMult = 1 + ((rec.level || 1) - 1) * 0.45;
         const harvestItems = [];
-        for (const [matId, baseQty] of Object.entries(spec.harvestYields || {})) {
-          if (!Object.hasOwn(w.inventory.materials, matId)) continue;
-          const qty = Math.max(1, Math.round(baseQty * lvMult));
-          w.inventory.opening[matId] += qty;
-          w.inventory.materials[matId] += qty;
-          rec.totalHarvested = (rec.totalHarvested || 0) + qty;
-          ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + qty;
-          harvestItems.push(`${w.catalog.materials[matId]?.nameTh || matId} +${qty}`);
+
+        if (spec.resourceType === "agricultural_plot") {
+          // Agricultural plots are driven by the 8-stage cultivation engine (plant -> grow -> harvest -> save seed -> replant)
+          const plotId = "plot_" + rec.id;
+          if (!ag.plots[plotId] && spec.cropId) {
+            ag.plots[plotId] = createAgriPlotState(spec.cropId, rec.id, plotId);
+          }
+          const plot = ag.plots[plotId];
+          if (plot) {
+            if (plot.stage === "idle" || plot.stage === "fallow") {
+              plantCropPlot(w, plotId, { silent: true });
+            }
+            if (plot.stage === "growing" && plot.growthMinutes < plot.targetGrowthMinutes) {
+              plot.growthMinutes = Math.min(plot.targetGrowthMinutes, plot.growthMinutes + 1440);
+            }
+            if (plot.growthMinutes >= plot.targetGrowthMinutes || plot.stage === "ready_to_harvest") {
+              harvestCropPlot(w, plotId, { silent: true });
+              if (
+                plot.soilNutrients < 55 &&
+                (safeAvailableToDeduct(w, "npk_fertilizer") >= 1 || safeAvailableToDeduct(w, "organic_compost") >= 1)
+              ) {
+                careCropPlot(w, plotId, { applyWater: false, applyFertilizer: true });
+              }
+              if (plot.soilMoisture < 55 && safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
+                careCropPlot(w, plotId, { applyWater: true, waterUnits: 1, applyFertilizer: false });
+              }
+              plantCropPlot(w, plotId, { silent: true });
+            }
+          }
+        } else if (spec.resourceType === "finite_mine") {
+          // Finite Mine: Extracts raw ores ONLY, depleting reserveRemaining and generating tailings
+          if ((rec.reserveRemaining ?? 420) > 0) {
+            for (const [matId, baseQty] of Object.entries(spec.harvestYields || {})) {
+              if (!Object.hasOwn(w.inventory.materials, matId)) continue;
+              if ((rec.reserveRemaining || 0) <= 0) break;
+              const desired = Math.max(1, Math.round(baseQty * lvMult * (rec.oreGrade || 0.9)));
+              const extracted = Math.min(rec.reserveRemaining, desired);
+              if (extracted > 0) {
+                rec.reserveRemaining -= extracted;
+                rec.tailingsGenerated = (rec.tailingsGenerated || 0) + Math.max(1, Math.round(extracted * 0.3));
+                w.inventory.opening[matId] += extracted;
+                w.inventory.materials[matId] += extracted;
+                rec.totalHarvested = (rec.totalHarvested || 0) + extracted;
+                ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + extracted;
+                harvestItems.push(`${w.catalog.materials[matId]?.nameTh || matId} +${extracted} (สำรองเหลือ ${rec.reserveRemaining})`);
+              }
+            }
+          }
+        } else if (spec.resourceType === "renewable_forest") {
+          // Renewable Forest: Mature cohorts regrow into treeStock; logging deducts treeStock and replants saplings
+          if (Array.isArray(rec.saplingCohorts)) {
+            const stillGrowing = [];
+            for (const cohort of rec.saplingCohorts) {
+              if (completedDay >= cohort.readyDay) {
+                rec.treeStock = (rec.treeStock || 0) + cohort.count;
+              } else {
+                stillGrowing.push(cohort);
+              }
+            }
+            rec.saplingCohorts = stillGrowing;
+          }
+          const availTrees = rec.treeStock ?? 120;
+          if (availTrees > 0) {
+            const cutQty = Math.min(availTrees, Math.max(1, Math.round(6 * lvMult)));
+            rec.treeStock -= cutQty;
+            w.inventory.opening.timber_bamboo_log += cutQty;
+            w.inventory.materials.timber_bamboo_log += cutQty;
+            rec.totalHarvested = (rec.totalHarvested || 0) + cutQty;
+            ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + cutQty;
+            harvestItems.push(`ท่อนไม้เศรษฐกิจ +${cutQty} (ต้นไม้คงเหลือ ${rec.treeStock})`);
+            // Replant saplings if water/seedling available
+            if (!Array.isArray(rec.saplingCohorts)) rec.saplingCohorts = [];
+            if (safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
+              safeDeductMaterial(w, "raw_water_m3", 1);
+              rec.saplingCohorts.push({ plantedDay: completedDay, readyDay: completedDay + 2, count: cutQty });
+            } else {
+              rec.saplingCohorts.push({ plantedDay: completedDay, readyDay: completedDay + 3, count: Math.max(1, Math.floor(cutQty * 0.6)) });
+            }
+          }
+        } else if (spec.resourceType === "livestock_herd") {
+          // Dairy Herd: Uses feed (rice_bran_husk or soybean_crop) & raw_water_m3 to yield raw milk (fresh_milk_soy) + compost
+          let feedFactor = 0.65;
+          if (safeAvailableToDeduct(w, "rice_bran_husk") >= 1) {
+            safeDeductMaterial(w, "rice_bran_husk", 1);
+            feedFactor = 1.0;
+          } else if (safeAvailableToDeduct(w, "soybean_crop") >= 1) {
+            safeDeductMaterial(w, "soybean_crop", 1);
+            feedFactor = 1.0;
+          }
+          if (safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
+            safeDeductMaterial(w, "raw_water_m3", 1);
+          } else {
+            feedFactor *= 0.7;
+          }
+          const milkQty = Math.max(1, Math.round(6 * lvMult * feedFactor));
+          const compostQty = Math.max(1, Math.round(2 * lvMult * feedFactor));
+          w.inventory.opening.fresh_milk_soy += milkQty;
+          w.inventory.materials.fresh_milk_soy += milkQty;
+          w.inventory.opening.organic_compost += compostQty;
+          w.inventory.materials.organic_compost += compostQty;
+          rec.totalHarvested = (rec.totalHarvested || 0) + milkQty + compostQty;
+          ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + milkQty + compostQty;
+          harvestItems.push(`น้ำนมโคสด +${milkQty}, ปุ๋ยหมักมูลโค +${compostQty}`);
+        } else if (spec.resourceType === "plantation_tapping") {
+          // Rubber Plantation: Taps natural_latex only (never free polymer_resin!)
+          const latexQty = Math.max(1, Math.round(7 * lvMult));
+          w.inventory.opening.natural_latex += latexQty;
+          w.inventory.materials.natural_latex += latexQty;
+          rec.totalHarvested = (rec.totalHarvested || 0) + latexQty;
+          ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + latexQty;
+          harvestItems.push(`น้ำยางพาราสด +${latexQty}`);
+        } else if (spec.resourceType === "environmental_flow") {
+          // Environmental Flow: Pumps raw_water_m3 bounded by dailyFlowCap
+          const flowCap = Math.round((rec.dailyFlowCap || 10) * lvMult);
+          const waterQty = Math.min(flowCap, Math.max(2, Math.round(8 * lvMult)));
+          w.inventory.opening.raw_water_m3 += waterQty;
+          w.inventory.materials.raw_water_m3 += waterQty;
+          ag.waterSource.usedToday = waterQty;
+          rec.totalHarvested = (rec.totalHarvested || 0) + waterQty;
+          ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + waterQty;
+          harvestItems.push(`น้ำดิบธรรมชาติ +${waterQty} ลบ.ม. (เพดานสูบ ${flowCap}/วัน)`);
         }
+
         if (harvestItems.length > 0) {
           ap.harvestHistory.unshift({
             day: completedDay,
@@ -1468,8 +2451,22 @@
         }
       }
 
-      // 3. Run Midstream Production Chains (converting harvested paddy_grain -> artisan_flour, crude_palm -> refined_palm_oil, etc.)
-      if (ownedList.length > 0) {
+      // 3. Run Midstream Production Chains (converting harvested paddy_grain -> milled_rice -> artisan_flour, timber -> pack_carton, etc.)
+      if (ownedList.length > 0 && ap.supplyChainStrategy !== "asset_light") {
+        // First mill any harvested paddy_grain into milled_rice + rice_bran_husk (leaving at least 2 paddy_grain if needed)
+        const availPaddy = safeAvailableToDeduct(w, "paddy_grain");
+        if (availPaddy >= 2) {
+          craftMaterialRecipe(w, "milled_rice", Math.min(4, Math.floor(availPaddy / 2)), { silent: true });
+        }
+        // Convert timber_bamboo_log into pack_carton if forestry is owned
+        const availTimber = safeAvailableToDeduct(w, "timber_bamboo_log");
+        if (availTimber >= 2) {
+          craftMaterialRecipe(w, "pack_carton", Math.min(3, Math.floor(availTimber / 2)), { silent: true });
+        }
+        // Convert phosphate_potash_rock + raw_water_m3 into npk_fertilizer
+        if (safeAvailableToDeduct(w, "phosphate_potash_rock") >= 1 && safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
+          craftMaterialRecipe(w, "npk_fertilizer", 1, { silent: true });
+        }
         runMidstreamRefining(w);
       }
 
@@ -1489,6 +2486,1273 @@
           if (unowned.length > 0) {
             acquireExternalAsset(w, unowned[0].id);
           }
+        }
+      }
+    }
+
+    // === CHAPTER 19: Fleet Freight Transport Business Engine ===
+    function ensureFleetTransport(w) {
+      if (!w.fleetTransport || typeof w.fleetTransport !== "object") {
+        w.fleetTransport = freshFleetTransport(w.seed);
+      }
+      if (!w.fleetTransport.vehicles) w.fleetTransport.vehicles = {};
+      if (!Array.isArray(w.fleetTransport.openQuotes)) w.fleetTransport.openQuotes = [];
+      if (!w.fleetTransport.contracts) w.fleetTransport.contracts = {};
+      if (!w.fleetTransport.cargoCustody) w.fleetTransport.cargoCustody = {};
+      if (!w.fleetTransport.metrics) w.fleetTransport.metrics = freshFleetTransport(w.seed).metrics;
+      if (!Array.isArray(w.fleetTransport.history)) w.fleetTransport.history = [];
+      return w.fleetTransport;
+    }
+
+    function acquireFleetVehicle(w, vehicleTypeId = "dry_6w", options = {}) {
+      const ft = ensureFleetTransport(w);
+      const spec = D.FLEET_VEHICLES?.[vehicleTypeId];
+      if (!spec) return { ok: false, code: "unknownVehicleType", message: "ไม่พบประเภทรถบรรทุกที่ระบุ" };
+      const mode = options.ownership === "leased" ? "leased" : "owned";
+      const upfrontCost = mode === "leased" ? spec.dailyLeaseCost * 5 : spec.purchaseCost;
+      if (options.freeGrant && w.finance.cash < upfrontCost) {
+        w.finance.openingCash += upfrontCost;
+        w.finance.cash += upfrontCost;
+      }
+      if (w.finance.cash < upfrontCost) {
+        return { ok: false, code: "insufficientCash", message: "เงินสดไม่พอสำหรับจัดซื้อหรือเช่ารถบรรทุกเข้ากองรถ" };
+      }
+      const nextIdx = Object.keys(ft.vehicles).length + 1;
+      const vid = "truck-" + nextIdx;
+      const plateNum = 1000 + ((seedHash(w.seed + ":" + vid) % 8900));
+      post(w, "equipment", -upfrontCost, `fleetAcquire:${vid}:${vehicleTypeId}`);
+      ft.vehicles[vid] = {
+        id: vid,
+        typeId: spec.id,
+        nameTh: `${spec.nameTh} #${nextIdx}`,
+        plate: `71-${plateNum} กทม.`,
+        ownership: mode,
+        maxWeightKg: spec.maxWeightKg,
+        maxVolumeM3: spec.maxVolumeM3,
+        baseLitersPerKm: spec.baseLitersPerKm,
+        supportedCargoTypes: [...spec.supportedCargoTypes],
+        condition: 100,
+        tireCondition: 100,
+        odometerKm: 0,
+        status: "idle",
+        assignedDriverId: null,
+        assignedDriverName: null,
+        activeContractId: null,
+        internalOrderId: null,
+        returnRemainingKm: 0,
+        tripsCompleted: 0,
+      };
+      if (w.logistics) {
+        w.logistics.fleetCount = Object.keys(ft.vehicles).length;
+      }
+      event(
+        w,
+        "fleetVehicleAcquired",
+        `${spec.icon} กองรถขนส่งบริษัทจัดหา "${ft.vehicles[vid].nameTh}" ทะเบียน ${ft.vehicles[vid].plate} (${mode === "leased" ? "สัญญาเช่า" : "ซื้อขาด"} ฿${(upfrontCost / 100).toLocaleString("th-TH")})`,
+        { vehicleId: vid, typeId: spec.id, costSatang: upfrontCost, ownership: mode },
+      );
+      return { ok: true, vehicleId: vid, vehicle: ft.vehicles[vid] };
+    }
+
+    function maintainFleetVehicle(w, vehicleId) {
+      const ft = ensureFleetTransport(w);
+      const v = ft.vehicles[vehicleId];
+      if (!v) return { ok: false, code: "unknownVehicle", message: "ไม่พบรถบรรทุกที่ระบุ" };
+      if (v.status !== "idle" && v.status !== "broken" && v.status !== "maintenance") {
+        return { ok: false, code: "vehicleInTransit", message: "รถกำลังปฏิบัติงานขนส่ง ไม่สามารถซ่อมบำรุงกลางคันได้" };
+      }
+      const spec = D.FLEET_VEHICLES?.[v.typeId] || D.FLEET_VEHICLES.dry_6w;
+      let cashCost = spec.maintenanceCost || 350000;
+      let tireUsed = 0;
+      if (v.tireCondition < 50 && safeAvailableToDeduct(w, "truck_tire") >= 1) {
+        safeDeductMaterial(w, "truck_tire", 1);
+        tireUsed = 1;
+        cashCost = Math.max(120000, cashCost - 150000);
+      }
+      if (w.finance.cash < cashCost) {
+        return { ok: false, code: "insufficientCash", message: "เงินสดไม่พอสำหรับค่าซ่อมบำรุงรถบรรทุก" };
+      }
+      post(w, "equipment", -cashCost, `fleetMaint:${v.id}:${now(w)}`);
+      v.condition = 100;
+      v.tireCondition = 100;
+      v.status = "idle";
+      ft.metrics.maintenanceCostSatang = (ft.metrics.maintenanceCostSatang || 0) + cashCost;
+      event(
+        w,
+        "fleetVehicleMaintained",
+        `🔧 ซ่อมบำรุงและตรวจสภาพ "${v.nameTh}" (${v.plate}) พร้อมใช้งาน 100%${tireUsed ? " (เบิกยางรถบรรทุกเรเดียลจากคลัง 1 เส้น)" : ""}`,
+        { vehicleId: v.id, costSatang: cashCost, tireUsed },
+      );
+      return { ok: true, vehicleId: v.id, condition: v.condition, tireCondition: v.tireCondition, costSatang: cashCost, tireUsed };
+    }
+
+    function acceptFreightContract(w, quoteId, options = {}) {
+      const ft = ensureFleetTransport(w);
+      const quote = ft.openQuotes.find((q) => q.id === quoteId && q.status === "quoted");
+      if (!quote) {
+        return { ok: false, code: "quoteUnavailable", message: "ไม่พบใบเสนอราคาขนส่งหรือถูกรับงานไปแล้ว" };
+      }
+
+      // Find requested or suitable idle vehicle
+      const candidatesVeh = options.vehicleId
+        ? [ft.vehicles[options.vehicleId]].filter(Boolean)
+        : Object.values(ft.vehicles);
+      if (!candidatesVeh.length) {
+        return { ok: false, code: "noVehicles", message: "บริษัทยังไม่มีรถบรรทุกในกองรถ" };
+      }
+
+      // Check capacity & cargo compatibility first so we return specific rejection reasons
+      const busyCheck = candidatesVeh.filter((v) => v.status === "idle" && !v.activeContractId && !v.internalOrderId);
+      if (!busyCheck.length) {
+        return { ok: false, code: "vehicleBusy", message: "รถบรรทุกที่ระบุไม่ว่าง (กำลังขนส่ง เดินทางขากลับ หรือซ่อมบำรุง)" };
+      }
+
+      const compatibleVeh = busyCheck.find(
+        (v) =>
+          v.condition > 20 &&
+          v.tireCondition > 15 &&
+          v.maxWeightKg >= quote.weightKg &&
+          v.maxVolumeM3 >= quote.volumeM3 &&
+          Array.isArray(v.supportedCargoTypes) &&
+          v.supportedCargoTypes.includes(quote.cargoType),
+      );
+      if (!compatibleVeh) {
+        return {
+          ok: false,
+          code: "incompatibleOrOverweightVehicle",
+          message: `รถบรรทุกที่ว่างไม่รองรับน้ำหนัก (${quote.weightKg} กก.) ปริมาตร (${quote.volumeM3} ลบ.ม.) หรือประเภทสินค้า (${quote.cargoType}) ของงานนี้`,
+        };
+      }
+
+      // Find an employed driver (logistics/coordinator) who is NOT already assigned to another active vehicle or incompatible task
+      const busyDriverIds = new Set(
+        Object.values(ft.vehicles)
+          .filter((v) => v.assignedDriverId && v.status !== "idle")
+          .map((v) => v.assignedDriverId),
+      );
+      const driver = options.driverPersonId
+        ? w.people.find((p) => p.id === options.driverPersonId && p.employed && !busyDriverIds.has(p.id))
+        : w.people.find((p) => p.employed && p.role === "logistics" && !busyDriverIds.has(p.id)) ||
+          w.people.find((p) => p.employed && p.role === "coordinator" && !busyDriverIds.has(p.id)) ||
+          w.people.find((p) => p.employed && !busyDriverIds.has(p.id));
+      if (!driver) {
+        return { ok: false, code: "noAvailableDriver", message: "ไม่มีพนักงานขับรถที่ว่างสำหรับเที่ยววิ่งนี้ (ห้ามคนขับคนเดียวขับรถ 2 คันพร้อมกัน)" };
+      }
+
+      // Calculate round-trip distance (pickup + loaded outbound + empty backhaul) and fuel cost (Chapter 19 Sections 6 & 7)
+      const pickupKm = quote.pickupEmptyKm || 0;
+      const outboundKm = quote.outboundLoadedKm || 120;
+      const backhaulKm = quote.backhaulEmptyKm || 120;
+      const totalRoundTripKm = pickupKm + outboundKm + backhaulKm;
+      const tmsInstalled = Boolean(w.softwareBusiness?.saasProducts?.tms_fleet?.installedInternally);
+      const effectiveLitersPerKm = compatibleVeh.baseLitersPerKm * (tmsInstalled ? 0.92 : 1.0);
+      const fuelLiters = Math.round(totalRoundTripKm * effectiveLitersPerKm * 10) / 10;
+      const fuelPricePerLiterSatang = w.catalog.materials?.diesel_liter?.unitCost || 3200; // ฿32.00/liter
+      const fuelCostSatang = Math.round(fuelLiters * fuelPricePerLiterSatang);
+      const tollFeeSatang = quote.tollFeeSatang || 20000;
+      const allocatedLaborSatang = 50000; // ฿500 allocated trip labor (tracked for margin, NOT double-deducted from payroll cash!)
+      const expectedMarginBeforeOverheadSatang =
+        quote.offeredRateSatang - fuelCostSatang - tollFeeSatang - allocatedLaborSatang;
+
+      if (!options.allowLoss && expectedMarginBeforeOverheadSatang < 0) {
+        return {
+          ok: false,
+          code: "unprofitableRoute",
+          message: `ดีลขนส่งนี้ขาดทุนเมื่อคิดระยะวิ่งรถเปล่าขากลับครบวงจร (กำไรคาดหมาย ฿${(expectedMarginBeforeOverheadSatang / 100).toFixed(2)})`,
+        };
+      }
+
+      const cid = `fcontract-${++w.sequence}`;
+      quote.status = "reserved";
+      const contract = {
+        id: cid,
+        quoteId: quote.id,
+        routeId: quote.routeId,
+        nameTh: quote.nameTh,
+        clientCorpId: quote.clientCorpId,
+        clientNameTh: w.externalWorld?.corporations?.[quote.clientCorpId]?.nameTh || "ลูกค้าขนส่ง B2B",
+        cargoType: quote.cargoType,
+        cargoNameTh: quote.cargoNameTh,
+        weightKg: quote.weightKg,
+        volumeM3: quote.volumeM3,
+        cargoValueSatang: quote.cargoValueSatang,
+        vehicleId: compatibleVeh.id,
+        vehicleNameTh: compatibleVeh.nameTh,
+        vehiclePlate: compatibleVeh.plate,
+        driverPersonId: driver.id,
+        driverName: driver.name,
+        pickupEmptyKm: pickupKm,
+        outboundLoadedKm: outboundKm,
+        backhaulEmptyKm: backhaulKm,
+        totalRoundTripKm,
+        fuelLiters,
+        fuelCostSatang,
+        tollFeeSatang,
+        allocatedLaborSatang,
+        agreedRateSatang: quote.offeredRateSatang,
+        expectedMarginBeforeOverheadSatang,
+        status: "reserved", // reserved -> loading -> outbound -> delivering -> delivered -> invoiced -> paid | cancelled | failed | claim_pending
+        outboundRemainingKm: pickupKm + outboundKm,
+        returnRemainingKm: backhaulKm,
+        fuelAndTollCharged: false,
+        podVerified: false,
+        invoiced: false,
+        paid: false,
+        invoiceDueAt: null,
+        reservedAt: now(w),
+        deliveredAt: null,
+        paidAt: null,
+      };
+
+      ft.contracts[cid] = contract;
+      compatibleVeh.status = "loading";
+      compatibleVeh.assignedDriverId = driver.id;
+      compatibleVeh.assignedDriverName = driver.name;
+      compatibleVeh.activeContractId = cid;
+      compatibleVeh.returnRemainingKm = backhaulKm;
+
+      // Record customer cargo in custody (strictly separated from company inventory w.inventory!)
+      ft.cargoCustody[cid] = {
+        contractId: cid,
+        ownerClientCorpId: contract.clientCorpId,
+        cargoNameTh: contract.cargoNameTh,
+        weightKg: contract.weightKg,
+        volumeM3: contract.volumeM3,
+        cargoValueSatang: contract.cargoValueSatang,
+        status: "in_custody",
+      };
+
+      event(
+        w,
+        "freightContractReserved",
+        `🚛 รับงานขนส่งกองรถ "${contract.nameTh}" ให้แก่ ${contract.clientNameTh}: จอง ${compatibleVeh.nameTh} (${compatibleVeh.plate}) ขับโดย ${driver.name} • ระยะไป-กลับ ${totalRoundTripKm} กม. • ค่าขนส่ง ฿${(contract.agreedRateSatang / 100).toLocaleString("th-TH")}`,
+        { contractId: cid, vehicleId: compatibleVeh.id, driverId: driver.id, totalRoundTripKm, expectedMarginBeforeOverheadSatang },
+      );
+      return { ok: true, contractId: cid, contract };
+    }
+
+    function advanceFreightContract(w, contractId, options = {}) {
+      const ft = ensureFleetTransport(w);
+      const c = ft.contracts[contractId];
+      if (!c) return { ok: false, code: "unknownContract", message: "ไม่พบใบงานขนส่ง" };
+      const v = ft.vehicles[c.vehicleId];
+      if (!v) return { ok: false, code: "missingVehicle", message: "ไม่พบรถบรรทุกของใบงานนี้" };
+
+      if (c.status === "cancelled" || c.status === "failed") {
+        return { ok: false, code: "contractTerminated", message: "ใบงานขนส่งนี้ถูกยกเลิกหรือล้มเหลวแล้ว" };
+      }
+
+      // Step 1: reserved -> loading -> outbound (charge fuel & tolls once)
+      if (c.status === "reserved" || c.status === "loading") {
+        if (!c.fuelAndTollCharged) {
+          // Consume 1 diesel_liter drum from inventory if available to reduce cash fuel outlay, or pay cash fuel + toll at pump
+          let cashFuelAndToll = c.fuelCostSatang + c.tollFeeSatang;
+          if (safeAvailableToDeduct(w, "diesel_liter") >= 1) {
+            safeDeductMaterial(w, "diesel_liter", 1);
+            cashFuelAndToll = Math.max(c.tollFeeSatang, cashFuelAndToll - 3200);
+          }
+          if (w.finance.cash < cashFuelAndToll) {
+            return { ok: false, code: "insufficientCashForFuelAndToll", message: "เงินสดหมุนเวียนไม่พอจ่ายค่าน้ำมันและค่าผ่านทางก่อนออกรถ" };
+          }
+          post(w, "equipment", -cashFuelAndToll, `freightFuelToll:${c.id}`);
+          c.fuelAndTollCharged = true;
+          ft.metrics.fuelConsumedLiters = Math.round(((ft.metrics.fuelConsumedLiters || 0) + c.fuelLiters) * 10) / 10;
+          ft.metrics.tollAndFuelCostSatang = (ft.metrics.tollAndFuelCostSatang || 0) + cashFuelAndToll;
+          ft.metrics.allocatedLaborSatang = (ft.metrics.allocatedLaborSatang || 0) + c.allocatedLaborSatang;
+        }
+        c.status = "outbound";
+        v.status = "outbound";
+        if (!options.completeAllSteps) return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
+      }
+
+      // Check for breakdown risk if vehicle condition is critically low or forced breakdown test
+      if (options.triggerBreakdown || v.condition <= 15) {
+        v.status = "broken";
+        c.status = "claim_pending";
+        const claimDeductible = Math.min(w.finance.cash, 45000);
+        if (claimDeductible > 0) {
+          post(w, "equipment", -claimDeductible, `freightBreakdownClaim:${c.id}`);
+          ft.metrics.claimsPaidSatang = (ft.metrics.claimsPaidSatang || 0) + claimDeductible;
+        }
+        ft.metrics.failedTrips = (ft.metrics.failedTrips || 0) + 1;
+        if (ft.cargoCustody[c.id]) ft.cargoCustody[c.id].status = "delayed_claim";
+        event(
+          w,
+          "freightVehicleBreakdown",
+          `⚠️ รถบรรทุก "${v.nameTh}" (${v.plate}) เครื่องยนต์ขัดข้องระหว่างขนส่งใบงาน ${c.id}! ต้องส่งทีมช่างซ่อมและจ่ายค่าเสียหายส่วนแรก ฿${(claimDeductible / 100).toLocaleString("th-TH")}`,
+          { contractId: c.id, vehicleId: v.id, claimDeductible },
+        );
+        return { ok: false, code: "vehicleBreakdown", status: c.status, vehicleStatus: v.status };
+      }
+
+      // Step 2: outbound -> delivering -> delivered
+      if (c.status === "outbound" || c.status === "delivering") {
+        c.outboundRemainingKm = 0;
+        c.status = "delivered";
+        c.deliveredAt = now(w);
+        c.podVerified = true;
+        if (ft.cargoCustody[c.id]) {
+          ft.cargoCustody[c.id].status = "delivered_to_recipient";
+          delete ft.cargoCustody[c.id];
+        }
+        // Vehicle is NOT immediately idle on delivery! It must drive back empty (backhaulEmptyKm)
+        v.status = "returning";
+        v.returnRemainingKm = c.backhaulEmptyKm;
+        v.odometerKm = (v.odometerKm || 0) + c.pickupEmptyKm + c.outboundLoadedKm;
+        v.condition = clamp(Math.round((v.condition - 6) * 10) / 10, 10, 100);
+        v.tireCondition = clamp(Math.round((v.tireCondition - 5) * 10) / 10, 10, 100);
+        if (!options.completeAllSteps) return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
+      }
+
+      // Step 3: delivered -> invoiced (issue bill once; idempotent!)
+      if (c.status === "delivered" && !c.invoiced) {
+        c.invoiced = true;
+        c.status = "invoiced";
+        c.invoiceDueAt = now(w) + (options.creditDays ? options.creditDays * 1440 : 0);
+        ft.metrics.receivablesSatang = (ft.metrics.receivablesSatang || 0) + c.agreedRateSatang;
+        if (!options.completeAllSteps && options.creditDays) {
+          return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
+        }
+      }
+
+      // Step 4: invoiced -> paid (collect payment once; idempotent!)
+      if (c.status === "invoiced" && !c.paid) {
+        if (!options.deferPayment) {
+          post(w, "sales", c.agreedRateSatang, `freightInvoicePaid:${c.id}`);
+          c.paid = true;
+          c.paidAt = now(w);
+          c.status = "paid";
+          ft.metrics.receivablesSatang = Math.max(0, (ft.metrics.receivablesSatang || 0) - c.agreedRateSatang);
+          ft.metrics.freightRevenueSatang = (ft.metrics.freightRevenueSatang || 0) + c.agreedRateSatang;
+          ft.metrics.completedTrips = (ft.metrics.completedTrips || 0) + 1;
+          ft.metrics.totalDistanceKm = (ft.metrics.totalDistanceKm || 0) + c.totalRoundTripKm;
+          ft.metrics.emptyBackhaulKm = (ft.metrics.emptyBackhaulKm || 0) + c.backhaulEmptyKm;
+        }
+      }
+
+      // Step 5: Vehicle completes empty backhaul return (`returning -> idle`) ONLY when finishReturn is true or completeAllSteps is true
+      if (v.status === "returning" && (options.finishReturn || options.completeAllSteps)) {
+        v.odometerKm = (v.odometerKm || 0) + (v.returnRemainingKm || 0);
+        v.returnRemainingKm = 0;
+        v.status = "idle";
+        v.assignedDriverId = null;
+        v.assignedDriverName = null;
+        v.activeContractId = null;
+        v.tripsCompleted = (v.tripsCompleted || 0) + 1;
+        ft.history.unshift({
+          id: c.id,
+          day: day(w),
+          nameTh: c.nameTh,
+          clientNameTh: c.clientNameTh,
+          vehicleNameTh: c.vehicleNameTh,
+          driverName: c.driverName,
+          totalRoundTripKm: c.totalRoundTripKm,
+          fuelLiters: c.fuelLiters,
+          revenueSatang: c.agreedRateSatang,
+          marginSatang: c.expectedMarginBeforeOverheadSatang,
+        });
+        if (ft.history.length > 30) ft.history.pop();
+        event(
+          w,
+          "freightContractCompleted",
+          `✅ ส่งมอบงานขนส่ง "${c.nameTh}" สำเร็จและรถกลับถึงลานจอด: รับค่าขนส่ง +฿${(c.agreedRateSatang / 100).toLocaleString("th-TH")} (หักค่าน้ำมัน ${c.fuelLiters} ลิตร ฿${(c.fuelCostSatang / 100).toLocaleString("th-TH")} + ค่าผ่านทาง ฿${(c.tollFeeSatang / 100).toLocaleString("th-TH")} • ส่วนเกินก่อนโสหุ้ย +฿${(c.expectedMarginBeforeOverheadSatang / 100).toLocaleString("th-TH")})`,
+          { contractId: c.id, revenueSatang: c.agreedRateSatang, marginSatang: c.expectedMarginBeforeOverheadSatang },
+        );
+      }
+
+      return { ok: true, contractId: c.id, status: c.status, paid: c.paid, vehicleStatus: v.status };
+    }
+
+    function cancelFreightContract(w, contractId) {
+      const ft = ensureFleetTransport(w);
+      const c = ft.contracts[contractId];
+      if (!c) return { ok: false, code: "unknownContract", message: "ไม่พบใบงานขนส่ง" };
+      if (["delivered", "invoiced", "paid"].includes(c.status)) {
+        return { ok: false, code: "alreadyDelivered", message: "งานขนส่งส่งมอบแล้ว ไม่สามารถยกเลิกได้" };
+      }
+      const v = ft.vehicles[c.vehicleId];
+      if (v && v.activeContractId === c.id) {
+        v.status = "idle";
+        v.returnRemainingKm = 0;
+        v.assignedDriverId = null;
+        v.assignedDriverName = null;
+        v.activeContractId = null;
+      }
+      if (ft.cargoCustody[c.id]) delete ft.cargoCustody[c.id];
+      c.status = "cancelled";
+      ft.metrics.cancelledTrips = (ft.metrics.cancelledTrips || 0) + 1;
+      return { ok: true, contractId: c.id, status: "cancelled" };
+    }
+
+    function matchBackhaulCargo(w, contractId, options = {}) {
+      const ft = ensureFleetTransport(w);
+      const c = ft.contracts[contractId];
+      if (!c) return { ok: false, code: "unknownContract", message: "ไม่พบใบงานขนส่ง" };
+      const v = ft.vehicles[c.vehicleId];
+      if (!v || v.status !== "returning") {
+        return { ok: false, code: "vehicleNotReturning", message: "รถบรรทุกไม่ได้อยู่ในสถานะตีรถกลับ (Returning) จึงไม่สามารถรับงานขากลับได้" };
+      }
+      if (c.backhaulMatched) {
+        return { ok: false, code: "alreadyMatched", message: "จับคู่งานบรรทุกขากลับ (Backhaul) ไปแล้ว" };
+      }
+      const backhaulRevenue = options.backhaulRevenueSatang || Math.round(c.agreedRateSatang * 0.55);
+      const extraFuelCost = Math.round((c.backhaulEmptyKm || 80) * 180);
+      if (w.finance.cash >= extraFuelCost && extraFuelCost > 0) {
+        post(w, "equipment", -extraFuelCost, `backhaulFuel:${c.id}`);
+        ft.metrics.tollAndFuelCostSatang = (ft.metrics.tollAndFuelCostSatang || 0) + extraFuelCost;
+      }
+      post(w, "sales", backhaulRevenue, `backhaulRevenue:${c.id}`);
+      c.backhaulMatched = true;
+      c.backhaulRevenueSatang = backhaulRevenue;
+      const savedEmptyKm = c.backhaulEmptyKm || 0;
+      ft.metrics.emptyBackhaulKm = Math.max(0, (ft.metrics.emptyBackhaulKm || 0) - savedEmptyKm);
+      ft.metrics.freightRevenueSatang = (ft.metrics.freightRevenueSatang || 0) + backhaulRevenue;
+      event(
+        w,
+        "backhaulMatched",
+        `🔄 จับคู่งานขนส่งขากลับ (Backhaul Matching) สำเร็จสำหรับ "${v.nameTh}": เปลี่ยนระยะตีรถเปล่า ${savedEmptyKm} กม. เป็นรายได้ขากลับ +฿${(backhaulRevenue / 100).toLocaleString("th-TH")}`,
+        { contractId: c.id, vehicleId: v.id, savedEmptyKm, backhaulRevenue },
+      );
+      return { ok: true, contractId: c.id, vehicleId: v.id, savedEmptyKm, backhaulRevenue };
+    }
+
+    // === CHAPTER 20: Software & SaaS App Business Engine ===
+    function ensureSoftwareBusiness(w) {
+      if (!w.softwareBusiness || typeof w.softwareBusiness !== "object") {
+        w.softwareBusiness = freshSoftwareBusiness();
+      }
+      if (!w.softwareBusiness.workstations) w.softwareBusiness.workstations = freshSoftwareBusiness().workstations;
+      if (!w.softwareBusiness.projects) w.softwareBusiness.projects = {};
+      if (!w.softwareBusiness.saasProducts) w.softwareBusiness.saasProducts = freshSoftwareBusiness().saasProducts;
+      if (!w.softwareBusiness.metrics) w.softwareBusiness.metrics = freshSoftwareBusiness().metrics;
+      if (!Array.isArray(w.softwareBusiness.history)) w.softwareBusiness.history = [];
+      return w.softwareBusiness;
+    }
+
+    function startSoftwareProject(w, appId = "pos_retail", clientCorpId = "cp_health", options = {}) {
+      const sb = ensureSoftwareBusiness(w);
+      const spec = D.SOFTWARE_APPS?.[appId];
+      if (!spec) return { ok: false, code: "unknownApp", message: "ไม่พบประเภทแอปพลิเคชันที่ระบุ" };
+
+      // Check developer & workstation availability (no double-booking the same person or workstation!)
+      const busyDevIds = new Set(
+        Object.values(sb.projects)
+          .filter((p) => p.assignedDeveloperId && !["closed", "cancelled", "deployed", "supporting"].includes(p.status))
+          .map((p) => p.assignedDeveloperId),
+      );
+      if (busyDevIds.size >= (sb.workstations.totalStations || 3)) {
+        return { ok: false, code: "workstationCapacityFull", message: "โต๊ะคอมพิวเตอร์นักพัฒนา (dev_workstation) ถูกจองเต็มทุกเครื่องแล้ว" };
+      }
+      const dev = options.developerPersonId
+        ? w.people.find((p) => p.id === options.developerPersonId && p.employed && !busyDevIds.has(p.id))
+        : w.people.find((p) => p.employed && p.role === "engineer" && !busyDevIds.has(p.id)) ||
+          w.people.find((p) => p.employed && p.role === "admin" && !busyDevIds.has(p.id)) ||
+          w.people.find((p) => p.employed && !busyDevIds.has(p.id));
+      if (!dev) {
+        return { ok: false, code: "noAvailableDeveloper", message: "ไม่มีวิศวกรหรือนักพัฒนาที่ว่างสำหรับรับโครงการใหม่ (ห้ามขายชั่วโมงคนเดียวซ้ำหลายโครงการ)" };
+      }
+
+      const pid = options.projectId || `swproj-${++w.sequence}`;
+      const price = options.contractPriceSatang || spec.contractPriceSatang || 12000000;
+      const depositAmt = Math.round(price * 0.3);
+      const corp = w.externalWorld?.corporations?.[clientCorpId];
+
+      // Collect 30% deposit into cash, but record it as unearnedDepositSatang (NOT recognized profit until milestones are accepted!)
+      post(w, "sales", depositAmt, `swDeposit:${pid}`);
+      sb.metrics.totalUnearnedDepositSatang = (sb.metrics.totalUnearnedDepositSatang || 0) + depositAmt;
+
+      const proj = {
+        id: pid,
+        appId: spec.id,
+        titleTh: `โครงการพัฒนา ${spec.nameTh} ให้แก่ ${corp ? corp.nameTh : "ลูกค้าองค์กร B2B"}`,
+        clientCorpId,
+        clientNameTh: corp ? corp.nameTh : "ลูกค้าองค์กร B2B",
+        status: "contracted",
+        targetVersion: options.targetVersion || "1.0.0",
+        deliveredVersion: null,
+        contractPriceSatang: price,
+        depositPct: 0.3,
+        uatMilestonePct: 0.4,
+        deployMilestonePct: 0.3,
+        depositCollectedSatang: depositAmt,
+        unearnedDepositSatang: depositAmt,
+        recognizedRevenueSatang: 0,
+        billedReceivableSatang: 0,
+        cashCollectedSatang: depositAmt,
+        allocatedLaborSatang: 0,
+        computeCostSatang: 0,
+        externalQaCostSatang: 0,
+        reworkCostSatang: 0,
+        progressMinutes: 0,
+        requiredDevMinutes: spec.devWorkMinutes || 120,
+        qaProgressMinutes: 0,
+        requiredQaMinutes: spec.qaWorkMinutes || 45,
+        defectsFound: 0,
+        defectsFixed: 0,
+        qaCertificateIssued: false,
+        assignedDeveloperId: dev.id,
+        assignedDeveloperName: dev.name,
+        createdAt: now(w),
+        completedAt: null,
+        lastReasonTh: `ลงนามสัญญาและรับเงินมัดจำ 30% (฿${(depositAmt / 100).toLocaleString("th-TH")}) จองเครื่อง dev_workstation ให้ ${dev.name}`,
+      };
+      sb.projects[pid] = proj;
+      if (!sb.workstations.occupiedByPersonIds.includes(dev.id)) {
+        sb.workstations.occupiedByPersonIds.push(dev.id);
+      }
+      event(
+        w,
+        "softwareProjectContracted",
+        `💻 เปิดโครงการซอฟต์แวร์รับจ้าง "${proj.titleTh}" มูลค่าสัญญา ฿${(price / 100).toLocaleString("th-TH")} (รับมัดจำ 30% ฿${(depositAmt / 100).toLocaleString("th-TH")} บันทึกเป็นเงินรับล่วงหน้ารอส่งมอบงาน)`,
+        { projectId: pid, appId: spec.id, contractPriceSatang: price, depositAmt },
+      );
+      return { ok: true, projectId: pid, project: proj };
+    }
+
+    function advanceSoftwareProject(w, projectId, options = {}) {
+      const sb = ensureSoftwareBusiness(w);
+      const proj = sb.projects[projectId];
+      if (!proj) return { ok: false, code: "unknownProject", message: "ไม่พบโครงการซอฟต์แวร์ที่ระบุ" };
+
+      // Hard Rule (Chapter 20 Section 10): Blocked projects NEVER advance progress for free!
+      if (proj.status === "blocked") {
+        if (!options.unblock) {
+          return { ok: false, code: "projectBlocked", message: "โครงการติดสถานะ Blocked ไม่สามารถเดินความคืบหน้าฟรีได้" };
+        }
+        proj.status = "contracted";
+      }
+      if (proj.status === "cancelled" || proj.status === "closed") {
+        return { ok: false, code: "projectEnded", message: "โครงการนี้ปิดหรือยกเลิกไปแล้ว" };
+      }
+
+      const spec = D.SOFTWARE_APPS?.[proj.appId] || D.SOFTWARE_APPS.pos_retail;
+
+      // If in discovery, contract it first
+      if (proj.status === "discovery") {
+        const depositAmt = Math.round(proj.contractPriceSatang * 0.3);
+        post(w, "sales", depositAmt, `swDeposit:${proj.id}`);
+        proj.depositCollectedSatang = depositAmt;
+        proj.unearnedDepositSatang = depositAmt;
+        proj.cashCollectedSatang = depositAmt;
+        sb.metrics.totalUnearnedDepositSatang = (sb.metrics.totalUnearnedDepositSatang || 0) + depositAmt;
+        proj.status = "contracted";
+        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+      }
+
+      // Step: contracted -> designed -> implementing -> testing
+      if (proj.status === "contracted" || proj.status === "designed" || proj.status === "implementing") {
+        const cloudFee = spec.computeCostSatang || 500000; // ฿5,000 cloud compute & build environment
+        if (proj.computeCostSatang === 0 && w.finance.cash >= cloudFee) {
+          post(w, "equipment", -cloudFee, `swCompute:${proj.id}`);
+          proj.computeCostSatang = cloudFee;
+          sb.metrics.totalComputeAndServerCostSatang = (sb.metrics.totalComputeAndServerCostSatang || 0) + cloudFee;
+        }
+        proj.status = "implementing";
+        proj.progressMinutes = Math.min(proj.requiredDevMinutes, (proj.progressMinutes || 0) + (options.minutes || proj.requiredDevMinutes));
+        proj.allocatedLaborSatang = 6000000; // ฿60,000 allocated dev labor (for project P&L, not double-deducted from payroll)
+        if (!options.completeAllSteps && proj.progressMinutes < proj.requiredDevMinutes) {
+          return { ok: true, projectId: proj.id, status: proj.status, progressMinutes: proj.progressMinutes };
+        }
+        proj.status = "testing";
+        if (options.injectDefects) {
+          proj.defectsFound = Number(options.injectDefects) || 2;
+          proj.defectsFixed = 0;
+        }
+        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+      }
+
+      // Step: testing (QA & Defect resolution)
+      if (proj.status === "testing") {
+        if (proj.externalQaCostSatang === 0) {
+          const qaCost = 1000000; // ฿10,000 QA test lab / device farm cost (matches Chapter 20 Section 8)
+          if (w.finance.cash >= qaCost) {
+            post(w, "equipment", -qaCost, `swQaTest:${proj.id}`);
+            proj.externalQaCostSatang = qaCost;
+            sb.metrics.totalComputeAndServerCostSatang = (sb.metrics.totalComputeAndServerCostSatang || 0) + qaCost;
+          }
+        }
+        if (proj.defectsFound > proj.defectsFixed) {
+          if (!options.fixDefects && !options.completeAllSteps) {
+            return {
+              ok: false,
+              code: "unresolvedDefects",
+              message: `พบบั๊กค้างในระบบ ${proj.defectsFound - proj.defectsFixed} รายการ ยังไม่สามารถออกใบรับรอง QA หรือส่งมอบให้ลูกค้ารับมอบได้`,
+            };
+          }
+          const openBugs = proj.defectsFound - proj.defectsFixed;
+          proj.defectsFixed = proj.defectsFound;
+          proj.reworkCostSatang = (proj.reworkCostSatang || 0) + openBugs * 1000000; // ฿10,000 allocated rework per bug
+          sb.metrics.totalDefectsResolved = (sb.metrics.totalDefectsResolved || 0) + openBugs;
+        }
+        proj.qaProgressMinutes = proj.requiredQaMinutes;
+        proj.qaCertificateIssued = true;
+        proj.deliveredVersion = options.deliveredVersion || proj.targetVersion;
+        proj.status = "customer_acceptance";
+        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+      }
+
+      // Step: customer_acceptance (UAT 40% milestone — requires qaCertificateIssued && version match!)
+      if (proj.status === "customer_acceptance") {
+        if (!proj.qaCertificateIssued || proj.defectsFound > proj.defectsFixed) {
+          return { ok: false, code: "qaNotPassed", message: "ยังไม่ผ่านการทดสอบ QA ไม่สามารถรับมอบงานได้" };
+        }
+        if (options.deliveredVersion && options.deliveredVersion !== proj.targetVersion) {
+          return { ok: false, code: "versionMismatch", message: "เวอร์ชันที่ส่งมอบไม่ตรงตามสัญญา ลูกค้าปฏิเสธการรับมอบ" };
+        }
+        const uatAmount = Math.round(proj.contractPriceSatang * proj.uatMilestonePct); // 40%
+        post(w, "sales", uatAmount, `swUatMilestone:${proj.id}`);
+        proj.cashCollectedSatang += uatAmount;
+        const newlyRecognized = proj.unearnedDepositSatang + uatAmount;
+        sb.metrics.totalUnearnedDepositSatang = Math.max(0, (sb.metrics.totalUnearnedDepositSatang || 0) - proj.unearnedDepositSatang);
+        proj.unearnedDepositSatang = 0;
+        proj.recognizedRevenueSatang += newlyRecognized;
+        proj.status = "deployed";
+        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+      }
+
+      // Step: deployed -> supporting -> closed (final 30% milestone)
+      if (proj.status === "deployed") {
+        const finalAmount = proj.contractPriceSatang - proj.cashCollectedSatang;
+        if (finalAmount > 0) {
+          post(w, "sales", finalAmount, `swDeployMilestone:${proj.id}`);
+          proj.cashCollectedSatang += finalAmount;
+          proj.recognizedRevenueSatang += finalAmount;
+        }
+        proj.status = "supporting";
+        proj.completedAt = now(w);
+        sb.metrics.projectsCompleted = (sb.metrics.projectsCompleted || 0) + 1;
+        sb.metrics.totalContractRevenueSatang = (sb.metrics.totalContractRevenueSatang || 0) + proj.recognizedRevenueSatang;
+        if (proj.assignedDeveloperId) {
+          sb.workstations.occupiedByPersonIds = sb.workstations.occupiedByPersonIds.filter((id) => id !== proj.assignedDeveloperId);
+        }
+        if (sb.saasProducts[proj.appId]) {
+          sb.saasProducts[proj.appId].status = "live";
+          sb.saasProducts[proj.appId].version = proj.targetVersion;
+          sb.saasProducts[proj.appId].mvpProgressMinutes = sb.saasProducts[proj.appId].mvpRequiredMinutes;
+        }
+        const projectSurplusSatang =
+          proj.recognizedRevenueSatang -
+          proj.allocatedLaborSatang -
+          proj.computeCostSatang -
+          proj.externalQaCostSatang -
+          proj.reworkCostSatang;
+        proj.projectSurplusSatang = projectSurplusSatang;
+        sb.history.unshift({
+          id: proj.id,
+          day: day(w),
+          titleTh: proj.titleTh,
+          clientNameTh: proj.clientNameTh,
+          revenueSatang: proj.recognizedRevenueSatang,
+          surplusSatang: projectSurplusSatang,
+        });
+        if (sb.history.length > 30) sb.history.pop();
+        event(
+          w,
+          "softwareProjectDeployed",
+          `🚀 ส่งมอบและเปิดใช้งานจริง "${proj.titleTh}" (v${proj.targetVersion}) สำเร็จ! รับเงินครบ ฿${(proj.recognizedRevenueSatang / 100).toLocaleString("th-TH")} (ส่วนเกินโครงการหลังหักแรงงานจัดสรร/Cloud/QA/งานแก้ = ฿${(projectSurplusSatang / 100).toLocaleString("th-TH")})`,
+          { projectId: proj.id, revenueSatang: proj.recognizedRevenueSatang, surplusSatang: projectSurplusSatang },
+        );
+      }
+
+      return {
+        ok: true,
+        projectId: proj.id,
+        status: proj.status,
+        recognizedRevenueSatang: proj.recognizedRevenueSatang,
+        unearnedDepositSatang: proj.unearnedDepositSatang,
+        projectSurplusSatang:
+          proj.recognizedRevenueSatang -
+          proj.allocatedLaborSatang -
+          proj.computeCostSatang -
+          proj.externalQaCostSatang -
+          proj.reworkCostSatang,
+      };
+    }
+
+    function updateSaasSubscription(w, appId, options = {}) {
+      const sb = ensureSoftwareBusiness(w);
+      const app = sb.saasProducts[appId];
+      if (!app) return { ok: false, code: "unknownApp", message: "ไม่พบผลิตภัณฑ์แอป SaaS ที่ระบุ" };
+
+      if (options.launchMvp) {
+        app.status = "live";
+        app.version = "1.0.0";
+        app.mvpProgressMinutes = app.mvpRequiredMinutes;
+      }
+      if (app.status !== "live") {
+        return { ok: false, code: "appNotLive", message: "แอปยังไม่ได้พัฒนาและเปิดให้บริการจริง (status !== live)" };
+      }
+
+      if (typeof options.addLeads === "number" && options.addLeads > 0) {
+        app.leadCount = (app.leadCount || 0) + Math.floor(options.addLeads);
+      }
+      if (typeof options.convertUsers === "number" && options.convertUsers > 0) {
+        const requested = Math.floor(options.convertUsers);
+        // Conversion cannot exceed available leads (Chapter 20 Section 7)
+        const converted = Math.min(app.leadCount || 0, requested);
+        app.leadCount -= converted;
+        app.activeSubscribers = (app.activeSubscribers || 0) + converted;
+        app.totalConvertedUsers = (app.totalConvertedUsers || 0) + converted;
+      }
+      if (typeof options.churnUsers === "number" && options.churnUsers > 0) {
+        // Churn cannot exceed active subscribers, and churned users stop generating future bills immediately!
+        const churned = Math.min(app.activeSubscribers || 0, Math.floor(options.churnUsers));
+        app.activeSubscribers -= churned;
+        app.totalChurnedUsers = (app.totalChurnedUsers || 0) + churned;
+      }
+      if (typeof options.installInternally === "boolean") {
+        if (options.installInternally && !app.installedInternally) {
+          const internalSetupCost = 150000; // ฿1,500 internal server setup cost (never generates external sales revenue!)
+          if (w.finance.cash >= internalSetupCost) {
+            post(w, "equipment", -internalSetupCost, `saasInternalInstall:${appId}`);
+            app.totalServerCostSatang = (app.totalServerCostSatang || 0) + internalSetupCost;
+            sb.metrics.totalComputeAndServerCostSatang = (sb.metrics.totalComputeAndServerCostSatang || 0) + internalSetupCost;
+          }
+          app.installedInternally = true;
+        } else if (!options.installInternally) {
+          app.installedInternally = false;
+        }
+      }
+
+      if (options.runBillingCycle) {
+        // Hard Rule (Chapter 20 Section 10): If activeSubscribers === 0, zero revenue is generated!
+        if ((app.activeSubscribers || 0) <= 0) {
+          app.lastBillingSummaryTh = "รอบบิลนี้มีผู้ใช้งาน 0 บัญชี — ไม่เกิดรายได้ค่าสมาชิก";
+          return {
+            ok: true,
+            appId,
+            activeSubscribers: 0,
+            billedRevenueSatang: 0,
+            serverAndSupportCostSatang: 0,
+            netCycleSurplusSatang: 0,
+          };
+        }
+        // Check server capacity overload
+        const serverCap = sb.workstations.serverCapacityUsers || 60;
+        const overloadPenalty = app.activeSubscribers > serverCap ? 0.85 : 1.0;
+        const grossBill = Math.round(app.activeSubscribers * app.monthlyFeePerUserSatang * overloadPenalty);
+        const serverCost = Math.min(w.finance.cash, Math.max(80000, Math.round(app.activeSubscribers * 12000)));
+        const allocatedSupportLabor = Math.round(app.activeSubscribers * 32000);
+
+        if (serverCost > 0) {
+          post(w, "equipment", -serverCost, `saasServer:${appId}:${now(w)}`);
+          app.totalServerCostSatang = (app.totalServerCostSatang || 0) + serverCost;
+          sb.metrics.totalComputeAndServerCostSatang = (sb.metrics.totalComputeAndServerCostSatang || 0) + serverCost;
+        }
+        post(w, "sales", grossBill, `saasBill:${appId}:${++w.sequence}`);
+        app.totalRevenueSatang = (app.totalRevenueSatang || 0) + grossBill;
+        sb.metrics.totalSaasRevenueSatang = (sb.metrics.totalSaasRevenueSatang || 0) + grossBill;
+        app.nextBillingMinute = now(w) + app.billingCycleMinutes;
+        const netSurplus = grossBill - serverCost - allocatedSupportLabor;
+        app.lastBillingSummaryTh = `เรียกเก็บค่าสมาชิก ${app.activeSubscribers} บัญชี: บิลรับ +฿${(grossBill / 100).toLocaleString("th-TH")} (หักค่าเซิร์ฟเวอร์ ฿${(serverCost / 100).toLocaleString("th-TH")} และแรงงานจัดสรร ฿${(allocatedSupportLabor / 100).toLocaleString("th-TH")} เหลือส่วนเกิน ฿${(netSurplus / 100).toLocaleString("th-TH")})`;
+
+        event(
+          w,
+          "saasBillingCollected",
+          `☁️ ครบรอบบิลแอป SaaS "${app.nameTh}": ผู้ใช้จริง ${app.activeSubscribers} บัญชี รับเงิน +฿${(grossBill / 100).toLocaleString("th-TH")}`,
+          { appId, activeSubscribers: app.activeSubscribers, grossBill, serverCost, netSurplus },
+        );
+        return {
+          ok: true,
+          appId,
+          activeSubscribers: app.activeSubscribers,
+          billedRevenueSatang: grossBill,
+          serverAndSupportCostSatang: serverCost + allocatedSupportLabor,
+          netCycleSurplusSatang: netSurplus,
+        };
+      }
+
+      return {
+        ok: true,
+        appId,
+        status: app.status,
+        leadCount: app.leadCount,
+        activeSubscribers: app.activeSubscribers,
+        installedInternally: app.installedInternally,
+      };
+    }
+
+    // === CHAPTER 21 & 24: 4 Factory Sector Process Models & 3 Industrial B2B Service Models ===
+    function ensureSectorProcesses(w) {
+      if (!w.sectorProcesses || typeof w.sectorProcesses !== "object") {
+        w.sectorProcesses = freshSectorProcesses();
+      }
+      if (!w.sectorProcesses.foodBakery) w.sectorProcesses.foodBakery = freshSectorProcesses().foodBakery;
+      if (!w.sectorProcesses.electronicsRma) w.sectorProcesses.electronicsRma = freshSectorProcesses().electronicsRma;
+      if (!w.sectorProcesses.automotiveOem) w.sectorProcesses.automotiveOem = freshSectorProcesses().automotiveOem;
+      if (!w.sectorProcesses.biomedSterile) w.sectorProcesses.biomedSterile = freshSectorProcesses().biomedSterile;
+      w.sectorProcesses.foodBakery.coldChainActive = Boolean(
+        w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active,
+      );
+      return w.sectorProcesses;
+    }
+
+    // Model 1: Food & Bakery Perishable Shelf-Life & Spoilage Engine
+    function expireFoodBatch(w, options = {}) {
+      const sp = ensureSectorProcesses(w);
+      const fb = sp.foodBakery;
+      // Find a ready food unit in inventory.finished, or decay activeBatches
+      const readyFoodUnits = Object.values(w.units).filter(
+        (u) => u.stage === "ready" && w.catalog.products[u.productId]?.industry === "food",
+      );
+      const targetUnit = options.unitId ? w.units[options.unitId] : readyFoodUnits[0];
+      if (!targetUnit || targetUnit.stage !== "ready") {
+        return { ok: false, code: "noReadyFoodUnit", message: "ไม่มีสินค้าอาหารสำเร็จรูปในคลังที่พร้อมตัดหมดอายุ" };
+      }
+      const pId = targetUnit.productId;
+      const prodSpec = w.catalog.products[pId];
+      // Strictly preserve product conservation:
+      // finished[p]--, completed[p]--, scrapped[p]++, delete w.units[u.id]
+      // Then completed[p] === shipped[p] + finished[p] AND started[p] === shipped[p] + scrapped[p] + inProcess[p] holds 100%!
+      w.inventory.finished[pId] = Math.max(0, (w.inventory.finished[pId] || 0) - 1);
+      w.production.completed[pId] = Math.max(0, (w.production.completed[pId] || 0) - 1);
+      w.production.scrapped[pId] = (w.production.scrapped[pId] || 0) + 1;
+      w.metrics.unitsScrapped = (w.metrics.unitsScrapped || 0) + 1;
+      delete w.units[targetUnit.id];
+      delete fb.activeBatches[targetUnit.id];
+
+      // Convert spoiled food organic waste into +1 organic_compost feedstock!
+      grantUnpurchasedMaterial(w, "organic_compost", 1);
+      fb.spoiledUnitsCount = (fb.spoiledUnitsCount || 0) + 1;
+      fb.compostRecoveredUnits = (fb.compostRecoveredUnits || 0) + 1;
+      fb.lastSpoilageEventTh = `สินค้า "${prodSpec?.nameTh || pId}" หมดอายุ (Shelf-Life Expired) 1 ล็อต ➔ คัดทิ้งเป็นของเสียและแปรรูปเป็นปุ๋ยหมักชีวภาพ +1 ถุง`;
+
+      event(
+        w,
+        "foodBatchExpired",
+        `🥖❄️ ล็อตอาหาร "${prodSpec?.nameTh || pId}" (${targetUnit.id}) หมดอายุเกิน Shelf-Life ก่อนจัดส่ง! ตัดออกจากคลังสินค้าพร้อมส่งและรีไซเคิลเป็นปุ๋ยหมักชีวภาพ +1 ถุง`,
+        { unitId: targetUnit.id, productId: pId, spoiledUnitsCount: fb.spoiledUnitsCount },
+      );
+      return {
+        ok: true,
+        unitId: targetUnit.id,
+        productId: pId,
+        spoiledUnitsCount: fb.spoiledUnitsCount,
+        compostRecoveredUnits: fb.compostRecoveredUnits,
+      };
+    }
+
+    // Model 2: Electronics & Semiconductor SMT / Burn-in / Post-Sale RMA Engine
+    function triggerRmaClaim(w, options = {}) {
+      const sp = ensureSectorProcesses(w);
+      const er = sp.electronicsRma;
+      const productId = options.productId || "controller";
+      const prodSpec = w.catalog.products[productId] || w.catalog.products.hub || Object.values(w.catalog.products)[0];
+      const claimId = options.claimId || `rma-${++w.sequence}`;
+      const defectiveQty = Math.max(1, Math.min(5, Math.floor(Number(options.defectiveQty) || 1)));
+      const claim = {
+        id: claimId,
+        productId: prodSpec.id,
+        productNameTh: prodSpec.nameTh,
+        orderId: options.orderId || "ord-warranty",
+        defectiveQty,
+        reasonTh: options.reasonTh || "ลูกค้าแจ้งอาการบอร์ดควบคุมเกิดความร้อนสะสมระหว่างใช้งานจริง (Field Burn-In Drift)",
+        firmwareRev: er.firmwareRevision || "Rev.1.2",
+        status: "open", // open | repaired | refunded
+        createdAt: now(w),
+        resolvedAt: null,
+      };
+      er.rmaClaims[claimId] = claim;
+      er.totalRmaClaims = (er.totalRmaClaims || 0) + 1;
+      er.lastRmaSummaryTh = `เปิดใบเคลม RMA ${claimId} (${prodSpec.nameTh} ×${defectiveQty} ชิ้น)`;
+      event(
+        w,
+        "electronicsRmaOpened",
+        `🔬⚡ ลูกค้าเปิดใบเคลมรับประกัน (RMA ${claimId}) สำหรับ "${prodSpec.nameTh}" ×${defectiveQty} ชิ้น (${claim.reasonTh})`,
+        { claimId, productId: prodSpec.id, defectiveQty },
+      );
+      return { ok: true, claimId, claim };
+    }
+
+    function resolveRmaClaim(w, claimId, options = {}) {
+      const sp = ensureSectorProcesses(w);
+      const er = sp.electronicsRma;
+      const claim = er.rmaClaims[claimId];
+      if (!claim) return { ok: false, code: "unknownRmaClaim", message: "ไม่พบใบเคลม RMA ที่ระบุ" };
+      if (claim.status !== "open") return { ok: false, code: "alreadyResolved", message: "ใบเคลม RMA นี้ดำเนินการเสร็จสิ้นแล้ว" };
+
+      // Check if we can repair using 1 PCB + technician/inspector or pay warranty compensation
+      const mode = options.mode || (safeAvailableToDeduct(w, "pcb") >= 1 ? "rework_board" : "refund_compensation");
+      if (mode === "rework_board" && safeAvailableToDeduct(w, "pcb") >= 1) {
+        safeDeductMaterial(w, "pcb", 1);
+        claim.status = "repaired";
+        claim.resolvedAt = now(w);
+        claim.resolutionMode = "rework_board";
+        er.resolvedRmaCount = (er.resolvedRmaCount || 0) + 1;
+        er.firmwareRevision = `Rev.1.${3 + er.resolvedRmaCount}`;
+        w.reputation = clamp(w.reputation + 1, 0, 100);
+        er.lastRmaSummaryTh = `ซ่อมเปลี่ยนบอร์ด PCB และอัปเดตเฟิร์มแวร์ ${er.firmwareRevision} ให้ใบเคลม ${claim.id} สำเร็จ`;
+        event(
+          w,
+          "electronicsRmaResolved",
+          `🔧✅ ซ่อมบำรุงบอร์ด RMA (${claim.id}) ของ "${claim.productNameTh}" สำเร็จ (เบิกแผ่นวงจร PCB ×1 ชิ้น + อัปแพตช์เฟิร์มแวร์ ${er.firmwareRevision} • รักษาชื่อเสียงบริษัท +1)`,
+          { claimId: claim.id, resolutionMode: "rework_board", firmwareRevision: er.firmwareRevision },
+        );
+        return { ok: true, claimId: claim.id, status: claim.status, resolutionMode: "rework_board", firmwareRevision: er.firmwareRevision };
+      }
+
+      const refundSatang = Math.min(w.finance.cash, 28000 * (claim.defectiveQty || 1));
+      if (refundSatang > 0) {
+        post(w, "customerRefund", -refundSatang, `rmaWarrantyRefund:${claim.id}`);
+        er.warrantyCostSatang = (er.warrantyCostSatang || 0) + refundSatang;
+      }
+      claim.status = "refunded";
+      claim.resolvedAt = now(w);
+      claim.resolutionMode = "refund_compensation";
+      er.resolvedRmaCount = (er.resolvedRmaCount || 0) + 1;
+      er.lastRmaSummaryTh = `ชดเชยค่าเคลมประกันใบงาน ${claim.id} เป็นเงิน ฿${(refundSatang / 100).toLocaleString("th-TH")}`;
+      return { ok: true, claimId: claim.id, status: claim.status, resolutionMode: "refund_compensation", refundSatang };
+    }
+
+    // Model 3: Automotive EV, Energy & Heavy Robotics Tooling Changeover Engine
+    function triggerToolingChangeover(w, lineId = "lineA", targetProductId = "ev_battery_pack", options = {}) {
+      const sp = ensureSectorProcesses(w);
+      const ao = sp.automotiveOem;
+      if (!ao.lineTooling[lineId]) {
+        ao.lineTooling[lineId] = { lineId, currentToolingProductId: null, consecutiveSameModelCount: 0, changeoverCount: 0 };
+      }
+      const lineState = ao.lineTooling[lineId];
+      const prevProd = lineState.currentToolingProductId;
+      if (prevProd === targetProductId && !options.force) {
+        lineState.consecutiveSameModelCount = (lineState.consecutiveSameModelCount || 0) + 1;
+        ao.rhythmBonusUnits = (ao.rhythmBonusUnits || 0) + 1;
+        return { ok: true, lineId, changed: false, currentToolingProductId: targetProductId, consecutiveSameModelCount: lineState.consecutiveSameModelCount };
+      }
+      const setupCost = options.freeSetup ? 0 : Math.min(w.finance.cash, 35000);
+      if (setupCost > 0 && prevProd !== null) {
+        post(w, "equipment", -setupCost, `toolingChangeover:${lineId}:${targetProductId}:${++w.sequence}`);
+        ao.toolingChangeoverCostSatang = (ao.toolingChangeoverCostSatang || 0) + setupCost;
+      }
+      lineState.currentToolingProductId = targetProductId;
+      lineState.consecutiveSameModelCount = 1;
+      lineState.changeoverCount = (lineState.changeoverCount || 0) + 1;
+      ao.totalChangeovers = (ao.totalChangeovers || 0) + 1;
+      const prodName = w.catalog.products[targetProductId]?.nameTh || targetProductId;
+      ao.lastToolingSummaryTh = `สลับแม่พิมพ์และจิ๊ก ${lineId} เป็นรุ่น "${prodName}" (สะสม ${ao.totalChangeovers} ครั้ง)`;
+      if (!options.silent) {
+        event(
+          w,
+          "toolingChangeover",
+          `🦾⚙️ ตั้งค่าแม่พิมพ์และจิ๊กประกอบ (Die & Jig Changeover) บนสายการผลิต ${lineId} สำหรับ "${prodName}" (ค่าสอบเทียบจิ๊ก ฿${(setupCost / 100).toLocaleString("th-TH")})`,
+          { lineId, targetProductId, setupCost, totalChangeovers: ao.totalChangeovers },
+        );
+      }
+      return { ok: true, lineId, changed: true, currentToolingProductId: targetProductId, setupCost, totalChangeovers: ao.totalChangeovers };
+    }
+
+    // Model 4: Bio-Medical & Cleanroom Sterile Quarantine & Clinical Release Engine
+    function certifyBiomedLot(w, options = {}) {
+      const sp = ensureSectorProcesses(w);
+      const bm = sp.biomedSterile;
+      const productId = options.productId || "vital_monitor";
+      const prodSpec = w.catalog.products[productId] || w.catalog.products.pulseOximeter || Object.values(w.catalog.products)[0];
+      const lotId = options.lotId || `biolot-${++w.sequence}`;
+      const hasWaterPlant = Boolean(w.facilities?.constructedPlots?.includes("waterPlant"));
+      const hasQaLab = Boolean(w.facilities?.constructedPlots?.includes("qaLab"));
+
+      if (options.contaminateLot) {
+        bm.sterilityIndex = 58;
+      } else {
+        bm.sterilityIndex = clamp((bm.sterilityIndex || 92) + (hasWaterPlant ? 3 : 0) + (hasQaLab ? 3 : 0), 50, 99);
+      }
+
+      if (bm.sterilityIndex < 70 || options.contaminateLot) {
+        bm.quarantineLots[lotId] = {
+          id: lotId,
+          productId: prodSpec.id,
+          productNameTh: prodSpec.nameTh,
+          status: "rejected",
+          sterilityScore: bm.sterilityIndex,
+          assayAt: now(w),
+        };
+        bm.sterilityRejectedLots = (bm.sterilityRejectedLots || 0) + 1;
+        // Reset sterility after decontamination flush
+        bm.sterilityIndex = 94;
+        bm.lastSterileSummaryTh = `กักกันและระงับล็อต ${lotId} (${prodSpec.nameTh}) เนื่องจากค่าความปลอดเชื้อต่ำกว่าเกณฑ์ 70%`;
+        event(
+          w,
+          "biomedLotRejected",
+          `🧬⚠️ ห้องแล็บกักกันเชื้อสั่งระงับล็อตเวชภัณฑ์ "${prodSpec.nameTh}" (${lotId}) เนื่องจากตรวจพบค่าความปลอดเชื้อต่ำกว่าเกณฑ์มาตรฐาน!`,
+          { lotId, productId: prodSpec.id, status: "rejected" },
+        );
+        return { ok: false, code: "sterilityContamination", lotId, status: "rejected", sterilityScore: 58 };
+      }
+
+      bm.quarantineLots[lotId] = {
+        id: lotId,
+        productId: prodSpec.id,
+        productNameTh: prodSpec.nameTh,
+        status: "certified",
+        sterilityScore: bm.sterilityIndex,
+        assayAt: now(w),
+      };
+      bm.clinicalCertificatesIssued = (bm.clinicalCertificatesIssued || 0) + 1;
+      bm.lastSterileSummaryTh = `ออกใบรับรองปลอดเชื้อ Clinical COA ให้ล็อต ${lotId} (${prodSpec.nameTh} • Sterility ${bm.sterilityIndex}%)`;
+      event(
+        w,
+        "biomedLotCertified",
+        `🧬✅ ผ่านการตรวจเพาะเชื้อและออกใบรับรอง Clinical Lot Release (${lotId}) สำหรับ "${prodSpec.nameTh}" (Sterility ${bm.sterilityIndex}%)`,
+        { lotId, productId: prodSpec.id, status: "certified", sterilityScore: bm.sterilityIndex },
+      );
+      return { ok: true, lotId, status: "certified", sterilityScore: bm.sterilityIndex };
+    }
+
+    // Model 8: Industrial B2B Services (Calibration Lab, Field Maintenance SLA, Eco Recycling)
+    function ensureServiceBusiness(w) {
+      if (!w.serviceBusiness || typeof w.serviceBusiness !== "object") {
+        w.serviceBusiness = freshServiceBusiness();
+      }
+      if (!w.serviceBusiness.orders) w.serviceBusiness.orders = {};
+      if (!w.serviceBusiness.instrumentCustody) w.serviceBusiness.instrumentCustody = {};
+      if (!w.serviceBusiness.metrics) w.serviceBusiness.metrics = freshServiceBusiness().metrics;
+      if (!Array.isArray(w.serviceBusiness.history)) w.serviceBusiness.history = [];
+      return w.serviceBusiness;
+    }
+
+    function startServiceOrder(w, serviceTypeId = "calibration_lab", clientCorpId = "siam_auto", options = {}) {
+      const sv = ensureServiceBusiness(w);
+      const spec = D.INDUSTRIAL_SERVICES?.[serviceTypeId];
+      if (!spec) return { ok: false, code: "unknownServiceType", message: "ไม่พบรูปแบบธุรกิจบริการวิศวกรรมที่ระบุ" };
+
+      // Check specialist availability so the same person cannot be assigned to multiple service orders concurrently
+      const busyIds = new Set(
+        Object.values(sv.orders)
+          .filter((o) => !["paid", "cancelled"].includes(o.status))
+          .map((o) => o.specialistId)
+          .filter(Boolean),
+      );
+      const candidates = w.people.filter(
+        (p) =>
+          p.employed &&
+          !busyIds.has(p.id) &&
+          ((Array.isArray(spec.requiredRoles) && spec.requiredRoles.includes(p.role)) || spec.requiredRole === p.role || ["engineer", "inspector", "assembler", "logistics"].includes(p.role)),
+      );
+      const specialist = options.specialistId
+        ? w.people.find((p) => p.employed && p.id === options.specialistId && !busyIds.has(p.id))
+        : candidates[0];
+      if (!specialist) {
+        return {
+          ok: false,
+          code: "noAvailableSpecialist",
+          message: "ไม่มีวิศวกรหรือผู้เชี่ยวชาญว่างสำหรับรับใบสั่งงานบริการนี้ (ห้ามจองตัวพนักงานซ้ำซ้อน)",
+        };
+      }
+
+      const oid = options.orderId || `srv-${++w.sequence}`;
+      const corp = w.externalWorld?.corporations?.[clientCorpId];
+      const clientNameTh = corp ? corp.nameTh : "ลูกค้าอุตสาหกรรม B2B";
+      const feeSatang = options.feeSatang || spec.baseFeeSatang || spec.basePriceSatang || 2400000;
+      const order = {
+        id: oid,
+        serviceTypeId: spec.id,
+        serviceNameTh: spec.nameTh,
+        icon: spec.icon,
+        clientCorpId,
+        clientNameTh,
+        specialistId: specialist.id,
+        specialistName: specialist.name,
+        feeSatang,
+        consumableCostSatang: spec.consumableCostSatang || spec.labConsumableCostSatang || spec.treatmentCostSatang || 180000,
+        slaDeadlineAt: now(w) + (spec.slaDeadlineHours || 24) * 60,
+        status: "accepted", // accepted -> in_progress -> certified_or_verified -> invoiced -> paid
+        stages: spec.stages,
+        currentStageIndex: 0,
+        partsConsumed: false,
+        invoiced: false,
+        paid: false,
+        slaBreached: false,
+        recoveredMaterials: {},
+        createdAt: now(w),
+      };
+      sv.orders[oid] = order;
+
+      // For calibration lab, register client's instrument in custody (never mixed with company inventory!)
+      if (serviceTypeId === "calibration_lab") {
+        sv.instrumentCustody[oid] = {
+          id: `custody-${oid}`,
+          orderId: oid,
+          clientNameTh,
+          equipmentNameTh: options.equipmentNameTh || "ชุดเซ็นเซอร์วัดแรงดันและเครื่องมือวัดละเอียดของลูกค้า",
+          status: "in_lab_custody",
+        };
+      }
+
+      event(
+        w,
+        "serviceOrderStarted",
+        `${spec.icon} เปิดใบงานบริการ "${spec.nameTh}" (${oid}) ให้ ${clientNameTh} • มอบหมาย ${specialist.name} ดูแล (มูลค่าบริการ ฿${(feeSatang / 100).toLocaleString("th-TH")})`,
+        { orderId: oid, serviceTypeId, clientNameTh, feeSatang },
+      );
+      return { ok: true, orderId: oid, order };
+    }
+
+    function advanceServiceOrder(w, orderId, options = {}) {
+      const sv = ensureServiceBusiness(w);
+      const o = sv.orders[orderId];
+      if (!o) return { ok: false, code: "unknownServiceOrder", message: "ไม่พบใบสั่งงานบริการ" };
+      if (o.status === "paid" || o.status === "cancelled") {
+        return { ok: true, orderId: o.id, status: o.status, paid: o.paid };
+      }
+      const spec = D.INDUSTRIAL_SERVICES?.[o.serviceTypeId];
+
+      // Step 1: Execute service process & consume required spare parts / lab consumables
+      if (o.status === "accepted" || o.status === "in_progress") {
+        if (!o.partsConsumed) {
+          for (const [mId, qty] of Object.entries(spec?.sparePartsRequired || spec?.spareParts || {})) {
+            if (safeAvailableToDeduct(w, mId) >= qty) {
+              safeDeductMaterial(w, mId, qty);
+            }
+          }
+          const labCost = Math.min(w.finance.cash, o.consumableCostSatang || 25000);
+          if (labCost > 0) {
+            post(w, "equipment", -labCost, `serviceConsumable:${o.id}`);
+            sv.metrics.serviceCostSatang = (sv.metrics.serviceCostSatang || 0) + labCost;
+          }
+          o.partsConsumed = true;
+        }
+
+        // Specific process mechanics per service model!
+        if (o.serviceTypeId === "calibration_lab") {
+          sv.metrics.calibrationCertificatesIssued = (sv.metrics.calibrationCertificatesIssued || 0) + 1;
+          if (sv.instrumentCustody[o.id]) {
+            sv.instrumentCustody[o.id].status = "calibrated_returned_to_client";
+            delete sv.instrumentCustody[o.id];
+          }
+        } else if (o.serviceTypeId === "field_maintenance") {
+          if (options.breachSla || now(w) > o.slaDeadlineAt) {
+            o.slaBreached = true;
+            sv.metrics.slaBreachCount = (sv.metrics.slaBreachCount || 0) + 1;
+            const penalty = Math.min(w.finance.cash, Math.round(o.feeSatang * (spec?.slaPenaltyPct || 0.25)));
+            if (penalty > 0) {
+              post(w, "customerRefund", -penalty, `serviceSlaPenalty:${o.id}`);
+              sv.metrics.slaPenaltyPaidSatang = (sv.metrics.slaPenaltyPaidSatang || 0) + penalty;
+            }
+          } else {
+            sv.metrics.slaOnTimeCount = (sv.metrics.slaOnTimeCount || 0) + 1;
+          }
+        } else if (o.serviceTypeId === "industrial_recycling") {
+          sv.metrics.recycledTonsProcessed = (sv.metrics.recycledTonsProcessed || 0) + 3;
+          for (const [recMatId, recQty] of Object.entries(spec?.recoveredMaterialsYield || spec?.recoveredOutputs || { metal_sheet: 1, pack_carton: 1, organic_compost: 1 })) {
+            grantUnpurchasedMaterial(w, recMatId, recQty);
+            o.recoveredMaterials[recMatId] = recQty;
+            sv.metrics.recoveredMaterialsUnits = (sv.metrics.recoveredMaterialsUnits || 0) + recQty;
+          }
+          if (w.agriculture?.waterSource) {
+            w.agriculture.waterSource.wastewaterTreated = (w.agriculture.waterSource.wastewaterTreated || 0) + 2;
+          }
+        }
+
+        o.currentStageIndex = Math.max(0, (o.stages?.length || 4) - 2);
+        o.status = "certified_or_verified";
+        if (!options.completeAllSteps) return { ok: true, orderId: o.id, status: o.status };
+      }
+
+      // Step 2: Invoice & Payment (idempotent!)
+      if (o.status === "certified_or_verified" && !o.invoiced) {
+        o.invoiced = true;
+        o.status = "invoiced";
+      }
+      if (o.status === "invoiced" && !o.paid) {
+        post(w, "sales", o.feeSatang, `serviceOrderPaid:${o.id}`);
+        o.paid = true;
+        o.paidAt = now(w);
+        o.status = "paid";
+        o.currentStageIndex = (o.stages?.length || 4) - 1;
+        sv.metrics.completedOrders = (sv.metrics.completedOrders || 0) + 1;
+        sv.metrics.serviceRevenueSatang = (sv.metrics.serviceRevenueSatang || 0) + o.feeSatang;
+        sv.history.unshift({
+          id: o.id,
+          day: day(w),
+          serviceNameTh: o.serviceNameTh,
+          clientNameTh: o.clientNameTh,
+          specialistName: o.specialistName,
+          feeSatang: o.feeSatang,
+          slaBreached: o.slaBreached,
+          recoveredMaterials: { ...o.recoveredMaterials },
+        });
+        if (sv.history.length > 25) sv.history.pop();
+        event(
+          w,
+          "serviceOrderCompleted",
+          `${o.icon} ส่งมอบงานบริการ "${o.serviceNameTh}" (${o.id}) ให้ ${o.clientNameTh} สำเร็จ: รับค่าบริการ +฿${(o.feeSatang / 100).toLocaleString("th-TH")}`,
+          { orderId: o.id, serviceTypeId: o.serviceTypeId, feeSatang: o.feeSatang },
+        );
+      }
+
+      return { ok: true, orderId: o.id, status: o.status, paid: o.paid, slaBreached: o.slaBreached, recoveredMaterials: o.recoveredMaterials };
+    }
+
+    function evaluateNewBusinessOperationsDaily(w, completedDay) {
+      const ft = ensureFleetTransport(w);
+      const sb = ensureSoftwareBusiness(w);
+      if (!w.policies.autoAccept) return;
+      if (completedDay < 8 && w.people.length <= 8 && Object.keys(w.externalWorld?.assetPortfolio?.ownedAssets || {}).length === 0) return;
+      if (completedDay < 7 && w.people.length <= 8 && Object.keys(w.externalWorld?.assetPortfolio?.ownedAssets || {}).length === 0) return;
+
+      // 1. Autonomous Fleet Transport: progress active contracts, accept profitable quotes if truck+driver idle, and refresh quotes
+      for (const c of Object.values(ft.contracts)) {
+        if (!["paid", "cancelled", "failed"].includes(c.status)) {
+          advanceFreightContract(w, c.id, { completeAllSteps: true });
+        }
+      }
+      // Refresh open quotes if low
+      if (ft.openQuotes.filter((q) => q.status === "quoted").length < 2) {
+        const routes = D.FREIGHT_ROUTES || [];
+        const r = routes[(completedDay - 1) % routes.length];
+        if (r) {
+          ft.openQuotes.push({
+            id: `fquote-d${completedDay}-${++w.sequence}`,
+            routeId: r.id,
+            nameTh: r.nameTh,
+            originTh: r.originTh,
+            destinationTh: r.destinationTh,
+            pickupEmptyKm: r.pickupEmptyKm,
+            outboundLoadedKm: r.outboundLoadedKm,
+            backhaulEmptyKm: r.backhaulEmptyKm,
+            totalRoundTripKm: r.pickupEmptyKm + r.outboundLoadedKm + r.backhaulEmptyKm,
+            tollFeeSatang: r.tollFeeSatang,
+            offeredRateSatang: r.baseRateSatang,
+            cargoType: r.cargoType,
+            cargoNameTh: r.cargoNameTh,
+            weightKg: r.weightKg,
+            volumeM3: r.volumeM3,
+            cargoValueSatang: r.cargoValueSatang,
+            clientCorpId: r.clientCorpId,
+            status: "quoted",
+            createdAt: now(w),
+          });
+        }
+      }
+      // If an idle vehicle needs maintenance, maintain it
+      for (const v of Object.values(ft.vehicles)) {
+        if (v.status === "idle" && (v.condition < 65 || v.tireCondition < 55) && w.finance.cash > 6000000) {
+          maintainFleetVehicle(w, v.id);
+        }
+      }
+      // Accept 1 profitable quote if vehicle & driver are available and cash runway is healthy
+      if (w.finance.cash > 4500000) {
+        const openQ = ft.openQuotes.find((q) => q.status === "quoted");
+        if (openQ) {
+          const res = acceptFreightContract(w, openQ.id);
+          if (res.ok) {
+            advanceFreightContract(w, res.contractId, { completeAllSteps: true });
+          }
+        }
+      }
+
+      // 2. Autonomous Software & SaaS Operations: progress active custom project and convert leads only when sales/engineer are active
+      for (const proj of Object.values(sb.projects)) {
+        if (!["supporting", "closed", "cancelled", "blocked"].includes(proj.status) && w.finance.cash > 5000000) {
+          advanceSoftwareProject(w, proj.id, { completeAllSteps: false });
+        }
+      }
+      const posApp = sb.saasProducts.pos_retail;
+      if (posApp && posApp.status === "live") {
+        if (completedDay >= 3 && posApp.leadCount > 0 && posApp.activeSubscribers === 0) {
+          updateSaasSubscription(w, "pos_retail", { convertUsers: 5 });
+        }
+        if (posApp.activeSubscribers > 0 && now(w) >= posApp.nextBillingMinute) {
+          updateSaasSubscription(w, "pos_retail", { runBillingCycle: true });
         }
       }
     }
@@ -1678,6 +3942,11 @@
         },
         facilities: freshFacilities(),
         logistics: freshLogistics(),
+        agriculture: freshAgriculture(),
+        fleetTransport: freshFleetTransport(String(seed)),
+        softwareBusiness: freshSoftwareBusiness(),
+        sectorProcesses: freshSectorProcesses(),
+        serviceBusiness: freshServiceBusiness(),
         externalWorld: freshExternalWorld(String(seed)),
         reputation: 45,
         policies: {
@@ -2672,6 +4941,54 @@
         u.stage = "ready";
         w.inventory.finished[u.productId]++;
         w.production.completed[u.productId]++;
+        // Update Sector-Specific Process State (Models 1-4)
+        const sp = ensureSectorProcesses(w);
+        const ind = product?.industry || "electronics";
+        if (ind === "food") {
+          const coldChain = Boolean(w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active);
+          u.freshnessPct = 100;
+          u.shelfLifeDays = coldChain ? 7 : 3;
+          sp.foodBakery.coldChainActive = coldChain;
+          sp.foodBakery.activeBatches[u.id] = {
+            unitId: u.id,
+            productId: u.productId,
+            bakedAt: now(w),
+            freshnessPct: 100,
+            shelfLifeDays: u.shelfLifeDays,
+            coldChainProtected: coldChain,
+          };
+        } else if (ind === "electronics") {
+          sp.electronicsRma.burnInPassCount = (sp.electronicsRma.burnInPassCount || 0) + 1;
+          u.firmwareRevision = sp.electronicsRma.firmwareRevision || "Rev.1.2";
+        } else if (ind === "automotive" || ind === "energy" || ind === "aerospace") {
+          const lineKey = u.lineId || "lineA";
+          const lt = sp.automotiveOem.lineTooling[lineKey] || (sp.automotiveOem.lineTooling[lineKey] = {
+            lineId: lineKey,
+            currentToolingProductId: null,
+            consecutiveSameModelCount: 0,
+            changeoverCount: 0,
+          });
+          if (lt.currentToolingProductId !== u.productId) {
+            lt.currentToolingProductId = u.productId;
+            lt.consecutiveSameModelCount = 1;
+            lt.changeoverCount = (lt.changeoverCount || 0) + 1;
+            sp.automotiveOem.totalChangeovers = (sp.automotiveOem.totalChangeovers || 0) + 1;
+          } else {
+            lt.consecutiveSameModelCount = (lt.consecutiveSameModelCount || 0) + 1;
+            sp.automotiveOem.rhythmBonusUnits = (sp.automotiveOem.rhythmBonusUnits || 0) + 1;
+          }
+          sp.automotiveOem.dynoCertifiedCount = (sp.automotiveOem.dynoCertifiedCount || 0) + 1;
+        } else if (ind === "biomed") {
+          sp.biomedSterile.clinicalCertificatesIssued = (sp.biomedSterile.clinicalCertificatesIssued || 0) + 1;
+          sp.biomedSterile.quarantineLots[`lot-${u.id}`] = {
+            id: `lot-${u.id}`,
+            productId: u.productId,
+            unitId: u.id,
+            status: "certified",
+            sterilityScore: sp.biomedSterile.sterilityIndex || 96,
+            assayAt: now(w),
+          };
+        }
       } else if (j.kind === "shipping") {
         const o = w.orders[j.orderId],
           units = Object.values(w.units).filter(
@@ -2679,10 +4996,32 @@
           );
         if (units.length !== o.quantity)
           throw Error("shipment requires complete ready order");
+        const spShip = ensureSectorProcesses(w);
         for (const item of units) {
+          if (spShip.foodBakery.activeBatches[item.id]) {
+            const fbBatch = spShip.foodBakery.activeBatches[item.id];
+            if ((fbBatch.freshnessPct ?? 100) >= 80) {
+              spShip.foodBakery.freshShippedCount = (spShip.foodBakery.freshShippedCount || 0) + 1;
+            } else {
+              spShip.foodBakery.markdownShippedCount = (spShip.foodBakery.markdownShippedCount || 0) + 1;
+            }
+            delete spShip.foodBakery.activeBatches[item.id];
+          }
           w.inventory.finished[item.productId]--;
           w.production.shipped[item.productId]++;
           delete w.units[item.id];
+        }
+        if (w.catalog.products[o.productId]?.industry === "electronics") {
+          spShip.electronicsRma.warrantyLots.unshift({
+            lotId: `wlot-${o.id}`,
+            orderId: o.id,
+            productId: o.productId,
+            quantity: o.quantity,
+            shippedDay: day(w),
+            expiresDay: day(w) + 14,
+            firmwareRev: spShip.electronicsRma.firmwareRevision || "Rev.1.2",
+          });
+          if (spShip.electronicsRma.warrantyLots.length > 25) spShip.electronicsRma.warrantyLots.pop();
         }
         o.shipped = o.quantity;
         o.completedAt = now(w);
@@ -4201,6 +6540,7 @@
       );
       payBills(w);
       evaluateExternalAssetsDaily(w, completedDay);
+      evaluateNewBusinessOperationsDaily(w, completedDay);
       if (assetBonuses.moraleBonusDaily > 0 || assetBonuses.energyBonusDaily > 0) {
         for (const emp of w.people) {
           if (!emp.employed) continue;
@@ -4382,6 +6722,7 @@
           w.people.some((p) => p.employed && p.atWork && p.role === "coordinator"))
         evaluateAutonomousHiring(w);
       processDue(w);
+      stepAgricultureAndResources(w);
       ensureJobs(w);
       autoAccept(w);
       planPurchases(w);
@@ -4717,6 +7058,144 @@
         case "craftMaterial": {
           return craftMaterialRecipe(w, c.materialId, c.batches || 1, {
             ignoreTechGate: Boolean(c.ignoreTechGate),
+          });
+        }
+        case "plantCropPlot": {
+          return plantCropPlot(w, c.plotId, {
+            cropId: c.cropId,
+            assetId: c.assetId,
+            seedMaterialId: c.seedMaterialId,
+            seedSaveRatio: c.seedSaveRatio,
+          });
+        }
+        case "careCropPlot": {
+          return careCropPlot(w, c.plotId, {
+            applyWater: c.applyWater,
+            waterUnits: c.waterUnits,
+            requireWater: c.requireWater,
+            applyFertilizer: c.applyFertilizer,
+            fertilizerMaterialId: c.fertilizerMaterialId,
+          });
+        }
+        case "harvestCropPlot": {
+          return harvestCropPlot(w, c.plotId, {
+            forceRipe: Boolean(c.forceRipe),
+            seedSaveRatio: c.seedSaveRatio,
+          });
+        }
+        case "saveSeedFromCrop": {
+          return saveSeedFromCrop(w, c.cropMaterialId, c.quantity || 2);
+        }
+        case "acquireFleetVehicle": {
+          return acquireFleetVehicle(w, c.vehicleTypeId || "dry_6w", {
+            ownership: c.ownership,
+            freeGrant: Boolean(c.freeGrant),
+          });
+        }
+        case "maintainFleetVehicle": {
+          return maintainFleetVehicle(w, c.vehicleId);
+        }
+        case "acceptFreightContract": {
+          return acceptFreightContract(w, c.quoteId, {
+            vehicleId: c.vehicleId,
+            driverPersonId: c.driverPersonId,
+            allowLoss: Boolean(c.allowLoss),
+          });
+        }
+        case "advanceFreightContract": {
+          return advanceFreightContract(w, c.contractId, {
+            completeAllSteps: Boolean(c.completeAllSteps),
+            triggerBreakdown: Boolean(c.triggerBreakdown),
+            creditDays: c.creditDays,
+            deferPayment: Boolean(c.deferPayment),
+            finishReturn: Boolean(c.finishReturn),
+          });
+        }
+        case "cancelFreightContract": {
+          return cancelFreightContract(w, c.contractId);
+        }
+        case "startSoftwareProject": {
+          return startSoftwareProject(w, c.appId || "pos_retail", c.clientCorpId || "cp_health", {
+            projectId: c.projectId,
+            developerPersonId: c.developerPersonId,
+            contractPriceSatang: c.contractPriceSatang,
+            targetVersion: c.targetVersion,
+          });
+        }
+        case "advanceSoftwareProject": {
+          return advanceSoftwareProject(w, c.projectId, {
+            completeAllSteps: Boolean(c.completeAllSteps),
+            unblock: Boolean(c.unblock),
+            minutes: c.minutes,
+            injectDefects: c.injectDefects,
+            fixDefects: c.fixDefects,
+            deliveredVersion: c.deliveredVersion,
+          });
+        }
+        case "updateSaasSubscription": {
+          return updateSaasSubscription(w, c.appId || "pos_retail", {
+            launchMvp: Boolean(c.launchMvp),
+            addLeads: c.addLeads,
+            convertUsers: c.convertUsers,
+            churnUsers: c.churnUsers,
+            installInternally: c.installInternally,
+            runBillingCycle: Boolean(c.runBillingCycle),
+          });
+        }
+        case "matchBackhaulCargo": {
+          return matchBackhaulCargo(w, c.contractId, {
+            backhaulRevenueSatang: c.backhaulRevenueSatang,
+          });
+        }
+        case "expireFoodBatch": {
+          return expireFoodBatch(w, { unitId: c.unitId });
+        }
+        case "triggerRmaClaim": {
+          return triggerRmaClaim(w, {
+            productId: c.productId,
+            orderId: c.orderId,
+            defectiveQty: c.defectiveQty,
+            reasonTh: c.reasonTh,
+          });
+        }
+        case "resolveRmaClaim": {
+          return resolveRmaClaim(w, c.claimId, { mode: c.mode });
+        }
+        case "triggerToolingChangeover": {
+          return triggerToolingChangeover(w, c.lineId || "lineA", c.productId || "ev_battery_pack", {
+            force: Boolean(c.force),
+            freeSetup: Boolean(c.freeSetup),
+          });
+        }
+        case "certifyBiomedLot": {
+          return certifyBiomedLot(w, {
+            productId: c.productId,
+            lotId: c.lotId,
+            contaminateLot: Boolean(c.contaminateLot),
+          });
+        }
+        case "startServiceOrder": {
+          return startServiceOrder(w, c.serviceTypeId || "calibration_lab", c.clientCorpId || "siam_auto", {
+            orderId: c.orderId,
+            specialistId: c.specialistId,
+            feeSatang: c.feeSatang,
+            equipmentNameTh: c.equipmentNameTh,
+          });
+        }
+        case "advanceServiceOrder": {
+          return advanceServiceOrder(w, c.orderId, {
+            completeAllSteps: Boolean(c.completeAllSteps),
+            breachSla: Boolean(c.breachSla),
+          });
+        }
+        case "feedLivestockHerd": {
+          return feedLivestockHerd(w, c.assetId || "dairy_soy_farm", {
+            freeFeed: Boolean(c.freeFeed),
+          });
+        }
+        case "surveyNewMineVein": {
+          return surveyNewMineVein(w, c.assetId || "copper_bauxite_mine", {
+            freeSurvey: Boolean(c.freeSurvey),
           });
         }
         case "sellMaterialB2B": {
@@ -5143,6 +7622,34 @@
           if (c.action === "setCeoDirective") {
             return command(w, { type: "setCeoDirective", directiveId: c.directiveId });
           }
+          if (
+            [
+              "plantCropPlot",
+              "careCropPlot",
+              "harvestCropPlot",
+              "saveSeedFromCrop",
+              "acquireFleetVehicle",
+              "maintainFleetVehicle",
+              "acceptFreightContract",
+              "advanceFreightContract",
+              "cancelFreightContract",
+              "matchBackhaulCargo",
+              "startSoftwareProject",
+              "advanceSoftwareProject",
+              "updateSaasSubscription",
+              "expireFoodBatch",
+              "triggerRmaClaim",
+              "resolveRmaClaim",
+              "triggerToolingChangeover",
+              "certifyBiomedLot",
+              "startServiceOrder",
+              "advanceServiceOrder",
+              "feedLivestockHerd",
+              "surveyNewMineVein",
+            ].includes(c.action)
+          ) {
+            return command(w, { ...c, type: c.action });
+          }
           return failure("invalidEdit", "ไม่รู้จักคำสั่งแก้ไข");
         }
         default:
@@ -5384,6 +7891,30 @@
       acquireExternalAsset,
       runMidstreamRefining,
       craftMaterialRecipe,
+      plantCropPlot,
+      careCropPlot,
+      harvestCropPlot,
+      saveSeedFromCrop,
+      stepAgricultureAndResources,
+      acquireFleetVehicle,
+      maintainFleetVehicle,
+      acceptFreightContract,
+      advanceFreightContract,
+      cancelFreightContract,
+      startSoftwareProject,
+      advanceSoftwareProject,
+      updateSaasSubscription,
+      matchBackhaulCargo,
+      expireFoodBatch,
+      triggerRmaClaim,
+      resolveRmaClaim,
+      triggerToolingChangeover,
+      certifyBiomedLot,
+      startServiceOrder,
+      advanceServiceOrder,
+      feedLivestockHerd,
+      surveyNewMineVein,
+      evaluateNewBusinessOperationsDaily,
       sellMaterialB2B,
       setCorporationRelation,
       simulateOffsiteEcosystemDaily,

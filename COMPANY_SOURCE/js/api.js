@@ -407,6 +407,57 @@
             : code === "turnaroundMilestone"
               ? "บริษัทปลดหนี้และสร้างชื่อเสียงพ้นวิกฤตสำเร็จ ก้าวเข้าสู่โหมดขยายอาณาจักรอุตสาหกรรมไร้ขีดจำกัด (Endless Corporate Empire)"
               : "ประธานเจ้าหน้าที่บริหาร (CEO) ปรับเข็มทิศกลยุทธ์ของบริษัท ส่งผลต่อความเร็วการขาย การวิจัย คุณภาพ QC หรือการสำรองเงินสดจริง";
+      } else if (["cropPlanted", "cropHarvested", "seedSavedFromCrop"].includes(code)) {
+        category = "SUPPLY";
+        categoryLabelTh = "วงจรเกษตรต้นน้ำ/เมล็ดพันธุ์";
+        isMajor = code === "cropHarvested";
+        epistemicStatus = "VERIFIED";
+        epistemicBadgeTh = code === "cropPlanted" ? "🌱 เพาะปลูกแปลงเกษตร" : code === "cropHarvested" ? "🌾 เก็บเกี่ยว & คัดพันธุ์" : "🌾 คัดเมล็ดพันธุ์";
+        meaningTh =
+          code === "cropPlanted"
+            ? "เกษตรกรเบิกเมล็ดพันธุ์และน้ำดิบลงแปลงเพาะปลูกจริง เริ่มนับเวลาการเติบโตตามสภาพดินและธาตุอาหาร"
+            : code === "cropHarvested"
+              ? "เก็บเกี่ยวผลผลิตจากแปลงเกษตร คัดแยกส่วนหนึ่งเก็บเป็นเมล็ดพันธุ์สำหรับรอบถัดไป และส่งส่วนที่เหลือเข้าคลังโรงงาน"
+              : "คัดแยกผลผลิตที่ยังงอกได้เก็บเข้าคลังเมล็ดพันธุ์ โดยหักสต็อกจริงและคัดส่วนที่ไม่สมบูรณ์เป็นรำ/แกลบ";
+      } else if (
+        [
+          "fleetVehicleAcquired",
+          "fleetVehicleMaintained",
+          "freightContractReserved",
+          "freightContractCompleted",
+          "freightVehicleBreakdown",
+        ].includes(code)
+      ) {
+        category = code === "freightContractCompleted" ? "SALES" : "SUPPLY";
+        categoryLabelTh = "ธุรกิจกองรถขนส่ง B2B";
+        isMajor = code !== "fleetVehicleMaintained";
+        epistemicStatus = code === "freightVehicleBreakdown" ? "OBSERVED" : "VERIFIED";
+        epistemicBadgeTh =
+          code === "freightVehicleBreakdown"
+            ? "⚠️ รถบรรทุกเสียกลางทาง"
+            : code === "freightContractCompleted"
+              ? "🚛 ส่งมอบขนส่งสำเร็จ"
+              : "🚚 กองรถขนส่ง B2B";
+        meaningTh =
+          code === "freightContractCompleted"
+            ? "รถบรรทุกส่งมอบสินค้าลูกค้าพร้อมหลักฐาน e-POD และวิ่งรถเปล่าขากลับถึงลานจอด รับรู้รายได้ค่าขนส่งหลังหักค่าน้ำมันและค่าผ่านทาง"
+            : code === "freightVehicleBreakdown"
+              ? "รถบรรทุกสภาพสึกหรอเกิดเหตุขัดข้องระหว่างทาง ต้องระงับเที่ยววิ่งและจ่ายค่าเสียหายส่วนแรก"
+              : "กองรถขนส่งบริหารการจัดหารถ จองคนขับ และบำรุงรักษาสภาพรถ/ยางตามระยะทางวิ่งจริง";
+      } else if (
+        ["softwareProjectContracted", "softwareProjectDeployed", "saasBillingCollected"].includes(code)
+      ) {
+        category = "RND";
+        categoryLabelTh = "ธุรกิจซอฟต์แวร์ & SaaS";
+        isMajor = true;
+        epistemicStatus = "VERIFIED";
+        epistemicBadgeTh = code === "saasBillingCollected" ? "☁️ รอบบิลสมาชิก SaaS" : "💻 โครงการซอฟต์แวร์";
+        meaningTh =
+          code === "softwareProjectContracted"
+            ? "รับงานพัฒนาซอฟต์แวร์ตามสัญญา จองเครื่องนักพัฒนาและรับเงินมัดจำ 30% (บันทึกเป็นเงินรับล่วงหน้ารอการส่งมอบ)"
+            : code === "softwareProjectDeployed"
+              ? "ผ่านการทดสอบ QA และลูกค้ารับมอบเวอร์ชันตามสัญญา รับชำระงวดสุดท้ายและรับรู้รายได้โครงการครบวงจร"
+              : "เรียกเก็บค่าบริการรายรอบจากบัญชีลูกค้าที่ใช้งานแอป SaaS จริง หักต้นทุนเซิร์ฟเวอร์และงานดูแลระบบ";
       } else if (["materialCrafted", "b2bMaterialSold", "corporateDiplomacyChanged"].includes(code)) {
         category = code === "b2bMaterialSold" ? "SALES" : code === "materialCrafted" ? "PROD" : "FINANCE";
         categoryLabelTh = code === "b2bMaterialSold" ? "ขายวัตถุดิบ B2B" : code === "materialCrafted" ? "แปรรูปวัตถุดิบหลายขั้น" : "การทูตบริษัทภายนอก";
@@ -1059,9 +1110,23 @@
             totalInboundReceived: 0,
             totalOutboundDispatched: 0,
           },
+          agriculture: w.agriculture || null,
+          fleetTransport: w.fleetTransport || null,
+          softwareBusiness: w.softwareBusiness || null,
+          sectorProcesses: w.sectorProcesses || null,
+          serviceBusiness: w.serviceBusiness || null,
           externalWorld: w.externalWorld || null,
           catalog: {
             rules: w.catalog.rules,
+            resourceClasses: Object.values(D.RESOURCE_CLASSES || {}),
+            agricultureCrops: Object.values(D.AGRICULTURE_CROPS || {}),
+            fleetVehicles: Object.values(D.FLEET_VEHICLES || {}),
+            freightRoutes: D.FREIGHT_ROUTES || [],
+            softwareApps: Object.values(D.SOFTWARE_APPS || {}),
+            sectorProcessModels: Object.values(D.SECTOR_PROCESS_MODELS || {}),
+            industrialServices: Object.values(D.INDUSTRIAL_SERVICES || {}),
+            businessProcessModels: D.BUSINESS_PROCESS_MODELS || [],
+            trueResourceChainTable: D.TRUE_RESOURCE_CHAIN_TABLE || [],
             materialTiers: Object.values(D.MATERIAL_TIERS || {}),
             materials: Object.values(w.catalog.materials).map((m) => {
               const tierNum = m.tier ?? 0;
@@ -1146,6 +1211,12 @@
                 acquiredDay: ownedRec ? ownedRec.acquiredDay : null,
                 totalHarvested: ownedRec ? (ownedRec.totalHarvested || 0) : 0,
                 totalDividendSatang: ownedRec ? (ownedRec.totalDividendSatang || 0) : 0,
+                reserveRemaining: ownedRec ? ownedRec.reserveRemaining : (a.initialReserveUnits || null),
+                oreGrade: ownedRec ? ownedRec.oreGrade : (a.oreGrade || null),
+                tailingsGenerated: ownedRec ? (ownedRec.tailingsGenerated || 0) : 0,
+                treeStock: ownedRec ? ownedRec.treeStock : (a.initialTreeStock || null),
+                saplingCohortsCount: ownedRec && Array.isArray(ownedRec.saplingCohorts) ? ownedRec.saplingCohorts.length : 0,
+                herdCount: ownedRec ? ownedRec.herdCount : (a.initialHerdCount || null),
                 upgradeCost: ownedRec && lv < 3 ? Math.round(a.cost * 0.65 * lv) : null,
               };
             }),

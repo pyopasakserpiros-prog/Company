@@ -1,9 +1,9 @@
 ---
 name: company-evolution-dev
-description: Master blueprint for Siam Enterprise / Company Simulation (COMPANY_SOURCE/) v1.0.0: Locked Human Core 1.0.0, 10-Level Career Hierarchy (Lv.1-10), 4-Tier Org Tree, 56x34 Greenfield Campus (14 Facilities), 12 External Assets, 5-Tier Material & Product Value Chain DAG (37 Materials, 27 Recipes, 28 Products), B2B Material Trading, 18 Living External Corporations, Zero Code-Zero (OEE, CEO Directives, NPC Life Milestones, Endless Mode), and 500-NPC Scaling.
+description: Master blueprint for Siam Enterprise / Company Simulation (COMPANY_SOURCE/) v1.2.0: Locked Human Core 1.0.0, 10-Level Career Hierarchy (Lv.1-10), 4-Tier Org Tree, 56x34 Greenfield Campus (14 Facilities), 12 External Assets, 5-Tier Material & Product Value Chain DAG (51 Materials, 32 Recipes, 28 Products), B2B Material Trading, 18 Living External Corporations, Zero Code-Zero (OEE, CEO Directives, NPC Life Milestones, Endless Mode), and 500-NPC Scaling.
 ---
 
-# Siam Enterprise / Company Simulation — Master Development Blueprint (v1.0.0)
+# Siam Enterprise / Company Simulation — Master Development Blueprint (v1.2.0)
 
 ## 1. Core Architectural Invariants (ห้ามละเมิดเด็ดขาด)
 1. **Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js` & `CORE_LOCK.json`)**:
@@ -17,7 +17,7 @@ description: Master blueprint for Siam Enterprise / Company Simulation (COMPANY_
    - Keep `const VERSION = "0.1.0"` inside `sim.js` for legacy save fixture compatibility (`review1`/`review2`), while exposing `RELEASE_VERSION = "1.0.0"` in `data.js`, `sim.js`, and `api.js` (`releaseVersion: "1.0.0"`).
 
 ## 2. 5-Tier Material & Product Value Chain DAG (`Tier 0 ➔ Tier 1 ➔ Tier 2 ➔ Tier 3 ➔ Tier 4`)
-- **37 Materials (`catalog.materials`) & 27 In-House Recipes (`D.MATERIAL_RECIPES`)**:
+- **51 Materials (`catalog.materials`) & 27 In-House Recipes (`D.MATERIAL_RECIPES`)**:
   - **Tier 0 (`tier: 0`, `craftable: false` — 10 Uncraftable Primary Raw Resources)**: `paddy_grain`, `crude_palm`, `raw_cane`, `fresh_milk_soy`, `natural_latex`, `silica_bauxite_ore`, `copper_iron_ore`, `lithium_brine_ore`, `crude_petro_feedstock`, `timber_bamboo_log`. Cannot be synthesized from nothing; must be harvested from `EXTERNAL_ASSETS` or bought from suppliers.
   - **Tier 1 (`tier: 1`, `craftable: true` — 10 First-Stage Refined Materials)**: `artisan_flour`, `refined_palm_oil`, `refined_sugar_syrup`, `raw_extract`, `metal_sheet`, `copper_coil`, `polymer_resin`, `pack_carton`, `glass_bottle`, `metallurgical_silicon` (smelted from `silica_bauxite_ore`).
   - **Tier 2 (`tier: 2`, `craftable: true` — 9 Second-Stage Advanced Intermediates)**: `bakery_dough_butter`, `probiotic_culture`, `foil_pouch`, `casing`, `wire_harness`, `heat_sink`, `optical_lens`, `cathode_electrolyte`, `silicon_wafer` (crystal-pulled from `metallurgical_silicon`).
@@ -34,3 +34,9 @@ description: Master blueprint for Siam Enterprise / Company Simulation (COMPANY_
 2. `node tools/test.cjs` — Run all **122 unit & integration tests** (`0 failures`).
 3. `node tools/build.cjs` — Build standalone `CompanyFoundation_single.html` (`Company_single.html`).
 4. `node tools/benchmark.cjs` — Verify 500-NPC performance (`0.931 ms/tick`).
+
+
+### อัปเดตล่าสุดรุ่น v1.2.0 (Chapters 19–24: True Upstream Resources & 8 Distinct Business Process Models)
+- แยก `RESOURCE_CLASSES` (10 คลาส) ออกจาก `tier` คงเหลือ `T0_NATURAL` เฉพาะทรัพยากรธรรมชาติแท้จริง 8 ชนิด และเพิ่มเมล็ดพันธุ์ พืชผล อาหารสัตว์ ปุ๋ยหมัก ปุ๋ยเคมี น้ำมันดีเซล รวมวัตถุดิบ 51 ชนิด และสูตรแปรรูป 32 สูตร
+- เพิ่มเอนจิน 8 โมเดลธุรกิจที่มีโปรเซสและ State Machine ของตัวเองแตกต่างกันจริง: (1) อาหารและเบเกอรี่มี Shelf-Life & Spoilage กลายเป็นปุ๋ยหมัก, (2) อิเล็กทรอนิกส์มี Firmware Rev & พูลรับประกัน RMA, (3) ยานยนต์ไฟฟ้ามี Die & Jig Tooling Changeover, (4) การแพทย์คลีนรูมมี ISO Class-5 Sterility & Quarantine Release, (5) ต้นน้ำธรรมชาติ 4 รูปแบบย่อย (เกษตร 8 ขั้นตอน/ปศุสัตว์/เหมืองแร่จำกัดปริมาณสำรอง/ป่าไม้ 3 รุ่นอายุ), (6) กองรถขนส่ง B2B 9 ขั้นตอนพร้อม Backhaul Matching, (7) ซอฟต์แวร์ตามสัญญา & SaaS 9 ขั้นตอน, และ (8) บริการวิศวกรรม B2B 3 โมเดล (`calibration_lab`, `field_maintenance`, `industrial_recycling`)
+- ผลทดสอบ `127/127` ผ่านครบ 100% (`0.994 ms/tick` ที่ 500 NPCs)

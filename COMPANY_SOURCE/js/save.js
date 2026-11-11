@@ -224,6 +224,95 @@
         "invalid externalWorld state",
       );
     }
+    if (w.agriculture !== undefined) {
+      add(
+        record(w.agriculture) &&
+          record(w.agriculture.plots) &&
+          Object.values(w.agriculture.plots).every(
+            (pl) =>
+              record(pl) &&
+              typeof pl.id === "string" &&
+              finite(pl.soilNutrients, 0, 100) &&
+              finite(pl.soilMoisture, 0, 100) &&
+              int(pl.cycleCount, 0) &&
+              finite(pl.seedSaveRatio, 0, 0.9),
+          ),
+        "invalid agriculture state",
+      );
+    }
+    if (w.fleetTransport !== undefined) {
+      const ft = w.fleetTransport;
+      const activeVehs = new Set();
+      const activeDrivers = new Set();
+      let noOverlap = true;
+      if (record(ft) && record(ft.contracts)) {
+        for (const c of Object.values(ft.contracts)) {
+          if (record(c) && ["reserved", "loading", "outbound", "delivering"].includes(c.status)) {
+            if (activeVehs.has(c.vehicleId) || activeDrivers.has(c.driverPersonId)) {
+              noOverlap = false;
+            }
+            activeVehs.add(c.vehicleId);
+            activeDrivers.add(c.driverPersonId);
+          }
+        }
+      }
+      add(
+        record(ft) &&
+          record(ft.vehicles) &&
+          record(ft.contracts) &&
+          record(ft.cargoCustody) &&
+          noOverlap,
+        "invalid fleetTransport state",
+      );
+    }
+    if (w.softwareBusiness !== undefined) {
+      const sb = w.softwareBusiness;
+      add(
+        record(sb) &&
+          record(sb.projects) &&
+          record(sb.saasProducts) &&
+          Object.values(sb.saasProducts).every(
+            (app) => record(app) && int(app.activeSubscribers, 0) && int(app.leadCount, 0),
+          ),
+        "invalid softwareBusiness state",
+      );
+    }
+    if (w.sectorProcesses !== undefined) {
+      const sp = w.sectorProcesses;
+      add(
+        record(sp) &&
+          record(sp.foodBakery) &&
+          record(sp.electronicsRma) &&
+          record(sp.automotiveOem) &&
+          record(sp.biomedSterile) &&
+          int(sp.foodBakery.spoiledUnitsCount, 0) &&
+          int(sp.electronicsRma.totalRmaClaims, 0) &&
+          int(sp.automotiveOem.totalChangeovers, 0) &&
+          finite(sp.biomedSterile.sterilityIndex, 0, 100),
+        "invalid sectorProcesses state",
+      );
+    }
+    if (w.serviceBusiness !== undefined) {
+      const sv = w.serviceBusiness;
+      const activeSpecialists = new Set();
+      let noOverlap = true;
+      if (record(sv) && record(sv.orders)) {
+        for (const o of Object.values(sv.orders)) {
+          if (record(o) && !["paid", "cancelled"].includes(o.status) && o.specialistId) {
+            if (activeSpecialists.has(o.specialistId)) noOverlap = false;
+            activeSpecialists.add(o.specialistId);
+          }
+        }
+      }
+      add(
+        record(sv) &&
+          record(sv.orders) &&
+          record(sv.instrumentCustody) &&
+          record(sv.metrics) &&
+          noOverlap,
+        "invalid serviceBusiness state",
+      );
+    }
     add(
       ["running", "won", "lost"].includes(w.status) &&
         finite(w.reputation, 0, 100) &&

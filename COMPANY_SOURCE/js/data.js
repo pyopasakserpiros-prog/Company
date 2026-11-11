@@ -718,7 +718,697 @@
     }
   });
 
-  // 12 External Assets & Concessions (หมวดสินทรัพย์ภายนอกนิคมที่ส่งผลจริงต่อวัตถุดิบ ต้นทุน โลจิสติกส์ พลังงาน และราคาขาย)
+  // Resource Origin & Classification Taxonomy (Chapter 23: แยกประเภททรัพยากรและแหล่งกำเนิดออกจากลำดับการแปรรูป)
+  const RESOURCE_CLASSES = deepFreeze({
+    natural_deposit: {
+      id: "natural_deposit",
+      nameTh: "แหล่งแร่และธรณีวิทยาธรรมชาติ (Finite Natural Deposit)",
+      isTrueNaturalResource: true,
+      stockBehavior: "finite_depletable",
+      descTh: "ทรัพยากรธรรมชาติใต้ดินที่มีปริมาณสำรองจำกัด (แร่ซิลิกา แร่บ็อกไซต์ แร่เหล็ก/ทองแดง แร่ลิเธียม หินฟอสเฟต ปิโตรเลียมดิบ) ขุดแล้วปริมาณสำรองลดลงจริง"
+    },
+    environmental_flow: {
+      id: "environmental_flow",
+      nameTh: "แหล่งทรัพยากรหมุนเวียนและกระแสธรรมชาติ (Environmental Flow)",
+      isTrueNaturalResource: true,
+      stockBehavior: "flow_rate_limited",
+      descTh: "ทรัพยากรธรรมชาติที่ไหลเข้าตามสภาพแวดล้อมและจำกัดด้วยกำลังเครื่องสูบ/แปลงพลังงาน (น้ำดิบ พลังงานแสงอาทิตย์/ลม อากาศ)"
+    },
+    biological_seed: {
+      id: "biological_seed",
+      nameTh: "เมล็ดพันธุ์และต้นพันธุ์ชีวภาพ (Biological Seed & Propagule)",
+      isTrueNaturalResource: false,
+      stockBehavior: "biological_cycle",
+      descTh: "เมล็ดพันธุ์ข้าว ท่อนพันธุ์อ้อย ต้นกล้าปาล์ม/ไม้เศรษฐกิจ และเมล็ดถั่วเหลือง ต้องหักใช้จริงเมื่อปลูกลงแปลงและคัดเก็บจากผลผลิตที่ยังงอกได้"
+    },
+    agricultural_crop: {
+      id: "agricultural_crop",
+      nameTh: "ผลผลิตชีวภาพจากการเพาะปลูก ป่าปลูก และปศุสัตว์ (Cultivated Biological Output)",
+      isTrueNaturalResource: false,
+      stockBehavior: "cultivated_harvest",
+      descTh: "ข้าวเปลือก ลำอ้อยสด ทะลายปาล์ม ถั่วเหลือง น้ำนมโคสด น้ำยางพารา และท่อนไม้ปลูก เกิดจากวงจรเพาะปลูก/เลี้ยงดูที่ใช้เวลา น้ำ ปุ๋ย และแรงงาน ไม่ใช่ทรัพยากรธรรมชาติ T0 ฟรี"
+    },
+    soil_input: {
+      id: "soil_input",
+      nameTh: "ปุ๋ยและธาตุอาหารบำรุงดินจากกระบวนการผลิต (Manufactured Soil Nutrient)",
+      isTrueNaturalResource: false,
+      stockBehavior: "manufactured_input",
+      descTh: "ปุ๋ยเคมี N-P-K จากแร่ฟอสเฟต/โพแทช และปุ๋ยหมักอินทรีย์จากรำข้าว/แกลบ/เศษพืช ใช้เติมธาตุอาหารในดินที่ถูกดึงไปทุกการเก็บเกี่ยว"
+    },
+    byproduct_waste: {
+      id: "byproduct_waste",
+      nameTh: "ผลพลอยได้และวัสดุหมุนเวียนจากกระบวนการแปรรูป (Process Byproduct)",
+      isTrueNaturalResource: false,
+      stockBehavior: "byproduct_recovery",
+      descTh: "รำข้าวและแกลบจากการสีข้าวเปลือก ใช้เป็นอาหารสัตว์ฟาร์มโคนมหรือหมักเป็นปุ๋ยอินทรีย์คืนสู่แปลงเกษตร"
+    },
+    refined_material: {
+      id: "refined_material",
+      nameTh: "วัตถุดิบแปรรูปขั้นต้น (First-Stage Refined Material)",
+      isTrueNaturalResource: false,
+      stockBehavior: "industrial_refined",
+      descTh: "ข้าวสารขัดสี แป้งโม่ น้ำตาลทราย น้ำมันปาล์มบริสุทธิ์ แผ่นโลหะ ขดลวดทองแดง เม็ดพลาสติก กล่องลูกฟูก ขวดแก้ว และแท่งซิลิคอน MG-Si"
+    },
+    intermediate_part: {
+      id: "intermediate_part",
+      nameTh: "วัสดุวิศวกรรมและกึ่งสำเร็จรูปขั้นกลาง (Midstream Intermediate)",
+      isTrueNaturalResource: false,
+      stockBehavior: "industrial_intermediate",
+      descTh: "โดว์ขนมปัง หัวเชื้อโพรไบโอติกส์ ซองฟอยล์ ตัวถัง ชุดสายไฟ ครีบระบายความร้อน เลนส์ออปติคัล สารแคโทด และแผ่นซิลิคอนเวเฟอร์"
+    },
+    high_tech_component: {
+      id: "high_tech_component",
+      nameTh: "ชิ้นส่วนอิเล็กทรอนิกส์และโมดูลไฮเทค (Tech-Gated Component)",
+      isTrueNaturalResource: false,
+      stockBehavior: "tech_gated_component",
+      descTh: "ดอกลำโพง แผงวงจร PCB โมดูล LED เซนเซอร์ MEMS โซลาร์เซลล์ แบตเตอรี่ลิเธียม ชิปไมโครโพรเซสเซอร์ และชิปกำลังไฟฟ้า IGBT"
+    },
+    operational_consumable: {
+      id: "operational_consumable",
+      nameTh: "เชื้อเพลิงและอะไหล่สิ้นเปลืองสำหรับกองรถและเครื่องจักร (Fleet & Plant Consumable)",
+      isTrueNaturalResource: false,
+      stockBehavior: "operational_consumable",
+      descTh: "น้ำมันดีเซลหมุนเร็ว B7 และยางรถบรรทุกเรเดียล ใช้เดินรถขนส่งตามระยะทางจริงและเปลี่ยนตามสภาพสึกหรอ"
+    }
+  });
+
+  // 4 Agricultural Crop Lifecycles (8-Stage Cultivation Engine: เตรียมดิน -> ปลูกหักเมล็ด -> ดูแลน้ำ/ปุ๋ย -> เก็บเกี่ยว -> คัดเมล็ดพันธุ์ -> พักดิน/ปลูกรอบถัดไป)
+  const AGRICULTURE_CROPS = deepFreeze({
+    jasmine_rice: {
+      id: "jasmine_rice",
+      nameTh: "นาข้าวหอมมะลิทุ่งกุลาร้องไห้ (8 ขั้นตอนวงจรเพาะปลูก)",
+      icon: "🌾",
+      assetId: "jasmine_rice_farm",
+      seedMaterialId: "rice_seed",
+      seedRequired: 2,
+      waterRequired: 2,
+      nutrientDrainPerCycle: 22,
+      moistureDrainPerCycle: 20,
+      growthMinutes: 1440,
+      harvestMaterialId: "paddy_grain",
+      baseGrossYield: 12,
+      byproductMaterialId: "rice_bran_husk",
+      byproductYield: 2,
+      defaultSeedSaveRatio: 0.25,
+      forbiddenSeedIds: ["milled_rice", "artisan_flour", "bakery_dough_butter"],
+      cycleDescTh: "ที่ดินแปลงนา + เมล็ดพันธุ์ข้าว (rice_seed) + น้ำดิบ + ปุ๋ยธาตุอาหาร ➔ เก็บเกี่ยวข้าวเปลือก (paddy_grain) ➔ คัด 25% เก็บเป็นเมล็ดพันธุ์รอบถัดไป และส่งที่เหลือเข้าโรงสีเป็นข้าวสาร (milled_rice) + รำข้าว/แกลบ (rice_bran_husk) ➔ โม่เป็นแป้ง (artisan_flour)"
+    },
+    sugarcane: {
+      id: "sugarcane",
+      nameTh: "ไร่อ้อยปลอดการเผา (ปลูกด้วยท่อนพันธุ์อ้อยสด)",
+      icon: "🎋",
+      assetId: "sugarcane_estate",
+      seedMaterialId: "cane_stalk_seed",
+      seedRequired: 2,
+      waterRequired: 2,
+      nutrientDrainPerCycle: 24,
+      moistureDrainPerCycle: 18,
+      growthMinutes: 1440,
+      harvestMaterialId: "raw_cane",
+      baseGrossYield: 12,
+      byproductMaterialId: "organic_compost",
+      byproductYield: 2,
+      defaultSeedSaveRatio: 0.25,
+      forbiddenSeedIds: ["refined_sugar_syrup", "raw_extract"],
+      cycleDescTh: "แปลงไร่อ้อย + ท่อนพันธุ์อ้อย (cane_stalk_seed) + น้ำดิบ + ปุ๋ย ➔ เก็บเกี่ยวลำอ้อยสด (raw_cane) ➔ คัดท่อนพันธุ์ปลูกรอบหน้า และส่งอ้อยเข้าโรงหีบเคี่ยวเป็นน้ำตาลบริสุทธิ์ (refined_sugar_syrup)"
+    },
+    oil_palm: {
+      id: "oil_palm",
+      nameTh: "สวนปาล์มน้ำมันสุราษฎร์ธานี (ปลูกด้วยต้นกล้าปาล์มพันธุ์ดี)",
+      icon: "🌴",
+      assetId: "palm_oil_plantation",
+      seedMaterialId: "palm_seedling",
+      seedRequired: 2,
+      waterRequired: 2,
+      nutrientDrainPerCycle: 20,
+      moistureDrainPerCycle: 18,
+      growthMinutes: 1440,
+      harvestMaterialId: "crude_palm",
+      baseGrossYield: 12,
+      byproductMaterialId: "organic_compost",
+      byproductYield: 2,
+      defaultSeedSaveRatio: 0.25,
+      forbiddenSeedIds: ["refined_palm_oil", "diesel_liter"],
+      cycleDescTh: "แปลงสวนปาล์ม + ต้นกล้าปาล์ม (palm_seedling) + น้ำดิบ + ปุ๋ย ➔ เก็บเกี่ยวทะลายปาล์มสด (crude_palm) ➔ กลั่นเป็นน้ำมันปาล์มบริสุทธิ์/เนยขาว (refined_palm_oil) และไบโอดีเซล"
+    },
+    soy_herb: {
+      id: "soy_herb",
+      nameTh: "แปลงถั่วเหลืองและสมุนไพรออร์แกนิก (พืชตระกูลถั่วบำรุงดิน)",
+      icon: "🌿",
+      assetId: "organic_herb_orchard",
+      seedMaterialId: "soybean_seed",
+      seedRequired: 2,
+      waterRequired: 2,
+      nutrientDrainPerCycle: 14,
+      moistureDrainPerCycle: 16,
+      growthMinutes: 1440,
+      harvestMaterialId: "soybean_crop",
+      baseGrossYield: 10,
+      byproductMaterialId: "organic_compost",
+      byproductYield: 2,
+      defaultSeedSaveRatio: 0.25,
+      forbiddenSeedIds: ["raw_extract", "probiotic_culture"],
+      cycleDescTh: "แปลงเกษตรอินทรีย์ + เมล็ดพันธุ์ถั่วเหลือง/สมุนไพร (soybean_seed) + น้ำดิบ + ปุ๋ยหมัก ➔ เก็บเกี่ยวผลผลิต (soybean_crop) ➔ คัดพันธุ์และส่งสกัดสุญญากาศเป็นสารสกัดเข้มข้น (raw_extract)"
+    }
+  });
+
+  // Pillar 1 Business Expansion (Chapter 19): Fleet Freight Transport Vehicles & Route Graph
+  const FLEET_VEHICLES = deepFreeze({
+    dry_6w: {
+      id: "dry_6w",
+      nameTh: "รถบรรทุกตู้ทึบ 6 ล้อ (Dry Cargo Box Truck)",
+      icon: "🚚",
+      purchaseCost: 3500000, // ฿35,000 in game satang scale
+      dailyLeaseCost: 180000, // ฿1,800/day
+      maxWeightKg: 6500,
+      maxVolumeM3: 28,
+      baseLitersPerKm: 0.18,
+      supportedCargoTypes: ["dry", "general", "packaging"],
+      speedKmPerHour: 60,
+      maintenanceCost: 350000,
+      descTh: "รถบรรทุกตู้ทึบมาตรฐานสำหรับงานเหมาคันโรงงานถึงโรงงานและขนส่งร่วมหลายลูกค้า"
+    },
+    reefer_6w: {
+      id: "reefer_6w",
+      nameTh: "รถบรรทุกห้องเย็นควบคุมอุณหภูมิ (Cold-Chain Reefer Truck)",
+      icon: "❄️",
+      purchaseCost: 4800000, // ฿48,000 in game satang scale
+      dailyLeaseCost: 250000,
+      maxWeightKg: 6000,
+      maxVolumeM3: 24,
+      baseLitersPerKm: 0.24,
+      supportedCargoTypes: ["cold_chain", "food", "biomed", "dry"],
+      speedKmPerHour: 58,
+      maintenanceCost: 480000,
+      descTh: "รถห้องเย็นพร้อมเซนเซอร์บันทึกอุณหภูมิสำหรับขนส่งเบเกอรี่ นมสด และเวชภัณฑ์ (ใช้น้ำมันทำความเย็นเพิ่ม)"
+    },
+    heavy_10w: {
+      id: "heavy_10w",
+      nameTh: "รถหัวลากและหางพ่วงบรรทุกหนัก 10 ล้อ (Heavy Flatbed & Trailer)",
+      icon: "🚛",
+      purchaseCost: 6500000, // ฿65,000 in game satang scale
+      dailyLeaseCost: 340000,
+      maxWeightKg: 16000,
+      maxVolumeM3: 54,
+      baseLitersPerKm: 0.29,
+      supportedCargoTypes: ["heavy_machinery", "ore_metal", "dry", "general"],
+      speedKmPerHour: 52,
+      maintenanceCost: 650000,
+      descTh: "รถบรรทุกหนักสำหรับขนส่งแร่ แผ่นโลหะ แบตเตอรี่ EV และเครื่องจักรอุตสาหกรรม"
+    }
+  });
+
+  const FREIGHT_ROUTES = deepFreeze([
+    {
+      id: "route_eec_bkk",
+      nameTh: "นิคมลาดกระบัง ➔ ศูนย์กระจายสินค้าบางนา-ตราด (ไป-กลับ)",
+      originTh: "นิคมลาดกระบัง กรุงเทพฯ",
+      destinationTh: "ศูนย์กระจายสินค้าบางนา-ตราด",
+      pickupEmptyKm: 15,
+      outboundLoadedKm: 105,
+      backhaulEmptyKm: 120,
+      tollFeeSatang: 20000, // ฿200
+      baseRateSatang: 450000, // ฿4,500 (ตรงตามตัวอย่างบทที่ 19: 120 กม. ไป + 120 กม. กลับเปล่า)
+      cargoType: "dry",
+      cargoNameTh: "ชิ้นส่วนอิเล็กทรอนิกส์และพัสดุโรงงาน",
+      weightKg: 4200,
+      volumeM3: 18,
+      cargoValueSatang: 18000000,
+      clientCorpId: "metro_retail"
+    },
+    {
+      id: "route_chacheongsao_rayong",
+      nameTh: "นิคมอมตะชลบุรี ➔ นิคมอีสเทิร์นซีบอร์ด ระยอง",
+      originTh: "นิคมอมตะซิตี้ ชลบุรี",
+      destinationTh: "นิคมอีสเทิร์นซีบอร์ด ระยอง",
+      pickupEmptyKm: 20,
+      outboundLoadedKm: 95,
+      backhaulEmptyKm: 115,
+      tollFeeSatang: 24000,
+      baseRateSatang: 520000,
+      cargoType: "ore_metal",
+      cargoNameTh: "แผ่นโลหะขึ้นรูปและชุดสายไฟยานยนต์ EV",
+      weightKg: 9500,
+      volumeM3: 32,
+      cargoValueSatang: 32000000,
+      clientCorpId: "asia_autoparts"
+    },
+    {
+      id: "route_pathum_bkk_cold",
+      nameTh: "อุทยานวิทยาศาสตร์ ปทุมธานี ➔ เครือโรงพยาบาลและเชนอาหารกรุงเทพฯ",
+      originTh: "ปทุมธานี",
+      destinationTh: "กรุงเทพฯ ชั้นใน",
+      pickupEmptyKm: 18,
+      outboundLoadedKm: 82,
+      backhaulEmptyKm: 100,
+      tollFeeSatang: 18000,
+      baseRateSatang: 580000,
+      cargoType: "cold_chain",
+      cargoNameTh: "โภชนเภสัชและโดว์ครัวซองต์แช่แข็งควบคุมอุณหภูมิ",
+      weightKg: 3800,
+      volumeM3: 16,
+      cargoValueSatang: 26000000,
+      clientCorpId: "cp_health"
+    },
+    {
+      id: "route_ayutthaya_laemchabang",
+      nameTh: "นิคมโรจนะ อยุธยา ➔ ท่าเรือแหลมฉบัง ชลบุรี",
+      originTh: "นิคมโรจนะ อยุธยา",
+      destinationTh: "ท่าเรือแหลมฉบัง ชลบุรี",
+      pickupEmptyKm: 25,
+      outboundLoadedKm: 165,
+      backhaulEmptyKm: 190,
+      tollFeeSatang: 35000,
+      baseRateSatang: 790000,
+      cargoType: "dry",
+      cargoNameTh: "เซนเซอร์หุ่นยนต์และอุปกรณ์ส่งออกญี่ปุ่น",
+      weightKg: 5400,
+      volumeM3: 22,
+      cargoValueSatang: 45000000,
+      clientCorpId: "tokyo_elec"
+    }
+  ]);
+
+  // Pillar 2 Business Expansion (Chapter 20): Software House, Custom Dev & 8 SaaS Applications
+  const SOFTWARE_APPS = deepFreeze({
+    pos_retail: {
+      id: "pos_retail",
+      nameTh: "ระบบหน้าร้านและตัดสต็อกอัจฉริยะ (Smart POS & Offline Sync)",
+      icon: "🖥️",
+      targetSector: "food",
+      targetClients: ["cp_health", "metro_retail", "siam_naturals"],
+      contractPriceSatang: 12000000, // ฿120,000 (ตรงตามตัวอย่างบทที่ 20: มัดจำ 30% / รับมอบทดสอบ 40% / เปิดใช้ 30%)
+      devWorkMinutes: 120,
+      qaWorkMinutes: 45,
+      computeCostSatang: 500000, // ฿5,000
+      saasMonthlyFeePerUserSatang: 60000, // ฿600/บัญชี/รอบ
+      serverUsersPerUnit: 25,
+      internalBenefitTh: "เชื่อมระบบขายและตัดสต็อกอัตโนมัติ เพิ่มความแม่นยำการประเมินดีลฝ่ายขาย +5%",
+      descTh: "ระบบขายหน้าร้าน ตัดสต็อกแบบออฟไลน์แล้วซิงก์ขึ้นคลาวด์ เหมาะสำหรับเชนร้านอาหารและค้าปลีก"
+    },
+    queue_booking: {
+      id: "queue_booking",
+      nameTh: "แอปจองคิวและบริหารตารางนัดหมาย (Smart Slot & Queue Manager)",
+      icon: "📅",
+      targetSector: "biomed",
+      targetClients: ["biomed_siam", "cp_health"],
+      contractPriceSatang: 11000000,
+      devWorkMinutes: 110,
+      qaWorkMinutes: 40,
+      computeCostSatang: 450000,
+      saasMonthlyFeePerUserSatang: 55000,
+      serverUsersPerUnit: 30,
+      internalBenefitTh: "จัดคิวท่าเทียบรถและตารางนัดหมายลูกค้า ลดเวลารอคิวหน้าคลัง",
+      descTh: "ระบบจองคิวตาม capacity รายเวลา เก็บมัดจำและป้องกันคิวชนสำหรับคลินิกและศูนย์บริการ"
+    },
+    tms_fleet: {
+      id: "tms_fleet",
+      nameTh: "แพลตฟอร์มบริหารกองรถขนส่งและหลักฐานส่งของ (Fleet TMS & e-POD)",
+      icon: "🚛",
+      targetSector: "general",
+      targetClients: ["metro_retail", "asia_autoparts", "siam_metal"],
+      contractPriceSatang: 15000000,
+      devWorkMinutes: 140,
+      qaWorkMinutes: 50,
+      computeCostSatang: 600000,
+      saasMonthlyFeePerUserSatang: 75000,
+      serverUsersPerUnit: 20,
+      internalBenefitTh: "เมื่อติดตั้งใช้เองในบริษัท ช่วยลดระยะทางวิ่งรถเปล่าและประหยัดน้ำมันกองรถขนส่ง -8%",
+      descTh: "ระบบจัดเที่ยวรถ จองคนขับ คำนวณเชื้อเพลิงขาไป-ขากลับ และบันทึกหลักฐานส่งมอบ e-POD"
+    },
+    wms_warehouse: {
+      id: "wms_warehouse",
+      nameTh: "ระบบบริหารคลังสินค้า บาร์โค้ด และล็อตวัตถุดิบ (Smart WMS & Lot Tracker)",
+      icon: "📦",
+      targetSector: "tech",
+      targetClients: ["siam_tech", "tokyo_elec", "metro_retail"],
+      contractPriceSatang: 14000000,
+      devWorkMinutes: 130,
+      qaWorkMinutes: 45,
+      computeCostSatang: 550000,
+      saasMonthlyFeePerUserSatang: 70000,
+      serverUsersPerUnit: 22,
+      internalBenefitTh: "เมื่อติดตั้งใช้เองในคลังสินค้า ช่วยเพิ่มความเร็วงานแพ็กกิ้งและตรวจรับพัสดุ +8%",
+      descTh: "ระบบระบุตำแหน่งพาเลท บาร์โค้ด และอายุเก็บเมล็ดพันธุ์/วัตถุดิบตามล็อตจริง"
+    },
+    hr_payroll: {
+      id: "hr_payroll",
+      nameTh: "ระบบบริหารงานบุคคล กะทำงาน และเงินเดือน (Enterprise HRIS & Payroll)",
+      icon: "👥",
+      targetSector: "multi",
+      targetClients: ["apex_ind", "titan_elec", "siam_tech"],
+      contractPriceSatang: 13500000,
+      devWorkMinutes: 125,
+      qaWorkMinutes: 45,
+      computeCostSatang: 500000,
+      saasMonthlyFeePerUserSatang: 65000,
+      serverUsersPerUnit: 25,
+      internalBenefitTh: "เมื่อติดตั้งใช้เอง ช่วยลดเวลาจัดการเอกสารฝ่ายบุคคลและเพิ่มความพึงพอใจพนักงาน",
+      descTh: "ระบบคำนวณกะทำงาน ค่าล่วงเวลา OT โบนัสผลงาน และสิทธิ์การเข้าถึงข้อมูลพนักงาน"
+    },
+    doc_procurement: {
+      id: "doc_procurement",
+      nameTh: "ระบบใบขอซื้อ อนุมัติงบ และเอกสารดิจิทัล (e-Procurement & Audit Trail)",
+      icon: "📑",
+      targetSector: "automotive",
+      targetClients: ["siam_metal", "eastern_auto", "petro_chem_siam"],
+      contractPriceSatang: 12500000,
+      devWorkMinutes: 115,
+      qaWorkMinutes: 40,
+      computeCostSatang: 480000,
+      saasMonthlyFeePerUserSatang: 62000,
+      serverUsersPerUnit: 25,
+      internalBenefitTh: "เมื่อติดตั้งใช้เอง ช่วยเร่งความเร็วการออกใบสั่งซื้อ PO และวางบิล Invoice +10%",
+      descTh: "ระบบตรวจสอบใบขอซื้อ อนุมัติหลายระดับ และเก็บประวัติการแก้ไขเพื่อการตรวจสอบบัญชี"
+    },
+    field_service: {
+      id: "field_service",
+      nameTh: "แอปบริหารงานช่างซ่อมบำรุงและสอบเทียบภาคสนาม (Field Service & PM App)",
+      icon: "🛠️",
+      targetSector: "energy",
+      targetClients: ["green_power", "pacific_solar", "solartech_asia"],
+      contractPriceSatang: 14500000,
+      devWorkMinutes: 135,
+      qaWorkMinutes: 45,
+      computeCostSatang: 580000,
+      saasMonthlyFeePerUserSatang: 72000,
+      serverUsersPerUnit: 20,
+      internalBenefitTh: "เมื่อติดตั้งใช้เอง ช่วยลดอัตราการสึกหรอของเครื่องจักรโรงงานและรถบรรทุก -6%",
+      descTh: "แอปจัดตารางทีมช่าง เบิกอะไหล่ บันทึกรูปหลักฐานก่อน-หลังซ่อม และใบรับรองการสอบเทียบ"
+    },
+    ai_doc_assistant: {
+      id: "ai_doc_assistant",
+      nameTh: "ผู้ช่วย AI ค้นหาเอกสารวิศวกรรมและคู่มือโรงงาน (Enterprise RAG AI Assistant)",
+      icon: "🤖",
+      targetSector: "aerospace_robotics",
+      targetClients: ["siam_aero_robotics", "tokyo_elec", "biomed_siam"],
+      contractPriceSatang: 18500000,
+      devWorkMinutes: 160,
+      qaWorkMinutes: 60,
+      computeCostSatang: 850000,
+      saasMonthlyFeePerUserSatang: 95000,
+      serverUsersPerUnit: 15,
+      internalBenefitTh: "เมื่อติดตั้งใช้เอง ช่วยวิศวกรค้นหาคู่มือและงานวิจัย R&D ได้เร็วขึ้น (+แต้มวิจัย +10%)",
+      descTh: "ระบบค้นหาเอกสารภายในตามสิทธิ์พร้อมอ้างอิงแหล่งที่มา มีการคิดโควตา API และแจ้งเตือนเมื่อคำถามอยู่นอกขอบเขตข้อมูล"
+    }
+  });
+
+  // 4 Distinct Factory Sector Process & Business Models (ผ่าตัดธุรกิจโรงงานเดิมให้แต่ละอุตสาหกรรมมีโปรเซส ความเสี่ยง และโมเดลธุรกิจของตัวเองจริง)
+  const SECTOR_PROCESS_MODELS = deepFreeze({
+    food_bakery_batch: {
+      id: "food_bakery_batch",
+      nameTh: "โมเดลธุรกิจอาหารสด เบเกอรี่ และเครื่องดื่ม (Batch Fermentation, Shelf-Life & Cold-Chain Consignment)",
+      icon: "🍞",
+      industries: ["food"],
+      stagesTh: [
+        "1. ชั่งตวงและนวดผสมแบตช์ (Batch Mixing & Kneading)",
+        "2. หมักโดว์/พาสเจอร์ไรซ์และอบอุโมงค์ความร้อน (Fermentation & Tunnel Baking)",
+        "3. ตรวจวัดความชื้น เชื้อจุลินทรีย์ และชิมรสชาติ (Food Safety & Sensory QC)",
+        "4. ซีลสุญญากาศ/คุมอุณหภูมิและประทับวันหมดอายุ (Cold-Seal & Shelf-Life Stamp)"
+      ],
+      shelfLifeDaysBase: 3,
+      shelfLifeDaysColdChain: 7,
+      freshnessDecayPerDay: 28,
+      freshnessDecayColdChain: 10,
+      freshBonusThresholdPct: 80,
+      freshPriceBonusPct: 0.06,
+      staleMarkdownPct: 0.12,
+      uniqueMechanismTh: "ผลิตเป็นแบตช์เตาอบ มีค่าความสด (freshnessPct 100%➔0%) และวันหมดอายุจริง หากค้างคลังจนหมดอายุจะบูดเสีย (Spoilage) ต้องตัดเป็นของเสียและนำไปหมักปุ๋ยอินทรีย์ หากส่งมอบตอนสดใหม่ได้โบนัสราคา +6% แต่ถ้าใกล้หมดอายุถูกหัก Markdown -12%"
+    },
+    electronics_smt_rma: {
+      id: "electronics_smt_rma",
+      nameTh: "โมเดลธุรกิจอิเล็กทรอนิกส์และเซมิคอนดักเตอร์ (SMT Pick-and-Place, Firmware Revision & Post-Sale RMA Warranty)",
+      icon: "🔌",
+      industries: ["tech"],
+      stagesTh: [
+        "1. วางชิป SMT และบัดกรีเตา Reflow (SMT Pick-and-Place & Reflow)",
+        "2. แฟลชเฟิร์มแวร์และประกอบตัวถัง (Firmware Flash & Enclosure)",
+        "3. ทดสอบจ่ายไฟ Burn-in และสแกนวงจร AOI/ICT (Burn-In & ICT Test)",
+        "4. แพ็กถุงกันไฟฟ้าสถิต ESD และยิงเลข Serial (ESD Serialization Pack)"
+      ],
+      warrantyPeriodDays: 14,
+      baseRmaRiskPct: 0.08,
+      rmaRepairMaterialId: "pcb",
+      rmaCashCompensationSatang: 35000,
+      uniqueMechanismTh: "มีรุ่นฮาร์ดแวร์/เฟิร์มแวร์ (Revision) และเมื่อส่งมอบแล้วสินค้าจะเข้าสู่พูลรับประกันหลังการขาย (Active Warranty Pool) หากคุณภาพคาบเส้นจะเกิดใบเคลมประกัน RMA ที่ต้องใช้วิศวกรและอะไหล่ซ่อมเคลมหรือชดเชยเงินให้ลูกค้า"
+    },
+    automotive_oem_tooling: {
+      id: "automotive_oem_tooling",
+      nameTh: "โมเดลธุรกิจยานยนต์ EV พลังงาน และเครื่องจักรกลหนัก (CNC Die Tooling Changeover & HV Dyno Certification)",
+      icon: "⚡",
+      industries: ["automotive", "energy", "aerospace_robotics"],
+      stagesTh: [
+        "1. ตั้งแม่พิมพ์ปั๊มโลหะและสอบเทียบแขนกล CNC (Die Tooling Setup & Changeover)",
+        "2. เชื่อมเลเซอร์เซลล์แรงดันสูงและประกอบชุดส่งกำลัง (HV Cell & Powertrain Integration)",
+        "3. ทดสอบฉนวนแรงดันสูง Dielectric และขึ้นแท่น Dyno (HV Safety & Dyno Stress Test)",
+        "4. ตีลังเหล็กและล็อกโช้คกันกระแทกส่งมอบ OEM (Heavy OEM Crate Rigging)"
+      ],
+      changeoverCostSatang: 45000,
+      changeoverPenaltyMinutes: 15,
+      sameModelRhythmBonusPct: 0.12,
+      uniqueMechanismTh: "สายการผลิตจำแม่พิมพ์ (Tooling Jig) ของรุ่นสินค้าที่กำลังผลิต หากสลับไปผลิตรุ่นอื่นต้องเสียเวลาและต้นทุนตั้งแม่พิมพ์ใหม่ (Changeover Cost) แต่หากเดินสายพานรุ่นเดิมต่อเนื่องจะได้โบนัสความเร็ว +12%"
+    },
+    biomed_sterile_lot: {
+      id: "biomed_sterile_lot",
+      nameTh: "โมเดลธุรกิจชีวการแพทย์และโภชนเภสัชคลีนรูม (Aseptic Formulation, Clinical Assay & Lot Quarantine Release)",
+      icon: "🧬",
+      industries: ["biomed"],
+      stagesTh: [
+        "1. เตรียมสารชีวภาพในห้องคลีนรูมแรงดันบวก (ISO Class-5 Sterile Formulation)",
+        "2. บรรจุปลอดเชื้อและประกอบไบโอเซนเซอร์ (Aseptic Clinical Filling)",
+        "3. เพาะเชื้อตรวจการปนเปื้อนและวัดความแม่นยำคลินิก (Microbial & Potency Assay)",
+        "4. กักกันตรวจปล่อยล็อตและติดฉลากควบคุม Lot (Quarantine Release & Lot Seal)"
+      ],
+      minSterilityScore: 70,
+      clinicalPremiumPct: 0.09,
+      uniqueMechanismTh: "ต้องควบคุมดัชนีความปลอดเชื้อของคลีนรูม (Sterility Index) ทุกแบตช์ต้องผ่านการกักกันตรวจปล่อยล็อต (Lot Quarantine) หากห้องแล็บปนเปื้อนต้องทำลายล็อตนั้นทิ้งทันที แต่เมื่อผ่านใบรับรองคลินิกจะได้ราคาพรีเมียมการแพทย์ +9%"
+    }
+  });
+
+  // Chapter 21: 3 Distinct B2B Industrial Service Business Models (แล็บสอบเทียบ ISO, ทีมช่างซ่อมบำรุง SLA นอกสถานที่, และโรงงานรีไซเคิลกากอุตสาหกรรม)
+  const INDUSTRIAL_SERVICES = deepFreeze({
+    calibration_lab: {
+      id: "calibration_lab",
+      nameTh: "บริการห้องแล็บสอบเทียบเครื่องมือวัดและรับรองมาตรฐาน ISO/IEC 17025",
+      shortNameTh: "แล็บสอบเทียบ ISO (Calibration Lab)",
+      icon: "🔬",
+      requiredRole: "inspector",
+      fallbackRole: "engineer",
+      stages: ["intake_logged", "lab_calibrating", "certificate_issued", "returned_and_billed"],
+      stagesTh: [
+        "1. รับมอบเครื่องมือวัดของลูกค้าเข้าทะเบียนฝากสอบเทียบ (Instrument Custody Intake)",
+        "2. เดินเครื่องสอบเทียบค่าความคลาดเคลื่อนในห้องแล็บควบคุมอุณหภูมิ (Precision Reference Calibration)",
+        "3. ทวนสอบผลและออกใบรับรองมาตรฐาน ISO/IEC (Calibration Certificate Issuance)",
+        "4. ส่งคืนเครื่องมือให้ลูกค้าและเรียกเก็บค่าธรรมเนียมสอบเทียบ (Custody Return & Billing)"
+      ],
+      serviceFeeSatang: 380000, // ฿3,800 per batch of instruments
+      labConsumableCostSatang: 45000,
+      requiredMinutes: 60,
+      sparePartInputs: {},
+      recoveredOutputs: {},
+      clientCorps: ["tokyo_elec", "biomed_siam", "siam_aero_robotics", "asia_autoparts"],
+      descTh: "รับเครื่องมือวัดและเซนเซอร์จากโรงงานลูกค้ามาสอบเทียบความแม่นยำในแล็บ (เครื่องมือลูกค้าเป็นทรัพย์สินฝากสอบเทียบ แยกจากสต็อกบริษัท) ออกใบรับรองและรับค่าบริการ"
+    },
+    field_maintenance: {
+      id: "field_maintenance",
+      nameTh: "บริการทีมวิศวกรซ่อมบำรุงเครื่องจักรนอกสถานที่ตามสัญญา SLA (Field Maintenance & Overhaul)",
+      shortNameTh: "ทีมช่างซ่อมบำรุงนอกสถานที่ (Field SLA)",
+      icon: "🛠️",
+      requiredRole: "engineer",
+      fallbackRole: "assembler",
+      stages: ["sla_dispatched", "parts_allocated", "onsite_overhaul", "sla_settled"],
+      stagesTh: [
+        "1. รับใบแจ้งซ่อมด่วนและล็อกเวลา SLA กับโรงงานลูกค้า (SLA Dispatch Ticket)",
+        "2. เบิกอะไหล่จริงจากคลังบริษัท (แผ่นโลหะ/ชุดสายไฟ) และจัดชุดเครื่องมือ (Spare Parts Allocation)",
+        "3. ส่งวิศวกรเดินทางไปซ่อมบำรุงและตั้งศูนย์เครื่องจักรหน้างาน (On-Site Overhaul & Alignment)",
+        "4. เดินเครื่องทดสอบผ่านเกณฑ์ รับเงินค่าบริการตาม SLA (SLA Verification & Settlement)"
+      ],
+      serviceFeeSatang: 640000, // ฿6,400 per SLA field overhaul
+      labConsumableCostSatang: 60000,
+      slaPenaltySatang: 140000,
+      requiredMinutes: 90,
+      sparePartInputs: { metal_sheet: 1, wire_harness: 1 },
+      recoveredOutputs: {},
+      clientCorps: ["siam_metal", "eastern_auto", "green_power", "pacific_solar"],
+      descTh: "ส่งทีมวิศวกรพร้อมเบิกอะไหล่จริงจากคลังไปซ่อมเครื่องจักรที่โรงงานลูกค้า หากส่งมอบทันเวลาได้รับเงินเต็มจำนวน หากล่าช้าเกิน SLA ถูกหักค่าปรับ"
+    },
+    industrial_recycling: {
+      id: "industrial_recycling",
+      nameTh: "บริการรับบำบัดของเสียและรีไซเคิลกากอุตสาหกรรมหมุนเวียน (Eco Waste Treatment & Material Recovery)",
+      shortNameTh: "รีไซเคิลกากอุตสาหกรรม (Eco Recycling)",
+      icon: "♻️",
+      requiredRole: "logistics",
+      fallbackRole: "assembler",
+      stages: ["waste_collected", "sorting_and_treatment", "material_recovered", "eco_settled"],
+      stagesTh: [
+        "1. รับกากอุตสาหกรรม เศษโลหะ และเศษกระดาษจากโรงงานคู่ค้า (Industrial Waste Intake)",
+        "2. คัดแยก บดย่อย และบำบัดด้วยน้ำดิบ/พลังงานสะอาด (Sorting, Washing & Treatment)",
+        "3. หลอมและอัดก้อนคืนสภาพเป็นวัตถุดิบหมุนเวียนเข้าคลังจริง (Secondary Material Recovery)",
+        "4. ออกใบรับรองการจัดการของเสียสีเขียว (ESG Certificate) และรับค่าบริการบำบัด"
+      ],
+      serviceFeeSatang: 320000, // ฿3,200 treatment fee + recovered materials!
+      labConsumableCostSatang: 50000,
+      requiredMinutes: 75,
+      sparePartInputs: { raw_water_m3: 1 },
+      recoveredOutputs: { metal_sheet: 1, pack_carton: 2, organic_compost: 1 },
+      clientCorps: ["cp_health", "metro_retail", "siam_tech", "petro_chem_siam"],
+      descTh: "รับบำบัดกากของเสียจากบริษัทคู่ค้าโดยใช้น้ำดิบและกระบวนการคัดแยก ได้ทั้งเงินค่าบริการบำบัด และได้แผ่นโลหะรีไซเคิล กล่องกระดาษ และปุ๋ยหมักกลับเข้าคลังจริง!"
+    }
+  });
+
+  // Master Overview of All 8 Distinct Business Models in Siam Enterprise v1.2.0
+  const BUSINESS_PROCESS_MODELS = deepFreeze([
+    {
+      id: "model_1_food_bakery",
+      nameTh: "1. ธุรกิจอาหารสด เบเกอรี่ และเครื่องดื่ม (Batch Baking & Cold-Chain Shelf-Life Model)",
+      icon: "🍞",
+      processFlowTh: "ชั่งตวงผสมแบตช์ ➔ หมักโดว์/พาสเจอร์ไรซ์/อบเตาอุโมงค์ ➔ ตรวจเชื้อและชิมรสชาติ ➔ ซีลสุญญากาศประทับวันหมดอายุ ➔ ส่งมอบเชนค้าปลีกก่อนหมดอายุ",
+      uniqueMechanicsTh: "มีความสด (freshnessPct) ลดลงรายวัน หากค้างสต็อกจนหมดอายุจะบูดเสียจริงและกลายเป็นปุ๋ยหมัก หากมีคลังห้องเย็นยืดอายุได้ 2 เท่า ส่งของสดใหม่ได้โบนัส +6%",
+      revenueAndRiskTh: "รายได้จากการขายล็อตสดและสัญญาส่งรายวัน • ความเสี่ยงคือของบูดเสียคาคลังหรือโดนหักราคา Markdown เมื่อความสดต่ำ"
+    },
+    {
+      id: "model_2_electronics_semicon",
+      nameTh: "2. ธุรกิจอิเล็กทรอนิกส์และเซมิคอนดักเตอร์ (SMT Fabrication, Firmware Revision & RMA Warranty Model)",
+      icon: "🔌",
+      processFlowTh: "ถลุงซิลิกา/ดึงเวเฟอร์ ➔ วางชิป SMT & บัดกรี Reflow ➔ แฟลชเฟิร์มแวร์ ➔ ทดสอบไฟ Burn-in/ICT ➔ แพ็กกันไฟฟ้าสถิต ESD ➔ ดูแลรับประกันหลังการขาย (RMA Pool)",
+      uniqueMechanicsTh: "สินค้าที่ส่งมอบแล้วเข้าสู่พูลรับประกัน 14 วัน หากผลิตด้วยเครื่องจักรโทรมหรือคุณภาพคาบเส้น ลูกค้าจะส่งเคลม RMA ต้องเบิกแผงวงจรซ่อมหรือจ่ายเงินชดเชย",
+      revenueAndRiskTh: "อัตรากำไรต่อชิ้นสูงแต่ต้องใช้แต้มวิจัย R&D ปลดล็อกชิ้นส่วน T3 • ความเสี่ยงคือภาระเคลมประกัน RMA หลังขาย"
+    },
+    {
+      id: "model_3_automotive_ev",
+      nameTh: "3. ธุรกิจยานยนต์ EV พลังงาน และเครื่องจักรกลหนัก (OEM Tooling Changeover & HV Dyno Model)",
+      icon: "⚡",
+      processFlowTh: "ตั้งแม่พิมพ์ปั๊มโลหะ CNC (Tooling Setup) ➔ เชื่อมเซลล์แบตแรงดันสูงและชุดส่งกำลัง ➔ ทดสอบฉนวน Dielectric & แท่น Dyno ➔ ตีลังเหล็กส่งมอบบริษัทรถยนต์ OEM",
+      uniqueMechanicsTh: "แต่ละไลน์ผลิตจดจำแม่พิมพ์รุ่นปัจจุบัน หากสลับรุ่นสินค้าไปมาต้องเสียเวลาและต้นทุนตั้งแม่พิมพ์ใหม่ (Changeover Cost) แต่ถ้าผลิตล็อตรุ่นเดิมต่อเนื่องจะได้โบนัสความเร็ว +12%",
+      revenueAndRiskTh: "มูลค่าสัญญาต่อออเดอร์สูงมาก • ความเสี่ยงคือต้นทุนสลับแม่พิมพ์บ่อยและการตกเกณฑ์ความปลอดภัยแรงดันสูง"
+    },
+    {
+      id: "model_4_biomed_sterile",
+      nameTh: "4. ธุรกิจชีวการแพทย์และโภชนเภสัชคลีนรูม (Aseptic Formulation & Lot Quarantine Model)",
+      icon: "🧬",
+      processFlowTh: "เตรียมหัวเชื้อในคลีนรูมปลอดเชื้อ ➔ บรรจุระดับคลินิก ➔ เพาะเชื้อตรวจการปนเปื้อนในแล็บ ➔ กักกันตรวจปล่อยรายล็อต (Lot Quarantine Release) ➔ ส่งมอบโรงพยาบาล",
+      uniqueMechanicsTh: "มีดัชนีความปลอดเชื้อ (Sterility Index) ทุกแบตช์ต้องผ่านการตรวจปล่อยล็อต หากปนเปื้อนต้องคัดทิ้งยกล็อต แต่ถ้าผ่านใบรับรองคลินิกจะได้ค่าพรีเมียมการแพทย์ +9%",
+      revenueAndRiskTh: "ราคาขายพรีเมียมสูงสุดในกลุ่มสินค้าผลิต • ความเสี่ยงคือการปนเปื้อนในคลีนรูมทำให้เสียวัตถุดิบยกล็อต"
+    },
+    {
+      id: "model_5_upstream_resources",
+      nameTh: "5. ธุรกิจต้นน้ำแท้จริง: นาข้าว 8 ขั้นตอน, ปศุสัตว์โคนม, เหมืองแร่สำรองจำกัด และป่าปลูก 3 ช่วงอายุ",
+      icon: "🌾",
+      processFlowTh: "[เกษตร] เตรียมดิน ➔ หักเมล็ดปลูก ➔ ให้น้ำ/ปุ๋ย ➔ เก็บเกี่ยว ➔ คัดพันธุ์ 25% ➔ สีข้าว/โม่แป้ง | [ปศุสัตว์] ให้อาหาร+น้ำ ➔ รีดนมสด+หมักมูลสัตว์ | [เหมือง] สำรวจ ➔ ขุดด้วยดีเซล ➔ แต่งแร่แยกกากแร่ | [ป่าปลูก] ตัดไม้โตเต็มวัย ➔ ปลูกกล้าไม้ทดแทน 3 ชั้นอายุ",
+      uniqueMechanicsTh: "แยกแหล่งกำเนิดธรรมชาติแท้จริง (T0_NATURAL) ออกจากผลผลิตชีวภาพ ห้ามใช้ข้าวสารหรือแป้งเป็นเมล็ดพันธุ์ เหมืองขุดแล้วแร่ลดลงจริง ป่าตัดแล้วต้องรอโต",
+      revenueAndRiskTh: "ลดต้นทุนวัตถุดิบโรงงานและขายส่งวัตถุดิบ B2B ได้ • ความเสี่ยงคือเมล็ดหมด ขาดน้ำ ดินเสื่อม ฝูงสัตว์ขาดอาหาร หรือสายแร่หมด"
+    },
+    {
+      id: "model_6_fleet_transport",
+      nameTh: "6. ธุรกิจขนส่งด้วยกองรถ B2B (9-Stage Fleet Dispatch, Cargo Custody & Backhaul Matching Model)",
+      icon: "🚛",
+      processFlowTh: "รับคำขอ ➔ ประเมินระยะไป-กลับรถเปล่า ➔ จองรถ+คนขับ+ช่องโหลด ➔ รับฝากของลูกค้าเข้า Custody ➔ วิ่งขาไปหักดีเซล+ค่าผ่านทาง ➔ ส่งมอบเซ็น e-POD ➔ วางบิล ➔ วิ่งรถกลับพร้อมจับคู่งานขากลับ (Backhaul Match) ➔ ตรวจเช็ก/ซ่อมบำรุง",
+      uniqueMechanicsTh: "แยกรถตู้ทึบ รถห้องเย็น (มีบันทึกอุณหภูมิ) และรถพ่วงหนัก สินค้าลูกค้าแยกจากสต็อกบริษัท รถที่จ่ายเงินแล้วยังไม่ว่างทันทีจนกว่าจะวิ่งกลับถึงลานจอด และจับคู่งานขากลับเพื่อลดเที่ยวรถเปล่าได้",
+      revenueAndRiskTh: "สร้างกระแสเงินสดจากค่าระวางขนส่งและงานขากลับ • ความเสี่ยงคือค่าน้ำมันขากลับรถเปล่า รถเสียกลางทาง และยางสึกหรอ"
+    },
+    {
+      id: "model_7_software_saas",
+      nameTh: "7. ธุรกิจพัฒนาซอฟต์แวร์รับจ้างและแอปสมาชิก SaaS (Milestone Dev, QA Defect Queue & Cloud MRR Model)",
+      icon: "💻",
+      processFlowTh: "[รับจ้าง] สำรวจความต้องการ ➔ สัญญามัดจำ 30% (Unearned Deposit) ➔ ออกแบบ ➔ เขียนโค้ดจองโต๊ะ ➔ ทดสอบ QA/แก้บั๊ก ➔ ลูกค้าตรวจ UAT 40% ➔ Deploy 30% | [SaaS] พัฒนา MVP ➔ หา Lead ➔ แปลงเป็นสมาชิก ➔ ดูแล Cloud Server/Support ➔ ตัดรอบบิลตามผู้ใช้จริง",
+      uniqueMechanicsTh: "เงินมัดจำ 30% ไม่นับเป็นกำไรจนกว่าจะส่งมอบผ่าน QA และเวอร์ชันตรงสัญญา แอป SaaS ที่ไม่มีผู้ใช้จริงจะไม่สร้างรายได้ฟรี และเมื่อผู้ใช้เกินความจุเซิร์ฟเวอร์จะเกิดอาการระบบอืด/ลูกค้ายกเลิก (Churn)",
+      revenueAndRiskTh: "รายได้ก้อนใหญ่ตามงวดงานและรายได้ประจำรายรอบ (MRR) • ความเสี่ยงคือบั๊กค้าง งานแก้ Technical Debt และลูกค้ายกเลิกสมาชิก"
+    },
+    {
+      id: "model_8_industrial_services",
+      nameTh: "8. ธุรกิจบริการวิศวกรรม สอบเทียบแล็บ ISO ซ่อมบำรุงภาคสนาม และรีไซเคิลกากอุตสาหกรรม (B2B Service Model)",
+      icon: "🔬",
+      processFlowTh: "[แล็บสอบเทียบ] รับเครื่องมือลูกค้าเข้า Custody ➔ วัดค่าเทียบมาตรฐาน ➔ ออกใบรับรอง ISO | [ทีมช่าง SLA] รับแจ้งซ่อม ➔ เบิกอะไหล่จริง ➔ ส่งวิศวกรซ่อมหน้างานทัน SLA | [รีไซเคิล] รับกากของเสีย ➔ คัดแยกบำบัดด้วยน้ำดิบ ➔ คืนสภาพเป็นแผ่นโลหะ/กล่อง/ปุ๋ยเข้าคลังจริง",
+      uniqueMechanicsTh: "ใช้ความเชี่ยวชาญของวิศวกร/QC และอาคารแล็บ/โรงซ่อม/โรงน้ำ สร้างรายได้บริการ B2B พร้อมหมุนเวียนกากอุตสาหกรรมกลับมาเป็นวัตถุดิบตั้งต้น",
+      revenueAndRiskTh: "สร้างรายได้บริการมาร์จิ้นสูงและได้วัตถุดิบรีไซเคิลเข้าคลัง • ความเสี่ยงคือการส่งงานซ่อมล่าช้าเกิน SLA หรือขาดอะไหล่ซ่อมบำรุง"
+    }
+  ]);
+
+  // Complete True-Resource Origin -> Extraction/Cultivation -> Midstream -> Downstream Reference Table (Chapter 23 Section 9)
+  const TRUE_RESOURCE_CHAIN_TABLE = deepFreeze([
+    {
+      chainId: "rice_bakery_chain",
+      nameTh: "สายข้าวหอมมะลิ ➔ ข้าวสาร/รำข้าว ➔ แป้งโม่ ➔ เบเกอรี่",
+      trueNaturalSourceTh: "ที่ดินแปลงนา (ดิน+ธาตุอาหาร) + น้ำดิบธรรมชาติ (raw_water_m3) + แสงแดด",
+      propaguleOrDepositTh: "เมล็ดพันธุ์ข้าวหอมมะลิ (rice_seed) จากคลังพันธุ์หรือคัดจากข้าวเปลือกรอบก่อน",
+      cultivationOrExtractionTh: "เพาะปลูก 8 ขั้นตอน (เตรียมดิน ➔ ปลูกหักเมล็ด ➔ ดูแลน้ำ/ปุ๋ย ➔ เก็บเกี่ยวข้าวเปลือก paddy_grain ➔ คัดเก็บพันธุ์ 25%)",
+      midstreamProcessingTh: "สีข้าวเปลือกเป็นข้าวสาร (milled_rice) + รำข้าว/แกลบ (rice_bran_husk) ➔ โม่ข้าวสารเป็นแป้ง (artisan_flour) ➔ นวดโดว์เนย (bakery_dough_butter)",
+      downstreamProductTh: "ขนมปังโฮลเกรน (artisan_bakery), ครัวซองต์ส่งออก (pastry_croissant_box), อาหารพร้อมทาน (ready_meal_box)",
+      simulationScopeNoteTh: "จำลองครบทั้งแปลงนา น้ำ ธาตุอาหารดิน การหักเมล็ด การคัดข้าวเปลือกเป็นพันธุ์ และการห้ามใช้ข้าวสาร/แป้งปลูก"
+    },
+    {
+      chainId: "sugarcane_syrup_chain",
+      nameTh: "สายอ้อยปลอดการเผา ➔ น้ำตาลบริสุทธิ์/ไซรัป ➔ เครื่องดื่มและเบเกอรี่",
+      trueNaturalSourceTh: "ที่ดินแปลงไร่อ้อย + น้ำดิบธรรมชาติ (raw_water_m3) + ปุ๋ยแร่ฟอสเฟต/โพแทช",
+      propaguleOrDepositTh: "ท่อนพันธุ์อ้อยสดคัดตาพันธุ์ดี (cane_stalk_seed)",
+      cultivationOrExtractionTh: "ปลูกท่อนพันธุ์อ้อย ดูแลน้ำและปุ๋ย เก็บเกี่ยวลำอ้อยสด (raw_cane) และคัดท่อนพันธุ์ไว้ปลูกรอบถัดไป",
+      midstreamProcessingTh: "หีบอ้อยสดและเคี่ยวเป็นน้ำตาลทรายบริสุทธิ์/ไซรัป (refined_sugar_syrup) + กากชานอ้อยหมักปุ๋ย (organic_compost)",
+      downstreamProductTh: "ขนมปังโฮลเกรน, ครัวซองต์เนยสด, เครื่องดื่มเวย์โปรตีน (dairy_protein_shake)",
+      simulationScopeNoteTh: "น้ำตาลไม่ใช่ T0 แท้จริง ต้องผ่านการปลูกอ้อยและหีบเคี่ยว หรือซื้อจากโรงหีบสหกรณ์"
+    },
+    {
+      chainId: "palm_olein_biodiesel_chain",
+      nameTh: "สายปาล์มน้ำมัน ➔ น้ำมันปาล์มบริสุทธิ์/เนยขาว & ไบโอดีเซล",
+      trueNaturalSourceTh: "ที่ดินแปลงสวนปาล์ม + น้ำดิบธรรมชาติ (raw_water_m3) + ธาตุอาหารดิน",
+      propaguleOrDepositTh: "ต้นกล้าปาล์มน้ำมันพันธุ์ดี (palm_seedling)",
+      cultivationOrExtractionTh: "ปลูกและดูแลแปลงปาล์ม ใช้น้ำและปุ๋ย เก็บเกี่ยวทะลายปาล์มสด (crude_palm)",
+      midstreamProcessingTh: "กลั่นทะลายปาล์มสดเป็นน้ำมันปาล์มบริสุทธิ์ (refined_palm_oil) และกลั่นร่วมกับปิโตรเลียมเป็นน้ำมันดีเซล B7 (diesel_liter)",
+      downstreamProductTh: "น้ำมันปรุงอาหารโอเลอิน (premium_cooking_oil), โดว์เพสตรี้, เชื้อเพลิงกองรถขนส่ง B2B",
+      simulationScopeNoteTh: "เชื่อมผลผลิตปาล์มเข้าสู่ทั้งสายอาหารและเชื้อเพลิงกองรถขนส่งของบริษัท"
+    },
+    {
+      chainId: "dairy_soy_biomed_chain",
+      nameTh: "สายฟาร์มโคนม & แปลงถั่วเหลืองสมุนไพร ➔ โพรไบโอติกส์ & โภชนเภสัช",
+      trueNaturalSourceTh: "ที่ดินแปลงเกษตร + น้ำดิบธรรมชาติ (raw_water_m3)",
+      propaguleOrDepositTh: "ฝูงโคนมแม่พันธุ์ + เมล็ดพันธุ์ถั่วเหลือง/สมุนไพร (soybean_seed)",
+      cultivationOrExtractionTh: "เลี้ยงโคนมด้วยรำข้าว/ถั่วเหลืองและน้ำดิบได้น้ำนมโคสด (fresh_milk_soy) • เพาะปลูกถั่วเหลือง/สมุนไพรได้ (soybean_crop)",
+      midstreamProcessingTh: "หมักน้ำนมโคสดเป็นหัวเชื้อโพรไบโอติกส์ (probiotic_culture) • สกัดถั่วเหลือง/สมุนไพรเป็นสารสกัดเข้มข้น (raw_extract)",
+      downstreamProductTh: "เครื่องดื่มสมุนไพร (herbalDrink), ซองเจลโพรไบโอติกส์ (probioticElixir), โภชนเภสัชซินไบโอติกส์ (synbiotic_medical_drink)",
+      simulationScopeNoteTh: "แยกน้ำนมโคสด (fresh_milk_soy) ออกจากถั่วเหลืองเพาะปลูก (soybean_crop) และไม่เสกหัวเชื้อฟรีจากฟาร์ม"
+    },
+    {
+      chainId: "forestry_pulp_carton_chain",
+      nameTh: "สายป่าปลูกไม้เศรษฐกิจหมุนเวียน ➔ เยื่อและกล่องกระดาษลูกฟูก",
+      trueNaturalSourceTh: "ที่ดินป่าปลูก + น้ำดิบธรรมชาติ (raw_water_m3)",
+      propaguleOrDepositTh: "กล้าไม้เศรษฐกิจหมุนเวียน (palm_seedling) และสต็อกต้นไม้โตเต็มวัย (treeStock)",
+      cultivationOrExtractionTh: "ตัดไม้เศรษฐกิจได้ท่อนไม้ซุง (timber_bamboo_log) โดยสต็อกต้นไม้ลดลงจริง และต้องปลูกกล้าไม้ทดแทนรอรอบโต",
+      midstreamProcessingTh: "ต้มเยื่อไม้ซุงกับน้ำดิบและขึ้นรูปเป็นกล่องกระดาษลูกฟูก (pack_carton)",
+      downstreamProductTh: "บรรจุภัณฑ์สำหรับสินค้าส่งออกทุกหมวด และขายส่ง B2B ให้ศูนย์ค้าส่ง",
+      simulationScopeNoteTh: "ป่าปลูกไม่เสกกล่องกระดาษสำเร็จรูปเข้าคลังฟรี ต้องตัดไม้ ปลูกทดแทน และเดินเครื่องแปรรูปกล่อง"
+    },
+    {
+      chainId: "silica_semicon_glass_chain",
+      nameTh: "สายเหมืองทรายควอตซ์ซิลิกา ➔ แก้วบรรจุภัณฑ์ & แท่งซิลิคอน ➔ เวเฟอร์ ➔ ชิปนาโน",
+      trueNaturalSourceTh: "แหล่งแร่ทรายควอตซ์ซิลิกาธรรมชาติ (silica_bauxite_ore) ที่มีปริมาณสำรองจำกัด (reserveRemaining)",
+      propaguleOrDepositTh: "ปริมาณสำรองแร่ในเหมือง (Finite Deposit) ขุดแล้วลดลงจริงและเกิดกากแร่ (tailings)",
+      cultivationOrExtractionTh: "ขุดและแต่งแร่ทรายควอตซ์ซิลิกา (silica_bauxite_ore) โดยใช้พลังงานและค่าบำรุงรักษาเหมือง",
+      midstreamProcessingTh: "หลอมเป็นขวดแก้ว (glass_bottle) ➔ เลนส์ (optical_lens) หรือถลุงเตาอาร์กเป็นแท่งซิลิคอน MG-Si (metallurgical_silicon) ➔ ดึงผลึกเวเฟอร์ (silicon_wafer) ➔ ชิป (microchip)",
+      downstreamProductTh: "กล้อง AI (visionCamera), โมดูล AI Edge (ai_edge_module), โดรนขนส่ง (autonomous_cargo_drone)",
+      simulationScopeNoteTh: "แยกทรายควอตซ์ซิลิกา (silica_bauxite_ore) ออกจากแร่บ็อกไซต์ (bauxite_ore) และเหมืองไม่แจกชิป/เวเฟอร์ฟรี"
+    },
+    {
+      chainId: "ore_metal_ev_battery_chain",
+      nameTh: "สายเหมืองแร่เหล็ก-ทองแดง-บ็อกไซต์-ลิเธียม ➔ โลหะแผ่น/ขดลวด/แบตเตอรี่ ➔ ยานยนต์ EV",
+      trueNaturalSourceTh: "แหล่งแร่ทองแดง/เหล็ก (copper_iron_ore), แร่บ็อกไซต์ (bauxite_ore), และแร่ลิเธียม (lithium_brine_ore)",
+      propaguleOrDepositTh: "ปริมาณสำรองแร่โลหะและน้ำเกลือแร่ลิเธียมในสัมปทานเหมือง",
+      cultivationOrExtractionTh: "ขุดแร่ดิบจากเหมืองตามกำลังเครื่องจักรและปริมาณสำรองคงเหลือ",
+      midstreamProcessingTh: "ถลุงเป็นแผ่นโลหะ (metal_sheet), ขดลวดทองแดง (copper_coil), สารแคโทดลิเธียม (cathode_electrolyte) ➔ แบตเตอรี่ (battery)",
+      downstreamProductTh: "ชุดควบคุม EV (evController), แพ็กแบตเตอรี่ (batteryPack), ตู้ชาร์จไว (evFastCharger), Powerwall",
+      simulationScopeNoteTh: "การซื้อเหมืองได้เฉพาะแร่ดิบจากการขุดจริง ต้องผ่านโรงถลุงก่อนจึงจะได้แผ่นโลหะและขดลวดทองแดง"
+    },
+    {
+      chainId: "phosphate_compost_fertilizer_chain",
+      nameTh: "สายหินฟอสเฟต/แร่โพแทช & รำข้าวแกลบ ➔ ปุ๋ยเคมี N-P-K & ปุ๋ยหมักอินทรีย์",
+      trueNaturalSourceTh: "แหล่งหินฟอสเฟตและแร่โพแทชธรรมชาติ (phosphate_potash_rock) + น้ำดิบ (raw_water_m3)",
+      propaguleOrDepositTh: "แร่ฟอสเฟต/โพแทชจากเหมือง และผลพลอยได้รำข้าว/แกลบ (rice_bran_husk) จากโรงสี",
+      cultivationOrExtractionTh: "ขุดแร่แม่ปุ๋ยจากเหมือง หรือรวบรวมรำข้าว/แกลบจากการสีข้าวเปลือก",
+      midstreamProcessingTh: "สังเคราะห์ปุ๋ยธาตุอาหารหลัก (npk_fertilizer) หรือหมักปุ๋ยอินทรีย์ชีวภาพ (organic_compost)",
+      downstreamProductTh: "เติมธาตุอาหารในแปลงเกษตรทั้ง 4 สายเพื่อรักษาระดับผลผลิตในรอบปลูกถัดไป หรือขายส่งสหกรณ์เกษตร B2B",
+      simulationScopeNoteTh: "ปิดลูปธาตุอาหารดินตามบทที่ 23: ปุ๋ยไม่ใช่วัตถุเสกฟรี แต่มีวัตถุดิบ ต้นทุน และกระบวนการผลิตจริง"
+    }
+  ]);
+
+  // 12 External Assets & Concessions (ปรับปรุงตามบทที่ 23: แยกสถานะแปลงเกษตร เหมืองแร่มีปริมาณสำรองจำกัด ป่าไม้ต้องปลูกทดแทน และไม่เสกสินค้าแปรรูปสำเร็จเข้าคลังฟรี)
   const EXTERNAL_ASSETS = deepFreeze({
     jasmine_rice_farm: {
       id: "jasmine_rice_farm",
@@ -726,17 +1416,20 @@
       shortNameTh: "ไร่ข้าวหอมมะลิ/ธัญพืช",
       category: "agro_upstream",
       categoryNameTh: "เกษตรกรรมและอาหารต้นน้ำ",
+      resourceType: "agricultural_plot",
+      cropId: "jasmine_rice",
       locationTh: "ร้อยเอ็ด / สุรินทร์",
       icon: "🌾",
       cost: 2200000,
       dailyUpkeep: 15000,
       dailyDividend: 45000,
+      starterSeeds: { rice_seed: 6, raw_water_m3: 6, organic_compost: 2 },
       harvestYields: { paddy_grain: 8 },
       linkedChainId: "chain_grain_flour_bakery",
       operationalEffectsTh: [
-        "เก็บเกี่ยว ข้าวเปลือกหอมมะลิและธัญพืช (paddy_grain) +8 ชิ้น/วัน ส่งเข้าคลังโรงงานฟรี",
-        "ป้อนโรงโม่แป้งกลางน้ำเพื่อผลิต แป้งข้าวหอม/แป้งสาลี (artisan_flour) สำหรับทำขนมปังโฮลเกรนและอาหารพร้อมทาน",
-        "ส่งข้าวหอมมะลิเข้าโรงอาหารพนักงาน ช่วยลดความหิวและเพิ่มขวัญกำลังใจ (Morale) +1 ทุกวัน"
+        "เปิดแปลงนาข้าวหอมมะลิ (8 ขั้นตอนเพาะปลูก): ใช้เมล็ดพันธุ์ข้าว (rice_seed) + น้ำดิบ + ธาตุอาหารดิน เพาะปลูกและเก็บเกี่ยวข้าวเปลือก (paddy_grain)",
+        "คัดข้าวเปลือกที่เก็บเกี่ยวได้ 25% เก็บเป็นเมล็ดพันธุ์รอบถัดไป และส่งส่วนที่เหลือสีเป็นข้าวสาร (milled_rice) + รำข้าว (rice_bran_husk) เพื่อโม่แป้งเบเกอรี่",
+        "ส่งข้าวหอมมะลิสดใหม่เข้าโรงอาหารพนักงาน ช่วยเพิ่มขวัญกำลังใจ (Morale) +1 ทุกวัน"
       ],
       moraleBonusDaily: 1,
       esgBonus: 1
@@ -747,58 +1440,67 @@
       shortNameTh: "สวนปาล์มน้ำมันสุราษฎร์ฯ",
       category: "agro_upstream",
       categoryNameTh: "เกษตรกรรมและอาหารต้นน้ำ",
+      resourceType: "agricultural_plot",
+      cropId: "oil_palm",
       locationTh: "สุราษฎร์ธานี / กระบี่",
       icon: "🌴",
       cost: 2500000,
       dailyUpkeep: 18000,
       dailyDividend: 52000,
+      starterSeeds: { palm_seedling: 6, raw_water_m3: 6, npk_fertilizer: 2 },
       harvestYields: { crude_palm: 8 },
       linkedChainId: "chain_palm_oil_refinery",
       operationalEffectsTh: [
-        "เก็บเกี่ยว ทะลายปาล์มสดและน้ำมันดิบ (crude_palm) +8 ชิ้น/วัน ส่งเข้าคลังโรงงานฟรี",
-        "ป้อนโรงกลั่นกลางน้ำสกัดเป็น น้ำมันปาล์มบริสุทธิ์และเนยขาว (refined_palm_oil) สำหรับทำขนมปังและน้ำมันปรุงอาหาร",
-        "ผลิตไบโอดีเซลใช้ในขบวนรถบรรทุกบริษัท ลดค่าโสหุ้ยขนส่งและเร่งงานจัดส่ง (Shipping) +6%"
+        "เปิดแปลงสวนปาล์มน้ำมัน: ใช้ต้นกล้าปาล์ม (palm_seedling) + น้ำดิบ + ปุ๋ยบำรุงดิน เพาะปลูกและเก็บเกี่ยวทะลายปาล์มสด (crude_palm)",
+        "ป้อนโรงกลั่นกลางน้ำสกัดเป็นน้ำมันปาล์มบริสุทธิ์ (refined_palm_oil) และน้ำมันดีเซลหมุนเร็ว B7 (diesel_liter) สำหรับกองรถขนส่ง",
+        "ช่วยลดภาระค่าเชื้อเพลิงและเร่งความเร็วงานจัดส่ง (Shipping) +6%"
       ],
       shippingSpeedBonus: 0.06,
       esgBonus: 1
     },
     sugarcane_estate: {
       id: "sugarcane_estate",
-      nameTh: "ไร่อ้อยปลอดการเผาและโรงหีบน้ำตาลต้นน้ำนครปฐม",
-      shortNameTh: "ไร่อ้อยและโรงหีบต้นน้ำ",
+      nameTh: "ไร่อ้อยปลอดการเผาและแปลงท่อนพันธุ์นครปฐม",
+      shortNameTh: "ไร่อ้อยปลอดการเผา",
       category: "agro_upstream",
       categoryNameTh: "เกษตรกรรมและอาหารต้นน้ำ",
+      resourceType: "agricultural_plot",
+      cropId: "sugarcane",
       locationTh: "นครปฐม / กาญจนบุรี",
       icon: "🎋",
       cost: 2000000,
       dailyUpkeep: 14000,
       dailyDividend: 40000,
+      starterSeeds: { cane_stalk_seed: 6, raw_water_m3: 6, organic_compost: 2 },
       harvestYields: { raw_cane: 8 },
       linkedChainId: "chain_cane_sugar_ferment",
       operationalEffectsTh: [
-        "เก็บเกี่ยว อ้อยสดและกากน้ำตาลธรรมชาติ (raw_cane) +8 ชิ้น/วัน ส่งเข้าคลังโรงงานฟรี",
-        "ป้อนสายเคี่ยวกลางน้ำผลิต น้ำตาลทรายบริสุทธิ์และไซรัป (refined_sugar_syrup) ใช้ในเบเกอรี่และเครื่องดื่ม",
-        "เชื้อเพลิงชีวมวลชานอ้อยช่วยลดค่าเช่าและสาธารณูปโภครายวันของนิคมลง 8%"
+        "เปิดแปลงไร่อ้อยปลอดการเผา: ใช้ท่อนพันธุ์อ้อย (cane_stalk_seed) + น้ำดิบ + ปุ๋ย เพาะปลูกและเก็บเกี่ยวลำอ้อยสด (raw_cane) พร้อมคัดท่อนพันธุ์ปลูกรอบถัดไป",
+        "ป้อนโรงหีบและเคี่ยวกลางน้ำผลิตน้ำตาลทรายบริสุทธิ์และไซรัป (refined_sugar_syrup) ใช้ในเบเกอรี่และเครื่องดื่ม",
+        "เชื้อเพลิงชีวมวลจากใบและชานอ้อยช่วยลดค่าเช่าและสาธารณูปโภครายวันของนิคมลง 8%"
       ],
       rentReductionPct: 0.08,
       esgBonus: 1
     },
     smart_dairy_farm: {
       id: "smart_dairy_farm",
-      nameTh: "ฟาร์มโคนมและเกษตรโปรตีนอัจฉริยะสระบุรี",
+      nameTh: "ฟาร์มโคนมและปศุสัตว์อัจฉริยะสระบุรี",
       shortNameTh: "ฟาร์มโคนมอัจฉริยะ",
       category: "agro_upstream",
       categoryNameTh: "เกษตรกรรมและอาหารต้นน้ำ",
+      resourceType: "livestock_herd",
+      initialHerdCount: 24,
       locationTh: "มวกเหล็ก สระบุรี",
       icon: "🐄",
       cost: 2800000,
       dailyUpkeep: 20000,
       dailyDividend: 58000,
-      harvestYields: { fresh_milk_soy: 6, probiotic_culture: 2 },
+      starterSeeds: { rice_bran_husk: 6, raw_water_m3: 6 },
+      harvestYields: { fresh_milk_soy: 6, organic_compost: 2 },
       linkedChainId: "chain_dairy_probiotic_bio",
       operationalEffectsTh: [
-        "ส่ง น้ำนมดิบและถั่วเหลืองออร์แกนิก (fresh_milk_soy) +6 ชิ้น/วัน และ หัวเชื้อโพรไบโอติกส์ +2 ชิ้น/วัน เข้าคลังฟรี",
-        "ป้อนสายคลีนรูมผลิต เครื่องดื่มเวย์โปรตีนยูเอชที (dairy_protein_shake) และซองเจลโพรไบโอติกส์",
+        "ดูแลฝูงโคนม 24 ตัวด้วยอาหารสัตว์ (รำข้าว/ถั่วเหลือง) และน้ำดิบ เพื่อรีดน้ำนมโคสดแท้ (fresh_milk_soy) และได้มูลโคหมักปุ๋ยอินทรีย์ (organic_compost)",
+        "ส่งน้ำนมโคสดเข้าห้องแล็บคลีนรูมเพื่อหมักบ่มเป็นหัวเชื้อโพรไบโอติกส์ (probiotic_culture) โดยไม่เสกหัวเชื้อสำเร็จรูปฟรี",
         "เสริมโภชนาการนมสดในโรงอาหาร ฟื้นฟูพลังงาน (Energy) พนักงานทุกคน +2 หน่วยทุกสิ้นวัน"
       ],
       energyBonusDaily: 2,
@@ -806,41 +1508,47 @@
     },
     organic_herb_orchard: {
       id: "organic_herb_orchard",
-      nameTh: "สวนสมุนไพรและผลไม้เมืองร้อนออร์แกนิกเชียงใหม่",
-      shortNameTh: "สวนสมุนไพรออร์แกนิก",
+      nameTh: "สวนถั่วเหลืองและสมุนไพรออร์แกนิกเชียงใหม่",
+      shortNameTh: "สวนถั่วเหลือง/สมุนไพร",
       category: "agro_upstream",
       categoryNameTh: "เกษตรกรรมและอาหารต้นน้ำ",
+      resourceType: "agricultural_plot",
+      cropId: "soy_herb",
       locationTh: "แม่ริม เชียงใหม่",
       icon: "🌿",
       cost: 2400000,
       dailyUpkeep: 16000,
       dailyDividend: 48000,
-      harvestYields: { raw_extract: 6 },
+      starterSeeds: { soybean_seed: 6, raw_water_m3: 6, organic_compost: 2 },
+      harvestYields: { soybean_crop: 6 },
       linkedChainId: "chain_herb_botanical_extract",
       operationalEffectsTh: [
-        "เก็บเกี่ยว สารสกัดสมุนไพรและผลไม้ออร์แกนิก (raw_extract) +6 ชิ้น/วัน ส่งเข้าคลังโดยตรง",
-        "ความสดบริสุทธิ์ของสมุนไพรต้นน้ำช่วยเพิ่มโอกาสผ่าน QC ของสินค้ากลุ่มอาหารและสุขภาพ +4%",
-        "ยกระดับชื่อเสียงองค์กรสีเขียว (Reputation) +2 เมื่อเข้าถือครอง"
+        "เปิดแปลงถั่วเหลืองและสมุนไพรออร์แกนิก: ใช้เมล็ดพันธุ์ (soybean_seed) + น้ำดิบ + ปุ๋ยหมัก เก็บเกี่ยวผลผลิต (soybean_crop) และช่วยตรึงไนโตรเจนฟื้นฟูดิน",
+        "ส่งผลผลิตสมุนไพรและถั่วเหลืองเข้าโรงสกัดสุญญากาศเพื่อผลิตสารสกัดเข้มข้น (raw_extract) ป้อนสายอาหารสุขภาพและโภชนเภสัช",
+        "เพิ่มโอกาสผ่าน QC ของสินค้ากลุ่มอาหารและสุขภาพ +4% และยกระดับชื่อเสียงองค์กรสีเขียว +2"
       ],
       foodQaBonus: 0.04,
       esgBonus: 2
     },
     rubber_polymer_estate: {
       id: "rubber_polymer_estate",
-      nameTh: "สวนยางพาราและโรงสกัดโพลีเมอร์ชีวภาพระยอง",
-      shortNameTh: "สวนยางพารา/โพลีเมอร์",
+      nameTh: "สวนยางพาราและแปลงไม้ยางอุตสาหกรรมระยอง",
+      shortNameTh: "สวนยางพารา/น้ำยางสด",
       category: "materials_mining",
       categoryNameTh: "เหมืองแร่ วัสดุศาสตร์ และป่าไม้",
+      resourceType: "plantation_tapping",
+      initialTreeStock: 160,
       locationTh: "นิคมพัฒนา ระยอง",
       icon: "🌳",
       cost: 3000000,
       dailyUpkeep: 22000,
       dailyDividend: 64000,
-      harvestYields: { natural_latex: 7, crude_petro_feedstock: 4, polymer_resin: 3 },
+      starterSeeds: { palm_seedling: 4, raw_water_m3: 4 },
+      harvestYields: { natural_latex: 7 },
       linkedChainId: "chain_latex_polymer_compound",
       operationalEffectsTh: [
-        "ส่ง น้ำยางพาราสด (natural_latex) +7 ชิ้น/วัน และ เม็ดพลาสติกเรซิน (polymer_resin) +3 ชิ้น/วัน เข้าคลังฟรี",
-        "ป้อนสายวัลคาไนซ์ผลิตชิ้นส่วนยางแท่นเครื่องและช่วงล่าง EV (ev_suspension_kit) และตัวถังอิเล็กทรอนิกส์",
+        "ดูแลแปลงต้นยางพาราโตเต็มวัย 160 ต้น กรีดน้ำยางพาราสด (natural_latex) เข้าคลังตามสภาพความชื้นดินและแรงงานดูแล",
+        "ส่งน้ำยางพาราสดเข้าโรงสังเคราะห์คอมปาวด์เพื่อแปรรูปเป็นเม็ดโพลีเมอร์เรซิน (polymer_resin) และยางรถบรรทุกเรเดียล (truck_tire)",
         "ซีลยางเกรดอุตสาหกรรมช่วยลดอัตราการสึกหรอของเครื่องจักรโรงงานลง 12%"
       ],
       wearReductionPct: 0.12,
@@ -848,62 +1556,72 @@
     },
     silica_copper_mine: {
       id: "silica_copper_mine",
-      nameTh: "สัมปทานเหมืองแร่ควอตซ์ซิลิกาและโรงถลุงทองแดง",
-      shortNameTh: "เหมืองซิลิกาและทองแดง",
+      nameTh: "สัมปทานเหมืองแร่ควอตซ์ซิลิกา บ็อกไซต์ ทองแดง และฟอสเฟต",
+      shortNameTh: "เหมืองแร่ซิลิกา/โลหะ/ฟอสเฟต",
       category: "materials_mining",
       categoryNameTh: "เหมืองแร่ วัสดุศาสตร์ และป่าไม้",
+      resourceType: "finite_mine",
+      initialReserveUnits: 420,
+      oreGrade: 0.9,
       locationTh: "ลพบุรี / ตาก",
       icon: "⛏️",
       cost: 3800000,
       dailyUpkeep: 28000,
       dailyDividend: 82000,
-      harvestYields: { silica_bauxite_ore: 6, copper_iron_ore: 5, lithium_brine_ore: 3, metallurgical_silicon: 2, copper_coil: 3, metal_sheet: 3 },
+      starterSeeds: {},
+      harvestYields: { silica_bauxite_ore: 4, bauxite_ore: 2, copper_iron_ore: 4, lithium_brine_ore: 2, phosphate_potash_rock: 2 },
       linkedChainId: "chain_silica_wafer_semicon",
       operationalEffectsTh: [
-        "ส่ง แร่ควอตซ์ซิลิกา (silica_bauxite_ore) +6 ชิ้น, ขดลวดทองแดง +3 ชิ้น และ แผ่นโลหะ +3 ชิ้น/วัน เข้าคลังฟรี",
-        "ป้อนโรงหลอมผลึกสร้าง แผ่นซิลิคอนเวเฟอร์ (silicon_wafer) สำหรับผลิตชิป AI Edge และโซลาร์เซลล์",
-        "ลดการพึ่งพิงการนำเข้าโลหะและแร่เซมิคอนดักเตอร์จากต่างประเทศ"
+        "ขุดแร่ธรรมชาติต้นน้ำแท้จริงจากแหล่งสัมปทานที่มีปริมาณสำรองจำกัด (420 หน่วย): ทรายควอตซ์ซิลิกา, แร่บ็อกไซต์, แร่ทองแดง/เหล็ก, แร่ลิเธียม และหินฟอสเฟต",
+        "ทุกการขุดจะหักปริมาณสำรองแร่คงเหลือ (reserveRemaining) และเกิดกากแร่ (tailings) — ไม่แจกแผ่นโลหะหรือชิปสำเร็จรูปฟรี ต้องส่งเข้าโรงถลุงแปรรูปต่อ!",
+        "ลดการพึ่งพาการนำเข้าแร่ดิบจากต่างประเทศสำหรับสายเซมิคอนดักเตอร์ ยานยนต์ EV และโรงงานปุ๋ย"
       ],
       esgBonus: 0
     },
     forestry_pulp_mill: {
       id: "forestry_pulp_mill",
-      nameTh: "ป่าปลูกไม้เศรษฐกิจหมุนเวียนและโรงเยื่อกระดาษบรรจุภัณฑ์",
-      shortNameTh: "ป่าเศรษฐกิจ/โรงเยื่อกระดาษ",
+      nameTh: "สวนป่าปลูกไม้เศรษฐกิจหมุนเวียนและแปลงเพาะชำกล้าไม้",
+      shortNameTh: "ป่าปลูกไม้เศรษฐกิจหมุนเวียน",
       category: "materials_mining",
       categoryNameTh: "เหมืองแร่ วัสดุศาสตร์ และป่าไม้",
+      resourceType: "renewable_forest",
+      initialTreeStock: 120,
       locationTh: "ปราจีนบุรี / สระแก้ว",
       icon: "🌲",
       cost: 2100000,
       dailyUpkeep: 15000,
       dailyDividend: 42000,
-      harvestYields: { timber_bamboo_log: 6, pack_carton: 6, foil_pouch: 4 },
+      starterSeeds: { palm_seedling: 6, raw_water_m3: 6 },
+      harvestYields: { timber_bamboo_log: 6 },
       linkedChainId: "chain_forestry_pulp_packaging",
       operationalEffectsTh: [
-        "ผลิต กล่องบรรจุภัณฑ์มาตรฐาน (pack_carton) +6 ชิ้น/วัน และ ซองฟอยล์สุญญากาศ +4 ชิ้น/วัน ส่งเข้าคลังฟรี",
-        "บรรจุภัณฑ์สั่งตัดตรงสเปกช่วยเร่งความเร็วงานแพ็กกิ้ง (Packing) ในคลังสินค้า +12%",
-        "ดูดซับคาร์บอนเครดิต เพิ่มคะแนน ESG และชื่อเสียงบริษัท +2"
+        "บริหารสต็อกต้นไม้เศรษฐกิจหมุนเวียน (120 ต้น): การตัดไม้ได้ท่อนไม้ซุง (timber_bamboo_log) ทำให้สต็อกต้นไม้ลดลงจริง และต้องใช้กล้าไม้ + น้ำดิบปลูกทดแทนตามรอบเวลา",
+        "ส่งท่อนไม้ซุงเข้าโรงเยื่อกระดาษแปรรูปเป็นกล่องบรรจุภัณฑ์ (pack_carton) โดยไม่เสกกล่องสำเร็จรูปฟรีจากป่า",
+        "ช่วยเร่งความเร็วงานแพ็กกิ้งในคลังสินค้า +12% และเพิ่มชื่อเสียง ESG +2"
       ],
       packingSpeedBonus: 0.12,
       esgBonus: 2
     },
     offsite_solar_wind_farm: {
       id: "offsite_solar_wind_farm",
-      nameTh: "ทุ่งกังหันลมและโซลาร์ฟาร์มเมกะวัตต์นอกนิคม",
-      shortNameTh: "ทุ่งกังหันลม/โซลาร์ฟาร์ม",
+      nameTh: "ทุ่งกังหันลม โซลาร์ฟาร์ม และสถานีสูบน้ำดิบธรรมชาติ",
+      shortNameTh: "โซลาร์ฟาร์ม & สถานีน้ำดิบ",
       category: "energy_infra",
       categoryNameTh: "พลังงานและโครงสร้างพื้นฐาน",
+      resourceType: "environmental_flow",
+      dailyWaterFlowCap: 10,
       locationTh: "ชัยภูมิ / นครราชสีมา",
       icon: "🌬️",
       cost: 3400000,
       dailyUpkeep: 18000,
       dailyDividend: 75000,
-      harvestYields: {},
+      starterSeeds: { raw_water_m3: 10 },
+      harvestYields: { raw_water_m3: 8 },
       linkedChainId: null,
       operationalEffectsTh: [
-        "จ่ายกระแสไฟฟ้าสะอาดเข้าสายส่งนิคม ลดภาระค่าเช่าและค่าไฟฟ้ารายวัน (rentDaily) ลง 28% ถาวร",
-        "เสถียรภาพไฟฟ้าแรงดันสูงช่วยเร่งความเร็วการผลิตของทุกอาคาร +6%",
-        "เพิ่มความพร้อมเข้าตลาดหลักทรัพย์ (IPO Readiness) +6% และรับรายได้ขายไฟเข้าระบบการไฟฟ้าทุกวัน"
+        "แหล่งพลังงานหมุนเวียนและสถานีสูบน้ำดิบธรรมชาติ (Environmental Flow): สูบน้ำดิบ (raw_water_m3) เข้าคลังตามขีดจำกัดกำลังเครื่องสูบและสภาพอากาศ (สูงสุด 8–12 หน่วย/วัน)",
+        "จ่ายกระแสไฟฟ้าสะอาดเข้าสายส่งนิคม ลดภาระค่าเช่าและค่าไฟฟ้ารายวัน (rentDaily) ลง 28% และเร่งความเร็วผลิต +6%",
+        "เพิ่มความพร้อมเข้าตลาดหลักทรัพย์ (IPO Readiness) +6%"
       ],
       rentReductionPct: 0.28,
       productionSpeedBonus: 0.06,
@@ -915,6 +1633,7 @@
       shortNameTh: "ท่าเทียบเรือแหลมฉบัง",
       category: "logistics_commercial",
       categoryNameTh: "โลจิสติกส์และเครือข่ายการค้า",
+      resourceType: "logistics_infrastructure",
       locationTh: "ท่าเรือแหลมฉบัง ชลบุรี",
       icon: "🚢",
       cost: 4200000,
@@ -924,7 +1643,7 @@
       linkedChainId: null,
       operationalEffectsTh: [
         "ทางด่วนศุลกากรและท่าเทียบเรือส่วนตัว ลดเวลารอวัตถุดิบขาเข้า (Lead Time) จากทุกซัพพลายเออร์ลง 30%",
-        "เพิ่มขนาดขบวนรถบรรทุกขนส่งประจำนิคม +4 คันทันที",
+        "เพิ่มขนาดขบวนรถบรรทุกขนส่งประจำนิคม +4 คันทันที และเพิ่มโอกาสได้งานขนส่งเหมาคัน B2B",
         "เพิ่มอำนาจต่อรองราคาขายส่งออก B2B +4% สำหรับทุกออเดอร์"
       ],
       leadTimeReductionPct: 0.3,
@@ -938,6 +1657,7 @@
       shortNameTh: "คลังห้องเย็น Cold Chain",
       category: "logistics_commercial",
       categoryNameTh: "โลจิสติกส์และเครือข่ายการค้า",
+      resourceType: "logistics_infrastructure",
       locationTh: "บางนา-ตราด สมุทรปราการ",
       icon: "❄️",
       cost: 2900000,
@@ -946,9 +1666,9 @@
       harvestYields: {},
       linkedChainId: null,
       operationalEffectsTh: [
-        "รักษาความสดของแป้ง นม สมุนไพร และเบเกอรี่ เพิ่มโอกาสผ่าน QC สินค้าหมวดอาหาร +6%",
+        "รักษาความสดของเมล็ดพันธุ์ ข้าวสาร แป้ง นมสด สมุนไพร และเบเกอรี่ เพิ่มโอกาสผ่าน QC สินค้าหมวดอาหาร +6%",
         "เพิ่มขบวนรถห้องเย็น +3 คัน และยืดเวลาส่งมอบออเดอร์ (Deadline) ให้ยาวขึ้น +1 วัน",
-        "สร้างรายได้ค่าเช่าพื้นที่คลังห้องเย็นจากคู่ค้าภายนอกทุกวัน"
+        "รองรับงานรับจ้างขนส่งควบคุมอุณหภูมิ (Cold-Chain Freight) มูลค่าสูง"
       ],
       foodQaBonus: 0.06,
       fleetBonus: 3,
@@ -961,6 +1681,7 @@
       shortNameTh: "เครือข่ายโชว์รูม/ร้านค้าปลีก",
       category: "logistics_commercial",
       categoryNameTh: "โลจิสติกส์และเครือข่ายการค้า",
+      resourceType: "commercial_network",
       locationTh: "กรุงเทพฯ และหัวเมืองใหญ่ 12 สาขา",
       icon: "🏪",
       cost: 3600000,
@@ -970,7 +1691,7 @@
       linkedChainId: null,
       operationalEffectsTh: [
         "บูรณาการปลายน้ำ (Forward Integration): ขายตรงถึงตลาดปลายทาง เพิ่มราคาขายต่อหน่วย (unitPrice) +7%",
-        "เพิ่มสัดส่วนเงินมัดจำรับล่วงหน้าเมื่อปิดดีล (Deposit) จาก 30% เป็น 40% ช่วยหมุนเงินสดไวขึ้น",
+        "เพิ่มสัดส่วนเงินมัดจำรับล่วงหน้าเมื่อปิดดีล (Deposit) จาก 30% เป็น 40% และเพิ่มยอดผู้สมัครแอป SaaS ของบริษัท",
         "ขยายส่วนแบ่งการตลาดของบริษัท (Market Share) +3.5% ทันที"
       ],
       pricePremiumBonus: 0.07,
@@ -980,23 +1701,23 @@
     }
   });
 
-  // 5-Tier Material & Product Value Chain Architecture (T0 ➔ T1 ➔ T2 ➔ T3 ➔ T4)
+  // 5-Tier Material & Product Value Chain Architecture (แยก T0 ต้นน้ำธรรมชาติแท้จริง ออกจากผลผลิตชีวภาพ/เกษตร และการแปรรูป T1-T4 ตามบทที่ 23)
   const MATERIAL_TIERS = deepFreeze({
     0: {
       tier: 0,
-      code: "T0_RAW",
-      nameTh: "ขั้นที่ 0: ทรัพยากรธรรมชาติต้นน้ำ (ผลิตเองไม่ได้ ต้องเก็บเกี่ยวจากสินทรัพย์ภายนอกหรือซื้อซัพพลายเออร์)",
-      shortNameTh: "T0 · วัตถุดิบธรรมชาติต้นน้ำ (Uncraftable)",
-      badgeTh: "T0 · ต้นน้ำแท้",
+      code: "T0_NATURAL",
+      nameTh: "ขั้นที่ 0: ทรัพยากรธรรมชาติต้นน้ำแท้จริง (แร่ หิน ทราย น้ำดิบ ปิโตรเลียมดิบ • ห้ามมีข้าว น้ำตาล แป้ง กระดาษ หรือน้ำนมในขั้นนี้)",
+      shortNameTh: "T0 · ทรัพยากรธรรมชาติแท้จริง (True Natural Source)",
+      badgeTh: "T0 · ธรรมชาติแท้",
       craftable: false,
       sellableB2B: true
     },
     1: {
       tier: 1,
-      code: "T1_REFINED",
-      nameTh: "ขั้นที่ 1: วัตถุดิบแปรรูปขั้นต้น (โม่/หีบ/ถลุงจาก T0 หรือซื้อตลาด • ใช้ผลิตต่อและขาย B2B ได้)",
-      shortNameTh: "T1 · แปรรูปขั้นที่ 1 (First-Stage Refined)",
-      badgeTh: "T1 · แปรรูปขั้นต้น",
+      code: "T1_BIO_AND_REFINED",
+      nameTh: "ขั้นที่ 1: เมล็ดพันธุ์ ผลผลิตเพาะปลูก/ปศุสัตว์ และวัตถุดิบแปรรูปขั้นต้น (เพาะปลูกในแปลงเกษตร หรือสี/โม่/หีบ/ถลุงจาก T0)",
+      shortNameTh: "T1 · ผลผลิตชีวภาพ & แปรรูปขั้นต้น (Cultivated & Stage-1 Refined)",
+      badgeTh: "T1 · ชีวภาพ/แปรรูปต้น",
       craftable: true,
       sellableB2B: true
     },
@@ -1021,7 +1742,7 @@
     4: {
       tier: 4,
       code: "T4_PRODUCT",
-      nameTh: "ขั้นที่ 4: สินค้าอุตสาหกรรมสำเร็จรูปปลายน้ำ 6 หมวดธุรกิจ (ส่งมอบดีล B2B และตลาดโลก)",
+      nameTh: "ขั้นที่ 4: สินค้าอุตสาหกรรมสำเร็จรูปและบริการปลายน้ำ (ส่งมอบดีล B2B กองรถขนส่ง และซอฟต์แวร์ SaaS)",
       shortNameTh: "T4 · สินค้าสำเร็จรูป (Finished Product)",
       badgeTh: "T4 · สินค้าปลายน้ำ",
       craftable: true,
@@ -1029,128 +1750,190 @@
     }
   });
 
-  // 27 Multi-Stage Material & Component Recipes (ทุกวัตถุดิบตั้งแต่ Tier 1-3 ที่บริษัทสามารถผลิตเองเพื่อใช้เป็นวัตถุดิบตั้งต้นหรือขายเป็นสินค้า B2B)
+  // 32 Multi-Stage Material & Component Recipes (ครอบคลุมการสีข้าว โม่แป้ง ผลิตปุ๋ย N-P-K หมักปุ๋ยอินทรีย์ กลั่นดีเซล หล่อยางรถบรรทุก และแปรรูป T1-T3)
   const MATERIAL_RECIPES = deepFreeze({
-    // === TIER 1: First-Stage Refined Materials (Crafted from Tier 0 Uncraftable Raw Resources) ===
-    artisan_flour: {
-      id: "artisan_flour",
-      outputMaterialId: "artisan_flour",
-      nameTh: "โม่ข้าวเปลือกและธัญพืชเป็นแป้งโม่ละเอียด (T0 ➔ T1)",
+    // === TIER 1: Grain Milling, Soil Fertilizer, Fuel, Tire & First-Stage Refining ===
+    milled_rice: {
+      id: "milled_rice",
+      outputMaterialId: "milled_rice",
+      nameTh: "สีข้าวเปลือกหอมมะลิเป็นข้าวสารขัดสีและรำข้าว/แกลบ (Cultivated Crop ➔ Milled Rice + Bran)",
       tier: 1,
       minResearch: 0,
       capitalRequirement: 0,
       inputs: { paddy_grain: 2 },
+      outputs: { milled_rice: 2, rice_bran_husk: 1 },
+      b2bSellPrice: 3800,
+      chainPathTh: "เมล็ดพันธุ์ข้าว (rice_seed) ➔ แปลงนา ➔ ข้าวเปลือก (paddy_grain) ➔ ข้าวสาร (milled_rice) + รำข้าว/แกลบ (rice_bran_husk)"
+    },
+    artisan_flour: {
+      id: "artisan_flour",
+      outputMaterialId: "artisan_flour",
+      nameTh: "โม่ข้าวสารและธัญพืชเป็นแป้งโม่ละเอียดเกรดเบเกอรี่ (Milled Rice ➔ Artisan Flour)",
+      tier: 1,
+      minResearch: 0,
+      capitalRequirement: 0,
+      inputs: { milled_rice: 2 },
+      fallbackRawInputs: { paddy_grain: 2 },
       outputs: { artisan_flour: 2 },
       b2bSellPrice: 5500,
-      chainPathTh: "ข้าวเปลือก (T0) ➔ แป้งโม่ละเอียด (T1) ➔ โดว์เนยสด (T2) / ขนมปังโฮลเกรน (T4)"
+      chainPathTh: "ข้าวเปลือก (paddy_grain) ➔ สีเป็นข้าวสาร (milled_rice) ➔ โม่เป็นแป้งละเอียด (artisan_flour) ➔ โดว์เนยสด (T2) / ขนมปังโฮลเกรน (T4)"
+    },
+    npk_fertilizer: {
+      id: "npk_fertilizer",
+      outputMaterialId: "npk_fertilizer",
+      nameTh: "แปรรูปหินฟอสเฟตและแร่โพแทชธรรมชาติเป็นปุ๋ยธาตุอาหารหลัก N-P-K (T0 ➔ T1 Soil Input)",
+      tier: 1,
+      minResearch: 0,
+      capitalRequirement: 0,
+      inputs: { phosphate_potash_rock: 1, raw_water_m3: 1 },
+      outputs: { npk_fertilizer: 2 },
+      b2bSellPrice: 3200,
+      chainPathTh: "หินฟอสเฟต/โพแทช (T0) + น้ำดิบ (T0) ➔ ปุ๋ยธาตุอาหาร N-P-K (T1) ➔ เติมธาตุอาหารแปลงนาข้าว/ไร่อ้อย/สวนปาล์ม"
+    },
+    organic_compost: {
+      id: "organic_compost",
+      outputMaterialId: "organic_compost",
+      nameTh: "หมักรำข้าว แกลบ และเศษพืชกับน้ำดิบเป็นปุ๋ยหมักอินทรีย์ชีวภาพ (Byproduct ➔ Compost)",
+      tier: 1,
+      minResearch: 0,
+      capitalRequirement: 0,
+      inputs: { rice_bran_husk: 1, raw_water_m3: 1 },
+      outputs: { organic_compost: 2 },
+      b2bSellPrice: 2100,
+      chainPathTh: "รำข้าว/แกลบจากโรงสี (rice_bran_husk) + น้ำดิบ (T0) ➔ ปุ๋ยหมักอินทรีย์ (organic_compost) ➔ ฟื้นฟูดินแปลงเกษตร"
+    },
+    diesel_liter: {
+      id: "diesel_liter",
+      outputMaterialId: "diesel_liter",
+      nameTh: "กลั่นสารตั้งต้นปิโตรเลียมและปาล์มเป็นน้ำมันดีเซลหมุนเร็ว B7 (T0/Crop ➔ Fleet Fuel)",
+      tier: 1,
+      minResearch: 0,
+      capitalRequirement: 0,
+      inputs: { crude_petro_feedstock: 1, crude_palm: 1 },
+      outputs: { diesel_liter: 3 },
+      b2bSellPrice: 4100,
+      chainPathTh: "ปิโตรเลียมดิบ (T0) + ปาล์มสด (Crop) ➔ น้ำมันดีเซล B7 (diesel_liter) ➔ เติมกองรถบรรทุกรับจ้างขนส่ง B2B"
+    },
+    truck_tire: {
+      id: "truck_tire",
+      outputMaterialId: "truck_tire",
+      nameTh: "หล่อและวัลคาไนซ์น้ำยางพาราสดกับโครงเหล็กเป็นยางรถบรรทุกเรเดียล (Crop+T1 ➔ Fleet Tire)",
+      tier: 1,
+      minResearch: 10,
+      capitalRequirement: 1000000,
+      inputs: { natural_latex: 2, metal_sheet: 1 },
+      outputs: { truck_tire: 2 },
+      b2bSellPrice: 8200,
+      chainPathTh: "น้ำยางพาราสด (natural_latex) + แผ่นโลหะ (metal_sheet) ➔ ยางรถบรรทุกเรเดียล (truck_tire) ➔ ซ่อมบำรุงกองรถขนส่ง"
     },
     refined_palm_oil: {
       id: "refined_palm_oil",
       outputMaterialId: "refined_palm_oil",
-      nameTh: "กลั่นทะลายปาล์มสดเป็นน้ำมันปาล์มบริสุทธิ์และเนยขาว (T0 ➔ T1)",
+      nameTh: "กลั่นทะลายปาล์มสดเป็นน้ำมันปาล์มบริสุทธิ์และเนยขาว (Cultivated Crop ➔ T1)",
       tier: 1,
       minResearch: 0,
       capitalRequirement: 0,
       inputs: { crude_palm: 2 },
       outputs: { refined_palm_oil: 2 },
       b2bSellPrice: 5900,
-      chainPathTh: "ปาล์มดิบ (T0) ➔ น้ำมันบริสุทธิ์/เนยขาว (T1) ➔ โดว์เนยสด (T2) / น้ำมันโอเลอิน (T4)"
+      chainPathTh: "ต้นกล้าปาล์ม ➔ ทะลายปาล์มสด (crude_palm) ➔ น้ำมันบริสุทธิ์/เนยขาว (T1) ➔ โดว์เนยสด (T2) / น้ำมันโอเลอิน (T4)"
     },
     refined_sugar_syrup: {
       id: "refined_sugar_syrup",
       outputMaterialId: "refined_sugar_syrup",
-      nameTh: "หีบอ้อยสดและเคี่ยวเป็นน้ำตาลทรายบริสุทธิ์/ไซรัป (T0 ➔ T1)",
+      nameTh: "หีบอ้อยสดและเคี่ยวเป็นน้ำตาลทรายบริสุทธิ์/ไซรัป (Cultivated Crop ➔ T1)",
       tier: 1,
       minResearch: 0,
       capitalRequirement: 0,
       inputs: { raw_cane: 2 },
       outputs: { refined_sugar_syrup: 2 },
       b2bSellPrice: 5000,
-      chainPathTh: "อ้อยสด (T0) ➔ น้ำตาล/ไซรัปบริสุทธิ์ (T1) ➔ เบเกอรี่/เครื่องดื่มโปรตีน (T4)"
+      chainPathTh: "ท่อนพันธุ์อ้อย ➔ ลำอ้อยสด (raw_cane) ➔ น้ำตาล/ไซรัปบริสุทธิ์ (T1) ➔ เบเกอรี่/เครื่องดื่มโปรตีน (T4)"
     },
     raw_extract: {
       id: "raw_extract",
       outputMaterialId: "raw_extract",
-      nameTh: "สกัดสุญญากาศสมุนไพรและอ้อยเป็นสารสกัดเข้มข้น (T0 ➔ T1)",
+      nameTh: "สกัดสุญญากาศถั่วเหลือง สมุนไพร และอ้อยเป็นสารสกัดเข้มข้น (Cultivated Crop ➔ T1)",
       tier: 1,
       minResearch: 0,
       capitalRequirement: 0,
       inputs: { raw_cane: 1, fresh_milk_soy: 1 },
+      fallbackRawInputs: { soybean_crop: 2 },
       outputs: { raw_extract: 2 },
       b2bSellPrice: 4600,
-      chainPathTh: "อ้อยสด + น้ำนม/ถั่วเหลือง (T0) ➔ สารสกัดสมุนไพร/โปรตีน (T1) ➔ โภชนเภสัช (T4)"
+      chainPathTh: "ถั่วเหลือง/สมุนไพรเพาะปลูก (soybean_crop) + อ้อยสด ➔ สารสกัดสมุนไพร/โปรตีน (T1) ➔ โภชนเภสัช (T4)"
     },
     metal_sheet: {
       id: "metal_sheet",
       outputMaterialId: "metal_sheet",
-      nameTh: "ถลุงและรีดแร่เหล็ก-ทองแดงเป็นแผ่นโลหะขึ้นรูป (T0 ➔ T1)",
+      nameTh: "ถลุงและรีดแร่เหล็ก-ทองแดง-บ็อกไซต์เป็นแผ่นโลหะขึ้นรูป (T0 Ore ➔ T1)",
       tier: 1,
       minResearch: 15,
       capitalRequirement: 1500000,
       inputs: { copper_iron_ore: 2 },
       outputs: { metal_sheet: 2 },
       b2bSellPrice: 9100,
-      chainPathTh: "แร่เหล็ก/ทองแดงดิบ (T0) ➔ แผ่นโลหะขึ้นรูป (T1) ➔ ตัวถัง/ฮีตซิงก์ (T2) ➔ ยานยนต์ EV (T4)"
+      chainPathTh: "แร่เหล็ก/ทองแดง/บ็อกไซต์จากเหมือง (T0) ➔ แผ่นโลหะขึ้นรูป (T1) ➔ ตัวถัง/ฮีตซิงก์ (T2) ➔ ยานยนต์ EV (T4)"
     },
     copper_coil: {
       id: "copper_coil",
       outputMaterialId: "copper_coil",
-      nameTh: "ถลุงแร่และรีดเส้นลวดเป็นขดลวดทองแดงบริสุทธิ์ (T0 ➔ T1)",
+      nameTh: "ถลุงแร่และรีดเส้นลวดเป็นขดลวดทองแดงบริสุทธิ์ (T0 Ore ➔ T1)",
       tier: 1,
       minResearch: 15,
       capitalRequirement: 1500000,
       inputs: { copper_iron_ore: 2 },
       outputs: { copper_coil: 2 },
       b2bSellPrice: 7200,
-      chainPathTh: "แร่ทองแดงดิบ (T0) ➔ ขดลวดทองแดง (T1) ➔ ชุดสายไฟ (T2) / แผงวงจร PCB (T3)"
+      chainPathTh: "แร่ทองแดงดิบจากเหมือง (T0) ➔ ขดลวดทองแดง (T1) ➔ ชุดสายไฟ (T2) / แผงวงจร PCB (T3)"
     },
     polymer_resin: {
       id: "polymer_resin",
       outputMaterialId: "polymer_resin",
-      nameTh: "สังเคราะห์น้ำยางสดและสารปิโตรเคมีเป็นเม็ดโพลีเมอร์เรซิน (T0 ➔ T1)",
+      nameTh: "สังเคราะห์น้ำยางสดและสารปิโตรเคมีเป็นเม็ดโพลีเมอร์เรซิน (Crop/T0 ➔ T1)",
       tier: 1,
       minResearch: 10,
       capitalRequirement: 1200000,
       inputs: { natural_latex: 2 },
       outputs: { polymer_resin: 2 },
       b2bSellPrice: 5300,
-      chainPathTh: "น้ำยางสด/ปิโตรเคมี (T0) ➔ เม็ดพลาสติกเรซิน (T1) ➔ ตัวถัง/ชุดสายไฟ (T2)"
+      chainPathTh: "น้ำยางพาราสด (natural_latex) / ปิโตรเลียม (T0) ➔ เม็ดพลาสติกเรซิน (T1) ➔ ตัวถัง/ชุดสายไฟ (T2)"
     },
     pack_carton: {
       id: "pack_carton",
       outputMaterialId: "pack_carton",
-      nameTh: "แปรรูปไม้เศรษฐกิจและเส้นใยเป็นกล่องบรรจุภัณฑ์มาตรฐาน (T0 ➔ T1)",
+      nameTh: "ต้มเยื่อท่อนไม้ปลูกและขึ้นรูปเป็นกล่องกระดาษลูกฟูกมาตรฐาน (Forestry Log ➔ T1)",
       tier: 1,
       minResearch: 0,
       capitalRequirement: 0,
       inputs: { timber_bamboo_log: 2 },
       outputs: { pack_carton: 3 },
       b2bSellPrice: 2700,
-      chainPathTh: "ท่อนไม้เศรษฐกิจ/เส้นใย (T0) ➔ กล่องบรรจุภัณฑ์ (T1) ➔ สินค้าส่งออกทุกหมวด (T4)"
+      chainPathTh: "กล้าไม้ ➔ ท่อนไม้จากป่าปลูกหมุนเวียน (timber_bamboo_log) ➔ เยื่อและกล่องลูกฟูก (pack_carton) ➔ สินค้าส่งออกทุกหมวด (T4)"
     },
     glass_bottle: {
       id: "glass_bottle",
       outputMaterialId: "glass_bottle",
-      nameTh: "หลอมทรายควอตซ์ซิลิกาเป็นขวดแก้วสุญญากาศและหลอดแก้ว (T0 ➔ T1)",
+      nameTh: "หลอมทรายควอตซ์ซิลิกาธรรมชาติเป็นขวดแก้วสุญญากาศและหลอดแก้ว (T0 Ore ➔ T1)",
       tier: 1,
       minResearch: 10,
       capitalRequirement: 1000000,
       inputs: { silica_bauxite_ore: 1 },
       outputs: { glass_bottle: 2 },
       b2bSellPrice: 3300,
-      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แก้วบริสุทธิ์/ขวดสุญญากาศ (T1) ➔ เลนส์ออปติคัล (T2)"
+      chainPathTh: "ทรายควอตซ์ซิลิกาธรรมชาติ (T0) ➔ แก้วบริสุทธิ์/ขวดสุญญากาศ (T1) ➔ เลนส์ออปติคัล (T2)"
     },
     metallurgical_silicon: {
       id: "metallurgical_silicon",
       outputMaterialId: "metallurgical_silicon",
-      nameTh: "ถลุงทรายควอตซ์ซิลิกาด้วยเตาอาร์กไฟฟ้าเป็นแท่งซิลิคอนบริสุทธิ์ MG-Si (T0 ➔ T1)",
+      nameTh: "ถลุงทรายควอตซ์ซิลิกาด้วยเตาอาร์กไฟฟ้าเป็นแท่งซิลิคอนบริสุทธิ์ MG-Si (T0 Ore ➔ T1)",
       tier: 1,
       minResearch: 35,
       capitalRequirement: 2000000,
       inputs: { silica_bauxite_ore: 2 },
       outputs: { metallurgical_silicon: 2 },
       b2bSellPrice: 6900,
-      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แท่งซิลิคอน MG-Si (T1) ➔ ซิลิคอนเวเฟอร์ (T2) ➔ ชิปไมโครโพรเซสเซอร์ (T3)"
+      chainPathTh: "ทรายควอตซ์ซิลิกาธรรมชาติ (T0) ➔ แท่งซิลิคอน MG-Si (T1) ➔ ซิลิคอนเวเฟอร์ (T2) ➔ ชิปไมโครโพรเซสเซอร์ (T3)"
     },
 
     // === TIER 2: Second-Stage Advanced Intermediates (Crafted from Tier 1 Inputs) ===
@@ -1164,19 +1947,19 @@
       inputs: { artisan_flour: 1, refined_palm_oil: 1 },
       outputs: { bakery_dough_butter: 2 },
       b2bSellPrice: 7400,
-      chainPathTh: "ข้าวเปลือก/ปาล์ม (T0) ➔ แป้ง + เนยบริสุทธิ์ (T1) ➔ โดว์ขนมปัง/เนยเพสตรี้ (T2) ➔ ครัวซองต์ส่งออก (T4)"
+      chainPathTh: "ข้าวเปลือก ➔ ข้าวสาร ➔ แป้ง (T1) + เนยปาล์ม (T1) ➔ โดว์ขนมปัง/เนยเพสตรี้ (T2) ➔ ครัวซองต์ส่งออก (T4)"
     },
     probiotic_culture: {
       id: "probiotic_culture",
       outputMaterialId: "probiotic_culture",
-      nameTh: "หมักบ่มน้ำนมโคสดและถั่วเหลืองเป็นหัวเชื้อจุลินทรีย์โพรไบโอติกส์ (T0/T1 ➔ T2)",
+      nameTh: "หมักบ่มน้ำนมโคสดจากฟาร์มเป็นหัวเชื้อจุลินทรีย์โพรไบโอติกส์ (Livestock Milk ➔ T2)",
       tier: 2,
       minResearch: 30,
       capitalRequirement: 1500000,
       inputs: { fresh_milk_soy: 2 },
       outputs: { probiotic_culture: 2 },
       b2bSellPrice: 6600,
-      chainPathTh: "น้ำนมสด/ถั่วเหลือง (T0) ➔ หัวเชื้อโพรไบโอติกส์ (T2) ➔ โภชนเภสัชซินไบโอติกส์ (T4)"
+      chainPathTh: "อาหารสัตว์+น้ำ ➔ น้ำนมโคสด (fresh_milk_soy) ➔ หัวเชื้อโพรไบโอติกส์ (T2) ➔ โภชนเภสัชซินไบโอติกส์ (T4)"
     },
     foil_pouch: {
       id: "foil_pouch",
@@ -1188,7 +1971,7 @@
       inputs: { metal_sheet: 1, polymer_resin: 1 },
       outputs: { foil_pouch: 4 },
       b2bSellPrice: 3000,
-      chainPathTh: "แร่โลหะ + ยางพารา (T0) ➔ แผ่นโลหะ + เรซิน (T1) ➔ ซองฟอยล์สุญญากาศ (T2)"
+      chainPathTh: "แร่โลหะ + น้ำยางพารา ➔ แผ่นโลหะ + เรซิน (T1) ➔ ซองฟอยล์สุญญากาศ (T2)"
     },
     casing: {
       id: "casing",
@@ -1200,7 +1983,7 @@
       inputs: { polymer_resin: 1, metal_sheet: 1 },
       outputs: { casing: 2 },
       b2bSellPrice: 6500,
-      chainPathTh: "แร่เหล็ก + ยางพารา (T0) ➔ แผ่นโลหะ + เรซิน (T1) ➔ ตัวถังอุตสาหกรรม (T2)"
+      chainPathTh: "แร่โลหะ + น้ำยางพารา ➔ แผ่นโลหะ + เรซิน (T1) ➔ ตัวถังอุตสาหกรรม (T2)"
     },
     wire_harness: {
       id: "wire_harness",
@@ -1212,7 +1995,7 @@
       inputs: { copper_coil: 1, polymer_resin: 1 },
       outputs: { wire_harness: 2 },
       b2bSellPrice: 5900,
-      chainPathTh: "แร่ทองแดง + ยางพารา (T0) ➔ ขดลวดทองแดง + เรซิน (T1) ➔ ชุดสายไฟ (T2)"
+      chainPathTh: "แร่ทองแดง + น้ำยางพารา ➔ ขดลวดทองแดง + เรซิน (T1) ➔ ชุดสายไฟ (T2)"
     },
     heat_sink: {
       id: "heat_sink",
@@ -1224,7 +2007,7 @@
       inputs: { metal_sheet: 1, copper_coil: 1 },
       outputs: { heat_sink: 3 },
       b2bSellPrice: 5300,
-      chainPathTh: "แร่โลหะ (T0) ➔ แผ่นโลหะ + ทองแดง (T1) ➔ ครีบระบายความร้อน (T2)"
+      chainPathTh: "แร่บ็อกไซต์/โลหะ (T0) ➔ แผ่นโลหะ + ทองแดง (T1) ➔ ครีบระบายความร้อน (T2)"
     },
     optical_lens: {
       id: "optical_lens",
@@ -1236,12 +2019,12 @@
       inputs: { glass_bottle: 2, polymer_resin: 1 },
       outputs: { optical_lens: 2 },
       b2bSellPrice: 8500,
-      chainPathTh: "ทรายซิลิกา (T0) ➔ แก้วบริสุทธิ์ (T1) ➔ เลนส์ออปติคัล (T2) ➔ กล้อง AI / เครื่องมือแพทย์ (T4)"
+      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แก้วบริสุทธิ์ (T1) ➔ เลนส์ออปติคัล (T2) ➔ กล้อง AI / เครื่องมือแพทย์ (T4)"
     },
     cathode_electrolyte: {
       id: "cathode_electrolyte",
       outputMaterialId: "cathode_electrolyte",
-      nameTh: "สกัดแร่ลิเธียมและทองแดงเป็นสารแคโทดและอิเล็กโทรไลต์แบตเตอรี่ (T0/T1 ➔ T2)",
+      nameTh: "สกัดแร่ลิเธียมและทองแดงเป็นสารแคโทดและอิเล็กโทรไลต์แบตเตอรี่ (T0+T1 ➔ T2)",
       tier: 2,
       minResearch: 85,
       capitalRequirement: 2500000,
@@ -1263,7 +2046,7 @@
       chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แท่งซิลิคอน MG-Si (T1) ➔ แผ่นซิลิคอนเวเฟอร์ (T2) ➔ ชิปนาโน (T3)"
     },
 
-    // === TIER 3: Tech-Gated Sub-Assemblies & High-Tech Components (Early game must buy; mid/late game can fabricate & sell B2B) ===
+    // === TIER 3: Tech-Gated Sub-Assemblies & High-Tech Components ===
     driver: {
       id: "driver",
       outputMaterialId: "driver",
@@ -1286,7 +2069,7 @@
       inputs: { copper_coil: 1, polymer_resin: 1 },
       outputs: { pcb: 2 },
       b2bSellPrice: 11800,
-      chainPathTh: "แร่ทองแดง + ยาง/เรซิน (T0/T1) ➔ แผงวงจรพิมพ์ PCB (T3) ➔ ชิปและอิเล็กทรอนิกส์ทุกชนิด (T4)"
+      chainPathTh: "แร่ทองแดง + น้ำยาง/เรซิน ➔ แผงวงจรพิมพ์ PCB (T3) ➔ ชิปและอิเล็กทรอนิกส์ทุกชนิด (T4)"
     },
     led: {
       id: "led",
@@ -1298,7 +2081,7 @@
       inputs: { silicon_wafer: 1, optical_lens: 1 },
       outputs: { led: 2 },
       b2bSellPrice: 9800,
-      chainPathTh: "ทรายซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ + เลนส์ (T2) ➔ โมดูลแสง LED (T3)"
+      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ + เลนส์ (T2) ➔ โมดูลแสง LED (T3)"
     },
     sensor: {
       id: "sensor",
@@ -1310,7 +2093,7 @@
       inputs: { silicon_wafer: 1, wire_harness: 1 },
       outputs: { sensor: 2 },
       b2bSellPrice: 8000,
-      chainPathTh: "ทรายซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ + สายไฟ (T2) ➔ เซนเซอร์ MEMS (T3)"
+      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ + สายไฟ (T2) ➔ เซนเซอร์ MEMS (T3)"
     },
     solar_cell: {
       id: "solar_cell",
@@ -1322,7 +2105,7 @@
       inputs: { silicon_wafer: 1, glass_bottle: 1, copper_coil: 1 },
       outputs: { solar_cell: 2 },
       b2bSellPrice: 11200,
-      chainPathTh: "ทรายซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ (T2) ➔ แผงโซลาร์เซลล์ (T3)"
+      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ (T2) ➔ แผงโซลาร์เซลล์ (T3)"
     },
     battery: {
       id: "battery",
@@ -1346,7 +2129,7 @@
       inputs: { silicon_wafer: 1, pcb: 1 },
       outputs: { microchip: 2 },
       b2bSellPrice: 11600,
-      chainPathTh: "ทรายซิลิกา (T0) ➔ แท่งซิลิคอน MG-Si (T1) ➔ ซิลิคอนเวเฟอร์ (T2) ➔ ชิปไมโครโพรเซสเซอร์ (T3)"
+      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แท่งซิลิคอน MG-Si (T1) ➔ ซิลิคอนเวเฟอร์ (T2) ➔ ชิปไมโครโพรเซสเซอร์ (T3)"
     },
     power_inverter_ic: {
       id: "power_inverter_ic",
@@ -1358,7 +2141,7 @@
       inputs: { silicon_wafer: 1, heat_sink: 1, copper_coil: 1 },
       outputs: { power_inverter_ic: 2 },
       b2bSellPrice: 12800,
-      chainPathTh: "ทรายซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ + ฮีตซิงก์ (T2) ➔ ชิป IGBT แรงดันสูง (T3)"
+      chainPathTh: "ทรายควอตซ์ซิลิกา (T0) ➔ แท่งซิลิคอน (T1) ➔ เวเฟอร์ + ฮีตซิงก์ (T2) ➔ ชิป IGBT แรงดันสูง (T3)"
     }
   });
 
@@ -1553,7 +2336,7 @@
       minResearch: 0,
       upstreamAssetId: "forestry_pulp_mill",
       upstreamAssetNameTh: "ป่าปลูกไม้เศรษฐกิจและโรงเยื่อกระดาษ",
-      inputs: { raw_cane: 1, natural_latex: 1 },
+      inputs: { timber_bamboo_log: 2 },
       outputs: { pack_carton: 3 },
       batchesPerDayBase: 3,
       downstreamProducts: ["artisan_bakery", "herbalDrink", "ready_meal_box", "premium_cooking_oil", "pastry_croissant_box"],
@@ -2271,10 +3054,10 @@
     ],
     suppliers: [
       { id: "shenzhen_semi", nameTh: "บจก. เซินเจิ้น เซมิคอนดักเตอร์ ซัพพลาย", originTh: "เซินเจิ้น / ท่าเรือแหลมฉบัง", specialtyTh: "แผงวงจร ชิป เลนส์ออปติคัล เวเฟอร์ และแร่ซิลิกา", materials: ["pcb", "microchip", "led", "sensor", "heat_sink", "optical_lens", "power_inverter_ic", "silica_bauxite_ore", "metallurgical_silicon", "silicon_wafer"], baseTrust: 50, creditTermsTh: "COD / Net 7" },
-      { id: "siam_metal", nameTh: "บจก. สยามเมทัล แอนด์ ฮาร์เนส อินดัสทรี", originTh: "นิคมอมตะซิตี้ ชลบุรี", specialtyTh: "แร่เหล็ก-ทองแดง แผ่นโลหะ ขดลวด ตัวถัง และชุดสายไฟ", materials: ["copper_iron_ore", "silica_bauxite_ore", "lithium_brine_ore", "casing", "driver", "metal_sheet", "wire_harness", "heat_sink", "copper_coil", "polymer_resin", "natural_latex"], baseTrust: 55, creditTermsTh: "Net 7" },
-      { id: "thai_organic", nameTh: "สหกรณ์เกษตรอินทรีย์และสารสกัดไทย", originTh: "นครปฐม / เชียงใหม่", specialtyTh: "ผลผลิตเกษตรต้นน้ำ แป้งโม่ โดว์เนย สารสกัด และบรรจุภัณฑ์", materials: ["raw_extract", "glass_bottle", "pack_carton", "probiotic_culture", "foil_pouch", "paddy_grain", "crude_palm", "raw_cane", "fresh_milk_soy", "timber_bamboo_log", "artisan_flour", "refined_palm_oil", "refined_sugar_syrup", "bakery_dough_butter"], baseTrust: 58, creditTermsTh: "COD / Net 7" },
+      { id: "siam_metal", nameTh: "บจก. สยามเมทัล แอนด์ ฮาร์เนส อินดัสทรี", originTh: "นิคมอมตะซิตี้ ชลบุรี", specialtyTh: "แร่เหล็ก-ทองแดง แผ่นโลหะ ขดลวด ตัวถัง และชุดสายไฟ", materials: ["copper_iron_ore", "silica_bauxite_ore", "bauxite_ore", "lithium_brine_ore", "phosphate_potash_rock", "casing", "driver", "metal_sheet", "wire_harness", "heat_sink", "copper_coil", "polymer_resin", "natural_latex", "truck_tire"], baseTrust: 55, creditTermsTh: "Net 7" },
+      { id: "thai_organic", nameTh: "สหกรณ์เกษตรอินทรีย์และสารสกัดไทย", originTh: "นครปฐม / เชียงใหม่", specialtyTh: "ผลผลิตเกษตรต้นน้ำ แป้งโม่ โดว์เนย สารสกัด และบรรจุภัณฑ์", materials: ["rice_seed", "cane_stalk_seed", "palm_seedling", "soybean_seed", "raw_water_m3", "npk_fertilizer", "organic_compost", "paddy_grain", "milled_rice", "rice_bran_husk", "crude_palm", "raw_cane", "soybean_crop", "fresh_milk_soy", "timber_bamboo_log", "raw_extract", "glass_bottle", "pack_carton", "probiotic_culture", "foil_pouch", "artisan_flour", "refined_palm_oil", "refined_sugar_syrup", "bakery_dough_butter"], baseTrust: 58, creditTermsTh: "COD / Net 7" },
       { id: "pacific_solar", nameTh: "บจก. แปซิฟิก โซลาร์ แอนด์ ลิเธียม เพาเวอร์", originTh: "นิคมอีสเทิร์นซีบอร์ด ระยอง", specialtyTh: "แร่ลิเธียม แคโทดอิเล็กโทรไลต์ แผงโซลาร์เซลล์ และแบตเตอรี่", materials: ["lithium_brine_ore", "cathode_electrolyte", "solar_cell", "battery", "power_inverter_ic", "copper_coil"], baseTrust: 48, creditTermsTh: "Net 14" },
-      { id: "petro_chem_siam", nameTh: "บมจ. มาบตาพุด ปิโตรเคมี แอนด์ โพลีเมอร์", originTh: "นิคมมาบตาพุด ระยอง", specialtyTh: "สารตั้งต้นปิโตรเคมี น้ำยางพารา เม็ดพลาสติกเรซิน และฟอยล์", materials: ["crude_petro_feedstock", "natural_latex", "polymer_resin", "foil_pouch", "pack_carton", "timber_bamboo_log"], baseTrust: 54, creditTermsTh: "Net 7" }
+      { id: "petro_chem_siam", nameTh: "บมจ. มาบตาพุด ปิโตรเคมี แอนด์ โพลีเมอร์", originTh: "นิคมมาบตาพุด ระยอง", specialtyTh: "สารตั้งต้นปิโตรเคมี น้ำยางพารา เม็ดพลาสติกเรซิน และฟอยล์", materials: ["crude_petro_feedstock", "diesel_liter", "truck_tire", "natural_latex", "polymer_resin", "foil_pouch", "pack_carton", "timber_bamboo_log", "raw_water_m3"], baseTrust: 54, creditTermsTh: "Net 7" }
     ],
     competitors: [
       { id: "titan_elec", nameTh: "บมจ. ไททัน อิเล็กทรอนิกส์", sector: "tech", sectorTh: "อิเล็กทรอนิกส์และสมาร์ตเทค", marketSharePct: 22.0, strength: 68, strategyTh: "เน้นกำลังการผลิตขนาดใหญ่และตัดราคา" },
@@ -2887,50 +3670,68 @@
       },
     },
     materials: {
-      // === TIER 0: Uncraftable Primary Raw Resources (10 ชนิด — ผลิตเองจากศูนย์ไม่ได้ ต้องเก็บเกี่ยวจากสินทรัพย์ภายนอกหรือซื้อจากซัพพลายเออร์) ===
-      paddy_grain: { id: "paddy_grain", nameTh: "ข้าวเปลือกหอมมะลิและธัญพืชต้นน้ำ", unitCost: 1800, leadMinutes: 720, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 2300 },
-      crude_palm: { id: "crude_palm", nameTh: "ทะลายปาล์มสดและน้ำมันปาล์มดิบ (CPO)", unitCost: 2000, leadMinutes: 720, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 2600 },
-      raw_cane: { id: "raw_cane", nameTh: "อ้อยสดและกากน้ำตาลธรรมชาติต้นน้ำ", unitCost: 1600, leadMinutes: 720, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 2100 },
-      fresh_milk_soy: { id: "fresh_milk_soy", nameTh: "น้ำนมโคสดและถั่วเหลืองออร์แกนิกต้นน้ำ", unitCost: 2200, leadMinutes: 720, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 2800 },
-      natural_latex: { id: "natural_latex", nameTh: "น้ำยางพาราสดและเส้นใยชีวภาพต้นน้ำ", unitCost: 2400, leadMinutes: 720, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 3100 },
-      silica_bauxite_ore: { id: "silica_bauxite_ore", nameTh: "ทรายควอตซ์ซิลิกาและแร่บ็อกไซต์ต้นน้ำ", unitCost: 3200, leadMinutes: 1440, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 4100 },
-      copper_iron_ore: { id: "copper_iron_ore", nameTh: "แร่ทองแดงและแร่เหล็กดิบจากเหมืองต้นน้ำ", unitCost: 2600, leadMinutes: 1440, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 3400 },
-      lithium_brine_ore: { id: "lithium_brine_ore", nameTh: "แร่ลิเธียมสปอดูมีนและเกลือแร่แบตเตอรี่ต้นน้ำ", unitCost: 3600, leadMinutes: 1440, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 4700 },
-      crude_petro_feedstock: { id: "crude_petro_feedstock", nameTh: "แนฟทาและสารตั้งต้นปิโตรเคมีต้นน้ำ", unitCost: 2200, leadMinutes: 720, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 2900 },
-      timber_bamboo_log: { id: "timber_bamboo_log", nameTh: "ท่อนไม้เศรษฐกิจและเยื่อไผ่ธรรมชาติต้นน้ำ", unitCost: 1400, leadMinutes: 720, tier: 0, tierCode: "T0_RAW", craftable: false, minResearch: 0, b2bSellPrice: 1900 },
+      // === TIER 0: True Natural Primary Resources (7 ชนิด — ทรัพยากรธรรมชาติแท้จริงก่อนการเพาะปลูกหรือแปรรูป: แร่ หิน ทราย น้ำดิบ ปิโตรเลียมดิบ) ===
+      silica_bauxite_ore: { id: "silica_bauxite_ore", nameTh: "ทรายควอตซ์ซิลิกาธรรมชาติจากแหล่งแร่ (SiO2 Ore)", unitCost: 3000, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3900 },
+      bauxite_ore: { id: "bauxite_ore", nameTh: "แร่บ็อกไซต์อะลูมิเนียมธรรมชาติจากเหมือง (Alumina Ore)", unitCost: 2800, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3600 },
+      copper_iron_ore: { id: "copper_iron_ore", nameTh: "แร่ทองแดงและแร่เหล็กดิบจากแหล่งธรณีวิทยา", unitCost: 2600, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3400 },
+      lithium_brine_ore: { id: "lithium_brine_ore", nameTh: "แร่ลิเธียมสปอดูมีนและน้ำเกลือแร่ธรรมชาติ", unitCost: 3600, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 4700 },
+      phosphate_potash_rock: { id: "phosphate_potash_rock", nameTh: "หินฟอสเฟตและแร่โพแทชธรรมชาติ (แร่แม่ปุ๋ยต้นน้ำ)", unitCost: 1800, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2400 },
+      crude_petro_feedstock: { id: "crude_petro_feedstock", nameTh: "แนฟทาและสารตั้งต้นปิโตรเลียมดิบจากแหล่งธรรมชาติ", unitCost: 2200, leadMinutes: 720, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "geological_well", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2900 },
+      raw_water_m3: { id: "raw_water_m3", nameTh: "น้ำดิบธรรมชาติจากแหล่งน้ำผิวดินและบาดาล (ลบ.ม.)", unitCost: 600, leadMinutes: 360, tier: 0, tierCode: "T0_NATURAL", resourceClass: "environmental_flow", resourceOrigin: "water_intake", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 900 },
 
-      // === TIER 1: First-Stage Refined Materials (10 ชนิด — แปรรูปขั้นที่ 1 จาก T0 หรือซื้อตลาด • ใช้เป็นวัตถุดิบขั้นต่อไปหรือขายส่ง B2B ได้) ===
-      artisan_flour: { id: "artisan_flour", nameTh: "แป้งข้าวหอมและแป้งสาลีโม่ละเอียด (แปรรูป T1)", unitCost: 4200, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 0, b2bSellPrice: 5500 },
-      refined_palm_oil: { id: "refined_palm_oil", nameTh: "น้ำมันปาล์มบริสุทธิ์และเนยขาวเบเกอรี่ (แปรรูป T1)", unitCost: 4500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 0, b2bSellPrice: 5900 },
-      refined_sugar_syrup: { id: "refined_sugar_syrup", nameTh: "น้ำตาลทรายบริสุทธิ์และไซรัปกลูโคส (แปรรูป T1)", unitCost: 3800, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 0, b2bSellPrice: 5000 },
-      raw_extract: { id: "raw_extract", nameTh: "สารสกัดสมุนไพร/ผลไม้ออร์แกนิก (แปรรูป T1)", unitCost: 3500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 0, b2bSellPrice: 4600 },
-      metal_sheet: { id: "metal_sheet", nameTh: "แผ่นโลหะขึ้นรูป (แปรรูป T1)", unitCost: 7000, leadMinutes: 1440, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 15, b2bSellPrice: 9100 },
-      copper_coil: { id: "copper_coil", nameTh: "ขดลวดทองแดงเหนี่ยวนำเกรดอุตสาหกรรม (แปรรูป T1)", unitCost: 5500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 15, b2bSellPrice: 7200 },
-      polymer_resin: { id: "polymer_resin", nameTh: "เม็ดพลาสติกวิศวกรรมและเรซินทนความร้อน (แปรรูป T1)", unitCost: 4000, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 10, b2bSellPrice: 5300 },
-      pack_carton: { id: "pack_carton", nameTh: "กล่องบรรจุภัณฑ์มาตรฐานอาหารและส่งออก (แปรรูป T1)", unitCost: 2000, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 0, b2bSellPrice: 2700 },
-      glass_bottle: { id: "glass_bottle", nameTh: "ขวดแก้วสุญญากาศและหลอดแก้วควอตซ์ (แปรรูป T1)", unitCost: 2500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 10, b2bSellPrice: 3300 },
-      metallurgical_silicon: { id: "metallurgical_silicon", nameTh: "แท่งซิลิคอนบริสุทธิ์เกรดโลหะวิทยา MG-Si (แปรรูป T1)", unitCost: 5200, leadMinutes: 1440, tier: 1, tierCode: "T1_REFINED", craftable: true, minResearch: 35, b2bSellPrice: 6900 },
+      // === TIER 1A: Biological Seeds & Propagules (4 ชนิด — เมล็ดพันธุ์และต้นพันธุ์ชีวภาพสำหรับเพาะปลูกในแปลงเกษตร) ===
+      rice_seed: { id: "rice_seed", nameTh: "เมล็ดพันธุ์ข้าวหอมมะลิคัดเกรดพร้อมงอก (ใช้เพาะปลูกในแปลงนา)", unitCost: 1400, leadMinutes: 720, tier: 1, tierCode: "T1_BIO_SEED", resourceClass: "biological_seed", resourceOrigin: "seed_selection", isTrueNaturalResource: false, craftable: false, canPlantCrop: true, targetCropId: "jasmine_rice", minResearch: 0, b2bSellPrice: 1900 },
+      cane_stalk_seed: { id: "cane_stalk_seed", nameTh: "ท่อนพันธุ์อ้อยสดคัดตาพันธุ์ดี (ใช้เพาะปลูกในแปลงอ้อย)", unitCost: 1200, leadMinutes: 720, tier: 1, tierCode: "T1_BIO_SEED", resourceClass: "biological_seed", resourceOrigin: "seed_selection", isTrueNaturalResource: false, craftable: false, canPlantCrop: true, targetCropId: "sugarcane", minResearch: 0, b2bSellPrice: 1650 },
+      palm_seedling: { id: "palm_seedling", nameTh: "ต้นกล้าปาล์มน้ำมันและกล้าไม้เศรษฐกิจ (ใช้ปลูกในแปลงสวน/ป่าปลูก)", unitCost: 1500, leadMinutes: 720, tier: 1, tierCode: "T1_BIO_SEED", resourceClass: "biological_seed", resourceOrigin: "seed_selection", isTrueNaturalResource: false, craftable: false, canPlantCrop: true, targetCropId: "oil_palm", minResearch: 0, b2bSellPrice: 2000 },
+      soybean_seed: { id: "soybean_seed", nameTh: "เมล็ดพันธุ์ถั่วเหลืองและสมุนไพรออร์แกนิก (ใช้เพาะปลูกและบำรุงดิน)", unitCost: 1300, leadMinutes: 720, tier: 1, tierCode: "T1_BIO_SEED", resourceClass: "biological_seed", resourceOrigin: "seed_selection", isTrueNaturalResource: false, craftable: false, canPlantCrop: true, targetCropId: "soy_herb", minResearch: 0, b2bSellPrice: 1800 },
 
-      // === TIER 2: Second-Stage Advanced Intermediates (9 ชนิด — แปรรูปขั้นที่ 2 จาก T1 • ใช้ประกอบชิ้นส่วน T3/สินค้า T4 หรือขายส่ง B2B) ===
-      bakery_dough_butter: { id: "bakery_dough_butter", nameTh: "โดว์ขนมปังหมักยีสต์และเนยเพสตรี้พร้อมอบ (กลางน้ำ T2)", unitCost: 5600, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 25, b2bSellPrice: 7400 },
-      probiotic_culture: { id: "probiotic_culture", nameTh: "หัวเชื้อจุลินทรีย์ชีวภาพและวิตามินสกัดเย็น (กลางน้ำ T2)", unitCost: 5000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 30, b2bSellPrice: 6600 },
-      foil_pouch: { id: "foil_pouch", nameTh: "ซองฟอยล์สุญญากาศเกรดการแพทย์และอาหาร (กลางน้ำ T2)", unitCost: 2200, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 25, b2bSellPrice: 3000 },
-      casing: { id: "casing", nameTh: "ตัวถังและโครงสร้างคอมโพสิต (กลางน้ำ T2)", unitCost: 5000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 30, b2bSellPrice: 6500 },
-      wire_harness: { id: "wire_harness", nameTh: "ชุดสายไฟแรงดันต่ำและขั้วต่อ (กลางน้ำ T2)", unitCost: 4500, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 35, b2bSellPrice: 5900 },
-      heat_sink: { id: "heat_sink", nameTh: "ครีบระบายความร้อนอะลูมิเนียม (กลางน้ำ T2)", unitCost: 4000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 40, b2bSellPrice: 5300 },
-      optical_lens: { id: "optical_lens", nameTh: "เลนส์ออปติคัลและกระจกแซฟไฟร์ความละเอียดสูง (กลางน้ำ T2)", unitCost: 6500, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 75, b2bSellPrice: 8500 },
-      cathode_electrolyte: { id: "cathode_electrolyte", nameTh: "สารแคโทดลิเธียมและอิเล็กโทรไลต์บริสุทธิ์ (กลางน้ำ T2)", unitCost: 6800, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 85, b2bSellPrice: 8900 },
-      silicon_wafer: { id: "silicon_wafer", nameTh: "แผ่นซิลิคอนเวเฟอร์เกรดเซมิคอนดักเตอร์ (กลางน้ำ T2)", unitCost: 7800, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", craftable: true, minResearch: 65, b2bSellPrice: 10400 },
+      // === TIER 1B: Cultivated Agricultural, Livestock & Plantation Outputs (7 ชนิด — เกิดจากวงจรเพาะปลูก/ปศุสัตว์ ไม่ใช่ทรัพยากรธรรมชาติ T0!) ===
+      paddy_grain: { id: "paddy_grain", nameTh: "ข้าวเปลือกหอมมะลิจากการเพาะปลูก (คัดเก็บเป็นเมล็ดพันธุ์ได้ / สีเป็นข้าวสารได้)", unitCost: 1800, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "rice_seed", minResearch: 0, b2bSellPrice: 2300 },
+      crude_palm: { id: "crude_palm", nameTh: "ทะลายปาล์มน้ำมันสดจากการเพาะปลูก (สกัดเป็นน้ำมันปาล์มบริสุทธิ์)", unitCost: 2000, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "palm_seedling", minResearch: 0, b2bSellPrice: 2600 },
+      raw_cane: { id: "raw_cane", nameTh: "ลำอ้อยสดจากการเพาะปลูก (คัดท่อนพันธุ์ได้ / หีบเป็นน้ำตาลได้)", unitCost: 1600, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "cane_stalk_seed", minResearch: 0, b2bSellPrice: 2100 },
+      soybean_crop: { id: "soybean_crop", nameTh: "เมล็ดถั่วเหลืองและสมุนไพรสดจากการเพาะปลูก (คัดพันธุ์ได้ / สกัดสารสำคัญ)", unitCost: 1900, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "soybean_seed", minResearch: 0, b2bSellPrice: 2500 },
+      fresh_milk_soy: { id: "fresh_milk_soy", nameTh: "น้ำนมโคสดแท้จากฟาร์มปศุสัตว์ (ผลิตจากการเลี้ยงฝูงโคนมด้วยอาหารและน้ำ)", unitCost: 2200, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "livestock_husbandry", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2800 },
+      natural_latex: { id: "natural_latex", nameTh: "น้ำยางพาราสดจากการกรีดสวนยางปลูก (ต้องดูแลแปลงยาง)", unitCost: 2400, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "plantation_tapping", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3100 },
+      timber_bamboo_log: { id: "timber_bamboo_log", nameTh: "ท่อนไม้เศรษฐกิจจากการตัดป่าปลูกหมุนเวียน (ตัดแล้วต้องปลูกทดแทน)", unitCost: 1400, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "forestry_rotation", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 1900 },
 
-      // === TIER 3: Tech-Gated Sub-Assemblies & High-Tech Components (8 ชนิด — ต้นเกมต้องซื้อ เมื่อมีทุนและแต้มวิจัยถึงเกณฑ์จึงผลิตเองและขาย B2B ได้) ===
-      driver: { id: "driver", nameTh: "ดอกลำโพงและแอคชูเอเตอร์เสียง (ชิ้นส่วน T3)", unitCost: 6000, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 95, b2bSellPrice: 7900 },
-      pcb: { id: "pcb", nameTh: "แผงวงจรพิมพ์หลายชั้น PCB (ชิ้นส่วน T3)", unitCost: 9000, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 105, b2bSellPrice: 11800 },
-      led: { id: "led", nameTh: "โมดูลแสง SMD LED (ชิ้นส่วน T3)", unitCost: 7500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 135, b2bSellPrice: 9800 },
-      sensor: { id: "sensor", nameTh: "เซ็นเซอร์อัจฉริยะ MEMS/LiDAR (ชิ้นส่วน T3)", unitCost: 6000, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 150, b2bSellPrice: 8000 },
-      solar_cell: { id: "solar_cell", nameTh: "แผงโซลาร์เซลล์ประสิทธิภาพสูง (ชิ้นส่วน T3)", unitCost: 8500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 180, b2bSellPrice: 11200 },
-      battery: { id: "battery", nameTh: "โมดูลแบตเตอรี่ลิเธียมความปลอดภัยสูง (ชิ้นส่วน T3)", unitCost: 9500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 210, b2bSellPrice: 12600 },
-      microchip: { id: "microchip", nameTh: "ชิปไมโครโพรเซสเซอร์ระดับนาโน (ชิ้นส่วน T3)", unitCost: 8500, leadMinutes: 720, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 250, b2bSellPrice: 11600 },
-      power_inverter_ic: { id: "power_inverter_ic", nameTh: "ชิปควบคุมกำลังไฟฟ้า IGBT แรงดันสูง (ชิ้นส่วน T3)", unitCost: 9500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", craftable: true, minResearch: 290, b2bSellPrice: 12800 },
+      // === TIER 1C & 1D: Milled Rice, Byproducts, Soil Fertilizers, Fleet Consumables & First-Stage Refined Materials (16 ชนิด) ===
+      milled_rice: { id: "milled_rice", nameTh: "ข้าวสารหอมมะลิขัดสี (สีจากข้าวเปลือก • ห้ามใช้ปลูกเป็นเมล็ดพันธุ์!)", unitCost: 2900, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "rice_milling", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3800 },
+      rice_bran_husk: { id: "rice_bran_husk", nameTh: "รำข้าวและแกลบจากการสีข้าว (ผลพลอยได้ใช้หมักปุ๋ยและเลี้ยงโคนม)", unitCost: 900, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "byproduct_waste", resourceOrigin: "rice_milling", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 1300 },
+      npk_fertilizer: { id: "npk_fertilizer", nameTh: "ปุ๋ยธาตุอาหารหลัก N-P-K (ผลิตจากหินฟอสเฟต/โพแทชและน้ำดิบ)", unitCost: 2400, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "soil_input", resourceOrigin: "fertilizer_synthesis", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3200 },
+      organic_compost: { id: "organic_compost", nameTh: "ปุ๋ยหมักอินทรีย์ชีวภาพ (หมักจากรำข้าว/แกลบและน้ำดิบ)", unitCost: 1500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "soil_input", resourceOrigin: "compost_fermentation", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2100 },
+      diesel_liter: { id: "diesel_liter", nameTh: "น้ำมันดีเซลหมุนเร็ว B7/ไบโอดีเซล (เชื้อเพลิงกองรถขนส่งและเครื่องจักร)", unitCost: 3200, leadMinutes: 360, tier: 1, tierCode: "T1_REFINED", resourceClass: "operational_consumable", resourceOrigin: "fuel_refining", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 4100 },
+      truck_tire: { id: "truck_tire", nameTh: "ยางรถบรรทุกเรเดียลเสริมใยเหล็ก (อะไหล่กองรถขนส่ง B2B)", unitCost: 6200, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "operational_consumable", resourceOrigin: "tire_vulcanizing", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 10, b2bSellPrice: 8200 },
+      artisan_flour: { id: "artisan_flour", nameTh: "แป้งข้าวหอมและแป้งธัญพืชโม่ละเอียด (แปรรูป T1 • ห้ามใช้ปลูกเป็นเมล็ดพันธุ์!)", unitCost: 4200, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "grain_grinding", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 5500 },
+      refined_palm_oil: { id: "refined_palm_oil", nameTh: "น้ำมันปาล์มบริสุทธิ์และเนยขาวเบเกอรี่ (แปรรูป T1)", unitCost: 4500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "oil_refining", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 5900 },
+      refined_sugar_syrup: { id: "refined_sugar_syrup", nameTh: "น้ำตาลทรายบริสุทธิ์และไซรัปกลูโคส (แปรรูป T1)", unitCost: 3800, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "sugar_milling", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 5000 },
+      raw_extract: { id: "raw_extract", nameTh: "สารสกัดสมุนไพรและโปรตีนถั่วเหลืองเข้มข้น (แปรรูป T1)", unitCost: 3500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "vacuum_extraction", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 4600 },
+      metal_sheet: { id: "metal_sheet", nameTh: "แผ่นโลหะและอะลูมิเนียมขึ้นรูป (แปรรูป T1)", unitCost: 7000, leadMinutes: 1440, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "ore_smelting", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 15, b2bSellPrice: 9100 },
+      copper_coil: { id: "copper_coil", nameTh: "ขดลวดทองแดงเหนี่ยวนำเกรดอุตสาหกรรม (แปรรูป T1)", unitCost: 5500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "ore_smelting", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 15, b2bSellPrice: 7200 },
+      polymer_resin: { id: "polymer_resin", nameTh: "เม็ดพลาสติกวิศวกรรมและเรซินทนความร้อน (แปรรูป T1)", unitCost: 4000, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "polymer_synthesis", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 10, b2bSellPrice: 5300 },
+      pack_carton: { id: "pack_carton", nameTh: "กล่องกระดาษลูกฟูกและบรรจุภัณฑ์มาตรฐาน (แปรรูป T1)", unitCost: 2000, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "pulp_converting", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2700 },
+      glass_bottle: { id: "glass_bottle", nameTh: "ขวดแก้วสุญญากาศและหลอดแก้วควอตซ์ (แปรรูป T1)", unitCost: 2500, leadMinutes: 720, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "glass_furnace", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 10, b2bSellPrice: 3300 },
+      metallurgical_silicon: { id: "metallurgical_silicon", nameTh: "แท่งซิลิคอนบริสุทธิ์เกรดโลหะวิทยา MG-Si (แปรรูป T1)", unitCost: 5200, leadMinutes: 1440, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "arc_furnace", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 35, b2bSellPrice: 6900 },
+
+      // === TIER 2: Second-Stage Advanced Intermediates (9 ชนิด) ===
+      bakery_dough_butter: { id: "bakery_dough_butter", nameTh: "โดว์ขนมปังหมักยีสต์และเนยเพสตรี้พร้อมอบ (กลางน้ำ T2)", unitCost: 5600, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "dough_fermentation", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 25, b2bSellPrice: 7400 },
+      probiotic_culture: { id: "probiotic_culture", nameTh: "หัวเชื้อจุลินทรีย์ชีวภาพและวิตามินสกัดเย็น (กลางน้ำ T2)", unitCost: 5000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "bio_fermentation", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 30, b2bSellPrice: 6600 },
+      foil_pouch: { id: "foil_pouch", nameTh: "ซองฟอยล์สุญญากาศเกรดการแพทย์และอาหาร (กลางน้ำ T2)", unitCost: 2200, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "foil_lamination", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 25, b2bSellPrice: 3000 },
+      casing: { id: "casing", nameTh: "ตัวถังและโครงสร้างคอมโพสิต (กลางน้ำ T2)", unitCost: 5000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "cnc_molding", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 30, b2bSellPrice: 6500 },
+      wire_harness: { id: "wire_harness", nameTh: "ชุดสายไฟแรงดันต่ำและขั้วต่อ (กลางน้ำ T2)", unitCost: 4500, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "harness_crimping", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 35, b2bSellPrice: 5900 },
+      heat_sink: { id: "heat_sink", nameTh: "ครีบระบายความร้อนอะลูมิเนียม (กลางน้ำ T2)", unitCost: 4000, leadMinutes: 720, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "cnc_extrusion", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 40, b2bSellPrice: 5300 },
+      optical_lens: { id: "optical_lens", nameTh: "เลนส์ออปติคัลและกระจกแซฟไฟร์ความละเอียดสูง (กลางน้ำ T2)", unitCost: 6500, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "optics_polishing", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 75, b2bSellPrice: 8500 },
+      cathode_electrolyte: { id: "cathode_electrolyte", nameTh: "สารแคโทดลิเธียมและอิเล็กโทรไลต์บริสุทธิ์ (กลางน้ำ T2)", unitCost: 6800, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "battery_chemistry", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 85, b2bSellPrice: 8900 },
+      silicon_wafer: { id: "silicon_wafer", nameTh: "แผ่นซิลิคอนเวเฟอร์เกรดเซมิคอนดักเตอร์ (กลางน้ำ T2)", unitCost: 7800, leadMinutes: 1440, tier: 2, tierCode: "T2_INTERMEDIATE", resourceClass: "intermediate_part", resourceOrigin: "ingot_slicing", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 65, b2bSellPrice: 10400 },
+
+      // === TIER 3: Tech-Gated Sub-Assemblies & High-Tech Components (8 ชนิด) ===
+      driver: { id: "driver", nameTh: "ดอกลำโพงและแอคชูเอเตอร์เสียง (ชิ้นส่วน T3)", unitCost: 6000, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "acoustic_assembly", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 95, b2bSellPrice: 7900 },
+      pcb: { id: "pcb", nameTh: "แผงวงจรพิมพ์หลายชั้น PCB (ชิ้นส่วน T3)", unitCost: 9000, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "pcb_etching", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 105, b2bSellPrice: 11800 },
+      led: { id: "led", nameTh: "โมดูลแสง SMD LED (ชิ้นส่วน T3)", unitCost: 7500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "opto_packaging", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 135, b2bSellPrice: 9800 },
+      sensor: { id: "sensor", nameTh: "เซ็นเซอร์อัจฉริยะ MEMS/LiDAR (ชิ้นส่วน T3)", unitCost: 6000, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "mems_fab", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 150, b2bSellPrice: 8000 },
+      solar_cell: { id: "solar_cell", nameTh: "แผงโซลาร์เซลล์ประสิทธิภาพสูง (ชิ้นส่วน T3)", unitCost: 8500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "pv_coating", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 180, b2bSellPrice: 11200 },
+      battery: { id: "battery", nameTh: "โมดูลแบตเตอรี่ลิเธียมความปลอดภัยสูง (ชิ้นส่วน T3)", unitCost: 9500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "cell_stacking", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 210, b2bSellPrice: 12600 },
+      microchip: { id: "microchip", nameTh: "ชิปไมโครโพรเซสเซอร์ระดับนาโน (ชิ้นส่วน T3)", unitCost: 8500, leadMinutes: 720, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "lithography_fab", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 250, b2bSellPrice: 11600 },
+      power_inverter_ic: { id: "power_inverter_ic", nameTh: "ชิปควบคุมกำลังไฟฟ้า IGBT แรงดันสูง (ชิ้นส่วน T3)", unitCost: 9500, leadMinutes: 1440, tier: 3, tierCode: "T3_COMPONENT", resourceClass: "high_tech_component", resourceOrigin: "sic_module_fab", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 290, b2bSellPrice: 12800 },
     },
     products: {
       speaker: {
@@ -3451,16 +4252,30 @@
       probiotic_culture: 0,
       foil_pouch: 0,
       power_inverter_ic: 0,
+      silica_bauxite_ore: 0,
+      bauxite_ore: 0,
+      copper_iron_ore: 0,
+      lithium_brine_ore: 0,
+      phosphate_potash_rock: 0,
+      crude_petro_feedstock: 0,
+      raw_water_m3: 8,
+      rice_seed: 4,
+      cane_stalk_seed: 2,
+      palm_seedling: 2,
+      soybean_seed: 2,
       paddy_grain: 0,
       crude_palm: 0,
       raw_cane: 0,
+      soybean_crop: 0,
       fresh_milk_soy: 0,
       natural_latex: 0,
-      silica_bauxite_ore: 0,
-      copper_iron_ore: 0,
-      lithium_brine_ore: 0,
-      crude_petro_feedstock: 0,
       timber_bamboo_log: 0,
+      milled_rice: 0,
+      rice_bran_husk: 0,
+      npk_fertilizer: 2,
+      organic_compost: 2,
+      diesel_liter: 6,
+      truck_tire: 2,
       artisan_flour: 0,
       refined_palm_oil: 0,
       refined_sugar_syrup: 0,
@@ -3827,8 +4642,17 @@
     return e;
   }
   return Object.freeze({
-    VERSION: "1.0.0",
-    RELEASE_VERSION: "1.0.0",
+    VERSION: "1.2.0",
+    RELEASE_VERSION: "1.2.0",
+    RESOURCE_CLASSES,
+    AGRICULTURE_CROPS,
+    FLEET_VEHICLES,
+    FREIGHT_ROUTES,
+    SOFTWARE_APPS,
+    SECTOR_PROCESS_MODELS,
+    INDUSTRIAL_SERVICES,
+    BUSINESS_PROCESS_MODELS,
+    TRUE_RESOURCE_CHAIN_TABLE,
     MATERIAL_TIERS,
     MATERIAL_RECIPES,
     NATIONALITIES,
