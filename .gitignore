@@ -1,0 +1,11 @@
+node_modules/
+**/test/results/
+__pycache__/
+*.pyc
+.DS_Store
+.agent_cmd
+.agent_out
+.agent_status
+agent_runner.sh
+*.zip
+runner.log
