@@ -12,10 +12,10 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง v1.2.0 ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.0.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
-- Source: `COMPANY_SOURCE/js/sim.js: evaluateFacilityInvestment, evaluatePlotConstruction, evaluateDebtRepayment, acquireExternalAsset, evaluateNewBusinessOperationsDaily` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
-- ตัวอย่างหลักฐานเดิม: `COMPANY_SOURCE/test/campus-behavior.test.cjs; external-assets-production-chains-v060.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)
+- Source: `COMPANY_SOURCE/js/sim.js: evaluateFacilityInvestment, evaluatePlotConstruction, evaluateDebtRepayment, acquireExternalAsset, evaluateNewBusinessOperationsDaily, computeFinancialPools, evaluateExecutiveBoardAndBusinessEntry, recordBoardDecision` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
+- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/campus-behavior.test.cjs; external-assets-production-chains-v060.test.cjs; product-depth-npc-board-v130.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/). ระบบบอร์ดและเงินสดอิสระมีแล้ว; ใช้สกิลนี้ออกแบบการต่อยอด ไม่เขียนเหมือนไม่มี call-site
 
 ## หัวข้อที่เสนอให้ขยาย
 

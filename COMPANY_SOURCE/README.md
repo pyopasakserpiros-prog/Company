@@ -1,5 +1,7 @@
 # Company Simulation — วิธีเปิดและพัฒนา
 
+รุ่นเกมบน `main`: **v2.0.0** · [สถานะและรายงานแพตช์](../project_status_and_ai_onboarding.md)
+
 ## เล่น
 
 เปิด CompanyFoundation_single.html ในเบราว์เซอร์ที่อนุญาตไฟล์ในเครื่อง หรือรันในโฟลเดอร์นี้:

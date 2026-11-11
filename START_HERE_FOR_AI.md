@@ -1,73 +1,32 @@
-# รายงานผลการพัฒนาแพตช์ Siam Enterprise / Company Simulation — รุ่น v0.6.0
+# เริ่มงานกับ Company Simulation
 
-## 1. สรุปภาพรวมการอัปเกรดในรุ่น v0.6.0 (Executive Summary)
-แพตช์ **v0.6.0** ขยายระบบนิเวศธุรกิจและอุตสาหกรรมของบริษัทให้ครอบคลุม **หมวดสินทรัพย์ภายนอกนิคม (`EXTERNAL_ASSETS` 12 แห่ง)**, **ห่วงโซ่การผลิตแบบลูกโซ่ 3 ขั้น (`PRODUCTION_CHAINS` 8 สาย: ต้นน้ำ ➔ แปรรูปกลางน้ำ ➔ สินค้าปลายน้ำ)**, และ **กลยุทธ์การตัดสินใจผลิตเองหรือซื้อจากตลาด (`Make-or-Buy Strategy`)** โดยอ้างอิงทฤษฎีการบูรณาการแนวดิ่ง (Backward & Forward Vertical Integration) และกระบวนการผลิตทางอุตสาหกรรมจริง ([Esade Vertical Integration](https://www.esade.edu/beyond/en/vertical-integration-companies/), [IE University Supply Chain](https://www.ie.edu/uncover-ie/vertical-integration-global-mba/), [MYOB Vertical Integration](https://www.myob.com/au/insight/post/vertical-integration), [Brahmin Solutions 6 Manufacturing Process Types](https://www.brahmin-solutions.com/blog/types-of-manufacturing-processes), [Glassdome Manufacturing Processes](https://glassdome.com/the-five-or-six-types-of-manufacturing-processes/), [ThaiJO Agro-Food Supply Chain](https://so05.tci-thaijo.org/index.php/RJPJ/article/download/286491/189233)):
+สถานะ source ของ branch `main` ล่าสุดคือ **รุ่นเกม v2.0.0** อ่าน [project status](project_status_and_ai_onboarding.md) เพื่อดูระบบที่ตรวจแล้ว ผลทดสอบ และรายงานทุกแพตช์
 
-1. **หน้าต่าง UI หมวดสินทรัพย์ภายนอกนิคมและสัมปทาน 12 แห่ง (`EXTERNAL_ASSETS`) ที่ส่งผลจริงหลายมิติ**:
-   - ไม่ใช่เพียงการเพิ่มเงินปันผลรายวัน แต่สินทรัพย์แต่ละแห่งส่งผลต่อกลไกจำลองโดยตรง:
-     - **ส่งผลผลิตต้นน้ำเข้าคลังจริงทุกวัน**: เช่น ไร่ข้าวหอมมะลิส่ง `paddy_grain` (ข้าวเปลือก/ธัญพืช), สวนปาล์มส่ง `crude_palm` (ผลปาล์มสด/น้ำมันดิบ), ไร่อ้อยส่ง `raw_cane`, ฟาร์มโคนมส่ง `fresh_milk_soy` & `probiotic_culture`, สวนสมุนไพรส่ง `raw_extract`, สวนยางพาราส่ง `natural_latex` & `polymer_resin`, เหมืองแร่ส่ง `silica_bauxite_ore` & `copper_coil` & `metal_sheet`, ป่าเศรษฐกิจส่ง `pack_carton` & `foil_pouch`
-     - **ลดต้นทุนโสหุ้ยและพลังงาน**: ทุ่งกังหันลมและโซลาร์ฟาร์มเมกะวัตต์นอกนิคมลดค่าเช่า/ค่าไฟรายวันลง 28% และเร่งความเร็วสายพาน +6%; ไร่อ้อยมีโรงไฟฟ้าชีวมวลชานอ้อยลดค่าไฟนิคม 8%
-     - **ยกระดับโลจิสติกส์และอำนาจการค้า**: ท่าเทียบเรือแหลมฉบังลดเวลารอวัตถุดิบนำเข้า (`leadMinutes`) ลง 30% และเพิ่มฟลีทรถ +4 คัน; คลังห้องเย็นเพิ่มโอกาสผ่าน QC สินค้าอาหาร +6% และยืดเวลาส่งมอบ +1 วัน; เครือข่ายโชว์รูมและร้านค้าปลีกปลายน้ำ (Forward Integration) เพิ่มราคาขายต่อหน่วย +7%, เพิ่มเงินมัดจำรับล่วงหน้าจาก 30% เป็น 40%, และเพิ่มส่วนแบ่งตลาด +3.5%
-     - **ยกระดับสวัสดิการและพลังงานพนักงาน**: ข้าวหอมมะลิและนมสดจากฟาร์มของบริษัทส่งเข้าโรงอาหาร เพิ่มขวัญกำลังใจ (`morale`) และฟื้นฟูพลังงาน (`energy`) พนักงานทุกคนทุกสิ้นวัน
-2. **ระบบห่วงโซ่การผลิตแบบลูกโซ่ 8 สาย (`PRODUCTION_CHAINS`) และกลยุทธ์ Make-or-Buy**:
-   - บริษัทสามารถเลือกวิสัยทัศน์ได้ 3 รูปแบบ (`SUPPLY_CHAIN_STRATEGIES`):
-     1. **`asset_light` (ซื้อสำเร็จรูป / Pure Outsourcing)**: ไม่ต้องมีไร่ข้าว ไม่ต้องมีโรงโม่แป้ง สามารถสั่งซื้อแป้ง (`artisan_flour`), น้ำมันบริสุทธิ์ (`refined_palm_oil`), น้ำตาลไซรัป (`refined_sugar_syrup`), หรือซิลิคอนเวเฟอร์ (`silicon_wafer`) จากซัพพลายเออร์ในตลาดมาผลิตขนมปังโฮลเกรน (`artisan_bakery`) หรือชิป AI (`ai_edge_module`) ได้ทันที
-     2. **`balanced_hybrid` (ผสมผสาน Make & Buy)**: แปรรูปผลผลิตจากสินทรัพย์ภายนอกที่มีอยู่เพื่อลดต้นทุน และสั่งซื้อเฉพาะส่วนที่ขาดจากตลาดโดยอัตโนมัติ
-     3. **`vertical_integration` (บูรณาการแนวดิ่งเต็มรูปแบบ)**: มุ่งลงทุนไร่/สวน/เหมืองต้นน้ำ + ก่อสร้าง **โรงโม่แป้งและโรงกลั่นสกัดกลางน้ำ (`refineryMill`)** และ **โรงอบเบเกอรี่และอาหารแปรรูป (`bakeryPlant`)** เพื่อควบคุมห่วงโซ่การผลิตตั้งแต่ต้นน้ำยันปลายน้ำ ประหยัดต้นทุนวัตถุดิบลง 50–60%
-3. **ขยายคลังข้อมูลอุตสาหกรรม**:
-   - **วัตถุดิบ 30 ชนิด** (เพิ่มวัตถุดิบต้นน้ำ 6 ชนิด และวัตถุดิบแปรรูปกลางน้ำ 4 ชนิด)
-   - **สินค้า 22 ชนิด** (เพิ่ม `artisan_bakery`, `premium_cooking_oil`, `ready_meal_box`, `dairy_protein_shake`, `ev_suspension_kit`, `ai_edge_module`)
-   - **รูปแบบการผลิต 8 ระบบ (`PRODUCTION_MODES`)** และ **อาคารขยายนิคมบนแผนที่ 14 แห่ง (`EXPANSION_PLOTS`)**
+## อ่านก่อนเริ่มทุกครั้ง
 
-## 2. ตารางหมวดสินทรัพย์ภายนอกทั้ง 12 แห่ง (`EXTERNAL_ASSETS`) และผลกระทบจริง
+1. [AGENTS.md](AGENTS.md) — กฎเหล็ก; ห้ามแก้โดยไม่ได้รับอนุญาตจากผู้ใช้โดยตรง
+2. [สถานะโครงการ](project_status_and_ai_onboarding.md) — ความสามารถที่มีจริง รุ่นเกม และผลตรวจล่าสุด
+3. [Workflow ทำงานร่วมกัน](docs/company/AGENT_COLLABORATION_WORKFLOW.md) และ [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
+4. [Master Skills และดัชนีสกิล](.agents/skills/README.md) พร้อม `SKILL.md` ที่เกี่ยวข้องกับงาน
+5. อ่าน source/test จริงใน `COMPANY_SOURCE/` ก่อนยืนยันพฤติกรรม
 
-| สินทรัพย์ภายนอก | หมวดหมู่ | งบลงทุน | ผลผลิตต้นน้ำเข้าคลังฟรี/วัน | ผลกระทบเชิงปฏิบัติการและเศรษฐกิจจริง |
-| :--- | :--- | :--- | :--- | :--- |
-| **🌾 ไร่ข้าวหอมมะลิและธัญพืชอินทรีย์** | เกษตรต้นน้ำ | ฿22,000 | `paddy_grain` +8 ชิ้น | ป้อนโรงโม่ผลิตแป้ง `artisan_flour` ทำขนมปัง/อาหารพร้อมทาน • เลี้ยงโรงอาหารเพิ่ม Morale +1/วัน • ปันผลสุทธิ +฿300/วัน |
-| **🌴 สวนปาล์มน้ำมันสุราษฎร์ธานี** | เกษตรต้นน้ำ | ฿25,000 | `crude_palm` +8 ชิ้น | ป้อนโรงกลั่นผลิตน้ำมันบริสุทธิ์/เนยขาว `refined_palm_oil` • ไบโอดีเซลเร่งความเร็วขนส่ง Shipping +6% • ปันผลสุทธิ +฿340/วัน |
-| **🎋 ไร่อ้อยและโรงหีบน้ำตาลต้นน้ำ** | เกษตรต้นน้ำ | ฿20,000 | `raw_cane` +8 ชิ้น | ป้อนสายเคี่ยวผลิตน้ำตาล/ไซรัป `refined_sugar_syrup` • ชีวมวลชานอ้อยลดค่าเช่า/ค่าไฟนิคม -8% • ปันผลสุทธิ +฿260/วัน |
-| **🐄 ฟาร์มโคนมและโปรตีนอัจฉริยะ** | ปศุสัตว์/ชีวภาพ | ฿28,000 | `fresh_milk_soy` +6, `probiotic_culture` +2 | ป้อนสายคลีนรูมผลิตเวย์โปรตีนและเจลโพรไบโอติกส์ • เสริมนมสดโรงอาหารเพิ่ม Energy พนักงาน +2/วัน • ปันผลสุทธิ +฿380/วัน |
-| **🌿 สวนสมุนไพรออร์แกนิกเชียงใหม่** | เกษตรอินทรีย์ | ฿24,000 | `raw_extract` +6 ชิ้น | ป้อนสายเครื่องดื่มสมุนไพรโดยตรง • เพิ่มโอกาสผ่าน QC สินค้าอาหาร +4% • ชื่อเสียง ESG +2 • ปันผลสุทธิ +฿320/วัน |
-| **🌳 สวนยางพาราและโพลีเมอร์ระยอง** | วัสดุศาสตร์ | ฿30,000 | `natural_latex` +7, `polymer_resin` +3 | ป้อนสายวัลคาไนซ์ผลิตชุดช่วงล่าง EV • ซีลยางลดการสึกหรอเครื่องจักรโรงงาน -12% • ปันผลสุทธิ +฿420/วัน |
-| **⛏️ เหมืองแร่ซิลิกาและโรงถลุงทองแดง** | เหมืองแร่/โลหะ | ฿38,000 | `silica_bauxite_ore` +6, `copper_coil` +3, `metal_sheet` +3 | ป้อนโรงหลอมสร้างแผ่นซิลิคอนเวเฟอร์ `silicon_wafer` สำหรับชิป AI Edge • ปันผลสุทธิ +฿540/วัน |
-| **🌲 ป่าปลูกไม้เศรษฐกิจและโรงเยื่อกระดาษ** | ป่าไม้/บรรจุภัณฑ์ | ฿21,000 | `pack_carton` +6, `foil_pouch` +4 | ป้อนกล่องและซองฟอยล์ให้ทุกสายพาน • เร่งความเร็วงานแพ็กกิ้ง Packing +12% • ชื่อเสียง ESG +2 • ปันผลสุทธิ +฿270/วัน |
-| **🌬️ ทุ่งกังหันลมและโซลาร์ฟาร์มเมกะวัตต์** | พลังงานสะอาด | ฿34,000 | พลังงานไฟฟ้าสะอาด | ลดค่าเช่าและค่าไฟฟ้านิคมรายวันลง -28% ถาวร • เร่งความเร็วผลิตทุกอาคาร +6% • ชื่อเสียง ESG +3 • ปันผลขายไฟสุทธิ +฿570/วัน |
-| **🚢 ท่าเทียบเรือคอนเทนเนอร์แหลมฉบัง** | โลจิสติกส์ส่งออก | ฿42,000 | ท่าเรือและคลังทัณฑ์บน | ลดเวลารอวัตถุดิบขาเข้า (Lead Time) จากทุกซัพพลายเออร์ลง -30% • เพิ่มรถบรรทุก +4 คัน • ราคาขายส่งออก +4% |
-| **❄️ ศูนย์กระจายสินค้าห้องเย็น Cold Chain** | โลจิสติกส์ห้องเย็น | ฿29,000 | ฟลีทและคลังควบคุมอุณหภูมิ | เพิ่มโอกาสผ่าน QC สินค้าหมวดอาหาร +6% • ยืดเส้นตายส่งมอบออเดอร์ +1 วัน • เพิ่มรถห้องเย็น +3 คัน |
-| **🏪 เครือข่ายโชว์รูมและร้านค้าปลีก B2B/B2C** | พาณิชย์ปลายน้ำ | ฿36,000 | ช่องทางจัดจำหน่ายตรง | บูรณาการปลายน้ำ: เพิ่มราคาขายสินค้าทุกชนิด +7% • เพิ่มเงินมัดจำรับล่วงหน้าเป็น 40% • ส่วนแบ่งตลาด +3.5% |
+## เล่น ตรวจ และ build
 
-## 3. ตารางห่วงโซ่การผลิตแบบลูกโซ่ 8 สาย (`PRODUCTION_CHAINS`)
+ต้องใช้ Node.js 20 ขึ้นไป:
 
-| รหัสห่วงโซ่ | ต้นน้ำ (Upstream Asset / Raw) | แปรรูปกลางน้ำ (Midstream Refining) | สินค้าปลายน้ำ (Downstream Products) |
-| :--- | :--- | :--- | :--- |
-| **`chain_grain_flour_bakery`** | ไร่ข้าวหอมมะลิ ➔ `paddy_grain` ×2 | โรงโม่แป้ง ➔ `artisan_flour` ×2 | ขนมปังโฮลเกรนและเบเกอรี่อบสด (`artisan_bakery`), ชุดอาหารพร้อมทาน (`ready_meal_box`) |
-| **`chain_palm_oil_refinery`** | สวนปาล์มน้ำมัน ➔ `crude_palm` ×2 | โรงกลั่นปาล์ม ➔ `refined_palm_oil` ×2 | ขนมปังโฮลเกรน (`artisan_bakery`), น้ำมันปาล์มโอเลอิน (`premium_cooking_oil`), อาหารพร้อมทาน (`ready_meal_box`) |
-| **`chain_cane_sugar_ferment`** | ไร่อ้อยต้นน้ำ ➔ `raw_cane` ×2 | โรงหีบ/เคี่ยว ➔ `refined_sugar_syrup` ×2 | ขนมปังโฮลเกรน (`artisan_bakery`), เครื่องดื่มเวย์โปรตีน (`dairy_protein_shake`) |
-| **`chain_dairy_probiotic_bio`** | ฟาร์มโคนมอัจฉริยะ ➔ `fresh_milk_soy` ×2 | ห้องหมักชีวภาพ ➔ `probiotic_culture` ×2 | เครื่องดื่มเวย์โปรตีน (`dairy_protein_shake`), ซองเจลโพรไบโอติกส์ (`probioticElixir`) |
-| **`chain_herb_botanical_extract`** | สวนสมุนไพร/ไร่อ้อย ➔ `raw_cane` + `fresh_milk_soy` | โรงสกัดสุญญากาศ ➔ `raw_extract` ×2 | เครื่องดื่มสมุนไพร (`herbalDrink`), โปรตีนอัดแท่ง (`energyProtein`), ช็อตภูมิคุ้มกัน (`functionalShot`) |
-| **`chain_latex_polymer_compound`** | สวนยางพารา ➔ `natural_latex` ×2 | โรงเคมีโพลีเมอร์ ➔ `polymer_resin` ×2 | ชุดยางแท่นเครื่องและช่วงล่าง EV (`ev_suspension_kit`), กล้อง AI (`visionCamera`) |
-| **`chain_silica_wafer_semicon`** | เหมืองซิลิกา ➔ `silica_bauxite_ore` ×2 | โรงหลอมผลึก ➔ `silicon_wafer` ×2 | โมดูลประมวลผลชิป AI Edge (`ai_edge_module`) |
-| **`chain_forestry_pulp_packaging`** | ป่าเศรษฐกิจ/เส้นใย ➔ `raw_cane` + `natural_latex` | โรงเยื่อกระดาษ ➔ `pack_carton` ×3 | ป้อนกล่องบรรจุภัณฑ์ให้สินค้าอาหารและอุตสาหกรรมทุกชนิด |
+```bash
+cd COMPANY_SOURCE
+npm ci
+npm run check
+npm test
+npm run build
+npm run test:browser
+```
 
-## 4. ผลการตรวจสอบคุณภาพและประสิทธิภาพ (Verification & Benchmark Results)
-- **Locked Human Core 1.0.0 Verification (`tools/verify.cjs`)**: `PASS` (`SHA-256: fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`)
-- **Automated Unit & Integration Tests (`tools/test.cjs`)**: ผ่านครบ **117 / 117 ชุดทดสอบ** (`0 failures`)
-- **500-NPC High-Scale Performance Benchmark (`tools/benchmark.cjs`)**: **`0.945 ms/tick`** ที่พนักงาน 500 คน (`p95: 1.656 ms`)
+เปิด `COMPANY_SOURCE/CompanyFoundation_single.html` แบบออฟไลน์ หรือ `COMPANY_SOURCE/index.html` ผ่าน local server ดูรายละเอียดที่ [README ของ source](COMPANY_SOURCE/README.md) และผลตรวจล่าสุดที่ [project status](project_status_and_ai_onboarding.md)
 
+## หลักทำงาน
 
-### อัปเดตล่าสุดรุ่น v2.0.0 (Chapters 19–24: True Upstream Resources & 8 Distinct Business Process Models)
-- แยก `RESOURCE_CLASSES` (10 คลาส) ออกจาก `tier` คงเหลือ `T0_NATURAL` เฉพาะทรัพยากรธรรมชาติแท้จริง 8 ชนิด และเพิ่มเมล็ดพันธุ์ พืชผล อาหารสัตว์ ปุ๋ยหมัก ปุ๋ยเคมี น้ำมันดีเซล รวมวัตถุดิบ 58 ชนิด และสูตรแปรรูป 35 สูตร
-- เพิ่มเอนจิน 8 โมเดลธุรกิจที่มีโปรเซสและ State Machine ของตัวเองแตกต่างกันจริง: (1) อาหารและเบเกอรี่มี Shelf-Life & Spoilage กลายเป็นปุ๋ยหมัก, (2) อิเล็กทรอนิกส์มี Firmware Rev & พูลรับประกัน RMA, (3) ยานยนต์ไฟฟ้ามี Die & Jig Tooling Changeover, (4) การแพทย์คลีนรูมมี ISO Class-5 Sterility & Quarantine Release, (5) ต้นน้ำธรรมชาติ 4 รูปแบบย่อย (เกษตร 8 ขั้นตอน/ปศุสัตว์/เหมืองแร่จำกัดปริมาณสำรอง/ป่าไม้ 3 รุ่นอายุ), (6) กองรถขนส่ง B2B 9 ขั้นตอนพร้อม Backhaul Matching, (7) ซอฟต์แวร์ตามสัญญา & SaaS 9 ขั้นตอน, และ (8) บริการวิศวกรรม B2B 3 โมเดล (`calibration_lab`, `field_maintenance`, `industrial_recycling`)
-- ผลทดสอบ `132/132` ผ่านครบ 100% (`0.994 ms/tick` ที่ 500 NPCs)
+ผู้ใช้ชอบเฝ้าดู NPC ใช้ชีวิตและตัดสินใจเอง พร้อมทดลองเปลี่ยนนิสัย เงิน บริษัท และทรัพยากรเพื่อดูผล ทีมพัฒนาต้องช่วยคิดและออกแบบต่อ ไม่รอให้ผู้ใช้แจกแจงทุกอย่าง Edit Hub ต้องเข้าใจง่าย ไม่บังคับจำ ID หรือแก้ JSON
 
-
-### อัปเดตล่าสุดรุ่น v2.0.0 (Chapters 28–32: Product Families, True Elemental Origins & Autonomous NPC Executive Board)
-- ขยายแค็ตตาล็อกเป็น **58 วัตถุดิบ**, **35 สูตรแปรรูป**, **36 สินค้าอุตสาหกรรม** ใน **10 ตระกูลผลิตภัณฑ์ (`PRODUCT_FAMILIES`)**, **9 โดเมนความสามารถ (`CAPABILITY_DOMAINS`)**, และ **6 บริการวิศวกรรม B2B** (`calibration_lab`, `field_maintenance`, `industrial_recycling`, `battery_second_life_lab`, `returnable_pallet_pool`, `cold_storage_3pl`)
-- เพิ่มระบบคณะกรรมการบริหารและสมุดบันทึกมติการลงทุน (`w.executiveBoard` & `evaluateExecutiveBoardAndBusinessEntry`) คำนวณเงินสดอิสระ (`uncommittedCashSatang`) และบันทึกเหตุผลการอนุมัติ/ชะลอ/ถือเงินสดสำรองตามบุคลิก Human Core 1.0.0 ของผู้บริหาร
-- ผลทดสอบ `132/132` ผ่านครบ 100% (`0.795 ms/tick` ที่ 500 NPCs)
-
-
-### อัปเดตล่าสุดยุค v2.0.0 (Era 2.0.0: Master Skill Blueprint & Living Global Geopolitics, Foreign Governments, Wars, Treaties & World Chronicle)
-- อัปเกรด Master Skill (`company-evolution-dev` & `company-for-every-patch`) ครบทุกชั้นสถาปัตยกรรม พร้อมกฎบังคับอัปเดต Master Skill ทุกแพตช์
-- เพิ่มระบบภูมิรัฐศาสตร์โลกมีชีวิต (`w.externalWorld.geopolitics` & `w.externalWorld.worldChronicle`): 8 รัฐบาลประเทศมหาอำนาจ/คู่ค้า (`GLOBAL_NATIONS`) และ 12 เหตุการณ์ภูมิรัฐศาสตร์/สงคราม/การปิดล้อมทางทะเล/สนธิสัญญาการค้าเสรี (`GEOPOLITICAL_EVENTS`) ที่ส่งผลจริงต่อราคาวัตถุดิบทั้ง 58 ชนิด ค่าเงินบาท/USD ดัชนีน้ำมัน ค่าระวางขนส่ง ดีมานด์สินค้า และการตัดสินใจของบอร์ดบริหาร NPC
-- ผลทดสอบ `132/132` ผ่านครบ 100%
+Gemini/ChatGPT ที่ทำงานผ่านแอปแชตรับ ZIP ผ่านผู้ใช้และต้องส่ง ZIP โครงการกลับ; ตรวจ ZIP ฉบับสุดท้ายและเทียบกับ repo ล่าสุดก่อนรวมเสมอ การอัปเดต repo ไม่ได้ซิงก์แอป Gemini ที่ทำงานจาก ZIP เก่าโดยอัตโนมัติ ดู [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md)

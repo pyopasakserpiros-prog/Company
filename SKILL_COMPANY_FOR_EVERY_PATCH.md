@@ -17,7 +17,7 @@ Use this skill on **every patch** of `Siam Enterprise: Autonomous Multi-Industry
 ## 2. Non-Negotiable Architectural Invariants
 1. **Permanently Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`)**:
    - NEVER edit `js/human-core.js` or `CORE_LOCK.json` (`SHA-256: fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
-   - Preserve `S.VERSION = "0.1.0-review.3"` for legacy save migration tests while incrementing `D.RELEASE_VERSION` / `S.RELEASE_VERSION` (currently `"2.0.0"`).
+   - Source distinction: `D.VERSION` / `D.RELEASE_VERSION` are the game release (`"2.0.0"`); catalog version is `"1.2.0"`; `S.VERSION` in `sim.js` is the current world/save state marker (`"0.1.0"`); `package.json` is `"0.1.0"`. Do not treat these as the same version or change them without tracing save validation and tests.
 2. **100% Autonomous NPC, Executive Board & Living Geopolitical World**:
    - All operational actions, Executive Board investment proposals (`w.executiveBoard.decisionLedger`), and Geopolitical World simulations (`w.externalWorld.geopolitics` & `w.externalWorld.worldChronicle`) run autonomously and deterministically.
    - Normal viewing tabs remain observational; manual intervention and scenario triggers live in the **Sandbox Edit Hub (`directorEdit`)**.

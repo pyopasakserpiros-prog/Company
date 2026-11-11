@@ -8,7 +8,7 @@ description: MASTER SKILL for Siam Enterprise / Company Simulation (บริษ
 
 ## 1. Core Identity & Architecture Overview (Era 2.0.0)
 - **Game Title**: `Siam Enterprise: Autonomous Multi-Industry Company Simulation (บริษัทจำลองธุรกิจและอุตสาหกรรมอัตโนมัติ)`
-- **Source Root**: `COMPANY_SOURCE/` (`VERSION: "2.0.0"`, `RELEASE_VERSION: "2.0.0"`, `S.VERSION: "0.1.0-review.3"` preserved for legacy save migration compatibility)
+- **Source Root**: `COMPANY_SOURCE/` (`D.VERSION: "2.0.0"`, `D.RELEASE_VERSION: "2.0.0"`, catalog version `1.2.0`, `S.VERSION: "0.1.0"` as the current simulation/save state marker, package.json version `0.1.0`)
 - **Standalone Build**: `COMPANY_SOURCE/CompanyFoundation_single.html` and `Company_single.html` (built via `node tools/build.cjs`, 100% Offline)
 - **Permanently Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`)**:
   - **HARD INVARIANT**: Never modify `js/human-core.js` or `CORE_LOCK.json` (`SHA-256: fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
@@ -22,7 +22,7 @@ description: MASTER SKILL for Siam Enterprise / Company Simulation (บริษ
 2. **56×34 Greenfield Industrial Estate & 14 Constructible Expansion Facilities (`D.EXPANSION_PLOTS`)**:
    - 8 Core Campus Buildings (`hq`, `rnd`, `factory`, `warehouse`, `canteen`, `courtyard`, `training`, `gate`) + 14 Constructible Plots (`rawDepot`, `prodLineB`, `prodLineC`, `cleanroomPlant`, `dispatchHub`, `execAnnex`, `maintWorkshop`, `qaLab`, `solarPlant`, `waterPlant`, `refineryMill`, `bakeryPlant`, `expoHall`, `dormitory`).
 3. **10 Resource Classes, 58 Materials, 35 Multi-Stage Recipes & True Elemental Provenance (`D.RESOURCE_CLASSES`, `D.MATERIAL_RECIPES`)**:
-   - **True Natural Resources (`T0_NATURAL` — 9 items)**: `raw_water_m3`, `ambient_air_gas`, `iron_ore`, `copper_iron_ore`, `bauxite_ore`, `silica_bauxite_ore`, `limestone_mineral`, `phosphate_potash_rock`, `lithium_brine_ore`, `crude_petro_feedstock`.
+   - **True Natural Resources (`T0_NATURAL` — 9 items)**: `silica_bauxite_ore`, `bauxite_ore`, `copper_iron_ore`, `lithium_brine_ore`, `phosphate_potash_rock`, `crude_petro_feedstock`, `raw_water_m3`, `ambient_air_gas`, `iron_ore` (9 catalog entries).
    - **Biological Seeds & Cuttings (`SEED_STOCK` — 5 items)**: `rice_seed`, `wheat_seed`, `cane_stalk_seed`, `palm_seedling`, `soybean_seed` (strict biological rule: `milled_rice`, `artisan_flour`, and `wheat_flour` have `cannotPlantAsSeed: true` and are rejected by `plantCropPlot`!).
    - **Cultivated Crops, Livestock & Forestry Logs (`CULTIVATED_CROP` — 8 items)**: `paddy_grain`, `wheat_grain`, `raw_cane`, `crude_palm`, `soybean_crop`, `fresh_milk_soy`, `natural_latex`, `timber_bamboo_log`.
    - **Refined T1, Intermediate T2 & High-Tech T3 Components**: True N-P-K synthesis (`ambient_air_gas` + `raw_water_m3` ➔ `nitrogen_ammonia` + `phosphate_potash_rock` ➔ `npk_fertilizer`), `wheat_flour`, `pharma_saline_water`, `silicon_wafer`, `microchip`, `power_inverter_ic`, etc.

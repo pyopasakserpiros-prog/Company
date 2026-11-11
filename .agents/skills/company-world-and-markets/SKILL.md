@@ -12,10 +12,10 @@ metadata:
 
 ## จุดเริ่มในโครงการ
 
-ฐานอ้างอิง v1.2.0 ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+ฐานอ้างอิง source v2.0.0; ตรวจ [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) และ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
 
-- Source: `COMPANY_SOURCE/js/sim.js: freshExternalWorld, simulateOffsiteEcosystemDaily, updateExternalWorld, evaluateExternalAssetsDaily, sellMaterialB2B, setCorporationRelation` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
-- ตัวอย่างหลักฐานเดิม: `COMPANY_SOURCE/test/ecosystem-multitier-dag-v100.test.cjs; scale-logistics-external-v040.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)
+- Source: `COMPANY_SOURCE/js/data.js: GLOBAL_NATIONS, GEOPOLITICAL_EVENTS; COMPANY_SOURCE/js/sim.js: freshGeopolitics, recomputeGeopoliticalMultipliers, changeForeignRegime, triggerGeopoliticalEvent, freshExternalWorld, simulateOffsiteEcosystemDaily, updateExternalWorld, evaluateExternalAssetsDaily, sellMaterialB2B, setCorporationRelation` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
+- ตัวอย่างหลักฐาน: `COMPANY_SOURCE/test/ecosystem-multitier-dag-v100.test.cjs; scale-logistics-external-v040.test.cjs; geopolitics-living-world-v200.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/). โลกปัจจุบันมี 8 ประเทศ/กลุ่มและ 12 เหตุการณ์; ตรวจผลส่งผ่านราคาจากการทดสอบจริง
 
 ## หัวข้อที่เสนอให้ขยาย
 
