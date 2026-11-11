@@ -55,7 +55,19 @@
 - **500-NPC High-Scale Performance Benchmark (`tools/benchmark.cjs`)**: **`0.945 ms/tick`** ที่พนักงาน 500 คน (`p95: 1.656 ms`)
 
 
-### อัปเดตล่าสุดรุ่น v1.2.0 (Chapters 19–24: True Upstream Resources & 8 Distinct Business Process Models)
-- แยก `RESOURCE_CLASSES` (10 คลาส) ออกจาก `tier` คงเหลือ `T0_NATURAL` เฉพาะทรัพยากรธรรมชาติแท้จริง 8 ชนิด และเพิ่มเมล็ดพันธุ์ พืชผล อาหารสัตว์ ปุ๋ยหมัก ปุ๋ยเคมี น้ำมันดีเซล รวมวัตถุดิบ 51 ชนิด และสูตรแปรรูป 32 สูตร
+### อัปเดตล่าสุดรุ่น v2.0.0 (Chapters 19–24: True Upstream Resources & 8 Distinct Business Process Models)
+- แยก `RESOURCE_CLASSES` (10 คลาส) ออกจาก `tier` คงเหลือ `T0_NATURAL` เฉพาะทรัพยากรธรรมชาติแท้จริง 8 ชนิด และเพิ่มเมล็ดพันธุ์ พืชผล อาหารสัตว์ ปุ๋ยหมัก ปุ๋ยเคมี น้ำมันดีเซล รวมวัตถุดิบ 58 ชนิด และสูตรแปรรูป 35 สูตร
 - เพิ่มเอนจิน 8 โมเดลธุรกิจที่มีโปรเซสและ State Machine ของตัวเองแตกต่างกันจริง: (1) อาหารและเบเกอรี่มี Shelf-Life & Spoilage กลายเป็นปุ๋ยหมัก, (2) อิเล็กทรอนิกส์มี Firmware Rev & พูลรับประกัน RMA, (3) ยานยนต์ไฟฟ้ามี Die & Jig Tooling Changeover, (4) การแพทย์คลีนรูมมี ISO Class-5 Sterility & Quarantine Release, (5) ต้นน้ำธรรมชาติ 4 รูปแบบย่อย (เกษตร 8 ขั้นตอน/ปศุสัตว์/เหมืองแร่จำกัดปริมาณสำรอง/ป่าไม้ 3 รุ่นอายุ), (6) กองรถขนส่ง B2B 9 ขั้นตอนพร้อม Backhaul Matching, (7) ซอฟต์แวร์ตามสัญญา & SaaS 9 ขั้นตอน, และ (8) บริการวิศวกรรม B2B 3 โมเดล (`calibration_lab`, `field_maintenance`, `industrial_recycling`)
-- ผลทดสอบ `127/127` ผ่านครบ 100% (`0.994 ms/tick` ที่ 500 NPCs)
+- ผลทดสอบ `132/132` ผ่านครบ 100% (`0.994 ms/tick` ที่ 500 NPCs)
+
+
+### อัปเดตล่าสุดรุ่น v2.0.0 (Chapters 28–32: Product Families, True Elemental Origins & Autonomous NPC Executive Board)
+- ขยายแค็ตตาล็อกเป็น **58 วัตถุดิบ**, **35 สูตรแปรรูป**, **36 สินค้าอุตสาหกรรม** ใน **10 ตระกูลผลิตภัณฑ์ (`PRODUCT_FAMILIES`)**, **9 โดเมนความสามารถ (`CAPABILITY_DOMAINS`)**, และ **6 บริการวิศวกรรม B2B** (`calibration_lab`, `field_maintenance`, `industrial_recycling`, `battery_second_life_lab`, `returnable_pallet_pool`, `cold_storage_3pl`)
+- เพิ่มระบบคณะกรรมการบริหารและสมุดบันทึกมติการลงทุน (`w.executiveBoard` & `evaluateExecutiveBoardAndBusinessEntry`) คำนวณเงินสดอิสระ (`uncommittedCashSatang`) และบันทึกเหตุผลการอนุมัติ/ชะลอ/ถือเงินสดสำรองตามบุคลิก Human Core 1.0.0 ของผู้บริหาร
+- ผลทดสอบ `132/132` ผ่านครบ 100% (`0.795 ms/tick` ที่ 500 NPCs)
+
+
+### อัปเดตล่าสุดยุค v2.0.0 (Era 2.0.0: Master Skill Blueprint & Living Global Geopolitics, Foreign Governments, Wars, Treaties & World Chronicle)
+- อัปเกรด Master Skill (`company-evolution-dev` & `company-for-every-patch`) ครบทุกชั้นสถาปัตยกรรม พร้อมกฎบังคับอัปเดต Master Skill ทุกแพตช์
+- เพิ่มระบบภูมิรัฐศาสตร์โลกมีชีวิต (`w.externalWorld.geopolitics` & `w.externalWorld.worldChronicle`): 8 รัฐบาลประเทศมหาอำนาจ/คู่ค้า (`GLOBAL_NATIONS`) และ 12 เหตุการณ์ภูมิรัฐศาสตร์/สงคราม/การปิดล้อมทางทะเล/สนธิสัญญาการค้าเสรี (`GEOPOLITICAL_EVENTS`) ที่ส่งผลจริงต่อราคาวัตถุดิบทั้ง 58 ชนิด ค่าเงินบาท/USD ดัชนีน้ำมัน ค่าระวางขนส่ง ดีมานด์สินค้า และการตัดสินใจของบอร์ดบริหาร NPC
+- ผลทดสอบ `132/132` ผ่านครบ 100%

@@ -220,7 +220,13 @@
           record(w.externalWorld.suppliers) &&
           record(w.externalWorld.competitors) &&
           record(w.externalWorld.government) &&
-          record(w.externalWorld.stockMarket),
+          record(w.externalWorld.stockMarket) &&
+          (w.externalWorld.geopolitics === undefined ||
+            (record(w.externalWorld.geopolitics) &&
+              record(w.externalWorld.geopolitics.nations) &&
+              finite(w.externalWorld.geopolitics.fxRateBahtPerUsd, 20, 60))) &&
+          (w.externalWorld.worldChronicle === undefined ||
+            Array.isArray(w.externalWorld.worldChronicle)),
         "invalid externalWorld state",
       );
     }
@@ -313,6 +319,23 @@
         "invalid serviceBusiness state",
       );
     }
+    if (w.capabilities !== undefined) {
+      add(
+        record(w.capabilities) &&
+          record(w.capabilities.domains) &&
+          record(w.capabilities.unlockedProducts) &&
+          record(w.capabilities.unlockedChains),
+        "invalid capabilities state",
+      );
+    }
+    if (w.executiveBoard !== undefined) {
+      add(
+        record(w.executiveBoard) &&
+          record(w.executiveBoard.budgetPools) &&
+          Array.isArray(w.executiveBoard.decisionLedger),
+        "invalid executiveBoard state",
+      );
+    }
     add(
       ["running", "won", "lost"].includes(w.status) &&
         finite(w.reputation, 0, 100) &&
@@ -348,7 +371,8 @@
         w.research.unlocked.every(
           (id) =>
             Object.hasOwn(w.catalog.products || {}, id) &&
-            w.catalog.products[id].researchRequired <= w.research.points,
+            (w.catalog.products[id].researchRequired <= w.research.points ||
+              Boolean(w.capabilities?.unlockedProducts?.[id])),
         ),
       "invalid research",
     );

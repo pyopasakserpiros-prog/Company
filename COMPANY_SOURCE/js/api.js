@@ -458,6 +458,16 @@
             : code === "softwareProjectDeployed"
               ? "ผ่านการทดสอบ QA และลูกค้ารับมอบเวอร์ชันตามสัญญา รับชำระงวดสุดท้ายและรับรู้รายได้โครงการครบวงจร"
               : "เรียกเก็บค่าบริการรายรอบจากบัญชีลูกค้าที่ใช้งานแอป SaaS จริง หักต้นทุนเซิร์ฟเวอร์และงานดูแลระบบ";
+      } else if (["geopoliticalEventTriggered", "foreignRegimeChanged"].includes(code)) {
+        category = "WORLD_GEOPOLITICS";
+        categoryLabelTh = code === "foreignRegimeChanged" ? "เปลี่ยนรัฐบาลต่างชาติ" : "ภูมิรัฐศาสตร์/สงครามโลก";
+        isMajor = true;
+        epistemicStatus = "VERIFIED";
+        epistemicBadgeTh = code === "foreignRegimeChanged" ? "🗳️ รัฐบาลมหาอำนาจ/คู่ค้า" : "🌍 เหตุการณ์โลกยุค 2.0";
+        meaningTh =
+          code === "foreignRegimeChanged"
+            ? "การเปลี่ยนขั้วรัฐบาลของประเทศคู่ค้าหรือมหาอำนาจ ส่งผลต่อกำแพงภาษี ค่าเงินบาท/USD และราคาวัตถุดิบนำเข้า-ส่งออกจริง"
+            : "เหตุการณ์ภูมิรัฐศาสตร์ สงคราม การปิดล้อมทางทะเล หรือสนธิสัญญาการค้าเสรี ส่งผลต่อดัชนีน้ำมัน ค่าระวางขนส่ง และดีมานด์สินค้าแต่ละอุตสาหกรรม";
       } else if (["materialCrafted", "b2bMaterialSold", "corporateDiplomacyChanged"].includes(code)) {
         category = code === "b2bMaterialSold" ? "SALES" : code === "materialCrafted" ? "PROD" : "FINANCE";
         categoryLabelTh = code === "b2bMaterialSold" ? "ขายวัตถุดิบ B2B" : code === "materialCrafted" ? "แปรรูปวัตถุดิบหลายขั้น" : "การทูตบริษัทภายนอก";
@@ -1030,7 +1040,30 @@
       });
 
       const rawEvents = [...w.events].slice(-45).reverse();
-      const chronicle = rawEvents.map((e) => presentChronicleEntry(w, e));
+      const internalChronicle = rawEvents.map((e) => presentChronicleEntry(w, e));
+      const worldChronicleFormatted = (w.externalWorld?.worldChronicle || []).slice(0, 20).map((wc) => ({
+        id: wc.id,
+        at: wc.at || ((wc.day || 1) - 1) * 1440 + 540,
+        day: wc.day || 1,
+        minuteOfDay: (wc.at || 540) % 1440,
+        code: wc.category || "WORLD_GEOPOLITICS",
+        message: `[${wc.regionTh || "โลกภายนอก"}] ${wc.headlineTh} (${wc.priceImpactSummaryTh || "-"})`,
+        epistemic: "VERIFIED",
+        epistemicStatus: "VERIFIED",
+        epistemicLabelTh: wc.badgeTh || "🌍 พงศาวดารโลก",
+        epistemicBadgeTh: wc.badgeTh || "🌍 พงศาวดารโลก",
+        category: "WORLD_GEOPOLITICS",
+        categoryLabelTh: "🌍 พงศาวดารโลกภายนอก",
+        major: Boolean(wc.isMajor),
+        isMajor: Boolean(wc.isMajor),
+        actorId: null,
+        actorName: null,
+        storyThreadId: wc.id,
+        meaningTh: wc.meaningTh,
+      }));
+      const chronicle = [...internalChronicle, ...worldChronicleFormatted]
+        .sort((a, b) => b.at - a.at)
+        .slice(0, 55);
       const digests = {
         d1: computePeriodDigest(w, 1, burn),
         d7: computePeriodDigest(w, 7, burn),
@@ -1115,6 +1148,8 @@
           softwareBusiness: w.softwareBusiness || null,
           sectorProcesses: w.sectorProcesses || null,
           serviceBusiness: w.serviceBusiness || null,
+          capabilities: w.capabilities || null,
+          executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
           catalog: {
             rules: w.catalog.rules,
@@ -1126,6 +1161,10 @@
             sectorProcessModels: Object.values(D.SECTOR_PROCESS_MODELS || {}),
             industrialServices: Object.values(D.INDUSTRIAL_SERVICES || {}),
             businessProcessModels: D.BUSINESS_PROCESS_MODELS || [],
+            capabilityDomains: Object.values(D.CAPABILITY_DOMAINS || {}),
+            productFamilies: Object.values(D.PRODUCT_FAMILIES || {}),
+            globalNations: Object.values(D.GLOBAL_NATIONS || {}),
+            geopoliticalEvents: Object.values(D.GEOPOLITICAL_EVENTS || {}),
             trueResourceChainTable: D.TRUE_RESOURCE_CHAIN_TABLE || [],
             materialTiers: Object.values(D.MATERIAL_TIERS || {}),
             materials: Object.values(w.catalog.materials).map((m) => {

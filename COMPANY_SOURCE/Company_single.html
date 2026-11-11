@@ -3516,6 +3516,23 @@ canvas.pt {
 
   // 4 Agricultural Crop Lifecycles (8-Stage Cultivation Engine: เตรียมดิน -> ปลูกหักเมล็ด -> ดูแลน้ำ/ปุ๋ย -> เก็บเกี่ยว -> คัดเมล็ดพันธุ์ -> พักดิน/ปลูกรอบถัดไป)
   const AGRICULTURE_CROPS = deepFreeze({
+    winter_wheat: {
+      id: "winter_wheat",
+      nameTh: "ข้าวสาลีอบขนมปัง (Bread Wheat)",
+      icon: "🌾",
+      assetId: "jasmine_rice_farm",
+      seedMaterialId: "wheat_seed",
+      seedPerPlot: 2,
+      waterPerCycle: 2,
+      fertilizerPerCycle: 1,
+      growthMinutes: 720,
+      harvestMaterialId: "wheat_grain",
+      baseHarvestYield: 7,
+      seedSaveDefaultRatio: 0.25,
+      byproductMaterialId: "rice_bran_husk",
+      byproductYield: 1,
+      forbiddenSeedIds: ["wheat_flour", "artisan_flour", "milled_rice", "bakery_dough_butter"],
+    },
     jasmine_rice: {
       id: "jasmine_rice",
       nameTh: "นาข้าวหอมมะลิทุ่งกุลาร้องไห้ (8 ขั้นตอนวงจรเพาะปลูก)",
@@ -3954,6 +3971,75 @@ canvas.pt {
       clientCorps: ["siam_metal", "eastern_auto", "green_power", "pacific_solar"],
       descTh: "ส่งทีมวิศวกรพร้อมเบิกอะไหล่จริงจากคลังไปซ่อมเครื่องจักรที่โรงงานลูกค้า หากส่งมอบทันเวลาได้รับเงินเต็มจำนวน หากล่าช้าเกิน SLA ถูกหักค่าปรับ"
     },
+    battery_second_life_lab: {
+      id: "battery_second_life_lab",
+      nameTh: "บริการห้องแล็บคัดเกรดแบตเตอรี่ใช้แล้วและประกอบชุดกักเก็บ Second-Life (Battery SOH Lab)",
+      shortNameTh: "แล็บแบตเตอรี่ Second-Life (Battery SOH)",
+      icon: "🔋",
+      domainId: "power_electronics",
+      requiredRole: "engineer",
+      fallbackRole: "inspector",
+      stages: ["pack_custody_intake", "soh_cell_grading", "module_rebalancing", "certified_return_or_recycle"],
+      stagesTh: [
+        "1. รับฝากแพ็กแบตเตอรี่เก่าของลูกค้าเข้าทะเบียน Custody (Pack Custody Intake)",
+        "2. วัดความจุ SOH และความต้านทานภายในรายเซลล์ (Cell SOH Grading)",
+        "3. คัดแยกโมดูลที่ผ่านเกณฑ์ความจุ >=80% และส่งเซลล์เสื่อมไปบำบัด (Rebalancing & Reject Separation)",
+        "4. ออกใบรับรอง SOH ส่งคืนลูกค้าพร้อมรับค่าบริการและกู้คืนโลหะจากเซลล์เสื่อม",
+      ],
+      serviceFeeSatang: 520000,
+      labConsumableCostSatang: 55000,
+      requiredMinutes: 80,
+      sparePartInputs: { wire_harness: 1 },
+      recoveredOutputs: { metal_sheet: 1, copper_coil: 1 },
+      clientCorps: ["eastern_auto", "green_power", "pacific_solar", "siam_aero_robotics"],
+      descTh: "รับแพ็กแบตเตอรี่เก่าของลูกค้ามาตรวจสุขภาพ SOH รายเซลล์ในแล็บ (แยก Custody ไม่ปนสต็อกบริษัท) คัดโมดูลที่ยังใช้งานได้ปลอดภัยและแยกเซลล์เสื่อมสกัดโลหะคืนโดยไม่เสกเซลล์เสียเป็นของใหม่ฟรี",
+    },
+    returnable_pallet_pool: {
+      id: "returnable_pallet_pool",
+      nameTh: "บริการให้เช่าพาเลตและบรรจุภัณฑ์หมุนเวียนมาตรฐานส่งออก (Returnable Pallet & Crate Pool)",
+      shortNameTh: "ให้เช่าพาเลตหมุนเวียน (Pallet Pool)",
+      icon: "📦",
+      domainId: "fleet_coldchain",
+      requiredRole: "logistics",
+      fallbackRole: "assembler",
+      stages: ["pool_allocation", "client_dispatch", "return_inspection_wash", "damage_settlement"],
+      stagesTh: [
+        "1. เบิกบรรจุภัณฑ์/พาเลตจากพูลและติดแท็กติดตาม (Pool Asset Allocation)",
+        "2. จัดส่งให้โรงงานลูกค้าใช้หมุนเวียนขนส่งสินค้า (Client Pool Dispatch)",
+        "3. รับคืน ล้างทำความสะอาด อบฆ่าเชื้อ และตรวจสภาพ (Return Wash & Inspection)",
+        "4. ซ่อมแซมพาเลตที่สึกหรอและเรียกเก็บค่าเช่าตามรอบพร้อมค่าชดเชยสูญหาย",
+      ],
+      serviceFeeSatang: 360000,
+      labConsumableCostSatang: 35000,
+      requiredMinutes: 65,
+      sparePartInputs: { pack_carton: 1 },
+      recoveredOutputs: {},
+      clientCorps: ["cp_health", "metro_retail", "siam_food_bev", "thai_agri_mill"],
+      descTh: "นำบรรจุภัณฑ์และพาเลตมาตรฐานออกให้บริษัทคู่ค้าเช่าหมุนเวียน ต้องเบิกบรรจุภัณฑ์จริงจากคลังและมีขั้นตอนรับคืน ล้าง ซ่อมแซมตามรอบใช้งาน",
+    },
+    cold_storage_3pl: {
+      id: "cold_storage_3pl",
+      nameTh: "บริการคลังสินค้าควบคุมอุณหภูมิและรับฝากสินค้า B2B (Cold-Storage & 3PL Custody Hub)",
+      shortNameTh: "คลังห้องเย็นรับฝาก 3PL (Cold Storage)",
+      icon: "❄️",
+      domainId: "fleet_coldchain",
+      requiredRole: "logistics",
+      fallbackRole: "inspector",
+      stages: ["cold_custody_intake", "temperature_monitored_storage", "fifo_pick_pack", "dispatch_and_billing"],
+      stagesTh: [
+        "1. รับมอบสินค้าควบคุมอุณหภูมิของลูกค้าเข้าทะเบียนฝากแยกอิสระ (3PL Cold Custody Intake)",
+        "2. จัดเก็บในห้องเย็นพร้อมบันทึกกราฟอุณหภูมิต่อเนื่อง (Monitored Cold Storage)",
+        "3. คัดหยิบตามลำดับวันหมดอายุ FEFO/FIFO และแพ็กเตรียมส่ง (FEFO Pick & Pack)",
+        "4. ส่งมอบคืนลูกค้าและวางบิลค่าเช่าพื้นที่ห้องเย็นและค่าบริการหยิบแพ็ก",
+      ],
+      serviceFeeSatang: 460000,
+      labConsumableCostSatang: 48000,
+      requiredMinutes: 70,
+      sparePartInputs: { pack_carton: 1 },
+      recoveredOutputs: {},
+      clientCorps: ["cp_health", "biomed_siam", "siam_food_bev", "metro_retail"],
+      descTh: "ให้บริการรับฝากและบริหารคลังห้องเย็นแก่ลูกค้าอาหารและเวชภัณฑ์ โดยแยกทะเบียนสินค้าฝากของลูกค้าออกจากสต็อกบริษัท 100%",
+    },
     industrial_recycling: {
       id: "industrial_recycling",
       nameTh: "บริการรับบำบัดของเสียและรีไซเคิลกากอุตสาหกรรมหมุนเวียน (Eco Waste Treatment & Material Recovery)",
@@ -4047,6 +4133,154 @@ canvas.pt {
   ]);
 
   // Complete True-Resource Origin -> Extraction/Cultivation -> Midstream -> Downstream Reference Table (Chapter 23 Section 9)
+  const CAPABILITY_DOMAINS = Object.freeze({
+    food_fermentation: {
+      id: "food_fermentation",
+      nameTh: "เทคโนโลยีอาหาร การหมักชีวภาพ และโคลด์เชน",
+      icon: "🥖",
+      relatedIndustries: ["food"],
+      baseLevel: 25,
+      descTh: "ความสามารถด้านการโม่แป้ง หมักโดว์/โพรไบโอติกส์ อบความร้อน และควบคุมอายุเก็บรักษาอาหารสด",
+    },
+    metal_machining: {
+      id: "metal_machining",
+      nameTh: "โลหะวิทยา แม่พิมพ์ Die & Jig และเครื่องจักรกลหนัก",
+      icon: "🦾",
+      relatedIndustries: ["automotive"],
+      baseLevel: 20,
+      descTh: "ความสามารถด้านการถลุงแร่ ขึ้นรูปแผ่นโลหะ พันขดลวดมอเตอร์ และตั้งจิ๊กประกอบยานยนต์",
+    },
+    power_electronics: {
+      id: "power_electronics",
+      nameTh: "วิศวกรรมไฟฟ้ากำลัง อินเวอร์เตอร์ และกักเก็บพลังงานแบตเตอรี่",
+      icon: "⚡",
+      relatedIndustries: ["energy", "automotive"],
+      baseLevel: 20,
+      descTh: "ความสามารถด้านวงจรแปลงไฟแรงดันสูง การประกอบแพ็กแบตเตอรี่ LFP/Solid-State และการทดสอบความปลอดภัย",
+    },
+    embedded_iot: {
+      id: "embedded_iot",
+      nameTh: "ระบบสมองกลฝังตัว แผงวงจร SMT และอุปกรณ์ IoT อุตสาหกรรม",
+      icon: "🔬",
+      relatedIndustries: ["electronics"],
+      baseLevel: 30,
+      descTh: "ความสามารถด้านการวางชิป SMT แฟลชเฟิร์มแวร์ ทดสอบ Burn-In และซ่อมบำรุงบอร์ด RMA",
+    },
+    semiconductor_optics: {
+      id: "semiconductor_optics",
+      nameTh: "เซมิคอนดักเตอร์ เลนส์ออปติคัล และหุ่นยนต์อัตโนมัติ",
+      icon: "🤖",
+      relatedIndustries: ["electronics", "automotive"],
+      baseLevel: 10,
+      descTh: "ความสามารถขั้นสูงด้านเวเฟอร์ซิลิคอน ชิปประมวลผล AI เลนส์ความละเอียดสูง และหุ่นยนต์ AGV/UAV",
+    },
+    biomed_sterile: {
+      id: "biomed_sterile",
+      nameTh: "ชีวการแพทย์ คลีนรูมปลอดเชื้อ ISO Class-5 และเวชภัณฑ์คลินิก",
+      icon: "🧬",
+      relatedIndustries: ["biomed", "food"],
+      baseLevel: 15,
+      descTh: "ความสามารถด้านการบำบัดน้ำบริสุทธิ์เภสัชกรรม การบรรจุปลอดเชื้อ และการตรวจรับรอง Clinical COA",
+    },
+    software_cloud: {
+      id: "software_cloud",
+      nameTh: "วิศวกรรมซอฟต์แวร์ สถาปัตยกรรมคลาวด์ และระบบ SaaS B2B",
+      icon: "💻",
+      relatedIndustries: ["software"],
+      baseLevel: 25,
+      descTh: "ความสามารถด้านการออกแบบซอฟต์แวร์องค์กร การทดสอบ QA อัตโนมัติ และการดูแลเซิร์ฟเวอร์ SaaS",
+    },
+    fleet_coldchain: {
+      id: "fleet_coldchain",
+      nameTh: "วิศวกรรมโลจิสติกส์ กองรถขนส่งควบคุมอุณหภูมิ และคลัง 3PL",
+      icon: "🚛",
+      relatedIndustries: ["fleet", "service"],
+      baseLevel: 25,
+      descTh: "ความสามารถด้านการบริหารกองรถบรรทุก การวางแผนเที่ยววิ่ง Backhaul และคลังสินค้าห้องเย็น 3PL",
+    },
+    agri_soil_science: {
+      id: "agri_soil_science",
+      nameTh: "เกษตรศาสตร์ เมล็ดพันธุ์ ปศุสัตว์โคนม และธรณีวิทยาเหมืองแร่",
+      icon: "🌾",
+      relatedIndustries: ["upstream"],
+      baseLevel: 25,
+      descTh: "ความสามารถด้านการคัดเมล็ดพันธุ์ ดูแลธาตุอาหารดิน N-P-K การเลี้ยงโคนม และการสำรวจสายแร่",
+    },
+  });
+
+  const PRODUCT_FAMILIES = Object.freeze({
+    smart_audio_lighting: {
+      id: "smart_audio_lighting",
+      nameTh: "ตระกูลอุปกรณ์เสียงและแสงสว่างอัจฉริยะ (Smart Audio & LED Systems)",
+      domainId: "embedded_iot",
+      sharedToolingGroup: "smt_light_jig",
+      products: ["speaker", "lamp"],
+    },
+    industrial_iot: {
+      id: "industrial_iot",
+      nameTh: "ตระกูลเกตเวย์ มิเตอร์ และดาต้าล็อกเกอร์อุตสาหกรรม (Industrial IoT & Telemetry)",
+      domainId: "embedded_iot",
+      sharedToolingGroup: "smt_iot_jig",
+      products: ["iotController", "smartMeter", "cold_chain_temp_logger"],
+    },
+    ai_vision_edge: {
+      id: "ai_vision_edge",
+      nameTh: "ตระกูลกล้อง Machine Vision และโมดูลประมวลผล AI Edge",
+      domainId: "semiconductor_optics",
+      sharedToolingGroup: "clean_optics_jig",
+      products: ["visionCamera", "ai_edge_module"],
+    },
+    ev_powertrain: {
+      id: "ev_powertrain",
+      nameTh: "ตระกูลระบบขับเคลื่อน เซนเซอร์ และช่วงล่างยานยนต์ไฟฟ้า (EV Powertrain & Chassis)",
+      domainId: "metal_machining",
+      sharedToolingGroup: "heavy_ev_jig",
+      products: ["autoSensor", "evController", "batteryPack", "ev_suspension_kit", "ev_traction_motor"],
+    },
+    robotics_automation: {
+      id: "robotics_automation",
+      nameTh: "ตระกูลแขนกลเซอร์โว หุ่นยนต์คลังสินค้า AGV และโดรนขนส่งหนัก",
+      domainId: "semiconductor_optics",
+      sharedToolingGroup: "robotics_cell_jig",
+      products: ["servoActuator", "warehouse_agv_bot", "autonomous_cargo_drone"],
+    },
+    herbal_functional_bev: {
+      id: "herbal_functional_bev",
+      nameTh: "ตระกูลเครื่องดื่มสมุนไพรและช็อตสกัดเข้มข้น (Herbal & Functional Beverages)",
+      domainId: "food_fermentation",
+      sharedToolingGroup: "liquid_bottling_line",
+      products: ["herbalDrink", "functionalShot", "premium_cooking_oil"],
+    },
+    bakery_grain: {
+      id: "bakery_grain",
+      nameTh: "ตระกูลขนมปังโฮลเกรน ครัวซองต์เนยสด บิสกิตข้าวสาลี และอาหารพร้อมทาน",
+      domainId: "food_fermentation",
+      sharedToolingGroup: "tunnel_oven_line",
+      products: ["artisan_bakery", "pastry_croissant_box", "wheat_grain_biscuit", "ready_meal_box"],
+    },
+    dairy_fermented: {
+      id: "dairy_fermented",
+      nameTh: "ตระกูลผลิตภัณฑ์นมโคแท้ โยเกิร์ตหมักเชื้อสด และโปรตีนจากพืช",
+      domainId: "food_fermentation",
+      sharedToolingGroup: "dairy_cold_line",
+      products: ["dairy_protein_shake", "probiotic_yogurt_cup", "energyProtein", "plant_based_meat"],
+    },
+    clinical_sterile: {
+      id: "clinical_sterile",
+      nameTh: "ตระกูลเวชภัณฑ์ปลอดเชื้อ น้ำเกลือการแพทย์ และเครื่องมือแพทย์ ICU",
+      domainId: "biomed_sterile",
+      sharedToolingGroup: "iso5_cleanroom_line",
+      products: ["probioticElixir", "synbiotic_medical_drink", "sterile_wound_dressing", "medical_saline_iv", "vital_signs_monitor"],
+    },
+    clean_energy_grid: {
+      id: "clean_energy_grid",
+      nameTh: "ตระกูลโซลาร์เซลล์ อินเวอร์เตอร์ ตู้ชาร์จไว DC และตู้กักเก็บพลังงาน LFP/Solid-State",
+      domainId: "power_electronics",
+      sharedToolingGroup: "power_cabinet_line",
+      products: ["solarCharger", "homeInverter", "evFastCharger", "lfp_grid_rack", "solid_state_powerwall"],
+    },
+  });
+
   const TRUE_RESOURCE_CHAIN_TABLE = deepFreeze([
     {
       chainId: "rice_bakery_chain",
@@ -4500,17 +4734,58 @@ canvas.pt {
       b2bSellPrice: 5500,
       chainPathTh: "ข้าวเปลือก (paddy_grain) ➔ สีเป็นข้าวสาร (milled_rice) ➔ โม่เป็นแป้งละเอียด (artisan_flour) ➔ โดว์เนยสด (T2) / ขนมปังโฮลเกรน (T4)"
     },
+    nitrogen_ammonia: {
+      id: "nitrogen_ammonia",
+      nameTh: "กระบวนการแยกก๊าซไนโตรเจนจากอากาศและสังเคราะห์แอมโมเนีย (Haber-Bosch N-Feedstock)",
+      tier: 1,
+      domainId: "agri_soil_science",
+      inputs: { ambient_air_gas: 1, raw_water_m3: 1 },
+      outputs: { nitrogen_ammonia: 2 },
+      requiredPlot: "refineryMill",
+      minResearch: 0,
+      capitalRequirement: 100000,
+      b2bSellPrice: 3900,
+      descTh: "แยกก๊าซไนโตรเจน (N2) จากอากาศและไฮโดรเจน (H2) จากน้ำดิบด้วยพลังงานไฟฟ้า สังเคราะห์เป็นแอมโมเนียแม่ปุ๋ยไนโตรเจนแท้",
+    },
     npk_fertilizer: {
       id: "npk_fertilizer",
-      outputMaterialId: "npk_fertilizer",
-      nameTh: "แปรรูปหินฟอสเฟตและแร่โพแทชธรรมชาติเป็นปุ๋ยธาตุอาหารหลัก N-P-K (T0 ➔ T1 Soil Input)",
+      nameTh: "กระบวนการผสมแม่ปุ๋ยธาตุอาหารหลักครบสูตร N-P-K (Nitrogen + Phosphate + Potash)",
       tier: 1,
+      domainId: "agri_soil_science",
+      inputs: { nitrogen_ammonia: 1, phosphate_potash_rock: 1 },
+      fallbackRawInputs: { ambient_air_gas: 1, phosphate_potash_rock: 1, raw_water_m3: 1 },
+      outputs: { npk_fertilizer: 3 },
+      requiredPlot: "refineryMill",
       minResearch: 0,
-      capitalRequirement: 0,
-      inputs: { phosphate_potash_rock: 1, raw_water_m3: 1 },
-      outputs: { npk_fertilizer: 2 },
-      b2bSellPrice: 3200,
-      chainPathTh: "หินฟอสเฟต/โพแทช (T0) + น้ำดิบ (T0) ➔ ปุ๋ยธาตุอาหาร N-P-K (T1) ➔ เติมธาตุอาหารแปลงนาข้าว/ไร่อ้อย/สวนปาล์ม"
+      capitalRequirement: 120000,
+      b2bSellPrice: 3600,
+      descTh: "ผสมแม่ปุ๋ยไนโตรเจน (N จากแอมโมเนียสังเคราะห์) เข้ากับฟอสเฟตและโพแทช (P-K จากหินแร่ธรรมชาติ) ได้ปุ๋ย N-P-K ×3 กระสอบโดยไม่เสกธาตุ N จากหินฟอสเฟตเปล่า",
+    },
+    wheat_flour: {
+      id: "wheat_flour",
+      nameTh: "กระบวนการโม่และร่อนแป้งสาลีกลูเตนสูงเกรดเบเกอรี่",
+      tier: 1,
+      domainId: "food_fermentation",
+      inputs: { wheat_grain: 2 },
+      outputs: { wheat_flour: 3, rice_bran_husk: 1 },
+      requiredPlot: "refineryMill",
+      minResearch: 0,
+      capitalRequirement: 120000,
+      b2bSellPrice: 5800,
+      descTh: "โม่ข้าวสาลีเมล็ดเต็ม (wheat_grain) ได้แป้งสาลีกลูเตนสูงสำหรับอบขนมปัง/บิสกิต และได้รำสาลีเป็นอาหารสัตว์",
+    },
+    pharma_saline_water: {
+      id: "pharma_saline_water",
+      nameTh: "กระบวนการกรองน้ำบริสุทธิ์ RO/DI และเตรียมสารละลายปลอดเชื้อระดับเภสัชกรรม",
+      tier: 1,
+      domainId: "biomed_sterile",
+      inputs: { raw_water_m3: 2 },
+      outputs: { pharma_saline_water: 2 },
+      requiredPlot: "waterPlant",
+      minResearch: 15,
+      capitalRequirement: 160000,
+      b2bSellPrice: 6400,
+      descTh: "บำบัดน้ำดิบผ่านเมมเบรน RO/DI หลายชั้นและฆ่าเชื้อสำหรับผลิตน้ำเกลือทางการแพทย์และชุดทำแผลปลอดเชื้อ",
     },
     organic_compost: {
       id: "organic_compost",
@@ -5347,6 +5622,578 @@ canvas.pt {
   });
 
   // External World & Living Off-Site Corporate Ecosystem Blueprint (16 บริษัทภายนอกที่มีชีวิตชีวา เป็นทั้งคู่ค้า ซัพพลายเออร์ พันธมิตร และคู่แข่งกันเอง)
+  const GLOBAL_NATIONS = deepFreeze({
+    TH: {
+      id: "TH",
+      flag: "🇹🇭",
+      nameTh: "ราชอาณาจักรไทย (ฐานที่ตั้งนิคมอุตสาหกรรม & ศูนย์กลางอาเซียน)",
+      shortNameTh: "ไทย (Thailand)",
+      bloc: "ASEAN",
+      defaultRegimeId: "boi_coalition",
+      regimes: [
+        {
+          id: "boi_coalition",
+          nameTh: "รัฐบาลผสมส่งเสริมการลงทุนอุตสาหกรรมเป้าหมาย (BOI Smart Industrial Coalition)",
+          leaderStyleTh: "สายส่งเสริมการลงทุนและส่งออก",
+          tariffModPct: 0,
+          fxModPct: 0,
+          materialMods: { paddy_grain: 0.96, raw_cane: 0.96, natural_latex: 0.95 },
+          sectorDemandMods: { electronics: 1.06, automotive: 1.06, food: 1.05 },
+          summaryTh: "ลดภาษีนิติบุคคล สนับสนุนการตั้งโรงงานแปรรูปและส่งออกสินค้าอุตสาหกรรม",
+        },
+        {
+          id: "green_populist",
+          nameTh: "รัฐบาลเกษตรสีเขียวและยกระดับสวัสดิการแรงงาน (Green Agri & Welfare Government)",
+          leaderStyleTh: "สายประชานิยมสีเขียวและพยุงราคาพืชผล",
+          tariffModPct: 2,
+          fxModPct: -2,
+          materialMods: { paddy_grain: 1.18, raw_cane: 1.15, crude_palm: 1.16, wheat_grain: 1.12, organic_compost: 0.9 },
+          sectorDemandMods: { food: 1.14, biomed: 1.12, energy: 1.1 },
+          summaryTh: "ประกันราคาพืชผลเกษตรทำให้ราคาข้าวเปลือก อ้อย และปาล์มสูงขึ้น (+15~18%) พร้อมหนุนตลาดอาหารและสุขภาพ",
+        },
+        {
+          id: "technocrat_infra",
+          nameTh: "รัฐบาลเทคโนแครตเร่งระเบียงเศรษฐกิจพิเศษ EEC & ดิจิทัล (EEC Technocrat Administration)",
+          leaderStyleTh: "สายเทคโนแครตและโครงสร้างพื้นฐานไฮเทค",
+          tariffModPct: -3,
+          fxModPct: 1,
+          materialMods: { silicon_wafer: 0.94, pcb: 0.95, diesel_liter: 0.95 },
+          sectorDemandMods: { electronics: 1.12, software: 1.15, fleet: 1.1 },
+          summaryTh: "ลดต้นทุนโลจิสติกส์และภาษีนำเข้าชิ้นส่วนอิเล็กทรอนิกส์ พร้อมเร่งดีมานด์ซอฟต์แวร์และระบบอัตโนมัติ",
+        },
+      ],
+    },
+    US: {
+      id: "US",
+      flag: "🇺🇸",
+      nameTh: "สหรัฐอเมริกา (มหาอำนาจเทคโนโลยี AI ตลาดทุน และการบริโภค)",
+      shortNameTh: "สหรัฐฯ (USA)",
+      bloc: "WESTERN_ALLIANCE",
+      defaultRegimeId: "free_trade_tech",
+      regimes: [
+        {
+          id: "free_trade_tech",
+          nameTh: "รัฐบาลเสรีการค้าและพันธมิตรซัพพลายเชนเทคโนโลยี (Global Tech & Free Trade Admin)",
+          leaderStyleTh: "สายโลกาภิวัตน์และนวัตกรรมเปิด",
+          tariffModPct: 0,
+          fxModPct: 0,
+          materialMods: { microchip: 1.0, silicon_wafer: 1.0, optical_lens: 1.0 },
+          sectorDemandMods: { electronics: 1.08, software: 1.1, biomed: 1.06 },
+          summaryTh: "ส่งเสริมการค้าข้ามชาติและการสั่งซื้ออุปกรณ์สมาร์ตเทคและซอฟต์แวร์จากภูมิภาคอาเซียน",
+        },
+        {
+          id: "america_first_tariff",
+          nameTh: "รัฐบาลอเมริกาต้องมาก่อนและกำแพงภาษีนำเข้า (America-First Protectionist Admin)",
+          leaderStyleTh: "สายชาตินิยมทางเศรษฐกิจและตั้งกำแพงภาษี",
+          tariffModPct: 14,
+          fxModPct: 8,
+          materialMods: { microchip: 1.28, silicon_wafer: 1.22, power_inverter_ic: 1.24, sensor: 1.18 },
+          sectorDemandMods: { electronics: 0.94, automotive: 0.95, food: 1.06 },
+          summaryTh: "ตั้งกำแพงภาษีนำเข้าและจำกัดการส่งออกชิปขั้นสูง ทำให้ราคาชิปไมโครโพรเซสเซอร์และเวเฟอร์ในตลาดโลกพุ่งขึ้น +22~28%",
+        },
+        {
+          id: "green_new_deal",
+          nameTh: "รัฐบาลอัดฉีดพลังงานสะอาดและยานยนต์ไฟฟ้า (Clean Energy Supercycle Admin)",
+          leaderStyleTh: "สายอัดฉีดงบพลังงานสีเขียวและลดคาร์บอน",
+          tariffModPct: -2,
+          fxModPct: -3,
+          materialMods: { solar_cell: 1.18, battery: 1.2, copper_coil: 1.14 },
+          sectorDemandMods: { energy: 1.25, automotive: 1.2, electronics: 1.08 },
+          summaryTh: "ทุ่มงบอุดหนุนโซลาร์เซลล์ ตู้กักเก็บพลังงาน และยานยนต์ไฟฟ้า ดันดีมานด์และราคาขายหมวดพลังงานสะอาดพุ่ง +20~25%",
+        },
+      ],
+    },
+    CN: {
+      id: "CN",
+      flag: "🇨🇳",
+      nameTh: "สาธารณรัฐประชาชนจีน (มหาอำนาจแร่หายาก แบตเตอรี่ และโรงงานโลก)",
+      shortNameTh: "จีน (China)",
+      bloc: "BRICS_EURASIA",
+      defaultRegimeId: "belt_and_road_expansion",
+      regimes: [
+        {
+          id: "belt_and_road_expansion",
+          nameTh: "คณะกรรมการยุทธศาสตร์เส้นทางสายไหมและส่งออกชิ้นส่วน (Belt & Road Industrial Drive)",
+          leaderStyleTh: "สายขยายเครือข่ายโลจิสติกส์และซัพพลายเชน",
+          tariffModPct: -2,
+          fxModPct: 0,
+          materialMods: { pcb: 0.94, casing: 0.94, metal_sheet: 0.95, glass_bottle: 0.95 },
+          sectorDemandMods: { fleet: 1.1, food: 1.08, electronics: 1.05 },
+          summaryTh: "ส่งออกชิ้นส่วนพื้นฐานในราคาประหยัดและรับซื้อสินค้าเกษตรแปรรูปจากไทยเพิ่มขึ้น",
+        },
+        {
+          id: "strategic_resource_control",
+          nameTh: "คณะกรรมการควบคุมโควตาส่งออกแร่หายาก ลิเธียม และซิลิคอน (Strategic Mineral Export Control)",
+          leaderStyleTh: "สายความมั่นคงทางทรัพยากรและเทคโนโลยี",
+          tariffModPct: 10,
+          fxModPct: 4,
+          materialMods: {
+            lithium_brine_ore: 1.38,
+            cathode_electrolyte: 1.35,
+            metallurgical_silicon: 1.32,
+            silicon_wafer: 1.26,
+            battery: 1.28,
+            solar_cell: 1.24,
+          },
+          sectorDemandMods: { energy: 1.12, automotive: 1.1 },
+          summaryTh: "จำกัดโควตาส่งออกแร่ลิเธียม แคโทด และแท่งซิลิคอนบริสุทธิ์ ทำให้ราคาวัตถุดิบแบตเตอรี่และโซลาร์ในตลาดโลกพุ่ง +26~38%!",
+        },
+        {
+          id: "domestic_consumption_drive",
+          nameTh: "คณะกรรมการกระตุ้นการบริโภคภายในและนำเข้าอาหารพรีเมียม (Domestic Prosperity Stimulus)",
+          leaderStyleTh: "สายกระตุ้นกำลังซื้อและนำเข้าอาหารสุขภาพ",
+          tariffModPct: -4,
+          fxModPct: 2,
+          materialMods: { milled_rice: 1.15, refined_sugar_syrup: 1.14, fresh_milk_soy: 1.12 },
+          sectorDemandMods: { food: 1.22, biomed: 1.16 },
+          summaryTh: "เปิดตลาดนำเข้าอาหารเบเกอรี่ เครื่องดื่มสมุนไพร โยเกิร์ต และโภชนเภสัชจากอาเซียนในราคาพรีเมียม (+16~22%)",
+        },
+      ],
+    },
+    JP: {
+      id: "JP",
+      flag: "🇯🇵",
+      nameTh: "ญี่ปุ่น (พันธมิตรยานยนต์ หุ่นยนต์ความแม่นยำสูง และออปติคัล)",
+      shortNameTh: "ญี่ปุ่น (Japan)",
+      bloc: "WESTERN_ALLIANCE",
+      defaultRegimeId: "asean_monozukuri_pact",
+      regimes: [
+        {
+          id: "asean_monozukuri_pact",
+          nameTh: "รัฐบาลพันธมิตรฐานการผลิตยานยนต์และหุ่นยนต์อาเซียน (ASEAN-Japan Monozukuri Pact)",
+          leaderStyleTh: "สายพันธมิตรอุตสาหกรรมระยะยาว",
+          tariffModPct: -3,
+          fxModPct: 0,
+          materialMods: { optical_lens: 0.96, wire_harness: 0.96 },
+          sectorDemandMods: { automotive: 1.14, electronics: 1.1 },
+          summaryTh: "ร่วมทุนและสั่งซื้อชิ้นส่วนยานยนต์ EV หุ่นยนต์คลังสินค้า AGV และแขนกลเซอร์โวจากโรงงานไทยอย่างต่อเนื่อง",
+        },
+        {
+          id: "semi_revival_act",
+          nameTh: "รัฐบาลยุทธศาสตร์ฟื้นฟูเซมิคอนดักเตอร์และโรโบติกส์แห่งชาติ (Silicon & Robotics Revival Act)",
+          leaderStyleTh: "สายลงทุนเทคโนโลยีขั้นสูง",
+          tariffModPct: 0,
+          fxModPct: 3,
+          materialMods: { optical_lens: 1.16, sensor: 1.15, silicon_wafer: 1.12 },
+          sectorDemandMods: { electronics: 1.18, automotive: 1.16, service: 1.12 },
+          summaryTh: "เร่งกว้านซื้อเซนเซอร์ เลนส์ออปติคัล และบริการสอบเทียบ ISO มาตรฐานสูง ดันราคาขายกลุ่มสมองกลและหุ่นยนต์สูงขึ้น",
+        },
+      ],
+    },
+    EU: {
+      id: "EU",
+      flag: "🇪🇺",
+      nameTh: "สหภาพยุโรป (ผู้นำมาตรฐานสิ่งแวดล้อม CBAM และเวชภัณฑ์คลีนรูม)",
+      shortNameTh: "สหภาพยุโรป (EU)",
+      bloc: "WESTERN_ALLIANCE",
+      defaultRegimeId: "strict_cbam_esg",
+      regimes: [
+        {
+          id: "strict_cbam_esg",
+          nameTh: "คณะกรรมาธิการบังคับใช้ภาษีคาร์บอนข้ามพรมแดน (Strict CBAM & Green ESG Mandate)",
+          leaderStyleTh: "สายควบคุมคาร์บอนและมาตรฐานสิ่งแวดล้อม",
+          tariffModPct: 6,
+          fxModPct: 2,
+          materialMods: { iron_ore: 1.18, copper_iron_ore: 1.16, bauxite_ore: 1.15, organic_compost: 0.92 },
+          sectorDemandMods: { energy: 1.18, biomed: 1.12, service: 1.15 },
+          summaryTh: "เก็บค่าธรรมเนียมคาร์บอนกับแร่โลหะและปิโตรเคมี (+15~18%) แต่ให้โบนัสราคาซื้อแก่โรงงานที่มีโซลาร์ฟาร์มและบริการรีไซเคิล",
+        },
+        {
+          id: "energy_medical_security",
+          nameTh: "คณะกรรมาธิการความมั่นคงทางพลังงานและเวชภัณฑ์ยุโรป (EU Energy & Clinical Security Pact)",
+          leaderStyleTh: "สายสำรองพลังงานและเวชภัณฑ์",
+          tariffModPct: -2,
+          fxModPct: 4,
+          materialMods: { pharma_saline_water: 1.16, foil_pouch: 1.12, cathode_electrolyte: 1.15 },
+          sectorDemandMods: { biomed: 1.24, energy: 1.22 },
+          summaryTh: "เร่งนำเข้าชุดทำแผลปลอดเชื้อ น้ำเกลือการแพทย์ เครื่องวัดสัญญาณชีพ และตู้กักเก็บพลังงานสำรอง (+22~24%)",
+        },
+      ],
+    },
+    ME: {
+      id: "ME",
+      flag: "🇸🇦",
+      nameTh: "กลุ่มประเทศตะวันออกกลางและโอเปก (ศูนย์กลางพลังงานและเส้นทางเดินเรือทะเลแดง)",
+      shortNameTh: "ตะวันออกกลาง (OPEC+)",
+      bloc: "ENERGY_CORRIDOR",
+      defaultRegimeId: "opec_balanced_output",
+      regimes: [
+        {
+          id: "opec_balanced_output",
+          nameTh: "มติโอเปกรักษาเสถียรภาพกำลังการผลิตน้ำมันดิบโลก (OPEC+ Balanced Production)",
+          leaderStyleTh: "สายรักษาสมดุลราคาพลังงาน",
+          tariffModPct: 0,
+          fxModPct: 0,
+          materialMods: { crude_petro_feedstock: 1.0, diesel_liter: 1.0, polymer_resin: 1.0 },
+          sectorDemandMods: { fleet: 1.04, food: 1.05 },
+          summaryTh: "ราคาน้ำมันดิบและดีเซลขนส่งอยู่ในเกณฑ์มีเสถียรภาพ เอื้อต่อการเดินรถขนส่ง B2B",
+        },
+        {
+          id: "opec_supply_cut",
+          nameTh: "มติโอเปกลดกำลังการผลิตน้ำมันดิบเชิงยุทธศาสตร์ (OPEC+ Deep Supply Cut)",
+          leaderStyleTh: "สายจำกัดอุปทานยกระดับราคาน้ำมัน",
+          tariffModPct: 4,
+          fxModPct: 5,
+          materialMods: { crude_petro_feedstock: 1.36, diesel_liter: 1.32, polymer_resin: 1.25, truck_tire: 1.15 },
+          sectorDemandMods: { energy: 1.2, fleet: 1.12 },
+          summaryTh: "ราคาน้ำมันดิบ ดีเซลหมุนเร็ว และเม็ดพลาสติกพุ่งขึ้น +25~36% ส่งผลให้ต้นทุนเชื้อเพลิงขนส่งและมูลค่าโซลาร์เซลล์สูงขึ้น",
+        },
+      ],
+    },
+    RU_EE: {
+      id: "RU_EE",
+      flag: "🇺🇦",
+      nameTh: "ภูมิภาคยูเรเซียและทะเลดำ (แหล่งส่งออกข้าวสาลีและแร่แม่ปุ๋ยโลก)",
+      shortNameTh: "ยูเรเซีย/ทะเลดำ",
+      bloc: "BRICS_EURASIA",
+      defaultRegimeId: "grain_fertilizer_corridor",
+      regimes: [
+        {
+          id: "grain_fertilizer_corridor",
+          nameTh: "ข้อตกลงเปิดระเบียงเดินเรือส่งออกธัญพืชและแม่ปุ๋ยโลก (Black Sea Grain & Fertilizer Corridor)",
+          leaderStyleTh: "สายเปิดเส้นทางส่งออกสินค้าเกษตร",
+          tariffModPct: 0,
+          fxModPct: 0,
+          materialMods: { wheat_grain: 1.0, wheat_flour: 1.0, phosphate_potash_rock: 1.0, npk_fertilizer: 1.0 },
+          sectorDemandMods: { food: 1.04 },
+          summaryTh: "อุปทานข้าวสาลีและแร่ฟอสเฟต/โพแทชในตลาดโลกไหลเวียนตามปกติ",
+        },
+        {
+          id: "sanctions_export_ban",
+          nameTh: "มาตรการคว่ำบาตรและระงับส่งออกแร่แม่ปุ๋ย-ข้าวสาลี (Fertilizer & Grain Export Embargo)",
+          leaderStyleTh: "สายปิดกั้นการส่งออกทรัพยากรเกษตร",
+          tariffModPct: 8,
+          fxModPct: 4,
+          materialMods: {
+            phosphate_potash_rock: 1.4,
+            nitrogen_ammonia: 1.32,
+            npk_fertilizer: 1.36,
+            wheat_grain: 1.34,
+            wheat_flour: 1.3,
+          },
+          sectorDemandMods: { food: 1.18 },
+          summaryTh: "ราคาหินฟอสเฟต/โพแทช ปุ๋ย N-P-K และข้าวสาลีโลกพุ่งขึ้น +30~40% ทำให้ไร่ข้าวไทยและโรงงานปุ๋ยในประเทศมีมูลค่าสูงขึ้นมาก!",
+        },
+      ],
+    },
+    ASEAN: {
+      id: "ASEAN",
+      flag: "🌏",
+      nameTh: "ประชาคมเศรษฐกิจอาเซียนและลุ่มน้ำโขง (CLMVT Supply Chain Ring)",
+      shortNameTh: "อาเซียน (ASEAN)",
+      bloc: "ASEAN",
+      defaultRegimeId: "asean_single_window",
+      regimes: [
+        {
+          id: "asean_single_window",
+          nameTh: "ข้อตกลงศุลกากรอิเล็กทรอนิกส์และการค้าเสรีอาเซียน (ASEAN Single Window & ATIGA)",
+          leaderStyleTh: "สายบูรณาการซัพพลายเชนภูมิภาค",
+          tariffModPct: -5,
+          fxModPct: 0,
+          materialMods: { timber_bamboo_log: 0.95, pack_carton: 0.95, natural_latex: 0.96 },
+          sectorDemandMods: { fleet: 1.15, food: 1.1, electronics: 1.08, service: 1.1 },
+          summaryTh: "ลดเวลาขนส่งข้ามพรมแดนและภาษีศุลกากรเป็น 0% กระตุ้นงานกองรถขนส่ง B2B และการค้าส่งวัตถุดิบในภูมิภาค",
+        },
+        {
+          id: "border_quota_control",
+          nameTh: "มาตรการควบคุมโควตาสินค้าเกษตรและด่านชายแดนเข้มงวด (Regional Border & Quota Tightening)",
+          leaderStyleTh: "สายปกป้องเกษตรกรและอุตสาหกรรมในประเทศ",
+          tariffModPct: 7,
+          fxModPct: 2,
+          materialMods: { paddy_grain: 1.16, soybean_crop: 1.15, timber_bamboo_log: 1.14 },
+          sectorDemandMods: { food: 1.08, fleet: 0.96 },
+          summaryTh: "เข้มงวดการนำเข้าพืชผลเกษตรหน้าด่าน ทำให้ราคาวัตถุดิบเกษตรในประเทศสูงขึ้นและเพิ่มความสำคัญของการมีไร่นาของตนเอง",
+        },
+      ],
+    },
+  });
+
+  const GEOPOLITICAL_EVENTS = deepFreeze({
+    red_sea_blockade_war: {
+      id: "red_sea_blockade_war",
+      category: "war_conflict",
+      badgeTh: "⚔️ สงครามและการปิดล้อมทางทะเล",
+      titleTh: "สงครามความมั่นคงและการปิดล้อมเส้นทางเดินเรือทะเลแดง–คลองสุเอซ",
+      regionTh: "ตะวันออกกลาง / เส้นทางเดินเรือเอเชีย-ยุโรป",
+      durationDays: 5,
+      oilMultiplier: 1.35,
+      freightRateMultiplier: 1.24,
+      leadTimeMultiplier: 1.25,
+      fxDeltaBaht: 1.4,
+      materialMods: {
+        crude_petro_feedstock: 1.38,
+        diesel_liter: 1.34,
+        polymer_resin: 1.26,
+        foil_pouch: 1.16,
+      },
+      sectorDemandMods: { energy: 1.22, fleet: 1.18, food: 1.12 },
+      stockMods: { GREEN: 4.2, AUTO: -2.1, TECH: -1.4 },
+      chronicleTh: "เกิดการปะทะทางทหารและปิดล้อมเส้นทางเดินเรือขนส่งน้ำมันในทะเลแดง เรือสินค้าต้องอ้อมแหลมกู๊ดโฮป ส่งผลให้ราคาน้ำมันดิบ ดีเซล และค่าระวางขนส่งโลกพุ่งสูงขึ้นทันที!",
+      strategicAdviceTh: "ต้นทุนดีเซลและเม็ดพลาสติกสูงขึ้น ควรใช้โซลาร์ฟาร์ม/ผลิตไบโอดีเซลเอง หรือรับงานขนส่ง B2B ที่ปรับขึ้นค่าระวางตามตลาด",
+    },
+    black_sea_grain_fertilizer_war: {
+      id: "black_sea_grain_fertilizer_war",
+      category: "war_conflict",
+      badgeTh: "⚔️ สงครามภูมิภาค & วิกฤตอาหารโลก",
+      titleTh: "สงครามปิดล้อมท่าเรือทะเลดำ ระงับการส่งออกข้าวสาลีและแร่แม่ปุ๋ยโลก",
+      regionTh: "ยุโรปตะวันออก / ทะเลดำ",
+      durationDays: 5,
+      oilMultiplier: 1.15,
+      freightRateMultiplier: 1.12,
+      leadTimeMultiplier: 1.15,
+      fxDeltaBaht: 0.9,
+      materialMods: {
+        wheat_grain: 1.42,
+        wheat_flour: 1.36,
+        phosphate_potash_rock: 1.38,
+        nitrogen_ammonia: 1.3,
+        npk_fertilizer: 1.35,
+        paddy_grain: 1.22,
+        milled_rice: 1.24,
+        artisan_flour: 1.22,
+      },
+      sectorDemandMods: { food: 1.26, biomed: 1.1 },
+      stockMods: { FOOD: 5.4, SET_IND: 1.2 },
+      chronicleTh: "ความขัดแย้งทางทหารในภูมิภาคทะเลดำทำให้ท่าเรือส่งออกข้าวสาลีและแร่ปุ๋ยฟอสเฟต/โพแทชถูกปิดกั้น ราคาปุ๋ย N-P-K และแป้งสาลีโลกพุ่งทะยาน ขณะที่ทั่วโลกหันมาสั่งซื้อข้าวและเบเกอรี่จากไทยเพิ่มขึ้นอย่างหนัก!",
+      strategicAdviceTh: "โอกาสทองของธุรกิจเกษตร โรงสีข้าว และเบเกอรี่ไทย! การผลิตปุ๋ยหมักชีวภาพและปุ๋ย N-P-K ใช้เองจะช่วยประหยัดต้นทุนได้มหาศาล",
+    },
+    superpower_chip_embargo: {
+      id: "superpower_chip_embargo",
+      category: "trade_war",
+      badgeTh: "⚡ สงครามเทคโนโลยี & คว่ำบาตรชิป",
+      titleTh: "มหาอำนาจประกาศมาตรการคว่ำบาตรและจำกัดการส่งออกชิป AI & เครื่องจักรเวเฟอร์",
+      regionTh: "แปซิฟิก / สหรัฐฯ–เอเชียตะวันออก",
+      durationDays: 5,
+      oilMultiplier: 1.0,
+      freightRateMultiplier: 1.08,
+      leadTimeMultiplier: 1.2,
+      fxDeltaBaht: 1.1,
+      materialMods: {
+        silicon_wafer: 1.36,
+        microchip: 1.42,
+        power_inverter_ic: 1.38,
+        optical_lens: 1.25,
+        sensor: 1.22,
+        pcb: 1.18,
+      },
+      sectorDemandMods: { electronics: 1.22, software: 1.18 },
+      stockMods: { TECH: -3.2, SET_IND: 1.5 },
+      chronicleTh: "สงครามเทคโนโลยีทวีความรุนแรง มหาอำนาจสั่งห้ามส่งออกชิปประมวลผลระดับนาโนและแผ่นซิลิคอนเวเฟอร์ ทำให้ราคาชิปในตลาดโลกพุ่ง +36~42% แต่ลูกค้า B2B หันมาจ้างโรงงานในไทยประกอบอุปกรณ์ IoT และ AI Edge แทน!",
+      strategicAdviceTh: "หากบริษัทมีแต้มวิจัย R&D สูงพอ การถลุงซิลิคอนและผลิตเวเฟอร์/ชิปเองในโรงงานจะสร้างกำไรจากการขาย B2B ได้สูงสุด",
+    },
+    us_regime_tariff_shift: {
+      id: "us_regime_tariff_shift",
+      category: "regime_change",
+      badgeTh: "🗳️ เปลี่ยนรัฐบาลมหาอำนาจ",
+      titleTh: "สหรัฐฯ เปลี่ยนขั้วรัฐบาลใหม่ ประกาศขึ้นกำแพงภาษีนำเข้าและดึงฐานการผลิตกลับประเทศ",
+      regionTh: "อเมริกาเหนือ / การค้าโลก",
+      durationDays: 6,
+      triggerNationId: "US",
+      triggerRegimeId: "america_first_tariff",
+      oilMultiplier: 1.05,
+      freightRateMultiplier: 1.1,
+      leadTimeMultiplier: 1.12,
+      fxDeltaBaht: 1.5,
+      materialMods: {
+        microchip: 1.26,
+        silicon_wafer: 1.2,
+        metal_sheet: 1.18,
+        copper_coil: 1.16,
+      },
+      sectorDemandMods: { electronics: 0.95, automotive: 0.96, food: 1.1, service: 1.14 },
+      stockMods: { TECH: -1.8, AUTO: -1.5, FOOD: 2.1 },
+      chronicleTh: "ผลการเลือกตั้งและการเปลี่ยนรัฐบาลใหม่ของสหรัฐฯ นำไปสู่การประกาศกำแพงภาษีนำเข้าชุดใหม่ ส่งผลให้ค่าเงินดอลลาร์แข็งค่าและราคาชิ้นส่วนอิเล็กทรอนิกส์นำเข้าสูงขึ้น",
+      strategicAdviceTh: "กระจายตลาดสู่คู่ค้าอาเซียน/ญี่ปุ่น/จีน และเพิ่มสัดส่วนการใช้วัตถุดิบที่แปรรูปเองในประเทศ",
+    },
+    global_green_supercycle_election: {
+      id: "global_green_supercycle_election",
+      category: "regime_change",
+      badgeTh: "🗳️ เปลี่ยนรัฐบาล & พันธมิตรสีเขียว",
+      titleTh: "กลุ่มประเทศมหาอำนาจเปลี่ยนรัฐบาลสู่พันธมิตรอัดฉีดงบพลังงานสะอาดและ EV โลก",
+      regionTh: "ยุโรป–อเมริกาเหนือ–เอเชีย",
+      durationDays: 6,
+      triggerNationId: "US",
+      triggerRegimeId: "green_new_deal",
+      oilMultiplier: 0.92,
+      freightRateMultiplier: 1.02,
+      leadTimeMultiplier: 0.98,
+      fxDeltaBaht: -0.6,
+      materialMods: {
+        solar_cell: 1.22,
+        battery: 1.25,
+        cathode_electrolyte: 1.2,
+        copper_coil: 1.15,
+        crude_petro_feedstock: 0.9,
+      },
+      sectorDemandMods: { energy: 1.28, automotive: 1.24, service: 1.16 },
+      stockMods: { GREEN: 6.5, AUTO: 4.1 },
+      chronicleTh: "รัฐบาลชุดใหม่ของชาติมหาอำนาจลงนามงบประมาณอุดหนุนพลังงานสะอาดและรถยนต์ไฟฟ้าครั้งประวัติศาสตร์ ส่งผลให้ความต้องการแผงโซลาร์ อินเวอร์เตอร์ ตู้แบตเตอรี่ LFP/Solid-State และมอเตอร์ EV พุ่งทะยานทั่วโลก!",
+      strategicAdviceTh: "เร่งเดินสายพานผลิตสินค้าหมวดพลังงานสะอาด ยานยนต์ EV และเปิดแล็บคัดเกรดแบตเตอรี่ Second-Life รับดีมานด์ตลาดโลก",
+    },
+    china_rare_earth_quota_shift: {
+      id: "china_rare_earth_quota_shift",
+      category: "regime_change",
+      badgeTh: "🗳️ นโยบายทรัพยากรจีน",
+      titleTh: "รัฐบาลจีนประกาศปรับโควตาส่งออกแร่ลิเธียม แคโทด และซิลิคอนบริสุทธิ์เพื่อความมั่นคงแห่งชาติ",
+      regionTh: "เอเชียตะวันออก",
+      durationDays: 5,
+      triggerNationId: "CN",
+      triggerRegimeId: "strategic_resource_control",
+      oilMultiplier: 1.02,
+      freightRateMultiplier: 1.06,
+      leadTimeMultiplier: 1.15,
+      fxDeltaBaht: 0.7,
+      materialMods: {
+        lithium_brine_ore: 1.38,
+        cathode_electrolyte: 1.35,
+        metallurgical_silicon: 1.32,
+        bauxite_ore: 1.22,
+        battery: 1.26,
+      },
+      sectorDemandMods: { energy: 1.16, automotive: 1.15 },
+      stockMods: { GREEN: 2.4, AUTO: 1.8 },
+      chronicleTh: "ทางการปักกิ่งประกาศจำกัดโควตาส่งออกแร่ลิเธียมและแท่งซิลิคอนบริสุทธิ์ ส่งผลให้ราคาสารแคโทดและโมดูลแบตเตอรี่ในตลาดโลกปรับตัวขึ้น +26~38% ทันที",
+      strategicAdviceTh: "การลงทุนในสัมปทานเหมืองแร่และบริการรีไซเคิล/แล็บแบตเตอรี่ Second-Life จะช่วยลดการพึ่งพาวัตถุดิบนำเข้าได้โดยตรง",
+    },
+    asean_jp_eu_free_trade_pact: {
+      id: "asean_jp_eu_free_trade_pact",
+      category: "international_cooperation",
+      badgeTh: "🤝 สนธิสัญญาความร่วมมือระหว่างประเทศ",
+      titleTh: "ลงนามสนธิสัญญาการค้าเสรีและระเบียงโลจิสติกส์ดิจิทัล อาเซียน–ญี่ปุ่น–สหภาพยุโรป",
+      regionTh: "อาเซียน–ญี่ปุ่น–ยุโรป",
+      durationDays: 6,
+      triggerNationId: "ASEAN",
+      triggerRegimeId: "asean_single_window",
+      oilMultiplier: 0.98,
+      freightRateMultiplier: 1.14,
+      leadTimeMultiplier: 0.85,
+      fxDeltaBaht: -0.5,
+      materialMods: {
+        pcb: 0.92,
+        optical_lens: 0.92,
+        wire_harness: 0.94,
+        pack_carton: 1.1,
+      },
+      sectorDemandMods: { electronics: 1.16, automotive: 1.18, food: 1.15, fleet: 1.2 },
+      stockMods: { SET_IND: 4.5, TECH: 3.8, AUTO: 3.5, FOOD: 3.2 },
+      chronicleTh: "ชาติสมาชิกอาเซียน ญี่ปุ่น และสหภาพยุโรปบรรลุข้อตกลงเปิดระเบียงการค้าเสรี ลดภาษีศุลกากรเป็นศูนย์และเชื่อมโยงระบบศุลกากรดิจิทัล ลดเวลาจัดส่งวัตถุดิบลง 15% และเพิ่มคำสั่งซื้อสินค้า B2B ทุกหมวด!",
+      strategicAdviceTh: "จังหวะเหมาะที่สุดในการเร่งรับออเดอร์ส่งออก ขยายกองรถขนส่ง B2B และให้เช่าพาเลตหมุนเวียนรับปริมาณการค้าที่เพิ่มขึ้น",
+    },
+    global_food_medical_accord: {
+      id: "global_food_medical_accord",
+      category: "international_cooperation",
+      badgeTh: "🤝 ความร่วมมือด้านสุขภาพและอาหารโลก",
+      titleTh: "องค์การอนามัยและอาหารโลกเปิดกองทุนจัดซื้อเวชภัณฑ์ปลอดเชื้อและอาหารสุขภาพจากไทย",
+      regionTh: "ทั่วโลก / สหประชาชาติ",
+      durationDays: 5,
+      triggerNationId: "EU",
+      triggerRegimeId: "energy_medical_security",
+      oilMultiplier: 1.0,
+      freightRateMultiplier: 1.08,
+      leadTimeMultiplier: 0.95,
+      fxDeltaBaht: 0.2,
+      materialMods: {
+        pharma_saline_water: 1.2,
+        probiotic_culture: 1.18,
+        raw_extract: 1.16,
+        foil_pouch: 1.15,
+      },
+      sectorDemandMods: { biomed: 1.28, food: 1.22 },
+      stockMods: { FOOD: 4.8, SET_IND: 2.6 },
+      chronicleTh: "ความร่วมมือระหว่างประเทศด้านสาธารณสุขและความมั่นคงทางอาหาร อนุมัติงบจัดซื้อชุดทำแผลปลอดเชื้อ น้ำเกลือทางการแพทย์ เครื่องมอนิเตอร์ ICU โยเกิร์ตโพรไบโอติกส์ และอาหารพร้อมทานจากฐานการผลิตในไทยล็อตใหญ่!",
+      strategicAdviceTh: "ดูแลดัชนีความปลอดเชื้อคลีนรูม ISO Class-5 ให้เกิน 90% และเปิดห้องเย็น Cold-Chain เพื่อรับโบนัสราคาสินค้าเวชภัณฑ์และอาหารสด",
+    },
+    el_nino_agri_drought: {
+      id: "el_nino_agri_drought",
+      category: "climate_shock",
+      badgeTh: "🌊 วิกฤตสภาพภูมิอากาศโลก",
+      titleTh: "ปรากฏการณ์เอลนีโญรุนแรงและคลื่นความร้อนกระทบผลผลิตเกษตรเอเชียตะวันออกเฉียงใต้",
+      regionTh: "เอเชียตะวันออกเฉียงใต้",
+      durationDays: 5,
+      oilMultiplier: 1.04,
+      freightRateMultiplier: 1.05,
+      leadTimeMultiplier: 1.08,
+      fxDeltaBaht: 0.6,
+      materialMods: {
+        raw_water_m3: 1.35,
+        paddy_grain: 1.28,
+        milled_rice: 1.25,
+        raw_cane: 1.26,
+        crude_palm: 1.24,
+        soybean_crop: 1.22,
+        fresh_milk_soy: 1.2,
+      },
+      sectorDemandMods: { food: 1.18, energy: 1.14 },
+      stockMods: { FOOD: 2.5, GREEN: 3.1 },
+      chronicleTh: "คลื่นความร้อนและภัยแล้งเอลนีโญทำให้ปริมาณน้ำธรรมชาติลดลงและราคาผลผลิตการเกษตรในตลาดโลกปรับตัวสูงขึ้น +20~28% โรงงานที่มีระบบบำบัดน้ำหมุนเวียนและแปลงเกษตรที่มีระบบชลประทานจะได้เปรียบอย่างมาก",
+      strategicAdviceTh: "สำรองน้ำดิบ (raw_water_m3) และใช้บริการรีไซเคิล/บำบัดน้ำเพื่อประคองความชื้นในแปลงเกษตรไม่ให้ผลผลิตตก",
+    },
+    global_port_congestion_crisis: {
+      id: "global_port_congestion_crisis",
+      category: "supply_chain_shock",
+      badgeTh: "🚢 วิกฤตโลจิสติกส์และท่าเรือโลก",
+      titleTh: "วิกฤตตู้คอนเทนเนอร์ขาดแคลนและท่าเรือขนส่งสินค้าหลักของโลกแออัดหนัก",
+      regionTh: "เส้นทางเดินเรือแปซิฟิก–ยุโรป–แหลมฉบัง",
+      durationDays: 5,
+      oilMultiplier: 1.08,
+      freightRateMultiplier: 1.28,
+      leadTimeMultiplier: 1.22,
+      fxDeltaBaht: 0.8,
+      materialMods: {
+        pack_carton: 1.24,
+        timber_bamboo_log: 1.18,
+        diesel_liter: 1.14,
+      },
+      sectorDemandMods: { fleet: 1.26, service: 1.2 },
+      stockMods: { SET_IND: 1.9, TECH: -1.1 },
+      chronicleTh: "ความแออัดของท่าเรือน้ำลึกทั่วโลกทำให้ตู้คอนเทนเนอร์และพาเลตหมุนเวียนขาดแคลน ค่าระวางรถบรรทุกขนส่ง B2B และบริการคลังห้องเย็น 3PL ปรับตัวสูงขึ้นกว่า +25%!",
+      strategicAdviceTh: "ขยายกองรถบรรทุก จับคู่งานขากลับ (Backhaul Matching) และเปิดบริการให้เช่าพาเลตหมุนเวียน / คลังห้องเย็น 3PL เพื่อทำกำไรจากค่าระวางที่พุ่งสูง",
+    },
+    apac_robotics_semi_alliance: {
+      id: "apac_robotics_semi_alliance",
+      category: "international_cooperation",
+      badgeTh: "🤝 พันธมิตรหุ่นยนต์และเซมิคอนดักเตอร์",
+      titleTh: "ก่อตั้งเครือข่ายพันธมิตรหุ่นยนต์อุตสาหกรรมและเซมิคอนดักเตอร์เอเชียแปซิฟิก (APAC Automation Pact)",
+      regionTh: "ไทย–ญี่ปุ่น–ไต้หวัน–สิงคโปร์",
+      durationDays: 6,
+      triggerNationId: "JP",
+      triggerRegimeId: "semi_revival_act",
+      oilMultiplier: 1.0,
+      freightRateMultiplier: 1.04,
+      leadTimeMultiplier: 0.9,
+      fxDeltaBaht: -0.3,
+      materialMods: {
+        silicon_wafer: 0.92,
+        sensor: 0.94,
+        optical_lens: 0.94,
+      },
+      sectorDemandMods: { automotive: 1.22, electronics: 1.2, software: 1.16 },
+      stockMods: { TECH: 5.2, AUTO: 4.4 },
+      chronicleTh: "เครือข่ายอุตสาหกรรมเอเชียแปซิฟิกจับมือถ่ายทอดมาตรฐานหุ่นยนต์และเปิดโควตาแผ่นเวเฟอร์ราคาพิเศษให้โรงงานพันธมิตร พร้อมสั่งซื้อหุ่นยนต์ AGV แขนกลเซอร์โว และโดรนขนส่งหนักเพิ่ม +20%!",
+      strategicAdviceTh: "เร่งวิจัยและเดินเครื่องสายพานหุ่นยนต์ AGV, แขนกลเซอร์โว และโมดูล AI Edge ป้อนกลุ่มพันธมิตรญี่ปุ่นและอาเซียน",
+    },
+    global_cyber_cloud_alert: {
+      id: "global_cyber_cloud_alert",
+      category: "tech_shock",
+      badgeTh: "⚡ วิกฤตไซเบอร์ & เปลี่ยนผ่านดิจิทัล",
+      titleTh: "คลื่นการโจมตีแรนซัมแวร์โลกบีบให้องค์กรเร่งเปลี่ยนผ่านสู่ซอฟต์แวร์คลาวด์และระบบตรวจสอบย้อนกลับ",
+      regionTh: "โครงข่ายดิจิทัลทั่วโลก",
+      durationDays: 5,
+      oilMultiplier: 1.0,
+      freightRateMultiplier: 1.0,
+      leadTimeMultiplier: 1.0,
+      fxDeltaBaht: 0.1,
+      materialMods: {
+        microchip: 1.14,
+        pcb: 1.12,
+      },
+      sectorDemandMods: { software: 1.32, service: 1.22, electronics: 1.15 },
+      stockMods: { TECH: 4.6, SET_IND: 2.1 },
+      chronicleTh: "เหตุการณ์โจมตีไซเบอร์ต่อระบบซัพพลายเชนแบบเก่าทั่วโลก ทำให้บริษัทคู่ค้า B2B เร่งสั่งพัฒนาซอฟต์แวร์องค์กร (POS, WMS, TMS, e-Procurement, AI Assistant) และสมัครสมาชิก SaaS เพิ่มขึ้นอย่างก้าวกระโดด!",
+      strategicAdviceTh: "มอบหมายวิศวกรซอฟต์แวร์เปิดพัฒนา MVP แอปพลิเคชันใหม่และแปลง Lead ลูกค้าเข้าสู่ระบบสมาชิก SaaS รายรอบ",
+    },
+  });
+
   const EXTERNAL_WORLD_DEFAULTS = deepFreeze({
     corporations: [
       {
@@ -6395,11 +7242,18 @@ canvas.pt {
       // === TIER 0: True Natural Primary Resources (7 ชนิด — ทรัพยากรธรรมชาติแท้จริงก่อนการเพาะปลูกหรือแปรรูป: แร่ หิน ทราย น้ำดิบ ปิโตรเลียมดิบ) ===
       silica_bauxite_ore: { id: "silica_bauxite_ore", nameTh: "ทรายควอตซ์ซิลิกาธรรมชาติจากแหล่งแร่ (SiO2 Ore)", unitCost: 3000, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3900 },
       bauxite_ore: { id: "bauxite_ore", nameTh: "แร่บ็อกไซต์อะลูมิเนียมธรรมชาติจากเหมือง (Alumina Ore)", unitCost: 2800, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3600 },
-      copper_iron_ore: { id: "copper_iron_ore", nameTh: "แร่ทองแดงและแร่เหล็กดิบจากแหล่งธรณีวิทยา", unitCost: 2600, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3400 },
+      copper_iron_ore: { id: "copper_iron_ore", nameTh: "แร่ทองแดงธรรมชาติคัดเกรดจากแหล่งธรณีวิทยา (CuFeS2 Copper Ore)", unitCost: 2600, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3400 },
       lithium_brine_ore: { id: "lithium_brine_ore", nameTh: "แร่ลิเธียมสปอดูมีนและน้ำเกลือแร่ธรรมชาติ", unitCost: 3600, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 4700 },
       phosphate_potash_rock: { id: "phosphate_potash_rock", nameTh: "หินฟอสเฟตและแร่โพแทชธรรมชาติ (แร่แม่ปุ๋ยต้นน้ำ)", unitCost: 1800, leadMinutes: 1440, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "mine_deposit", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2400 },
-      crude_petro_feedstock: { id: "crude_petro_feedstock", nameTh: "แนฟทาและสารตั้งต้นปิโตรเลียมดิบจากแหล่งธรรมชาติ", unitCost: 2200, leadMinutes: 720, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "geological_well", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2900 },
+      crude_petro_feedstock: { id: "crude_petro_feedstock", nameTh: "น้ำมันดิบธรรมชาติจากแหล่งปิโตรเลียม (Crude Oil Feedstock — ต้องกลั่นก่อนใช้)", unitCost: 2200, leadMinutes: 720, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_deposit", resourceOrigin: "geological_well", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2900 },
       raw_water_m3: { id: "raw_water_m3", nameTh: "น้ำดิบธรรมชาติจากแหล่งน้ำผิวดินและบาดาล (ลบ.ม.)", unitCost: 600, leadMinutes: 360, tier: 0, tierCode: "T0_NATURAL", resourceClass: "environmental_flow", resourceOrigin: "water_intake", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 900 },
+      ambient_air_gas: { id: "ambient_air_gas", nameTh: "อากาศบริสุทธิ์สำหรับโรงแยกก๊าซอุตสาหกรรม (N2/O2 Feedstock)", unitCost: 500, leadMinutes: 240, tier: 0, tierCode: "T0_NATURAL", resourceClass: "environmental_flow", resourceOrigin: "air_separation", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 800 },
+      iron_ore: { id: "iron_ore", nameTh: "แร่เหล็กธรรมชาติคัดเกรดจากเหมือง (Fe2O3 Iron Ore)", unitCost: 2300, leadMinutes: 600, tier: 0, tierCode: "T0_NATURAL", resourceClass: "natural_mineral", resourceOrigin: "mining_extraction", isTrueNaturalResource: true, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3200 },
+      wheat_seed: { id: "wheat_seed", nameTh: "เมล็ดพันธุ์ข้าวสาลีคัดเกรดพร้อมงอก (ใช้เพาะปลูกในแปลงข้าวสาลี)", unitCost: 1700, leadMinutes: 480, tier: 1, tierCode: "T1_REFINED", resourceClass: "biological_seed", resourceOrigin: "seed_propagation", isTrueNaturalResource: false, isSeed: true, cropId: "winter_wheat", craftable: false, canPlantCrop: true, minResearch: 0, b2bSellPrice: 2400 },
+      wheat_grain: { id: "wheat_grain", nameTh: "ข้าวสาลีเมล็ดเต็มจากการเพาะปลูก (โม่เป็นแป้งสาลีกลูเตนเบเกอรี่)", unitCost: 2300, leadMinutes: 540, tier: 1, tierCode: "T1_REFINED", resourceClass: "harvested_crop", resourceOrigin: "crop_cultivation", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveSeed: true, seedMaterialId: "wheat_seed", minResearch: 0, b2bSellPrice: 3200 },
+      nitrogen_ammonia: { id: "nitrogen_ammonia", nameTh: "ก๊าซไนโตรเจนและแอมโมเนียสังเคราะห์ (NH3 แม่ปุ๋ย N ต้นทาง)", unitCost: 2800, leadMinutes: 480, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "industrial_refining", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3900 },
+      wheat_flour: { id: "wheat_flour", nameTh: "แป้งสาลีกลูเตนสูงสำหรับเบเกอรี่และเพสตรี้ (โม่จากข้าวสาลี • ห้ามใช้ปลูก!)", unitCost: 4200, leadMinutes: 540, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "industrial_refining", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, cannotPlantAsSeed: true, minResearch: 0, b2bSellPrice: 5800 },
+      pharma_saline_water: { id: "pharma_saline_water", nameTh: "น้ำบริสุทธิ์เภสัชกรรม RO/DI และสารละลายปลอดเชื้อ (Pharma Grade)", unitCost: 4600, leadMinutes: 540, tier: 1, tierCode: "T1_REFINED", resourceClass: "refined_material", resourceOrigin: "industrial_refining", isTrueNaturalResource: false, craftable: true, canPlantCrop: false, minResearch: 15, b2bSellPrice: 6400 },
 
       // === TIER 1A: Biological Seeds & Propagules (4 ชนิด — เมล็ดพันธุ์และต้นพันธุ์ชีวภาพสำหรับเพาะปลูกในแปลงเกษตร) ===
       rice_seed: { id: "rice_seed", nameTh: "เมล็ดพันธุ์ข้าวหอมมะลิคัดเกรดพร้อมงอก (ใช้เพาะปลูกในแปลงนา)", unitCost: 1400, leadMinutes: 720, tier: 1, tierCode: "T1_BIO_SEED", resourceClass: "biological_seed", resourceOrigin: "seed_selection", isTrueNaturalResource: false, craftable: false, canPlantCrop: true, targetCropId: "jasmine_rice", minResearch: 0, b2bSellPrice: 1900 },
@@ -6411,7 +7265,7 @@ canvas.pt {
       paddy_grain: { id: "paddy_grain", nameTh: "ข้าวเปลือกหอมมะลิจากการเพาะปลูก (คัดเก็บเป็นเมล็ดพันธุ์ได้ / สีเป็นข้าวสารได้)", unitCost: 1800, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "rice_seed", minResearch: 0, b2bSellPrice: 2300 },
       crude_palm: { id: "crude_palm", nameTh: "ทะลายปาล์มน้ำมันสดจากการเพาะปลูก (สกัดเป็นน้ำมันปาล์มบริสุทธิ์)", unitCost: 2000, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "palm_seedling", minResearch: 0, b2bSellPrice: 2600 },
       raw_cane: { id: "raw_cane", nameTh: "ลำอ้อยสดจากการเพาะปลูก (คัดท่อนพันธุ์ได้ / หีบเป็นน้ำตาลได้)", unitCost: 1600, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "cane_stalk_seed", minResearch: 0, b2bSellPrice: 2100 },
-      soybean_crop: { id: "soybean_crop", nameTh: "เมล็ดถั่วเหลืองและสมุนไพรสดจากการเพาะปลูก (คัดพันธุ์ได้ / สกัดสารสำคัญ)", unitCost: 1900, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "soybean_seed", minResearch: 0, b2bSellPrice: 2500 },
+      soybean_crop: { id: "soybean_crop", nameTh: "เมล็ดถั่วเหลืองสดจากการเพาะปลูก (คัดเมล็ดพันธุ์ได้ / สกัดโปรตีนและน้ำมันถั่วเหลือง)", unitCost: 1900, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "agricultural_cycle", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, canSaveAsSeed: true, seedMaterialId: "soybean_seed", minResearch: 0, b2bSellPrice: 2500 },
       fresh_milk_soy: { id: "fresh_milk_soy", nameTh: "น้ำนมโคสดแท้จากฟาร์มปศุสัตว์ (ผลิตจากการเลี้ยงฝูงโคนมด้วยอาหารและน้ำ)", unitCost: 2200, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "livestock_husbandry", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 2800 },
       natural_latex: { id: "natural_latex", nameTh: "น้ำยางพาราสดจากการกรีดสวนยางปลูก (ต้องดูแลแปลงยาง)", unitCost: 2400, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "plantation_tapping", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 3100 },
       timber_bamboo_log: { id: "timber_bamboo_log", nameTh: "ท่อนไม้เศรษฐกิจจากการตัดป่าปลูกหมุนเวียน (ตัดแล้วต้องปลูกทดแทน)", unitCost: 1400, leadMinutes: 720, tier: 1, tierCode: "T1_CULTIVATED_CROP", resourceClass: "agricultural_crop", resourceOrigin: "forestry_rotation", isTrueNaturalResource: false, craftable: false, canPlantCrop: false, minResearch: 0, b2bSellPrice: 1900 },
@@ -6714,6 +7568,7 @@ canvas.pt {
       },
       artisan_bakery: {
         id: "artisan_bakery",
+        familyId: "bakery_grain",
         nameTh: "ขนมปังโฮลเกรนและเบเกอรี่อบสดพรีเมียม (Artisan Whole-Grain Bakery)",
         bom: { artisan_flour: 2, refined_palm_oil: 1, refined_sugar_syrup: 1, pack_carton: 1 },
         assemblyMinutes: 30,
@@ -6899,6 +7754,142 @@ canvas.pt {
         preferredLine: "lineC",
         chainId: "chain_wafer_microchip_fab"
       },
+      probiotic_yogurt_cup: {
+        id: "probiotic_yogurt_cup",
+        nameTh: "โยเกิร์ตโพรไบโอติกส์หมักเชื้อสดถ้วยแช่เย็น (Live-Culture Probiotic Yogurt)",
+        familyId: "dairy_fermented",
+        tierStage: "established",
+        domainId: "food_fermentation",
+        industry: "food",
+        industryNameTh: "อาหารและเครื่องดื่มเพื่อสุขภาพ",
+        productionMode: "cleanroom_batch",
+        bom: { fresh_milk_soy: 1, probiotic_culture: 1, refined_sugar_syrup: 1, pack_carton: 1 },
+        assemblyMinutes: 28,
+        qaMinutes: 14,
+        packingMinutes: 10,
+        priceMin: 34000,
+        priceMax: 48000,
+        researchRequired: 25,
+      },
+      wheat_grain_biscuit: {
+        id: "wheat_grain_biscuit",
+        nameTh: "บิสกิตข้าวสาลีโฮลเกรนอบกรอบเกรดพรีเมียม (Whole-Wheat Digestive Biscuit)",
+        familyId: "bakery_grain",
+        tierStage: "early",
+        domainId: "food_fermentation",
+        industry: "food",
+        industryNameTh: "อาหารและเครื่องดื่มเพื่อสุขภาพ",
+        productionMode: "continuous_food_bake",
+        bom: { wheat_flour: 2, refined_sugar_syrup: 1, refined_palm_oil: 1, pack_carton: 1 },
+        assemblyMinutes: 26,
+        qaMinutes: 12,
+        packingMinutes: 10,
+        priceMin: 32000,
+        priceMax: 45000,
+        researchRequired: 15,
+      },
+      sterile_wound_dressing: {
+        id: "sterile_wound_dressing",
+        nameTh: "ชุดทำแผลและผ้าก๊อซเวชภัณฑ์ปลอดเชื้อมาตรฐานโรงพยาบาล (Sterile Wound Care Kit)",
+        familyId: "clinical_sterile",
+        tierStage: "established",
+        domainId: "biomed_sterile",
+        industry: "biomed",
+        industryNameTh: "ชีวการแพทย์และเวชภัณฑ์คลีนรูม",
+        productionMode: "cleanroom_batch",
+        bom: { pharma_saline_water: 1, raw_extract: 1, foil_pouch: 2, pack_carton: 1 },
+        assemblyMinutes: 30,
+        qaMinutes: 18,
+        packingMinutes: 12,
+        priceMin: 42000,
+        priceMax: 58000,
+        researchRequired: 35,
+      },
+      medical_saline_iv: {
+        id: "medical_saline_iv",
+        nameTh: "น้ำเกลือทางการแพทย์และสารละลายปราศจากเชื้อ (Clinical Isotonic Saline IV)",
+        familyId: "clinical_sterile",
+        tierStage: "established",
+        domainId: "biomed_sterile",
+        industry: "biomed",
+        industryNameTh: "ชีวการแพทย์และเวชภัณฑ์คลีนรูม",
+        productionMode: "cleanroom_batch",
+        bom: { pharma_saline_water: 2, glass_bottle: 1, foil_pouch: 1 },
+        assemblyMinutes: 28,
+        qaMinutes: 18,
+        packingMinutes: 10,
+        priceMin: 38000,
+        priceMax: 54000,
+        researchRequired: 30,
+      },
+      cold_chain_temp_logger: {
+        id: "cold_chain_temp_logger",
+        nameTh: "โมดูลวัดและบันทึกอุณหภูมิห้องเย็นอัจฉริยะ (Cold-Chain IoT Temp Data Logger)",
+        familyId: "industrial_iot",
+        tierStage: "established",
+        domainId: "embedded_iot",
+        industry: "electronics",
+        industryNameTh: "อิเล็กทรอนิกส์และระบบสมองกลฝังตัว",
+        productionMode: "smt_precision",
+        bom: { pcb: 1, sensor: 1, battery: 1, casing: 1 },
+        assemblyMinutes: 34,
+        qaMinutes: 16,
+        packingMinutes: 10,
+        priceMin: 56000,
+        priceMax: 76000,
+        researchRequired: 40,
+      },
+      ev_traction_motor: {
+        id: "ev_traction_motor",
+        nameTh: "มอเตอร์ขับเคลื่อนยานยนต์ไฟฟ้ากำลังสูง (EV Permanent-Magnet Traction Motor)",
+        familyId: "ev_powertrain",
+        tierStage: "advanced",
+        domainId: "metal_machining",
+        industry: "automotive",
+        industryNameTh: "ยานยนต์ไฟฟ้าและฮาร์ดแวร์ขนส่ง",
+        productionMode: "high_voltage_cell",
+        bom: { copper_coil: 2, metal_sheet: 2, wire_harness: 1, heat_sink: 1 },
+        assemblyMinutes: 48,
+        qaMinutes: 20,
+        packingMinutes: 14,
+        priceMin: 68000,
+        priceMax: 92000,
+        researchRequired: 75,
+      },
+      lfp_grid_rack: {
+        id: "lfp_grid_rack",
+        nameTh: "ตู้กักเก็บพลังงานแบตเตอรี่ LFP มาตรฐานโรงงาน (Industrial LFP Battery Rack)",
+        familyId: "clean_energy_grid",
+        tierStage: "advanced",
+        domainId: "power_electronics",
+        industry: "energy",
+        industryNameTh: "พลังงานสะอาดและกริดอัจฉริยะ",
+        productionMode: "high_voltage_cell",
+        bom: { battery: 2, cathode_electrolyte: 1, pcb: 1, metal_sheet: 2 },
+        assemblyMinutes: 52,
+        qaMinutes: 22,
+        packingMinutes: 15,
+        priceMin: 82000,
+        priceMax: 112000,
+        researchRequired: 95,
+      },
+      warehouse_agv_bot: {
+        id: "warehouse_agv_bot",
+        nameTh: "หุ่นยนต์รถลากคลังสินค้าอัตโนมัติ AGV (Autonomous Warehouse AGV Robot)",
+        familyId: "robotics_automation",
+        tierStage: "advanced",
+        domainId: "semiconductor_optics",
+        industry: "automotive",
+        industryNameTh: "หุ่นยนต์และระบบอัตโนมัติอุตสาหกรรม",
+        productionMode: "high_voltage_cell",
+        bom: { pcb: 1, sensor: 1, battery: 1, metal_sheet: 2, wire_harness: 1 },
+        assemblyMinutes: 54,
+        qaMinutes: 22,
+        packingMinutes: 15,
+        priceMin: 88000,
+        priceMax: 120000,
+        researchRequired: 110,
+      },
       solid_state_powerwall: {
         id: "solid_state_powerwall",
         nameTh: "ตู้กักเก็บพลังงานโซลิดสเตตระดับโรงงาน (Solid-State Grid Powerwall)",
@@ -6955,6 +7946,13 @@ canvas.pt {
     },
     initialStock: {
       pcb: 30,
+      ambient_air_gas: 16,
+      iron_ore: 8,
+      wheat_seed: 6,
+      wheat_grain: 6,
+      nitrogen_ammonia: 6,
+      wheat_flour: 6,
+      pharma_saline_water: 6,
       casing: 30,
       driver: 30,
       led: 0,
@@ -7364,8 +8362,8 @@ canvas.pt {
     return e;
   }
   return Object.freeze({
-    VERSION: "1.2.0",
-    RELEASE_VERSION: "1.2.0",
+    VERSION: "2.0.0",
+    RELEASE_VERSION: "2.0.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -7374,6 +8372,10 @@ canvas.pt {
     SECTOR_PROCESS_MODELS,
     INDUSTRIAL_SERVICES,
     BUSINESS_PROCESS_MODELS,
+    CAPABILITY_DOMAINS,
+    PRODUCT_FAMILIES,
+    GLOBAL_NATIONS,
+    GEOPOLITICAL_EVENTS,
     TRUE_RESOURCE_CHAIN_TABLE,
     MATERIAL_TIERS,
     MATERIAL_RECIPES,
@@ -7808,7 +8810,7 @@ canvas.pt {
   function (H, D, L, E) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "1.2.0",
+      RELEASE_VERSION = "2.0.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -8277,6 +9279,92 @@ canvas.pt {
         history: [],
       };
     }
+
+    function freshCapabilities() {
+      const domains = {};
+      for (const [k, spec] of Object.entries(D.CAPABILITY_DOMAINS || {})) {
+        domains[k] = spec.baseLevel || 20;
+      }
+      return {
+        domains,
+        unlockedProducts: {},
+        unlockedChains: {},
+        licenses: {},
+      };
+    }
+
+    function freshExecutiveBoard() {
+      return {
+        lastReviewDay: 0,
+        committedBudgetSatang: 0,
+        budgetPools: {
+          survivalReserveSatang: 0,
+          maintenancePoolSatang: 0,
+          capabilityPoolSatang: 0,
+          expansionPoolSatang: 0,
+          uncommittedCashSatang: 0,
+        },
+        decisionLedger: [],
+      };
+    }
+
+    function freshGeopolitics(seedStr = "company") {
+      const nations = {};
+      for (const [nid, nSpec] of Object.entries(D.GLOBAL_NATIONS || {})) {
+        const defReg = (nSpec.regimes || []).find((r) => r.id === nSpec.defaultRegimeId) || (nSpec.regimes || [])[0];
+        nations[nid] = {
+          id: nid,
+          flag: nSpec.flag,
+          nameTh: nSpec.nameTh,
+          shortNameTh: nSpec.shortNameTh,
+          bloc: nSpec.bloc,
+          activeRegimeId: defReg ? defReg.id : "default",
+          activeRegimeNameTh: defReg ? defReg.nameTh : nSpec.nameTh,
+          leaderStyleTh: defReg ? defReg.leaderStyleTh : "-",
+          tariffModPct: defReg ? defReg.tariffModPct : 0,
+          fxModPct: defReg ? defReg.fxModPct : 0,
+          materialMods: defReg ? { ...(defReg.materialMods || {}) } : {},
+          sectorDemandMods: defReg ? { ...(defReg.sectorDemandMods || {}) } : {},
+          summaryTh: defReg ? defReg.summaryTh : "-",
+          lastChangedDay: 1,
+          regimeChangeCount: 0,
+        };
+      }
+      const firstEv = D.GEOPOLITICAL_EVENTS?.asean_jp_eu_free_trade_pact || Object.values(D.GEOPOLITICAL_EVENTS || {})[0];
+      return {
+        nations,
+        activeEvent: firstEv
+          ? {
+              ...clone(firstEv),
+              startedDay: 1,
+              expiresDay: 6,
+            }
+          : null,
+        eventHistory: [],
+        fxRateBahtPerUsd: 34.5,
+        globalOilIndex: 1.0,
+        globalFreightRateMultiplier: 1.0,
+        globalLeadTimeMultiplier: 1.0,
+        globalTariffIndexPct: 0,
+        materialPriceMultipliers: {},
+        materialSpotPrices: {},
+        sectorDemandMultipliers: {
+          food: 1.05,
+          electronics: 1.05,
+          automotive: 1.05,
+          energy: 1.05,
+          biomed: 1.05,
+          software: 1.05,
+          fleet: 1.05,
+          service: 1.05,
+        },
+        customEventTriggered: false,
+        applySpotPriceToPO: false,
+        totalRegimeShifts: 0,
+        totalGlobalEvents: 1,
+      };
+    }
+
     function freshExternalWorld(seedStr = "company") {
       const ext = D.EXTERNAL_WORLD_DEFAULTS || {
         clients: [],
@@ -8460,6 +9548,21 @@ canvas.pt {
       return {
         corporations,
         ecosystemFeed: initialFeed,
+        geopolitics: freshGeopolitics(seedStr),
+        worldChronicle: [
+          {
+            id: "wchron-init-1",
+            day: 1,
+            at: 540,
+            category: "INTL_COOPERATION",
+            badgeTh: "🤝 สนธิสัญญาความร่วมมือระหว่างประเทศ",
+            regionTh: "อาเซียน–ญี่ปุ่น–ยุโรป",
+            headlineTh: "เปิดระเบียงการค้าเสรีอาเซียน–ญี่ปุ่น–อียู เชื่อมศุลกากรอิเล็กทรอนิกส์และหนุนซัพพลายเชนอุตสาหกรรม",
+            meaningTh: "ลดเวลาขนส่งวัตถุดิบข้ามชาติลง 15% และกระตุ้นคำสั่งซื้อสินค้าอุตสาหกรรมจากฐานการผลิตในไทย",
+            priceImpactSummaryTh: "ดีมานด์ส่งออก +10~15% • เวลานำเข้าวัตถุดิบ -15%",
+            isMajor: true,
+          },
+        ],
         b2bMaterialDemands: initialDemands,
         b2bMaterialSalesHistory: [],
         totalB2BMaterialSalesUnits: 0,
@@ -8562,7 +9665,7 @@ canvas.pt {
         message,
         details: clone(details),
       });
-      if (w.events.length > 120) w.events.shift();
+      if (w.events.length > 160) w.events.shift();
     }
     function post(w, kind, delta, reference) {
       return E.post(w.finance, {
@@ -8968,12 +10071,23 @@ canvas.pt {
           message: `"${matSpec.nameTh}" เป็นทรัพยากรต้นน้ำหรือผลผลิตจากการเพาะปลูก/ขุดสกัด (${matSpec.resourceClass || "raw"}) ไม่สามารถเสกด้วยสูตรแปรรูปโรงงานได้โดยตรง ต้องเพาะปลูกในแปลงเกษตร ขุดจากเหมือง หรือสั่งซื้อจากซัพพลายเออร์`,
         };
       }
+      if (!w.capabilities) w.capabilities = freshCapabilities();
       const reqResearch = recipe.minResearch || 0;
-      if (!options.ignoreTechGate && (w.research?.points || 0) < reqResearch) {
+      const chainUnlocked = Boolean(recipe.chainId && w.capabilities?.unlockedChains?.[recipe.chainId]);
+      if (!options.ignoreTechGate && !chainUnlocked && (w.research?.points || 0) < reqResearch) {
         return {
           ok: false,
           code: "insufficientResearch",
-          message: `ยังขาดองค์ความรู้ R&D สำหรับผลิต "${matSpec.nameTh}" (Tier ${recipe.tier}) — ต้องการแต้มวิจัย ${reqResearch} แต้ม (ปัจจุบันมี ${Math.round(w.research?.points || 0)} แต้ม ช่วงต้นเกมต้องสั่งซื้อจากซัพพลายเออร์ไปก่อน)`,
+          message: `ยังขาดองค์ความรู้และเทคโนโลยีสำหรับผลิต "${matSpec.nameTh}" (Tier ${recipe.tier}) — ต้องการแต้มวิจัย ${reqResearch} แต้ม (ปัจจุบันมี ${Math.round(w.research?.points || 0)} แต้ม ต้องสั่งซื้อจากซัพพลายเออร์ภายนอกไปก่อน)`,
+        };
+      }
+      const capReq = recipe.capitalRequirement || 0;
+      const workingCapFloor = Math.min(capReq, 150000);
+      if (!options.ignoreCapitalGate && !options.ignoreTechGate && workingCapFloor > 0 && w.finance.cash < workingCapFloor) {
+        return {
+          ok: false,
+          code: "insufficientWorkingCapital",
+          message: `เงินทุนหมุนเวียนไม่เพียงพอสำหรับเดินเครื่องแปรรูป "${matSpec.nameTh}" (ต้องมีสภาพคล่องขั้นต่ำ ฿${(workingCapFloor / 100).toLocaleString("th-TH")})`,
         };
       }
       const reqBatches = Math.max(1, Math.min(50, Math.floor(Number(batches) || 1)));
@@ -9052,6 +10166,10 @@ canvas.pt {
       ap.recipeStats[materialId].batches += possibleBatches;
       ap.recipeStats[materialId].unitsProduced += totalUnitsOut;
       ap.recipeStats[materialId].savedSatang += saved;
+      const domId = recipe.domainId || (recipe.tier >= 3 ? "semiconductor_optics" : "food_fermentation");
+      if (w.capabilities?.domains && Object.hasOwn(w.capabilities.domains, domId)) {
+        w.capabilities.domains[domId] = Math.min(100, Math.round(((w.capabilities.domains[domId] || 20) + 0.5) * 10) / 10);
+      }
 
       ap.chainHistory.unshift({
         day: day(w),
@@ -9585,7 +10703,8 @@ canvas.pt {
         D.MATERIAL_RECIPES?.[materialId]?.b2bSellPrice ||
         matSpec.b2bSellPrice ||
         Math.round(matSpec.unitCost * 1.28);
-      const idxMult = w.externalWorld.assetPortfolio?.marketPriceIndex?.[materialId] || 1.0;
+      const geoMult = w.externalWorld?.geopolitics?.materialPriceMultipliers?.[materialId] || 1.0;
+      const idxMult = Math.max(w.externalWorld.assetPortfolio?.marketPriceIndex?.[materialId] || 1.0, geoMult);
       const partnerBonus = buyer && buyer.relationshipMode === "partner" ? 1.08 : 1.0;
       const unitPriceSatang = activeDemand
         ? Math.round(activeDemand.unitPriceSatang * partnerBonus)
@@ -9711,6 +10830,317 @@ canvas.pt {
       return { ok: true, corpId, mode, trustScore: corp.trustScore };
     }
 
+    // === ERA 2.0.0: Living Global Geopolitics, Foreign Governments, Wars, Treaties & World Chronicle Engine ===
+    function ensureGeopolitics(w) {
+      if (!w.externalWorld) w.externalWorld = freshExternalWorld(w.seed);
+      if (!w.externalWorld.geopolitics || typeof w.externalWorld.geopolitics !== "object") {
+        w.externalWorld.geopolitics = freshGeopolitics(w.seed);
+      }
+      if (!w.externalWorld.geopolitics.nations) {
+        w.externalWorld.geopolitics.nations = freshGeopolitics(w.seed).nations;
+      }
+      if (!w.externalWorld.geopolitics.materialPriceMultipliers) {
+        w.externalWorld.geopolitics.materialPriceMultipliers = {};
+      }
+      if (!w.externalWorld.geopolitics.materialSpotPrices) {
+        w.externalWorld.geopolitics.materialSpotPrices = {};
+      }
+      if (!w.externalWorld.geopolitics.sectorDemandMultipliers) {
+        w.externalWorld.geopolitics.sectorDemandMultipliers = freshGeopolitics(w.seed).sectorDemandMultipliers;
+      }
+      if (!Array.isArray(w.externalWorld.worldChronicle)) {
+        w.externalWorld.worldChronicle = [];
+      }
+      return w.externalWorld.geopolitics;
+    }
+
+    function appendWorldChronicle(w, entry) {
+      ensureGeopolitics(w);
+      const rec = {
+        id: entry.id || `wchron-d${day(w)}-${++w.sequence}`,
+        day: entry.day || day(w),
+        at: entry.at || now(w),
+        category: entry.category || "WORLD_GEOPOLITICS",
+        badgeTh: entry.badgeTh || "🌍 พงศาวดารโลก",
+        regionTh: entry.regionTh || "เศรษฐกิจโลก",
+        headlineTh: entry.headlineTh || "ความเคลื่อนไหวภูมิรัฐศาสตร์และตลาดโลก",
+        meaningTh: entry.meaningTh || "ส่งผลต่อราคาวัตถุดิบและอุปสงค์สินค้าในตลาด B2B",
+        priceImpactSummaryTh: entry.priceImpactSummaryTh || "-",
+        isMajor: entry.isMajor !== false,
+      };
+      w.externalWorld.worldChronicle.unshift(rec);
+      if (w.externalWorld.worldChronicle.length > 60) {
+        w.externalWorld.worldChronicle.length = 60;
+      }
+      return rec;
+    }
+
+    function recomputeGeopoliticalMultipliers(w) {
+      const geo = ensureGeopolitics(w);
+      const ap = ensureAssetPortfolio(w);
+      const matMults = {};
+      const spotPrices = {};
+      const secMults = {
+        food: 1.0,
+        electronics: 1.0,
+        automotive: 1.0,
+        energy: 1.0,
+        biomed: 1.0,
+        software: 1.0,
+        fleet: 1.0,
+        service: 1.0,
+      };
+
+      for (const mId of Object.keys(w.catalog.materials || {})) {
+        matMults[mId] = 1.0;
+      }
+
+      let tariffSum = 0;
+      let fxDeltaPctSum = 0;
+      for (const nat of Object.values(geo.nations || {})) {
+        tariffSum += nat.tariffModPct || 0;
+        fxDeltaPctSum += nat.fxModPct || 0;
+        for (const [mId, mult] of Object.entries(nat.materialMods || {})) {
+          if (matMults[mId] !== undefined) {
+            matMults[mId] = Math.round(clamp(matMults[mId] * mult, 0.72, 1.95) * 100) / 100;
+          }
+        }
+        for (const [sId, sMult] of Object.entries(nat.sectorDemandMods || {})) {
+          if (secMults[sId] !== undefined) {
+            secMults[sId] = Math.round(clamp(secMults[sId] * (1 + (sMult - 1) * 0.65), 0.78, 1.65) * 100) / 100;
+          }
+        }
+      }
+
+      const ev = geo.activeEvent;
+      if (ev) {
+        for (const [mId, mult] of Object.entries(ev.materialMods || {})) {
+          if (matMults[mId] !== undefined) {
+            matMults[mId] = Math.round(clamp(matMults[mId] * mult, 0.72, 1.95) * 100) / 100;
+          }
+        }
+        for (const [sId, sMult] of Object.entries(ev.sectorDemandMods || {})) {
+          if (secMults[sId] !== undefined) {
+            secMults[sId] = Math.round(clamp(secMults[sId] * sMult, 0.78, 1.75) * 100) / 100;
+          }
+        }
+        geo.globalOilIndex = Math.round(clamp((ev.oilMultiplier || 1.0) * (matMults.crude_petro_feedstock || 1.0), 0.8, 1.85) * 100) / 100;
+        geo.globalFreightRateMultiplier = Math.round(clamp(ev.freightRateMultiplier || 1.0, 0.85, 1.55) * 100) / 100;
+        geo.globalLeadTimeMultiplier = Math.round(clamp(ev.leadTimeMultiplier || 1.0, 0.8, 1.5) * 100) / 100;
+      } else {
+        geo.globalOilIndex = Math.round(clamp(matMults.crude_petro_feedstock || 1.0, 0.85, 1.6) * 100) / 100;
+        geo.globalFreightRateMultiplier = 1.0;
+        geo.globalLeadTimeMultiplier = 1.0;
+      }
+
+      geo.globalTariffIndexPct = Math.round(tariffSum * 10) / 10;
+      geo.fxRateBahtPerUsd = Math.round(clamp(34.5 * (1 + fxDeltaPctSum / 200) + (ev?.fxDeltaBaht || 0), 31.5, 39.5) * 100) / 100;
+
+      for (const [mId, matSpec] of Object.entries(w.catalog.materials || {})) {
+        const mult = matMults[mId] || 1.0;
+        geo.materialPriceMultipliers[mId] = mult;
+        spotPrices[mId] = Math.max(100, Math.round(matSpec.unitCost * mult));
+        // Sync with assetPortfolio.marketPriceIndex so B2B material sales and asset ROI immediately reflect geopolitical prices!
+        ap.marketPriceIndex[mId] = Math.round(clamp((ap.marketPriceIndex[mId] || 1.0) * 0.35 + mult * 0.65, 0.75, 1.95) * 100) / 100;
+      }
+      geo.materialSpotPrices = spotPrices;
+      geo.sectorDemandMultipliers = secMults;
+      return geo;
+    }
+
+    function changeForeignRegime(w, nationId = "US", regimeId = null, options = {}) {
+      const geo = ensureGeopolitics(w);
+      const nSpec = D.GLOBAL_NATIONS?.[nationId];
+      if (!nSpec || !Array.isArray(nSpec.regimes) || !nSpec.regimes.length) {
+        return { ok: false, code: "unknownNation", message: "ไม่พบประเทศหรือกลุ่มเศรษฐกิจที่ระบุ" };
+      }
+      const curState = geo.nations[nationId] || freshGeopolitics(w.seed).nations[nationId];
+      let nextReg = regimeId ? nSpec.regimes.find((r) => r.id === regimeId) : null;
+      if (!nextReg) {
+        if (regimeId) {
+          return { ok: false, code: "unknownRegime", message: "ไม่พบรัฐบาลหรือขั้วนโยบายที่ระบุ" };
+        }
+        const curIdx = nSpec.regimes.findIndex((r) => r.id === curState.activeRegimeId);
+        nextReg = nSpec.regimes[(curIdx + 1) % nSpec.regimes.length];
+      }
+
+      curState.activeRegimeId = nextReg.id;
+      curState.activeRegimeNameTh = nextReg.nameTh;
+      curState.leaderStyleTh = nextReg.leaderStyleTh;
+      curState.tariffModPct = nextReg.tariffModPct || 0;
+      curState.fxModPct = nextReg.fxModPct || 0;
+      curState.materialMods = { ...(nextReg.materialMods || {}) };
+      curState.sectorDemandMods = { ...(nextReg.sectorDemandMods || {}) };
+      curState.summaryTh = nextReg.summaryTh;
+      curState.lastChangedDay = day(w);
+      curState.regimeChangeCount = (curState.regimeChangeCount || 0) + 1;
+      geo.nations[nationId] = curState;
+      geo.totalRegimeShifts = (geo.totalRegimeShifts || 0) + 1;
+      if (options.manual) {
+        geo.customEventTriggered = true;
+        if (options.applySpotPriceToPO !== undefined) geo.applySpotPriceToPO = Boolean(options.applySpotPriceToPO);
+      }
+
+      recomputeGeopoliticalMultipliers(w);
+
+      const matEffectsTh = Object.entries(nextReg.materialMods || {})
+        .map(([mId, mult]) => `${w.catalog.materials[mId]?.nameTh || mId} ×${mult}`)
+        .join(", ");
+      const chron = appendWorldChronicle(w, {
+        category: "REGIME_CHANGE",
+        badgeTh: `🗳️ เปลี่ยนรัฐบาล ${nSpec.flag} ${nSpec.shortNameTh}`,
+        regionTh: nSpec.nameTh,
+        headlineTh: `${nSpec.flag} ${nSpec.shortNameTh} เปลี่ยนขั้วรัฐบาลเป็น "${nextReg.nameTh}" (${nextReg.leaderStyleTh})`,
+        meaningTh: nextReg.summaryTh,
+        priceImpactSummaryTh: matEffectsTh || `ภาษีการค้า ${nextReg.tariffModPct >= 0 ? "+" : ""}${nextReg.tariffModPct}% • ค่าเงิน ${geo.fxRateBahtPerUsd} บาท/USD`,
+        isMajor: true,
+      });
+
+      if (!options.silent) {
+        event(
+          w,
+          "foreignRegimeChanged",
+          `🗳️🌍 [ภูมิรัฐศาสตร์โลก] ${nSpec.flag} ${nSpec.shortNameTh} เปลี่ยนรัฐบาลเป็น "${nextReg.nameTh}" — ${nextReg.summaryTh}`,
+          { nationId, regimeId: nextReg.id, fxRateBahtPerUsd: geo.fxRateBahtPerUsd },
+        );
+      }
+      return {
+        ok: true,
+        nationId,
+        regimeId: nextReg.id,
+        regimeNameTh: nextReg.nameTh,
+        fxRateBahtPerUsd: geo.fxRateBahtPerUsd,
+        materialPriceMultipliers: { ...geo.materialPriceMultipliers },
+        chronicleEntry: chron,
+      };
+    }
+
+    function triggerGeopoliticalEvent(w, eventId = null, options = {}) {
+      const geo = ensureGeopolitics(w);
+      const allEvents = Object.values(D.GEOPOLITICAL_EVENTS || {});
+      if (!allEvents.length) return { ok: false, code: "noEvents", message: "ไม่มีคลังเหตุการณ์ภูมิรัฐศาสตร์" };
+
+      let evSpec = eventId ? D.GEOPOLITICAL_EVENTS?.[eventId] : null;
+      if (!evSpec) {
+        if (eventId) return { ok: false, code: "unknownGeopoliticalEvent", message: "ไม่พบเหตุการณ์ภูมิรัฐศาสตร์ที่ระบุ" };
+        const h = seedHash(`${w.seed}:geoev:${day(w)}:${geo.totalGlobalEvents || 0}`);
+        evSpec = allEvents[h % allEvents.length];
+      }
+
+      if (evSpec.triggerNationId && evSpec.triggerRegimeId) {
+        changeForeignRegime(w, evSpec.triggerNationId, evSpec.triggerRegimeId, { silent: true });
+      }
+
+      const curDay = day(w);
+      geo.activeEvent = {
+        ...clone(evSpec),
+        startedDay: curDay,
+        expiresDay: curDay + (evSpec.durationDays || 5),
+      };
+      geo.eventHistory.unshift({
+        id: evSpec.id,
+        titleTh: evSpec.titleTh,
+        category: evSpec.category,
+        badgeTh: evSpec.badgeTh,
+        startedDay: curDay,
+      });
+      if (geo.eventHistory.length > 30) geo.eventHistory.pop();
+      geo.totalGlobalEvents = (geo.totalGlobalEvents || 0) + 1;
+      if (options.manual) {
+        geo.customEventTriggered = true;
+        if (options.applySpotPriceToPO !== undefined) geo.applySpotPriceToPO = Boolean(options.applySpotPriceToPO);
+      }
+
+      recomputeGeopoliticalMultipliers(w);
+
+      // Apply stock market sector shock if stockMarket exists
+      if (w.externalWorld?.stockMarket?.indices && evSpec.stockMods) {
+        for (const [symKey, deltaPct] of Object.entries(evSpec.stockMods)) {
+          for (const idxObj of Object.values(w.externalWorld.stockMarket.indices)) {
+            if (idxObj.symbol === symKey || idxObj.id.toUpperCase().includes(symKey)) {
+              const nextVal = Math.max(100, Math.round(idxObj.value * (1 + deltaPct / 100) * 10) / 10);
+              idxObj.changePct = Math.round(((nextVal - idxObj.value) / idxObj.value) * 1000) / 10;
+              idxObj.value = nextVal;
+            }
+          }
+        }
+      }
+
+      // Adjust open freight quote rates by globalFreightRateMultiplier
+      if (w.fleetTransport && Array.isArray(w.fleetTransport.openQuotes)) {
+        for (const q of w.fleetTransport.openQuotes) {
+          if (q.status === "quoted") {
+            const routeSpec = (D.FREIGHT_ROUTES || []).find((r) => r.id === q.routeId);
+            const baseRate = routeSpec ? routeSpec.baseRateSatang : q.offeredRateSatang;
+            q.offeredRateSatang = Math.round(baseRate * (geo.globalFreightRateMultiplier || 1.0));
+          }
+        }
+      }
+
+      const matSummaryTh = Object.entries(evSpec.materialMods || {})
+        .slice(0, 5)
+        .map(([mId, mult]) => `${w.catalog.materials[mId]?.nameTh || mId} (${mult >= 1 ? "+" : ""}${Math.round((mult - 1) * 100)}%)`)
+        .join(", ");
+
+      const chron = appendWorldChronicle(w, {
+        category: evSpec.category === "war_conflict" ? "WAR_CONFLICT" : evSpec.category === "international_cooperation" ? "INTL_COOPERATION" : "WORLD_GEOPOLITICS",
+        badgeTh: evSpec.badgeTh,
+        regionTh: evSpec.regionTh,
+        headlineTh: `${evSpec.badgeTh}: ${evSpec.titleTh}`,
+        meaningTh: `${evSpec.chronicleTh} (💡 ข้อเสนอแนะเชิงกลยุทธ์: ${evSpec.strategicAdviceTh})`,
+        priceImpactSummaryTh: matSummaryTh || `ดัชนีน้ำมัน ×${geo.globalOilIndex} • ค่าระวาง ×${geo.globalFreightRateMultiplier}`,
+        isMajor: true,
+      });
+
+      if (!options.silent) {
+        event(
+          w,
+          "geopoliticalEventTriggered",
+          `${evSpec.badgeTh} [เหตุการณ์โลก] ${evSpec.titleTh} — ${evSpec.chronicleTh}`,
+          {
+            eventId: evSpec.id,
+            category: evSpec.category,
+            oilMultiplier: geo.globalOilIndex,
+            freightRateMultiplier: geo.globalFreightRateMultiplier,
+          },
+        );
+      }
+
+      return {
+        ok: true,
+        eventId: evSpec.id,
+        activeEvent: geo.activeEvent,
+        fxRateBahtPerUsd: geo.fxRateBahtPerUsd,
+        globalOilIndex: geo.globalOilIndex,
+        materialPriceMultipliers: { ...geo.materialPriceMultipliers },
+        sectorDemandMultipliers: { ...geo.sectorDemandMultipliers },
+        chronicleEntry: chron,
+      };
+    }
+
+    function simulateGlobalGeopoliticsDaily(w, completedDay) {
+      const geo = ensureGeopolitics(w);
+      // 1. Every 5 days, trigger or rotate a global geopolitical event (War, Treaty, Trade Shock, or Climate Event)
+      if (!geo.activeEvent || completedDay >= (geo.activeEvent.expiresDay || 6) || completedDay % 5 === 0) {
+        const allEvents = Object.values(D.GEOPOLITICAL_EVENTS || {});
+        if (allEvents.length > 0) {
+          const h = seedHash(`${w.seed}:dailyGeoEv:${completedDay}`);
+          const picked = allEvents[h % allEvents.length];
+          triggerGeopoliticalEvent(w, picked.id, { silent: completedDay < 15 });
+        }
+      }
+      // 2. Every 6 days, simulate a foreign election or cabinet policy shift in one of the 8 sovereign nations
+      if (completedDay % 6 === 0) {
+        const nationIds = Object.keys(D.GLOBAL_NATIONS || {});
+        if (nationIds.length > 0) {
+          const h = seedHash(`${w.seed}:dailyRegime:${completedDay}`);
+          const nid = nationIds[h % nationIds.length];
+          changeForeignRegime(w, nid, null, { silent: completedDay < 15 });
+        }
+      }
+      recomputeGeopoliticalMultipliers(w);
+    }
+
     function simulateOffsiteEcosystemDaily(w, completedDay) {
       if (!w.externalWorld) return;
       const ext = w.externalWorld;
@@ -9798,6 +11228,19 @@ canvas.pt {
           headlineTh,
           impactTh,
         });
+        if (slot === 0) {
+          appendWorldChronicle(w, {
+            id: `wchron-corp-d${completedDay}`,
+            day: completedDay,
+            category: "CORP_ECOSYSTEM",
+            badgeTh,
+            regionTh: actor.originTh || "ตลาดอุตสาหกรรม",
+            headlineTh,
+            meaningTh: impactTh,
+            priceImpactSummaryTh: `กระทบอุปสงค์/อุปทานของ ${matNameTh}`,
+            isMajor: etype === "SUPPLY_SHOCK" || etype === "PRICE_WAR",
+          });
+        }
       }
       if (ext.ecosystemFeed.length > 40) {
         ext.ecosystemFeed.length = 40;
@@ -10018,14 +11461,16 @@ canvas.pt {
           w.externalWorld.ourMarketSharePct =
             Math.round(clamp((w.externalWorld.ourMarketSharePct || 2.0) + spec.marketShareBonus, 1, 60) * 10) / 10;
         }
+        if (!w.capabilities) w.capabilities = freshCapabilities();
         if (spec.linkedChainId && D.PRODUCTION_CHAINS?.[spec.linkedChainId]) {
+          w.capabilities.unlockedChains[spec.linkedChainId] = true;
+          w.capabilities.domains.agri_soil_science = Math.min(100, (w.capabilities.domains.agri_soil_science || 25) + 10);
           const ch = D.PRODUCTION_CHAINS[spec.linkedChainId];
           for (const prodId of ch.downstreamProducts || []) {
             const prodSpec = w.catalog.products[prodId];
             if (prodSpec && !w.research.unlocked.includes(prodId)) {
-              if (w.research.points < prodSpec.researchRequired) {
-                w.research.points = prodSpec.researchRequired;
-              }
+              // Unlock ONLY the specific linked downstream product via domain/asset capability without inflating global research.points!
+              w.capabilities.unlockedProducts[prodId] = true;
               w.research.unlocked.push(prodId);
             }
           }
@@ -10237,7 +11682,10 @@ canvas.pt {
           if (ap.harvestHistory.length > 40) ap.harvestHistory.pop();
         }
 
-        const netDiv = Math.round(((spec.dailyDividend || 0) - (spec.dailyUpkeep || 0)) * lvMult);
+        // Operating resource assets (farms, mines, forests, livestock) produce physical materials into inventory;
+        // ONLY commercial network/infrastructure partnerships (port terminal, retail network, cold-chain hub, solar feed-in) generate cash service dividends!
+        const isCommercialNetworkAsset = ["deepsea_port_terminal", "retail_flagship_network", "offsite_solar_wind_farm", "cold_chain_hub"].includes(rec.id);
+        const netDiv = isCommercialNetworkAsset ? Math.round(((spec.dailyDividend || 0) - (spec.dailyUpkeep || 0)) * lvMult) : 0;
         if (netDiv > 0 && Number.isSafeInteger(w.finance.cash + netDiv)) {
           post(w, "sales", netDiv, `assetDiv:${rec.id}:d${completedDay}`);
           rec.totalDividendSatang = (rec.totalDividendSatang || 0) + netDiv;
@@ -10247,40 +11695,23 @@ canvas.pt {
 
       // 3. Run Midstream Production Chains (converting harvested paddy_grain -> milled_rice -> artisan_flour, timber -> pack_carton, etc.)
       if (ownedList.length > 0 && ap.supplyChainStrategy !== "asset_light") {
-        // First mill any harvested paddy_grain into milled_rice + rice_bran_husk (leaving at least 2 paddy_grain if needed)
         const availPaddy = safeAvailableToDeduct(w, "paddy_grain");
         if (availPaddy >= 2) {
-          craftMaterialRecipe(w, "milled_rice", Math.min(4, Math.floor(availPaddy / 2)), { silent: true });
+          craftMaterialRecipe(w, "milled_rice", Math.min(4, Math.floor(availPaddy / 2)), { silent: true, ignoreCapitalGate: true });
         }
-        // Convert timber_bamboo_log into pack_carton if forestry is owned
         const availTimber = safeAvailableToDeduct(w, "timber_bamboo_log");
         if (availTimber >= 2) {
-          craftMaterialRecipe(w, "pack_carton", Math.min(3, Math.floor(availTimber / 2)), { silent: true });
+          craftMaterialRecipe(w, "pack_carton", Math.min(3, Math.floor(availTimber / 2)), { silent: true, ignoreCapitalGate: true });
         }
-        // Convert phosphate_potash_rock + raw_water_m3 into npk_fertilizer
         if (safeAvailableToDeduct(w, "phosphate_potash_rock") >= 1 && safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
-          craftMaterialRecipe(w, "npk_fertilizer", 1, { silent: true });
+          craftMaterialRecipe(w, "npk_fertilizer", 1, { silent: true, ignoreCapitalGate: true });
         }
         runMidstreamRefining(w);
       }
 
-      // 4. Autonomous CEO External Asset Investment when company has strong cash surplus & vertical/hybrid vision
-      if (w.policies.autoAccept && completedDay >= 6 && ap.supplyChainStrategy !== "asset_light") {
-        const ceo = w.people.find((p) => p.employed && p.atWork && p.role === "coordinator");
-        if (ceo) {
-          const employees = w.people.filter((p) => p.employed);
-          const dailyBurn =
-            w.catalog.rules.rentDaily +
-            Math.round(w.finance.debt * w.catalog.rules.interestDaily) +
-            employees.reduce((sum, p) => sum + p.pay.dailyWage + w.policies.wellbeingDaily, 0);
-          const safetyReserve = dailyBurn * 24 + 5500000;
-          const unowned = Object.values(D.EXTERNAL_ASSETS || {}).filter(
-            (a) => !ap.ownedAssets[a.id] && w.finance.cash >= safetyReserve + a.cost,
-          );
-          if (unowned.length > 0) {
-            acquireExternalAsset(w, unowned[0].id);
-          }
-        }
+      // 4. Autonomous Executive Board & Business Entry Evaluation handles asset investment based on real material bottlenecks & ROI (no blind unowned[0]!)
+      if (w.policies.autoAccept && completedDay >= 9 && (w.people.length >= 10 || Object.keys(ap.ownedAssets || {}).length > 0)) {
+        evaluateExecutiveBoardAndBusinessEntry(w, completedDay);
       }
     }
 
@@ -10740,8 +12171,7 @@ canvas.pt {
       const dev = options.developerPersonId
         ? w.people.find((p) => p.id === options.developerPersonId && p.employed && !busyDevIds.has(p.id))
         : w.people.find((p) => p.employed && p.role === "engineer" && !busyDevIds.has(p.id)) ||
-          w.people.find((p) => p.employed && p.role === "admin" && !busyDevIds.has(p.id)) ||
-          w.people.find((p) => p.employed && !busyDevIds.has(p.id));
+          w.people.find((p) => p.employed && !busyDevIds.has(p.id) && (p.skills?.research?.level || 0) >= 28);
       if (!dev) {
         return { ok: false, code: "noAvailableDeveloper", message: "ไม่มีวิศวกรหรือนักพัฒนาที่ว่างสำหรับรับโครงการใหม่ (ห้ามขายชั่วโมงคนเดียวซ้ำหลายโครงการ)" };
       }
@@ -11210,9 +12640,12 @@ canvas.pt {
       if (prevProd === targetProductId && !options.force) {
         lineState.consecutiveSameModelCount = (lineState.consecutiveSameModelCount || 0) + 1;
         ao.rhythmBonusUnits = (ao.rhythmBonusUnits || 0) + 1;
-        return { ok: true, lineId, changed: false, currentToolingProductId: targetProductId, consecutiveSameModelCount: lineState.consecutiveSameModelCount };
+        return { ok: true, lineId, changed: false, sameFamily: true, currentToolingProductId: targetProductId, consecutiveSameModelCount: lineState.consecutiveSameModelCount };
       }
-      const setupCost = options.freeSetup ? 0 : Math.min(w.finance.cash, 35000);
+      const prevFam = prevProd ? w.catalog.products[prevProd]?.familyId : null;
+      const nextFam = w.catalog.products[targetProductId]?.familyId || null;
+      const isSameFamily = Boolean(prevFam && nextFam && prevFam === nextFam && !options.force);
+      const setupCost = options.freeSetup || isSameFamily ? 0 : Math.min(w.finance.cash, 35000);
       if (setupCost > 0 && prevProd !== null) {
         post(w, "equipment", -setupCost, `toolingChangeover:${lineId}:${targetProductId}:${++w.sequence}`);
         ao.toolingChangeoverCostSatang = (ao.toolingChangeoverCostSatang || 0) + setupCost;
@@ -11360,13 +12793,20 @@ canvas.pt {
       };
       sv.orders[oid] = order;
 
-      // For calibration lab, register client's instrument in custody (never mixed with company inventory!)
-      if (serviceTypeId === "calibration_lab") {
+      // For custody-based services (calibration_lab, battery_second_life_lab, cold_storage_3pl), register client's items in custody separately from company inventory!
+      if (["calibration_lab", "battery_second_life_lab", "cold_storage_3pl"].includes(serviceTypeId)) {
         sv.instrumentCustody[oid] = {
           id: `custody-${oid}`,
           orderId: oid,
+          serviceTypeId,
           clientNameTh,
-          equipmentNameTh: options.equipmentNameTh || "ชุดเซ็นเซอร์วัดแรงดันและเครื่องมือวัดละเอียดของลูกค้า",
+          equipmentNameTh:
+            options.equipmentNameTh ||
+            (serviceTypeId === "battery_second_life_lab"
+              ? "แพ็กแบตเตอรี่ลิเธียมใช้แล้วของลูกค้า (รอตรวจวัด SOH รายเซลล์)"
+              : serviceTypeId === "cold_storage_3pl"
+                ? "ล็อตสินค้าควบคุมอุณหภูมิของลูกค้าฝากเก็บ 3PL"
+                : "ชุดเซ็นเซอร์วัดแรงดันและเครื่องมือวัดละเอียดของลูกค้า"),
           status: "in_lab_custody",
         };
       }
@@ -11389,15 +12829,35 @@ canvas.pt {
       }
       const spec = D.INDUSTRIAL_SERVICES?.[o.serviceTypeId];
 
-      // Step 1: Execute service process & consume required spare parts / lab consumables
-      if (o.status === "accepted" || o.status === "in_progress") {
+      // Step 1: Execute service process & STRICTLY verify and consume required spare parts / lab consumables
+      if (o.status === "accepted" || o.status === "in_progress" || o.status === "waiting_parts") {
         if (!o.partsConsumed) {
-          for (const [mId, qty] of Object.entries(spec?.sparePartsRequired || spec?.spareParts || {})) {
-            if (safeAvailableToDeduct(w, mId) >= qty) {
-              safeDeductMaterial(w, mId, qty);
+          const reqParts = spec?.sparePartInputs || spec?.sparePartsRequired || spec?.spareParts || {};
+          for (const [mId, qty] of Object.entries(reqParts)) {
+            if (safeAvailableToDeduct(w, mId) < qty) {
+              o.status = "waiting_parts";
+              return {
+                ok: false,
+                code: "insufficientServiceParts",
+                status: o.status,
+                missingMaterialId: mId,
+                message: `อะไหล่หรือวัสดุ "${w.catalog.materials[mId]?.nameTh || mId}" ในคลังไม่พอสำหรับงานบริการ (ต้องการ ${qty} ชิ้น) — ห้ามส่งงานสำเร็จฟรีโดยไม่หักอะไหล่จริง`,
+              };
             }
           }
-          const labCost = Math.min(w.finance.cash, o.consumableCostSatang || 25000);
+          const labCost = o.consumableCostSatang || spec?.labConsumableCostSatang || 25000;
+          if (w.finance.cash < labCost) {
+            o.status = "waiting_parts";
+            return {
+              ok: false,
+              code: "insufficientServiceCash",
+              status: o.status,
+              message: "เงินสดหมุนเวียนไม่พอจ่ายค่าสารมาตรฐานและวัสดุสิ้นเปลืองของงานบริการ",
+            };
+          }
+          for (const [mId, qty] of Object.entries(reqParts)) {
+            safeDeductMaterial(w, mId, qty);
+          }
           if (labCost > 0) {
             post(w, "equipment", -labCost, `serviceConsumable:${o.id}`);
             sv.metrics.serviceCostSatang = (sv.metrics.serviceCostSatang || 0) + labCost;
@@ -11406,11 +12866,18 @@ canvas.pt {
         }
 
         // Specific process mechanics per service model!
-        if (o.serviceTypeId === "calibration_lab") {
+        if (["calibration_lab", "battery_second_life_lab", "cold_storage_3pl"].includes(o.serviceTypeId)) {
           sv.metrics.calibrationCertificatesIssued = (sv.metrics.calibrationCertificatesIssued || 0) + 1;
           if (sv.instrumentCustody[o.id]) {
             sv.instrumentCustody[o.id].status = "calibrated_returned_to_client";
             delete sv.instrumentCustody[o.id];
+          }
+          if (o.serviceTypeId === "battery_second_life_lab") {
+            for (const [recMatId, recQty] of Object.entries(spec?.recoveredOutputs || {})) {
+              grantUnpurchasedMaterial(w, recMatId, recQty);
+              o.recoveredMaterials[recMatId] = recQty;
+              sv.metrics.recoveredMaterialsUnits = (sv.metrics.recoveredMaterialsUnits || 0) + recQty;
+            }
           }
         } else if (o.serviceTypeId === "field_maintenance") {
           if (options.breachSla || now(w) > o.slaDeadlineAt) {
@@ -11476,20 +12943,555 @@ canvas.pt {
       return { ok: true, orderId: o.id, status: o.status, paid: o.paid, slaBreached: o.slaBreached, recoveredMaterials: o.recoveredMaterials };
     }
 
+    // === CHAPTER 29: NPC Executive Board, Capability Graph & Autonomous Business Entry Engine ===
+    function ensureCapabilities(w) {
+      if (!w.capabilities || typeof w.capabilities !== "object") {
+        w.capabilities = freshCapabilities();
+      }
+      if (!w.capabilities.domains) w.capabilities.domains = freshCapabilities().domains;
+      if (!w.capabilities.unlockedProducts) w.capabilities.unlockedProducts = {};
+      if (!w.capabilities.unlockedChains) w.capabilities.unlockedChains = {};
+      if (!w.capabilities.licenses) w.capabilities.licenses = {};
+      return w.capabilities;
+    }
+
+    function ensureExecutiveBoard(w) {
+      if (!w.executiveBoard || typeof w.executiveBoard !== "object") {
+        w.executiveBoard = freshExecutiveBoard();
+      }
+      if (!w.executiveBoard.budgetPools) w.executiveBoard.budgetPools = freshExecutiveBoard().budgetPools;
+      if (!Array.isArray(w.executiveBoard.decisionLedger)) w.executiveBoard.decisionLedger = [];
+      return w.executiveBoard;
+    }
+
+    function computeFinancialPools(w) {
+      const eb = ensureExecutiveBoard(w);
+      const employed = w.people.filter((p) => p.employed);
+      const ceo = employed.find((p) => p.role === "coordinator");
+      const dailyBurn =
+        w.catalog.rules.rentDaily +
+        Math.round(w.finance.debt * w.catalog.rules.interestDaily) +
+        employed.reduce((sum, p) => sum + p.pay.dailyWage + w.policies.wellbeingDaily, 0);
+      const payablesSatang = (w.finance.payables?.rent || 0) + (w.finance.payables?.interest || 0);
+      const unpaidWagesSatang = employed.reduce((s, p) => s + (p.pay?.dueBase || 0) + (p.pay?.dueOT || 0), 0);
+      const unearnedSwSatang = w.softwareBusiness?.metrics?.totalUnearnedDepositSatang || 0;
+      const prudence = ceo?.profile?.personality?.prudence ?? 50;
+      const riskTaking = ceo?.profile?.personality?.riskTaking ?? 50;
+      const reserveDays = clamp(Math.round(16 + (prudence - 50) * 0.16 - (riskTaking - 50) * 0.08), 10, 26);
+      const survivalReserveSatang = dailyBurn * reserveDays + payablesSatang + unpaidWagesSatang;
+      const committed = Math.max(0, eb.committedBudgetSatang || 0);
+      const uncommittedCashSatang = Math.max(
+        0,
+        w.finance.cash - survivalReserveSatang - unearnedSwSatang - committed,
+      );
+      const receivableSatang = Object.values(w.invoices || {})
+        .filter((inv) => inv.status === "unpaid")
+        .reduce((s, inv) => s + inv.amount, 0);
+      eb.budgetPools = {
+        survivalReserveSatang,
+        maintenancePoolSatang: Math.round(uncommittedCashSatang * 0.15),
+        capabilityPoolSatang: Math.round(uncommittedCashSatang * 0.25),
+        expansionPoolSatang: Math.round(uncommittedCashSatang * 0.6),
+        uncommittedCashSatang,
+        dailyBurnSatang: dailyBurn,
+        reserveDaysRequired: reserveDays,
+        receivableSatang,
+        unearnedDepositsSatang: unearnedSwSatang,
+      };
+      return eb.budgetPools;
+    }
+
+    function recordBoardDecision(w, entry) {
+      const eb = ensureExecutiveBoard(w);
+      const rec = {
+        proposalId: entry.proposalId || `prop-d${day(w)}-${++w.sequence}`,
+        day: day(w),
+        at: now(w),
+        category: entry.category || "strategy",
+        targetId: entry.targetId || "general",
+        titleTh: entry.titleTh || "วาระพิจารณาการลงทุนและขยายธุรกิจ",
+        proposerId: entry.proposerId || null,
+        proposerName: entry.proposerName || "คณะทำงานบริหาร",
+        deciderId: entry.deciderId || null,
+        deciderName: entry.deciderName || "CEO / คณะกรรมการบริหาร",
+        boardSize: entry.boardSize || 1,
+        alternativesConsidered: entry.alternativesConsidered || ["approve", "defer", "hold_cash"],
+        hardGateResults: entry.hardGateResults || { techReady: true, staffReady: true, cashReady: true },
+        uncommittedCashBefore: entry.uncommittedCashBefore ?? 0,
+        committedBudget: entry.committedBudget ?? 0,
+        projectedRunwayDays: entry.projectedRunwayDays ?? 20,
+        scoreBreakdown: entry.scoreBreakdown || { marketScore: 60, capabilityScore: 60, personalityMod: 0, totalScore: 60 },
+        resolution: entry.resolution || "hold_cash_prudent",
+        reasonTh: entry.reasonTh || "พิจารณาตามสถานะเงินสดสำรองและความพร้อมของทีม",
+        nextReviewDay: (entry.day || day(w)) + (entry.reviewCooldownDays || 2),
+        executionStatus: entry.executionStatus || "logged",
+      };
+      eb.decisionLedger.unshift(rec);
+      if (eb.decisionLedger.length > 60) eb.decisionLedger.pop();
+      return rec;
+    }
+
+    function evaluateExecutiveBoardAndBusinessEntry(w, completedDay = day(w), options = {}) {
+      const eb = ensureExecutiveBoard(w);
+      const cap = ensureCapabilities(w);
+      const ft = ensureFleetTransport(w);
+      const sb = ensureSoftwareBusiness(w);
+      const sv = ensureServiceBusiness(w);
+      const ap = ensureAssetPortfolio(w);
+      const pools = computeFinancialPools(w);
+
+      const employed = w.people.filter((p) => p.employed);
+      const ceo = employed.find((p) => p.role === "coordinator" && (p.atWork || options.ignoreAtWork));
+      const seniorLeaders = employed.filter((p) => (p.career?.level || 1) >= 4);
+      const boardMembers = ceo ? [ceo, ...seniorLeaders.filter((p) => p.id !== ceo.id).slice(0, 5)] : [];
+
+      // Hard Gate 0: Without an employed CEO (coordinator), strategic capital expansion cannot self-approve out of thin air!
+      if (!ceo) {
+        const rec = recordBoardDecision(w, {
+          category: "governance",
+          targetId: "board_quorum",
+          titleTh: "วาระพิจารณาแผนลงทุนและขยายไลน์ธุรกิจใหม่",
+          proposerName: "ฝ่ายแผนงานองค์กร",
+          deciderName: "ไม่มีผู้บริหารสูงสุด (Vacant CEO)",
+          boardSize: 0,
+          hardGateResults: { authorityReady: false, techReady: true, staffReady: true, cashReady: pools.uncommittedCashSatang > 0 },
+          uncommittedCashBefore: pools.uncommittedCashSatang,
+          projectedRunwayDays: pools.dailyBurnSatang > 0 ? Math.round((w.finance.cash / pools.dailyBurnSatang) * 10) / 10 : 30,
+          resolution: "deferred_no_executive_authority",
+          reasonTh: "ไม่มี CEO ปฏิบัติหน้าที่อนุมัติงบลงทุนเชิงกลยุทธ์ จึงชะลอการเปิดไลน์ธุรกิจใหม่ (งานประจำวันและสัญญาที่อนุมัติแล้วยังคงเดินหน้าต่อได้)",
+          executionStatus: "deferred",
+        });
+        return { ok: false, code: "noExecutiveAuthority", decision: rec };
+      }
+
+      const ambition = ceo.profile.personality.ambition ?? 50;
+      const riskTaking = ceo.profile.personality.riskTaking ?? 50;
+      const prudence = ceo.profile.personality.prudence ?? 50;
+      const analytical = ceo.profile.aptitudes.analytical ?? 50;
+      const personalityDrive = Math.round((ambition * 0.35 + riskTaking * 0.25 - prudence * 0.3 + analytical * 0.1) * 10) / 10;
+      const runwayDays = pools.dailyBurnSatang > 0 ? Math.round((w.finance.cash / pools.dailyBurnSatang) * 10) / 10 : 45;
+      let remainingUncommitted = pools.uncommittedCashSatang;
+      const decisionsThisRound = [];
+
+      // 1. Check Make-or-Buy / Missing Tech for high-tier components demanded by open offers
+      const openOffers = Object.values(w.offers || {}).filter((o) => o.status === "open");
+      for (const off of openOffers.slice(0, 2)) {
+        const prodSpec = w.catalog.products[off.productId];
+        if (!prodSpec) continue;
+        for (const [mId] of Object.entries(prodSpec.bom || {})) {
+          const rec = D.MATERIAL_RECIPES?.[mId];
+          if (rec && (rec.minResearch || 0) > (w.research?.points || 0) && !cap.unlockedChains[rec.chainId]) {
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "make_or_buy",
+                targetId: mId,
+                titleTh: `ประเมินการผลิตชิ้นส่วน "${w.catalog.materials[mId]?.nameTh || mId}" เองเทียบกับการสั่งซื้อจากซัพพลายเออร์`,
+                proposerId: ceo.id,
+                proposerName: ceo.name,
+                deciderId: ceo.id,
+                deciderName: `${ceo.name} (CEO & บอร์ดบริหาร ${boardMembers.length} คน)`,
+                boardSize: boardMembers.length,
+                alternativesConsidered: ["buy_from_supplier", "research_in_house_tech", "defer_order"],
+                hardGateResults: { assemblyTechReady: true, componentFabTechReady: false, supplierAvailable: true },
+                uncommittedCashBefore: remainingUncommitted,
+                projectedRunwayDays: runwayDays,
+                scoreBreakdown: { marketScore: 72, capabilityScore: 35, personalityMod: personalityDrive, totalScore: 64 },
+                resolution: "pilot_or_buy_inputs",
+                reasonTh: `บริษัทมีเทคโนโลยีประกอบ "${prodSpec.nameTh}" แต่ยังไม่มีเทคโนโลยีผลิต "${w.catalog.materials[mId]?.nameTh || mId}" ต้นทาง (ต้องการ R&D ${rec.minResearch} แต้ม มีอยู่ ${Math.round(w.research?.points || 0)} แต้ม) จึงอนุมัติให้ฝ่ายจัดซื้อสั่งซื้อชิ้นส่วนจากซัพพลายเออร์มาประกอบแทนการเสกเทคฟรี`,
+                executionStatus: "active_make_or_buy",
+              }),
+            );
+            break;
+          }
+        }
+      }
+
+      // 2. Evaluate Cold-Chain / Heavy Fleet Expansion (`reefer_6w` / `heavy_10w`) when unserved freight quotes exist
+      const unservedQuotes = (ft.openQuotes || []).filter((q) => {
+        if (q.status !== "quoted") return false;
+        return !Object.values(ft.vehicles || {}).some(
+          (v) =>
+            v.status === "idle" &&
+            v.maxWeightKg >= q.weightKg &&
+            v.maxVolumeM3 >= q.volumeM3 &&
+            Array.isArray(v.supportedCargoTypes) &&
+            v.supportedCargoTypes.includes(q.cargoType),
+        );
+      });
+      if (unservedQuotes.length > 0 || options.proposeFleetType) {
+        const targetQ = unservedQuotes[0];
+        const targetTypeId =
+          options.proposeFleetType ||
+          (targetQ?.cargoType === "cold_chain" ? "reefer_6w" : targetQ?.weightKg > 6500 ? "heavy_10w" : "reefer_6w");
+        const vSpec = D.FLEET_VEHICLES?.[targetTypeId];
+        if (vSpec) {
+          const busyDriverIds = new Set(
+            Object.values(ft.contracts || {})
+              .filter((c) => ["reserved", "loading", "outbound", "delivering"].includes(c.status))
+              .map((c) => c.driverPersonId),
+          );
+          const freeDrivers = employed.filter((p) => p.role === "logistics" && !busyDriverIds.has(p.id));
+          const useLease = prudence >= 65 || remainingUncommitted < vSpec.purchaseCost * 1.25;
+          const upFrontCost = useLease ? vSpec.leaseDepositSatang : vSpec.purchaseCost;
+          const expectedMargin = targetQ ? targetQ.offeredRateSatang - Math.round(targetQ.totalRoundTripKm * 800) - targetQ.tollFeeSatang : 450000;
+
+          if (freeDrivers.length === 0) {
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "fleet_expansion",
+                targetId: targetTypeId,
+                titleTh: `ข้อเสนอจัดหารถ "${vSpec.nameTh}" รองรับงานขนส่ง ${targetQ ? targetQ.nameTh : "B2B"}`,
+                proposerName: "ฝ่ายโลจิสติกส์และกองรถ",
+                deciderId: ceo.id,
+                deciderName: ceo.name,
+                boardSize: boardMembers.length,
+                hardGateResults: { techReady: true, staffReady: false, cashReady: remainingUncommitted >= upFrontCost },
+                uncommittedCashBefore: remainingUncommitted,
+                projectedRunwayDays: runwayDays,
+                resolution: "deferred_missing_staff",
+                reasonTh: `ชะลอการจัดหา "${vSpec.nameTh}": มีเงินทุนแต่ยังไม่มีพนักงานขับรถ (logistics) ที่ว่างและผ่านเกณฑ์พร้อมขับ จึงไม่ซื้อรถมาจอดทิ้ง`,
+                executionStatus: "deferred",
+              }),
+            );
+          } else if (expectedMargin <= 0) {
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "fleet_expansion",
+                targetId: targetTypeId,
+                titleTh: `ข้อเสนอจัดหารถ "${vSpec.nameTh}"`,
+                proposerName: "ฝ่ายโลจิสติกส์และกองรถ",
+                deciderId: ceo.id,
+                deciderName: ceo.name,
+                boardSize: boardMembers.length,
+                hardGateResults: { techReady: true, staffReady: true, cashReady: remainingUncommitted >= upFrontCost, marketViable: false },
+                uncommittedCashBefore: remainingUncommitted,
+                projectedRunwayDays: runwayDays,
+                resolution: "deferred_unprofitable_market",
+                reasonTh: `ปฏิเสธการลงทุน "${vSpec.nameTh}": อัตราค่าจ้างขนส่งในตลาดหักค่าน้ำมันไป-กลับและค่าผ่านทางแล้วยังไม่คุ้มจุดคุ้มทุน เลือกเก็บสภาพคล่องไว้แทน`,
+                executionStatus: "rejected",
+              }),
+            );
+          } else if (remainingUncommitted < upFrontCost) {
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "fleet_expansion",
+                targetId: targetTypeId,
+                titleTh: `ข้อเสนอจัดหารถ "${vSpec.nameTh}"`,
+                proposerName: "ฝ่ายโลจิสติกส์และกองรถ",
+                deciderId: ceo.id,
+                deciderName: ceo.name,
+                boardSize: boardMembers.length,
+                hardGateResults: { techReady: true, staffReady: true, cashReady: false },
+                uncommittedCashBefore: remainingUncommitted,
+                projectedRunwayDays: runwayDays,
+                resolution: "deferred_working_capital",
+                reasonTh: `เลือกเก็บเงินสดสำรองไว้ก่อน: เงินสดอิสระหลังหักสำรองค่าแรงและภาระหนี้ (฿${(remainingUncommitted / 100).toLocaleString("th-TH")}) ยังไม่พอสำหรับจัดหา "${vSpec.nameTh}" (฿${(upFrontCost / 100).toLocaleString("th-TH")})`,
+                executionStatus: "deferred",
+              }),
+            );
+          } else if (prudence >= 78 && riskTaking <= 35 && !options.forceApprove) {
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "fleet_expansion",
+                targetId: targetTypeId,
+                titleTh: `ข้อเสนอจัดหารถ "${vSpec.nameTh}"`,
+                proposerName: "ฝ่ายโลจิสติกส์และกองรถ",
+                deciderId: ceo.id,
+                deciderName: ceo.name,
+                boardSize: boardMembers.length,
+                hardGateResults: { techReady: true, staffReady: true, cashReady: true },
+                uncommittedCashBefore: remainingUncommitted,
+                projectedRunwayDays: runwayDays,
+                scoreBreakdown: { marketScore: 68, capabilityScore: 75, personalityMod: personalityDrive, totalScore: 54 },
+                resolution: "hold_cash_prudent",
+                reasonTh: `CEO (${ceo.name}) มีความรอบคอบสูง (Prudence ${Math.round(prudence)}) และไม่ชอบความเสี่ยง (RiskTaking ${Math.round(riskTaking)}) จึงมีมติให้ถือเงินสดสำรองเพิ่มความมั่นคงแทนการขยายกองรถในรอบนี้`,
+                executionStatus: "held_cash",
+              }),
+            );
+          } else {
+            const acq = acquireFleetVehicle(w, targetTypeId, useLease ? "leased" : "owned");
+            if (acq.ok) {
+              remainingUncommitted = Math.max(0, remainingUncommitted - upFrontCost);
+              eb.committedBudgetSatang = (eb.committedBudgetSatang || 0) + upFrontCost;
+              decisionsThisRound.push(
+                recordBoardDecision(w, {
+                  category: "fleet_expansion",
+                  targetId: targetTypeId,
+                  titleTh: `อนุมัติ${useLease ? "เช่าดำเนินงาน" : "จัดซื้อ"} "${vSpec.nameTh}"`,
+                  proposerName: freeDrivers[0].name,
+                  deciderId: ceo.id,
+                  deciderName: ceo.name,
+                  boardSize: boardMembers.length,
+                  hardGateResults: { techReady: true, staffReady: true, cashReady: true },
+                  uncommittedCashBefore: remainingUncommitted + upFrontCost,
+                  committedBudget: upFrontCost,
+                  projectedRunwayDays: runwayDays,
+                  scoreBreakdown: { marketScore: 82, capabilityScore: 80, personalityMod: personalityDrive, totalScore: 82 },
+                  resolution: "approved",
+                  reasonTh: `อนุมัติ${useLease ? "เช่า" : "ซื้อ"} "${vSpec.nameTh}" (฿${(upFrontCost / 100).toLocaleString("th-TH")}) เนื่องจากมีคนขับพร้อม (${freeDrivers[0].name}) และมีดีมานด์งานขนส่งที่ให้อัตรากำไรขั้นต้นเป็นบวก`,
+                  executionStatus: "executed",
+                }),
+              );
+              if (targetQ) {
+                const cRes = acceptFreightContract(w, targetQ.id, { vehicleId: acq.vehicleId, driverPersonId: freeDrivers[0].id });
+                if (cRes.ok) advanceFreightContract(w, cRes.contractId, { completeAllSteps: true });
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Evaluate Software & SaaS MVP / Custom Project Entry across all 8 apps
+      const conceptApps = Object.values(sb.saasProducts || {}).filter((a) => a.status === "concept");
+      if ((conceptApps.length > 0 && completedDay >= 8) || options.proposeSoftwareApp) {
+        const targetAppId = options.proposeSoftwareApp || conceptApps[0]?.appId;
+        const appState = sb.saasProducts?.[targetAppId];
+        const appSpec = D.SOFTWARE_APPS?.[targetAppId];
+        if (appState && appSpec) {
+          const busyDevIds = new Set(
+            Object.values(sb.projects || {})
+              .filter((p) => p.assignedDeveloperId && !["closed", "cancelled", "deployed", "supporting"].includes(p.status))
+              .map((p) => p.assignedDeveloperId),
+          );
+          const freeEng = employed.filter(
+            (p) => (p.role === "engineer" || (p.skills?.research?.level || 0) >= 28) && !busyDevIds.has(p.id),
+          );
+          const wsReady = busyDevIds.size < (sb.workstations?.totalStations || 3);
+          const devBudget = 180000;
+
+          if (freeEng.length === 0 || !wsReady) {
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "software_entry",
+                targetId: targetAppId,
+                titleTh: `ข้อเสนอพัฒนาผลิตภัณฑ์ซอฟต์แวร์ "${appSpec.nameTh}"`,
+                proposerName: "ฝ่ายวิศวกรรมซอฟต์แวร์",
+                deciderId: ceo.id,
+                deciderName: ceo.name,
+                boardSize: boardMembers.length,
+                hardGateResults: { techReady: true, staffReady: freeEng.length > 0, workstationReady: wsReady, cashReady: remainingUncommitted >= devBudget },
+                uncommittedCashBefore: remainingUncommitted,
+                projectedRunwayDays: runwayDays,
+                resolution: "deferred_missing_staff",
+                reasonTh: !wsReady
+                  ? `ชะลอการเปิดพัฒนา "${appSpec.nameTh}": โต๊ะคอมพิวเตอร์นักพัฒนา (dev_workstation) ถูกใช้งานเต็มความจุแล้ว`
+                  : `ชะลอการเปิดพัฒนา "${appSpec.nameTh}": ไม่มีวิศวกรซอฟต์แวร์ (engineer) ที่ว่าง (ห้ามดึงพนักงานฝ่ายอื่นที่ไม่มีทักษะเขียนโค้ดมาทำแทน)`,
+                executionStatus: "deferred",
+              }),
+            );
+          } else if (remainingUncommitted >= devBudget) {
+            updateSaasSubscription(w, targetAppId, { launchMvp: true, addLeads: 8 });
+            const salesStaff = employed.filter((p) => p.role === "sales");
+            if (salesStaff.length > 0) {
+              updateSaasSubscription(w, targetAppId, { convertUsers: 4, runBillingCycle: true });
+            }
+            remainingUncommitted = Math.max(0, remainingUncommitted - devBudget);
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "software_entry",
+                targetId: targetAppId,
+                titleTh: `อนุมัติพัฒนาและเปิดตัว MVP แอปพลิเคชัน "${appSpec.nameTh}"`,
+                proposerId: freeEng[0].id,
+                proposerName: freeEng[0].name,
+                deciderId: ceo.id,
+                deciderName: ceo.name,
+                boardSize: boardMembers.length,
+                hardGateResults: { techReady: true, staffReady: true, workstationReady: true, cashReady: true },
+                uncommittedCashBefore: remainingUncommitted + devBudget,
+                committedBudget: devBudget,
+                projectedRunwayDays: runwayDays,
+                resolution: "approved",
+                reasonTh: `อนุมัติให้ ${freeEng[0].name} พัฒนาและเปิดบริการ MVP "${appSpec.nameTh}" พร้อมให้ฝ่ายขายแปลงลูกค้าเข้าใช้งานจริง`,
+                executionStatus: "executed",
+              }),
+            );
+          }
+        }
+      }
+
+      // 4. Evaluate Industrial B2B Service Orders across all 6 service models
+      const serviceList = Object.values(D.INDUSTRIAL_SERVICES || {});
+      if ((completedDay >= 7 || options.proposeServiceType) && serviceList.length > 0) {
+        const srvSpec = options.proposeServiceType
+          ? D.INDUSTRIAL_SERVICES[options.proposeServiceType]
+          : serviceList[(completedDay - 1) % serviceList.length];
+        if (srvSpec) {
+          const reqParts = srvSpec.sparePartInputs || {};
+          const missingPart = Object.entries(reqParts).find(([mId, qty]) => safeAvailableToDeduct(w, mId) < qty);
+          const labCost = srvSpec.labConsumableCostSatang || 45000;
+          if (missingPart) {
+            decisionsThisRound.push(
+              recordBoardDecision(w, {
+                category: "service_entry",
+                targetId: srvSpec.id,
+                titleTh: `พิจารณาใบงานบริการ "${srvSpec.shortNameTh}"`,
+                proposerName: "ฝ่ายบริการวิศวกรรม B2B",
+                deciderId: ceo.id,
+                deciderName: ceo.name,
+                boardSize: boardMembers.length,
+                hardGateResults: { techReady: true, partsReady: false, cashReady: w.finance.cash >= labCost },
+                uncommittedCashBefore: remainingUncommitted,
+                projectedRunwayDays: runwayDays,
+                resolution: "deferred_missing_materials",
+                reasonTh: `ชะลอการรับงาน "${srvSpec.shortNameTh}": อะไหล่ "${w.catalog.materials[missingPart[0]]?.nameTh || missingPart[0]}" ในคลังไม่พอ (ต้องการ ${missingPart[1]} ชิ้น) ต้องรอฝ่ายจัดซื้อเติมสต็อกก่อน`,
+                executionStatus: "deferred",
+              }),
+            );
+          } else if (w.finance.cash >= labCost + 1500000) {
+            const clientCorpId = (srvSpec.clientCorps && srvSpec.clientCorps[0]) || "siam_auto";
+            const sRes = startServiceOrder(w, srvSpec.id, clientCorpId);
+            if (sRes.ok) {
+              advanceServiceOrder(w, sRes.orderId, { completeAllSteps: true });
+              decisionsThisRound.push(
+                recordBoardDecision(w, {
+                  category: "service_entry",
+                  targetId: srvSpec.id,
+                  titleTh: `อนุมัติรับและส่งมอบงานบริการ "${srvSpec.shortNameTh}"`,
+                  proposerName: sRes.order.specialistName,
+                  deciderId: ceo.id,
+                  deciderName: ceo.name,
+                  boardSize: boardMembers.length,
+                  hardGateResults: { techReady: true, staffReady: true, partsReady: true, cashReady: true },
+                  uncommittedCashBefore: remainingUncommitted,
+                  committedBudget: labCost,
+                  projectedRunwayDays: runwayDays,
+                  resolution: "approved",
+                  reasonTh: `ผู้เชี่ยวชาญ (${sRes.order.specialistName}) และอะไหล่พร้อมครบ จึงรับงานและส่งมอบ "${srvSpec.shortNameTh}" สร้างรายได้บริการ +฿${(srvSpec.serviceFeeSatang / 100).toLocaleString("th-TH")}`,
+                  executionStatus: "executed",
+                }),
+              );
+            } else if (sRes.code === "noAvailableSpecialist") {
+              decisionsThisRound.push(
+                recordBoardDecision(w, {
+                  category: "service_entry",
+                  targetId: srvSpec.id,
+                  titleTh: `พิจารณาใบงานบริการ "${srvSpec.shortNameTh}"`,
+                  proposerName: "ฝ่ายบริการวิศวกรรม B2B",
+                  deciderId: ceo.id,
+                  deciderName: ceo.name,
+                  boardSize: boardMembers.length,
+                  hardGateResults: { techReady: true, staffReady: false, partsReady: true },
+                  uncommittedCashBefore: remainingUncommitted,
+                  projectedRunwayDays: runwayDays,
+                  resolution: "deferred_missing_staff",
+                  reasonTh: `ชะลอรับงาน "${srvSpec.shortNameTh}": ผู้เชี่ยวชาญติดภารกิจอื่นทั้งหมด (ห้ามจองคนซ้ำซ้อน)`,
+                  executionStatus: "deferred",
+                }),
+              );
+            }
+          }
+        }
+      }
+
+      // 5. Demand- & Bottleneck-Scored External Asset Investment (Replaces blind unowned[0])
+      if (ap.supplyChainStrategy !== "asset_light" && (completedDay >= 7 || options.evaluateAssetsNow)) {
+        const unownedAssets = Object.values(D.EXTERNAL_ASSETS || {}).filter((a) => !ap.ownedAssets[a.id]);
+        if (unownedAssets.length > 0) {
+          // Score each asset by how much its outputs/chain address our actual consumed/purchased materials and unlocked products
+          const scoredAssets = unownedAssets
+            .map((a) => {
+              let demandScore = 40;
+              for (const [mId, qty] of Object.entries(a.harvestYields || a.starterSeeds || {})) {
+                const consumed = w.inventory.consumed[mId] || 0;
+                const purchased = w.inventory.purchased[mId] || 0;
+                const lowStock = (w.inventory.materials[mId] || 0) < 4 ? 18 : 0;
+                const geoSpike = Math.max(0, Math.round(((w.externalWorld?.geopolitics?.materialPriceMultipliers?.[mId] || 1.0) - 1.0) * 60));
+                demandScore += (consumed + purchased) * 3 + lowStock + qty * 2 + geoSpike;
+              }
+              if (a.pricePremiumBonus) demandScore += 22;
+              if (a.leadTimeReductionPct) demandScore += 18;
+              const roiScore = Math.round(demandScore + personalityDrive - a.cost / 500000);
+              return { asset: a, demandScore, roiScore };
+            })
+            .sort((x, y) => y.roiScore - x.roiScore);
+
+          const best = scoredAssets[0];
+          if (best) {
+            if (remainingUncommitted < best.asset.cost) {
+              decisionsThisRound.push(
+                recordBoardDecision(w, {
+                  category: "external_asset",
+                  targetId: best.asset.id,
+                  titleTh: `ประเมินการเข้าซื้อสินทรัพย์ต้นน้ำ/ปลายน้ำ "${best.asset.shortNameTh}"`,
+                  proposerName: "ฝ่ายกลยุทธ์ซัพพลายเชน",
+                  deciderId: ceo.id,
+                  deciderName: ceo.name,
+                  boardSize: boardMembers.length,
+                  hardGateResults: { techReady: true, cashReady: false },
+                  uncommittedCashBefore: remainingUncommitted,
+                  projectedRunwayDays: runwayDays,
+                  scoreBreakdown: { marketScore: best.demandScore, capabilityScore: 70, personalityMod: personalityDrive, totalScore: best.roiScore },
+                  resolution: "deferred_working_capital",
+                  reasonTh: `เลือกชะลอการซื้อ "${best.asset.shortNameTh}" (฿${(best.asset.cost / 100).toLocaleString("th-TH")}): เงินสดอิสระหลังกันเงินสำรองฉุกเฉินและค่าแรง (฿${(remainingUncommitted / 100).toLocaleString("th-TH")}) ยังไม่เพียงพอ`,
+                  executionStatus: "deferred",
+                }),
+              );
+            } else if (prudence >= 76 && riskTaking <= 38 && !options.forceApprove) {
+              decisionsThisRound.push(
+                recordBoardDecision(w, {
+                  category: "external_asset",
+                  targetId: best.asset.id,
+                  titleTh: `ประเมินการเข้าซื้อสินทรัพย์ "${best.asset.shortNameTh}"`,
+                  proposerName: "ฝ่ายกลยุทธ์ซัพพลายเชน",
+                  deciderId: ceo.id,
+                  deciderName: ceo.name,
+                  boardSize: boardMembers.length,
+                  hardGateResults: { techReady: true, cashReady: true },
+                  uncommittedCashBefore: remainingUncommitted,
+                  projectedRunwayDays: runwayDays,
+                  scoreBreakdown: { marketScore: best.demandScore, capabilityScore: 70, personalityMod: personalityDrive, totalScore: best.roiScore },
+                  resolution: "hold_cash_prudent",
+                  reasonTh: `CEO (${ceo.name}) มีความรอบคอบสูง (Prudence ${Math.round(prudence)}) จึงมีมติให้ถือเงินสดสำรองไว้รักษาสภาพคล่องแทนการทุ่มซื้อ "${best.asset.shortNameTh}"`,
+                  executionStatus: "held_cash",
+                }),
+              );
+            } else {
+              const acqRes = acquireExternalAsset(w, best.asset.id);
+              if (acqRes.ok) {
+                remainingUncommitted = Math.max(0, remainingUncommitted - best.asset.cost);
+                decisionsThisRound.push(
+                  recordBoardDecision(w, {
+                    category: "external_asset",
+                    targetId: best.asset.id,
+                    titleTh: `อนุมัติเข้าซื้อกิจการ "${best.asset.shortNameTh}" ตามคะแนนคอขวดวัตถุดิบสูงสุด`,
+                    proposerName: "ฝ่ายกลยุทธ์ซัพพลายเชน",
+                    deciderId: ceo.id,
+                    deciderName: ceo.name,
+                    boardSize: boardMembers.length,
+                    hardGateResults: { techReady: true, cashReady: true },
+                    uncommittedCashBefore: remainingUncommitted + best.asset.cost,
+                    committedBudget: best.asset.cost,
+                    projectedRunwayDays: runwayDays,
+                    scoreBreakdown: { marketScore: best.demandScore, capabilityScore: 75, personalityMod: personalityDrive, totalScore: best.roiScore },
+                    resolution: "approved",
+                    reasonTh: `บอร์ดบริหารอนุมัติซื้อ "${best.asset.shortNameTh}" (คะแนนความต้องการ ${best.demandScore} สูงสุดในกลุ่มตัวเลือก) เพื่อเสริมความมั่นคงของวัตถุดิบและอัตรากำไร`,
+                    executionStatus: "executed",
+                  }),
+                );
+              }
+            }
+          }
+        }
+      }
+
+      eb.lastReviewDay = completedDay;
+      computeFinancialPools(w);
+      return { ok: true, decisionsCount: decisionsThisRound.length, decisions: decisionsThisRound, pools: eb.budgetPools };
+    }
+
     function evaluateNewBusinessOperationsDaily(w, completedDay) {
       const ft = ensureFleetTransport(w);
       const sb = ensureSoftwareBusiness(w);
+      const sv = ensureServiceBusiness(w);
       if (!w.policies.autoAccept) return;
-      if (completedDay < 8 && w.people.length <= 8 && Object.keys(w.externalWorld?.assetPortfolio?.ownedAssets || {}).length === 0) return;
       if (completedDay < 7 && w.people.length <= 8 && Object.keys(w.externalWorld?.assetPortfolio?.ownedAssets || {}).length === 0) return;
 
-      // 1. Autonomous Fleet Transport: progress active contracts, accept profitable quotes if truck+driver idle, and refresh quotes
+      // 1. Autonomous Fleet Transport: progress active contracts, match backhaul when returning, maintain worn vehicles, and accept profitable quotes
       for (const c of Object.values(ft.contracts)) {
         if (!["paid", "cancelled", "failed"].includes(c.status)) {
           advanceFreightContract(w, c.id, { completeAllSteps: true });
         }
       }
-      // Refresh open quotes if low
       if (ft.openQuotes.filter((q) => q.status === "quoted").length < 2) {
         const routes = D.FREIGHT_ROUTES || [];
         const r = routes[(completedDay - 1) % routes.length];
@@ -11517,13 +13519,11 @@ canvas.pt {
           });
         }
       }
-      // If an idle vehicle needs maintenance, maintain it
       for (const v of Object.values(ft.vehicles)) {
         if (v.status === "idle" && (v.condition < 65 || v.tireCondition < 55) && w.finance.cash > 6000000) {
           maintainFleetVehicle(w, v.id);
         }
       }
-      // Accept 1 profitable quote if vehicle & driver are available and cash runway is healthy
       if (w.finance.cash > 4500000) {
         const openQ = ft.openQuotes.find((q) => q.status === "quoted");
         if (openQ) {
@@ -11534,20 +13534,33 @@ canvas.pt {
         }
       }
 
-      // 2. Autonomous Software & SaaS Operations: progress active custom project and convert leads only when sales/engineer are active
+      // 2. Autonomous Software & SaaS Operations
       for (const proj of Object.values(sb.projects)) {
         if (!["supporting", "closed", "cancelled", "blocked"].includes(proj.status) && w.finance.cash > 5000000) {
           advanceSoftwareProject(w, proj.id, { completeAllSteps: false });
         }
       }
-      const posApp = sb.saasProducts.pos_retail;
-      if (posApp && posApp.status === "live") {
-        if (completedDay >= 3 && posApp.leadCount > 0 && posApp.activeSubscribers === 0) {
-          updateSaasSubscription(w, "pos_retail", { convertUsers: 5 });
+      for (const app of Object.values(sb.saasProducts || {})) {
+        if (app.status === "live") {
+          if (completedDay >= 3 && app.leadCount > 0 && app.activeSubscribers === 0) {
+            updateSaasSubscription(w, app.appId, { convertUsers: Math.min(5, app.leadCount) });
+          }
+          if (app.activeSubscribers > 0 && now(w) >= app.nextBillingMinute) {
+            updateSaasSubscription(w, app.appId, { runBillingCycle: true });
+          }
         }
-        if (posApp.activeSubscribers > 0 && now(w) >= posApp.nextBillingMinute) {
-          updateSaasSubscription(w, "pos_retail", { runBillingCycle: true });
+      }
+
+      // 3. Autonomous Industrial B2B Service Orders progression
+      for (const ord of Object.values(sv.orders || {})) {
+        if (!["paid", "cancelled"].includes(ord.status)) {
+          advanceServiceOrder(w, ord.id, { completeAllSteps: true });
         }
+      }
+
+      // 4. Run Executive Board & Business Entry Evaluation if company has scaled or owns external assets
+      if (completedDay >= 9 && (w.people.length >= 10 || Object.keys(w.externalWorld?.assetPortfolio?.ownedAssets || {}).length > 0) && (w.executiveBoard?.lastReviewDay || 0) < completedDay) {
+        evaluateExecutiveBoardAndBusinessEntry(w, completedDay);
       }
     }
 
@@ -11622,7 +13635,13 @@ canvas.pt {
       const activeMarkupPct =
         (isPartnerCorp ? 0.05 : 0) +
         ((annexBuilt || isPartnerCorp) && neg ? Math.max(0, (neg.priceMarkupPct || 0) / 100) : 0);
-      const finalUnitPrice = activeMarkupPct > 0 ? Math.round(price * (1 + activeMarkupPct)) : price;
+      const geo = w.externalWorld?.geopolitics;
+      const geoSectorMult =
+        geo && (geo.customEventTriggered || day(w) >= 15)
+          ? clamp(geo.sectorDemandMultipliers?.[p.industry] || 1.0, 0.85, 1.45)
+          : 1.0;
+      const baseWithMarkup = activeMarkupPct > 0 ? Math.round(price * (1 + activeMarkupPct)) : price;
+      const finalUnitPrice = geoSectorMult !== 1.0 ? Math.round(baseWithMarkup * geoSectorMult) : baseWithMarkup;
       const negDepBonus = (annexBuilt || isPartnerCorp) && neg && neg.negotiatedDepositPct > 0.3 ? 0.05 : 0;
       w.offers[oid] = {
         id: oid,
@@ -11741,6 +13760,8 @@ canvas.pt {
         softwareBusiness: freshSoftwareBusiness(),
         sectorProcesses: freshSectorProcesses(),
         serviceBusiness: freshServiceBusiness(),
+        capabilities: freshCapabilities(),
+        executiveBoard: freshExecutiveBoard(),
         externalWorld: freshExternalWorld(String(seed)),
         reputation: 45,
         policies: {
@@ -12072,11 +14093,16 @@ canvas.pt {
           ) || w.people.find((p) => p.employed),
         pid = id(w, "purchase"),
         supplier = pickSupplierForMaterial(w, materialId, pid),
+        geoMult = w.externalWorld?.geopolitics?.materialPriceMultipliers?.[materialId] || 1.0,
+        spotUnitCost = w.externalWorld?.geopolitics?.materialSpotPrices?.[materialId] || Math.round(mat.unitCost * geoMult),
+        effectiveUnitCost = w.externalWorld?.geopolitics?.applySpotPriceToPO ? spotUnitCost : mat.unitCost,
         p = {
           id: pid,
           materialId,
           quantity,
-          cost: quantity * mat.unitCost,
+          cost: quantity * effectiveUnitCost,
+          spotUnitCost,
+          geopoliticalMultiplier: geoMult,
           status: "paperwork",
           orderedAt: now(w),
           dueAt: null,
@@ -12443,12 +14469,30 @@ canvas.pt {
       );
       if (!plots.length) return false;
 
-      const chosen = plots[0];
+      const activeJobs = Object.values(w.jobs || {});
+      const asmJobs = activeJobs.filter((j) => j.kind === "assembly" || j.kind === "rework").length;
+      const qaJobs = activeJobs.filter((j) => j.kind === "qa").length;
+      const shipJobs = activeJobs.filter((j) => j.kind === "packing" || j.kind === "shipping").length;
+      const machCond = w.facilities?.machineCondition ?? 100;
+
+      const scoredPlots = plots
+        .map((pl) => {
+          let score = 20;
+          if ((pl.id === "prodLineB" || pl.id === "prodLineC" || pl.id === "cleanroomPlant") && asmJobs >= 2) score += asmJobs * 12;
+          if (pl.id === "qaLab" && qaJobs >= 1) score += qaJobs * 15;
+          if (pl.id === "maintWorkshop" && machCond < 85) score += (100 - machCond) * 1.5;
+          if ((pl.id === "dispatchHub" || pl.id === "rawDepot") && shipJobs >= 1) score += shipJobs * 12;
+          if (pl.id === "refineryMill" || pl.id === "bakeryPlant") score += 18;
+          return { plot: pl, score };
+        })
+        .sort((a, b) => b.score - a.score);
+
+      const chosen = scoredPlots[0].plot;
       const res = constructPlot(
         w,
         chosen.id,
         ceo,
-        `ขยายโครงสร้างพื้นฐานนิคมรองรับทีมงาน ${employees.length} คน และคำสั่งซื้อ B2B`,
+        `ขยายโครงสร้างพื้นฐานนิคมตามคอขวดหน้างาน (${chosen.shortNameTh || chosen.nameTh}) รองรับทีมงาน ${employees.length} คน`,
       );
       return Boolean(res.ok);
     }
@@ -14169,6 +16213,9 @@ canvas.pt {
         );
       }
 
+      // 1A. Simulate Global Geopolitics, Foreign Governments, Wars, Treaties & World Chronicle (Era 2.0.0)
+      simulateGlobalGeopoliticsDaily(w, completedDay);
+
       // 1B. Simulate Off-Site Living Corporate Ecosystem (Inter-company trade, price wars, B2B intermediate demands)
       simulateOffsiteEcosystemDaily(w, completedDay);
 
@@ -14992,6 +17039,31 @@ canvas.pt {
             freeSurvey: Boolean(c.freeSurvey),
           });
         }
+        case "triggerGeopoliticalEvent": {
+          return triggerGeopoliticalEvent(w, c.eventId || null, {
+            manual: true,
+            applySpotPriceToPO: c.applySpotPriceToPO,
+            silent: Boolean(c.silent),
+          });
+        }
+        case "changeForeignRegime": {
+          return changeForeignRegime(w, c.nationId || "US", c.regimeId || null, {
+            manual: true,
+            applySpotPriceToPO: c.applySpotPriceToPO,
+            silent: Boolean(c.silent),
+          });
+        }
+        case "evaluateExecutiveBoard": {
+          return evaluateExecutiveBoardAndBusinessEntry(w, c.day || day(w), {
+            forceReview: true,
+            forceApprove: Boolean(c.forceApprove),
+            ignoreAtWork: Boolean(c.ignoreAtWork),
+            proposeFleetType: c.proposeFleetType,
+            proposeSoftwareApp: c.proposeSoftwareApp,
+            proposeServiceType: c.proposeServiceType,
+            evaluateAssetsNow: Boolean(c.evaluateAssetsNow),
+          });
+        }
         case "sellMaterialB2B": {
           return sellMaterialB2B(w, c.materialId, c.quantity || 2, c.buyerCorpId || null);
         }
@@ -15440,6 +17512,9 @@ canvas.pt {
               "advanceServiceOrder",
               "feedLivestockHerd",
               "surveyNewMineVein",
+              "evaluateExecutiveBoard",
+              "triggerGeopoliticalEvent",
+              "changeForeignRegime",
             ].includes(c.action)
           ) {
             return command(w, { ...c, type: c.action });
@@ -15708,6 +17783,12 @@ canvas.pt {
       advanceServiceOrder,
       feedLivestockHerd,
       surveyNewMineVein,
+      computeFinancialPools,
+      evaluateExecutiveBoardAndBusinessEntry,
+      recomputeGeopoliticalMultipliers,
+      changeForeignRegime,
+      triggerGeopoliticalEvent,
+      simulateGlobalGeopoliticsDaily,
       evaluateNewBusinessOperationsDaily,
       sellMaterialB2B,
       setCorporationRelation,
@@ -15953,7 +18034,13 @@ canvas.pt {
           record(w.externalWorld.suppliers) &&
           record(w.externalWorld.competitors) &&
           record(w.externalWorld.government) &&
-          record(w.externalWorld.stockMarket),
+          record(w.externalWorld.stockMarket) &&
+          (w.externalWorld.geopolitics === undefined ||
+            (record(w.externalWorld.geopolitics) &&
+              record(w.externalWorld.geopolitics.nations) &&
+              finite(w.externalWorld.geopolitics.fxRateBahtPerUsd, 20, 60))) &&
+          (w.externalWorld.worldChronicle === undefined ||
+            Array.isArray(w.externalWorld.worldChronicle)),
         "invalid externalWorld state",
       );
     }
@@ -16046,6 +18133,23 @@ canvas.pt {
         "invalid serviceBusiness state",
       );
     }
+    if (w.capabilities !== undefined) {
+      add(
+        record(w.capabilities) &&
+          record(w.capabilities.domains) &&
+          record(w.capabilities.unlockedProducts) &&
+          record(w.capabilities.unlockedChains),
+        "invalid capabilities state",
+      );
+    }
+    if (w.executiveBoard !== undefined) {
+      add(
+        record(w.executiveBoard) &&
+          record(w.executiveBoard.budgetPools) &&
+          Array.isArray(w.executiveBoard.decisionLedger),
+        "invalid executiveBoard state",
+      );
+    }
     add(
       ["running", "won", "lost"].includes(w.status) &&
         finite(w.reputation, 0, 100) &&
@@ -16081,7 +18185,8 @@ canvas.pt {
         w.research.unlocked.every(
           (id) =>
             Object.hasOwn(w.catalog.products || {}, id) &&
-            w.catalog.products[id].researchRequired <= w.research.points,
+            (w.catalog.products[id].researchRequired <= w.research.points ||
+              Boolean(w.capabilities?.unlockedProducts?.[id])),
         ),
       "invalid research",
     );
@@ -16950,6 +19055,16 @@ canvas.pt {
             : code === "softwareProjectDeployed"
               ? "ผ่านการทดสอบ QA และลูกค้ารับมอบเวอร์ชันตามสัญญา รับชำระงวดสุดท้ายและรับรู้รายได้โครงการครบวงจร"
               : "เรียกเก็บค่าบริการรายรอบจากบัญชีลูกค้าที่ใช้งานแอป SaaS จริง หักต้นทุนเซิร์ฟเวอร์และงานดูแลระบบ";
+      } else if (["geopoliticalEventTriggered", "foreignRegimeChanged"].includes(code)) {
+        category = "WORLD_GEOPOLITICS";
+        categoryLabelTh = code === "foreignRegimeChanged" ? "เปลี่ยนรัฐบาลต่างชาติ" : "ภูมิรัฐศาสตร์/สงครามโลก";
+        isMajor = true;
+        epistemicStatus = "VERIFIED";
+        epistemicBadgeTh = code === "foreignRegimeChanged" ? "🗳️ รัฐบาลมหาอำนาจ/คู่ค้า" : "🌍 เหตุการณ์โลกยุค 2.0";
+        meaningTh =
+          code === "foreignRegimeChanged"
+            ? "การเปลี่ยนขั้วรัฐบาลของประเทศคู่ค้าหรือมหาอำนาจ ส่งผลต่อกำแพงภาษี ค่าเงินบาท/USD และราคาวัตถุดิบนำเข้า-ส่งออกจริง"
+            : "เหตุการณ์ภูมิรัฐศาสตร์ สงคราม การปิดล้อมทางทะเล หรือสนธิสัญญาการค้าเสรี ส่งผลต่อดัชนีน้ำมัน ค่าระวางขนส่ง และดีมานด์สินค้าแต่ละอุตสาหกรรม";
       } else if (["materialCrafted", "b2bMaterialSold", "corporateDiplomacyChanged"].includes(code)) {
         category = code === "b2bMaterialSold" ? "SALES" : code === "materialCrafted" ? "PROD" : "FINANCE";
         categoryLabelTh = code === "b2bMaterialSold" ? "ขายวัตถุดิบ B2B" : code === "materialCrafted" ? "แปรรูปวัตถุดิบหลายขั้น" : "การทูตบริษัทภายนอก";
@@ -17522,7 +19637,30 @@ canvas.pt {
       });
 
       const rawEvents = [...w.events].slice(-45).reverse();
-      const chronicle = rawEvents.map((e) => presentChronicleEntry(w, e));
+      const internalChronicle = rawEvents.map((e) => presentChronicleEntry(w, e));
+      const worldChronicleFormatted = (w.externalWorld?.worldChronicle || []).slice(0, 20).map((wc) => ({
+        id: wc.id,
+        at: wc.at || ((wc.day || 1) - 1) * 1440 + 540,
+        day: wc.day || 1,
+        minuteOfDay: (wc.at || 540) % 1440,
+        code: wc.category || "WORLD_GEOPOLITICS",
+        message: `[${wc.regionTh || "โลกภายนอก"}] ${wc.headlineTh} (${wc.priceImpactSummaryTh || "-"})`,
+        epistemic: "VERIFIED",
+        epistemicStatus: "VERIFIED",
+        epistemicLabelTh: wc.badgeTh || "🌍 พงศาวดารโลก",
+        epistemicBadgeTh: wc.badgeTh || "🌍 พงศาวดารโลก",
+        category: "WORLD_GEOPOLITICS",
+        categoryLabelTh: "🌍 พงศาวดารโลกภายนอก",
+        major: Boolean(wc.isMajor),
+        isMajor: Boolean(wc.isMajor),
+        actorId: null,
+        actorName: null,
+        storyThreadId: wc.id,
+        meaningTh: wc.meaningTh,
+      }));
+      const chronicle = [...internalChronicle, ...worldChronicleFormatted]
+        .sort((a, b) => b.at - a.at)
+        .slice(0, 55);
       const digests = {
         d1: computePeriodDigest(w, 1, burn),
         d7: computePeriodDigest(w, 7, burn),
@@ -17607,6 +19745,8 @@ canvas.pt {
           softwareBusiness: w.softwareBusiness || null,
           sectorProcesses: w.sectorProcesses || null,
           serviceBusiness: w.serviceBusiness || null,
+          capabilities: w.capabilities || null,
+          executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
           catalog: {
             rules: w.catalog.rules,
@@ -17618,6 +19758,10 @@ canvas.pt {
             sectorProcessModels: Object.values(D.SECTOR_PROCESS_MODELS || {}),
             industrialServices: Object.values(D.INDUSTRIAL_SERVICES || {}),
             businessProcessModels: D.BUSINESS_PROCESS_MODELS || [],
+            capabilityDomains: Object.values(D.CAPABILITY_DOMAINS || {}),
+            productFamilies: Object.values(D.PRODUCT_FAMILIES || {}),
+            globalNations: Object.values(D.GLOBAL_NATIONS || {}),
+            geopoliticalEvents: Object.values(D.GEOPOLITICAL_EVENTS || {}),
             trueResourceChainTable: D.TRUE_RESOURCE_CHAIN_TABLE || [],
             materialTiers: Object.values(D.MATERIAL_TIERS || {}),
             materials: Object.values(w.catalog.materials).map((m) => {
@@ -21509,6 +23653,7 @@ canvas.pt {
       catRow.style.marginBottom = "8px";
       for (const [cId, cLb] of [
         ["ALL", "ทุกหมวด"],
+        ["WORLD_GEOPOLITICS", "🌍 พงศาวดารโลก/ภูมิรัฐศาสตร์"],
         ["SALES", "ฝ่ายขาย/ลูกค้า"],
         ["PROD", "โรงงาน/QC"],
         ["SUPPLY", "คลัง/จัดซื้อ"],
@@ -21941,10 +24086,141 @@ canvas.pt {
       byId("shTitle").textContent = "⚖️ กลยุทธ์ผู้บริหาร โลกภายนอก ตลาดหุ้น และนโยบายรัฐ";
       setSheetTabs([
         { id: "directives", label: "สถานะบริษัทและ CEO" },
+        { id: "geopolitics", label: "🌍 ภูมิรัฐศาสตร์โลก รัฐบาล 8 ประเทศ & พงศาวดารโลก (Era 2.0)" },
+        { id: "board_ledger", label: "🏛️ สมุดมติบอร์ดบริหาร & โดเมนความรู้ (บท 29/32)" },
         { id: "assets", label: "🌾 สินทรัพย์ภายนอก & ห่วงโซ่ลูกโซ่" },
         { id: "external", label: "🌐 คู่ค้า & คู่แข่ง" },
         { id: "macro", label: "📈 ตลาดหุ้น & รัฐบาล" },
       ]);
+      if (uiState.subTab === "geopolitics") {
+        const geo = v.externalWorld?.geopolitics || { nations: {}, activeEvent: null, fxRateBahtPerUsd: 34.5, globalOilIndex: 1.0, materialPriceMultipliers: {}, sectorDemandMultipliers: {} };
+        const wChron = v.externalWorld?.worldChronicle || [];
+        const ev = geo.activeEvent;
+
+        const activeEvCard = el("div", "card");
+        activeEvCard.append(
+          el("h3", "", "🌍 สถานการณ์ภูมิรัฐศาสตร์โลก الساخن สงคราม สนธิสัญญา และตัวคูณเศรษฐกิจมหภาค (Era 2.0.0)"),
+          el(
+            "div",
+            "muted",
+            "โลกภายนอกขับเคลื่อนแบบมีชีวิต: สงครามการค้า การปิดล้อมช่องแคบทางทะเล สนธิสัญญาการค้าเสรี และการเปลี่ยนขั้วรัฐบาลของ 8 ประเทศมหาอำนาจ/คู่ค้า ส่งผลต่อราคาวัตถุดิบทั้ง 58 ชนิด ค่าเงินบาท/USD ต้นทุนน้ำมันขนส่ง และดีมานด์สินค้าแต่ละอุตสาหกรรมโดยตรง",
+          ),
+          el(
+            "div",
+            "logrow",
+            `💱 อัตราแลกเปลี่ยน: ฿${(geo.fxRateBahtPerUsd || 34.5).toFixed(2)} / USD • 🛢️ ดัชนีราคาน้ำมันดิบโลก: ×${(geo.globalOilIndex || 1.0).toFixed(2)} • 🚢 ตัวคูณค่าระวางขนส่งโลก: ×${(geo.globalFreightRateMultiplier || 1.0).toFixed(2)} • ⏱️ ตัวคูณเวลานำเข้าซัพพลายเชน: ×${(geo.globalLeadTimeMultiplier || 1.0).toFixed(2)}`,
+          ),
+        );
+        if (ev) {
+          activeEvCard.append(
+            el("div", "logrow", `🔥 [เหตุการณ์โลกปัจจุบัน • วันที่ ${ev.startedDay}–${ev.expiresDay}] ${ev.badgeTh}: ${ev.titleTh} (${ev.regionTh})`),
+            el("div", "", `↳ รายละเอียด: ${ev.chronicleTh}`),
+            el("div", "muted", `💡 ข้อเสนอแนะเชิงกลยุทธ์: ${ev.strategicAdviceTh}`),
+          );
+        }
+
+        const secMultTxt = Object.entries(geo.sectorDemandMultipliers || {})
+          .map(([k, val]) => `${k}: ×${Number(val).toFixed(2)}`)
+          .join("  |  ");
+        activeEvCard.append(el("div", "logrow", `📊 ตัวคูณอุปสงค์และราคาส่งออกรายอุตสาหกรรม: ${secMultTxt}`));
+
+        const nationsCard = el("div", "card");
+        nationsCard.append(
+          el("h3", "", "🏛️ รัฐบาลและขั้วนโยบายของ 8 ประเทศมหาอำนาจและกลุ่มเศรษฐกิจคู่ค้า (Foreign Governments & Regimes)"),
+          el("div", "muted", "เมื่อประเทศมหาอำนาจหรือคู่ค้าเปลี่ยนรัฐบาล (จากการเลือกตั้งหรือการปรับขั้วนโยบาย) จะเปลี่ยนกำแพงภาษีและราคาวัตถุดิบเฉพาะกลุ่มทันที"),
+        );
+        for (const nat of Object.values(geo.nations || {})) {
+          const matEffects = Object.entries(nat.materialMods || {})
+            .map(([mId, mVal]) => {
+              const mName = v.catalog?.materials?.find((x) => x.id === mId)?.nameTh || mId;
+              return `${mName} ×${mVal}`;
+            })
+            .join(", ");
+          nationsCard.append(
+            el(
+              "div",
+              "logrow",
+              `${nat.flag} ${nat.nameTh} — รัฐบาลปัจจุบัน: "${nat.activeRegimeNameTh}" (${nat.leaderStyleTh}) • ภาษีการค้า ${nat.tariffModPct >= 0 ? "+" : ""}${nat.tariffModPct}% • ผลกระทบราคาวัตถุดิบ: ${matEffects || "สมดุลปกติ"} — ${nat.summaryTh}`,
+            ),
+          );
+        }
+
+        const worldChronCard = el("div", "card");
+        worldChronCard.append(
+          el("h3", "", `📜 พงศาวดารโลกภายนอกและเหตุการณ์ระหว่างประเทศ (${wChron.length} บันทึก)`),
+          el("div", "muted", "บันทึกเหตุการณ์สงคราม การเปลี่ยนรัฐบาล สนธิสัญญาความร่วมมือ และการแข่งขันของ 18 บริษัทนอกนิคมเรียงตามลำดับเวลา"),
+        );
+        for (const wc of wChron.slice(0, 18)) {
+          worldChronCard.append(
+            el(
+              "div",
+              "logrow",
+              `[วันที่ ${wc.day}] ${wc.badgeTh} (${wc.regionTh}): ${wc.headlineTh} — 📈 ผลกระทบราคา: ${wc.priceImpactSummaryTh} • ↳ ${wc.meaningTh}`,
+            ),
+          );
+        }
+
+        body.replaceChildren(activeEvCard, nationsCard, worldChronCard);
+        return;
+      }
+      if (uiState.subTab === "board_ledger") {
+        const eb = v.executiveBoard || { budgetPools: {}, decisionLedger: [] };
+        const pools = eb.budgetPools || {};
+        const cap = v.capabilities || { domains: {} };
+
+        const poolCard = el("div", "card");
+        poolCard.append(
+          el("h3", "", "💰 พอร์ตงบประมาณและเงินสดอิสระของคณะกรรมการบริหาร (Uncommitted Cash & Budget Pools — บทที่ 29/32)"),
+          el(
+            "div",
+            "muted",
+            "การตัดสินใจลงทุนของ CEO และบอร์ดบริหารคำนวณจากเงินสดอิสระ (Uncommitted Cash) หลังหักเงินสำรองฉุกเฉิน ค่าแรงค้างจ่าย เจ้าหนี้การค้า และเงินมัดจำลูกค้าที่มีภาระต้องส่งมอบ เพื่อป้องกันการนำเงินก้อนเดียวไปลงทุนซ้ำซ้อน",
+          ),
+          el(
+            "div",
+            "logrow",
+            `🏦 เงินสดในบัญชีรวม: ${moneyFull(v.company.cash)} • 🛡️ เงินสำรองฉุกเฉินขั้นต่ำ (${pools.reserveDaysRequired || 18} วัน): ${moneyFull(pools.survivalReserveSatang || 0)} • ⏳ เงินมัดจำลูกค้ามีภาระส่งมอบ: ${moneyFull(pools.unearnedDepositsSatang || 0)}`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `🟢 เงินสดอิสระพร้อมพิจารณาลงทุน (Uncommitted Cash): ${moneyFull(pools.uncommittedCashSatang || 0)} • 📌 งบที่อนุมัติผูกพันแล้ว: ${moneyFull(eb.committedBudgetSatang || 0)} • 🧾 ลูกหนี้การค้ารอเรียกเก็บ: ${moneyFull(pools.receivableSatang || 0)}`,
+          ),
+        );
+
+        const domCard = el("div", "card");
+        domCard.append(
+          el("h3", "", "🧠 กราฟความสามารถ 9 โดเมนและ 10 ตระกูลผลิตภัณฑ์ (9 Capability Domains & 10 Product Families — บทที่ 28/32)"),
+          el("div", "muted", "แยกองค์ความรู้ตามโดเมนอุตสาหกรรมจริง การวิจัยเบเกอรี่ไม่ทำให้เกิดความรู้ผลิตชิปเซมิคอนดักเตอร์ และการสลับรุ่นสินค้าในตระกูลเดียวกันไม่ต้องเสียค่าตั้งแม่พิมพ์ใหม่"),
+        );
+        for (const d of v.catalog?.capabilityDomains || []) {
+          const lv = cap.domains?.[d.id] ?? d.baseLevel ?? 20;
+          domCard.append(
+            el("div", "logrow", `${d.icon || "🔬"} [${d.id}] ${d.nameTh} — ระดับความเชี่ยวชาญโดเมน: ${lv}/100 • ${d.descTh}`),
+          );
+        }
+
+        const ledgerCard = el("div", "card");
+        ledgerCard.append(
+          el("h3", "", `📜 สมุดบันทึกมติคณะกรรมการบริหารและเหตุผลการตัดสินใจ (${(eb.decisionLedger || []).length} รายการ)`),
+          el("div", "muted", "บันทึกทุกข้อเสนอที่ผ่านการพิจารณาของ CEO และหัวหน้าฝ่าย พร้อมผลตรวจ Hard Gates และเหตุผลที่อนุมัติ ชะลอ หรือเลือกถือเงินสด"),
+        );
+        if (!(eb.decisionLedger || []).length) {
+          ledgerCard.append(el("div", "muted", "ยังไม่มีมติการลงทุนในรอบนี้ (ระบบจะประเมินอัตโนมัติตามรอบวันหรือเมื่อเกิดคอขวดหน้างาน)"));
+        } else {
+          for (const item of (eb.decisionLedger || []).slice(0, 20)) {
+            ledgerCard.append(
+              el(
+                "div",
+                "logrow",
+                `[วันที่ ${item.day}] (${item.resolution}) ${item.titleTh} — ผู้ตัดสินใจ: ${item.deciderName} • เงินสดอิสระก่อนพิจารณา: ${moneyFull(item.uncommittedCashBefore || 0)} • เหตุผล: ${item.reasonTh}`,
+              ),
+            );
+          }
+        }
+        body.replaceChildren(poolCard, domCard, ledgerCard);
+        return;
+      }
       if (uiState.subTab === "assets") {
         body.replaceChildren(...renderExternalAssetsAndChainsView(v));
         return;
@@ -22300,6 +24576,12 @@ canvas.pt {
           ["🧬 ออกใบรับรองปลอดเชื้อ Clinical COA", { type: "directorEdit", action: "certifyBiomedLot", productId: "vital_monitor" }],
           ["🔬 รับงานแล็บสอบเทียบ ISO", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "calibration_lab", clientCorpId: "siam_auto" }],
           ["♻️ รับงานรีไซเคิลกากของเสีย ➔ กู้คืนวัตถุดิบ", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "industrial_recycling", clientCorpId: "eastern_chem" }],
+          ["⚔️ จำลองสงครามปิดล้อมทะเลแดง (น้ำมัน/ค่าระวางพุ่ง)", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "red_sea_blockade_war" }],
+          ["⚔️ จำลองสงครามทะเลดำ (ราคาปุ๋ย/แป้งสาลีพุ่ง)", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "black_sea_grain_fertilizer_war" }],
+          ["⚡ จำลองสงครามคว่ำบาตรชิป AI (ราคาชิป/เวเฟอร์พุ่ง)", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "superpower_chip_embargo" }],
+          ["🗳️ เปลี่ยนรัฐบาลสหรัฐฯ (ขึ้นกำแพงภาษี/กรีนดีล)", { type: "directorEdit", action: "changeForeignRegime", nationId: "US" }],
+          ["🗳️ เปลี่ยนรัฐบาลจีน (จำกัดโควตาส่งออกลิเธียม)", { type: "directorEdit", action: "changeForeignRegime", nationId: "CN", regimeId: "strategic_resource_control" }],
+          ["🤝 ลงนามสนธิสัญญาการค้าเสรี อาเซียน-ญี่ปุ่น-อียู", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "asean_jp_eu_free_trade_pact" }],
         ];
         for (const [labelTh, payload] of bpActions) {
           const btn = el("button", "btn", labelTh);

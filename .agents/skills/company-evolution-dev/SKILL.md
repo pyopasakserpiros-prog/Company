@@ -1,53 +1,54 @@
 ---
 name: company-evolution-dev
-description: Master engineering and patch development blueprint for Siam Enterprise / Company Simulation (บริษัทจำลองธุรกิจและอุตสาหกรรมอัตโนมัติ, COMPANY_SOURCE/) up to v0.4.0. Covers the Locked Human Core 1.0.0 (14 Personalities, 18 Values, 30 Aptitudes, 12 Vitality States), Multi-Nationality Demographic & Name Pools (TH/JP/CN/VN/MM/EN), Real-World Corporate Divisions (Executive, White-Collar Office, Blue-Collar Factory), Organizational Headcount Quotas & Boss Promotion Evaluation Engine (Merit vs Favoritism/Nepotism), 5-Person Lean Startup to 500-NPC High-Performance Scaling (<1ms/tick), 8 Constructible Expansion Facilities (Raw Depot, Lines B & C, Dispatch Hub, Trade Annex, Maintenance, Solar, Dormitory), End-to-End B2B Sales/Procurement/Dispatch Logistics, External World Engine (Clients, Suppliers, Competitors, Government Policy, Stock Market & Enterprise Valuation), and 12 Multi-Industry Products across 4 Sectors. Update this skill after every Company patch.
+description: MASTER SKILL for Siam Enterprise / Company Simulation (บริษัทจำลองธุรกิจและอุตสาหกรรมอัตโนมัติ, COMPANY_SOURCE/) up to Era 2.0.0 (v2.0.0). Covers the Permanently Locked Human Core 1.0.0, 10-Level Corporate Hierarchy (Lv.1-Lv.10), 4-Tier Org Tree, 56x34 Greenfield Campus (14 Constructible Facilities), 10 Resource Classes (58 Materials, 35 Recipes, 36 Products in 10 Product Families), 9 Capability Domains, 8 Distinct Business Process Models + 6 Industrial B2B Services, Autonomous NPC Executive Board & Decision Ledger, Living Global Geopolitics (8 Nations/Governments, 12 Wars/Treaties/Shocks, FX/Oil/Tariff Transmission, World Chronicle), 18 Multi-Role External Corporations, and 500-NPC High-Performance Scaling (<1ms/tick). MANDATORY RULE: Update this Master Skill on every future patch.
 ---
-# Siam Enterprise: Autonomous Multi-Industry Company Simulation — Master Engineering Blueprint (v0.4.0)
+# Siam Enterprise: Autonomous Multi-Industry Company Simulation — MASTER ENGINEERING SKILL (Era 2.0.0 / v2.0.0)
 
-## 1. Core Identity & Autonomous Design Philosophy
+> **MANDATORY MASTER SKILL UPDATE RULE**: Whenever a new patch or feature is developed for `Siam Enterprise / Company Simulation (COMPANY_SOURCE/)`, you MUST update both this Master Skill (`company-evolution-dev`) and the Evergreen Workflow Skill (`company-for-every-patch`) in `.agents/skills/`, root `SKILL.md`, and via `skills:update_skill` before completing the turn.
+
+## 1. Core Identity & Architecture Overview (Era 2.0.0)
 - **Game Title**: `Siam Enterprise: Autonomous Multi-Industry Company Simulation (บริษัทจำลองธุรกิจและอุตสาหกรรมอัตโนมัติ)`
-- **Source Root**: `COMPANY_SOURCE/`
-- **Single-File Build**: `COMPANY_SOURCE/CompanyFoundation_single.html` (and `Company_single.html`, built via `node tools/build.cjs`, 100% Offline)
-- **Core Gameplay Philosophy**:
-  - **100% Autonomous NPC & CEO Loop**: Employees across Executive, White-Collar Office, and Blue-Collar Factory divisions make all operational decisions autonomously based on their innate personalities, values, aptitudes, learned skills, vitality states, and cash reserves:
-    - **Commercial B2B Sales (`sales` / `evaluateSalesNegotiation` / `autoAccept`)**: Sales reps prospect and negotiate contracts with 6 named external B2B Client corporations (`w.externalWorld.clients`), using `sales` skill, `communication`, `emotionalInsight`, `verbal`, `assertiveness`, and `ambition` to score deals and build client trust.
-    - **Procurement & Inbound Supply Chain (`admin` / `planPurchases` / `placePurchase`)**: Procurement officers monitor BOM requirements vs. on-hand + in-transit inventory, order materials from 4 named external Suppliers (`w.externalWorld.suppliers`), build supplier trust/tiers, and track inbound logistics trucks (`w.logistics.inboundShipments`).
-    - **Multi-Line Shop-Floor Production & QC (`assembler`, `inspector`)**: Executes production across Main Factory Line A and constructible Smart Line B (`prodLineB`) and Mega Automated Line C (`prodLineC`), followed by QC inspection (`qa`) and rework (`rework`).
-    - **Warehouse & Outbound Fleet Dispatch (`logistics`)**: Packs finished goods (`packing`) and dispatches outbound delivery trucks (`w.logistics.outboundShipments`) to B2B clients, followed by accounting invoice issuance (`invoice`) and settlement (`paymentReceived`).
-    - **CEO Strategic Management (`coordinator`)**:
-      - **Weekly Strategic Directives (`w.externalWorld.ceoDirective`)**: Sets weekly corporate direction (`sales_blitz`, `cash_shield`, `zero_defect`, `wellness_care`, `rnd_sprint`, `scale_expansion`) based on CEO Human Core and financial health.
-      - **Debt Repayment (`evaluateDebtRepayment`)**: Repays bank loan principal from surplus cash above a prudence-weighted safety reserve (`15..25` days of burn + payables).
-      - **Core Facility Upgrades (`evaluateFacilityInvestment`)**: Upgrades 7 core campus buildings (`hq`, `factory`, `warehouse`, `rnd`, `canteen`, `courtyard`, `training`) from Lv.1 to Lv.3.
-      - **Industrial Estate Expansion Construction (`constructPlot` & `evaluatePlotConstruction`)**: Constructs 8 new facilities on campus expansion plots (`rawDepot`, `prodLineB`, `prodLineC`, `dispatchHub`, `execAnnex`, `maintWorkshop`, `solarPlant`, `dormitory`), automatically registering new high-capacity work stations.
-      - **HR Recruitment & 500-NPC Scaling (`evaluateAutonomousHiring` & `scaleCompany`)**: Supports starting with a 5-person Lean Startup team (`startupMode: "lean"`) or standard 8-person team, and scaling up to **500 concurrent NPCs** (`maxPeople: 500`).
-    - **Organizational Headcount Quotas (`CAREER_QUOTAS` & `getDepartmentHeadroom`)**:
-      - Promotions require an open quota slot in the organizational pyramid (`Lv.1` unlimited; `Lv.2` max 45% of dept; `Lv.3` 1 per dept initially, expanding to 2 at Lv.2+ building or deptSize >= 4, and scaling 1 per 6 staff in large factories; `Lv.4` 1 base, expanding at >=10 staff & >=15M cash, scaling 1 per 20 staff up to 12).
-    - **Boss Promotion Evaluation Engine (`evaluatePromotions`)**:
-      - Department Supervisor or CEO evaluates candidates using Human Core (`values.integrity`, `values.fairness` vs `values.influence`, `sociability`) balancing **Merit** vs **Favoritism/Nepotism**, triggering `promotionGrievance` on passed-over competitors when nepotism wins.
+- **Source Root**: `COMPANY_SOURCE/` (`VERSION: "2.0.0"`, `RELEASE_VERSION: "2.0.0"`, `S.VERSION: "0.1.0-review.3"` preserved for legacy save migration compatibility)
+- **Standalone Build**: `COMPANY_SOURCE/CompanyFoundation_single.html` and `Company_single.html` (built via `node tools/build.cjs`, 100% Offline)
+- **Permanently Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`)**:
+  - **HARD INVARIANT**: Never modify `js/human-core.js` or `CORE_LOCK.json` (`SHA-256: fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
+  - Drives 14 Personality traits, 18 Values, 30 Aptitudes, and 12 Vitality States for every employee, manager, and CEO.
 
-## 2. Permanently Locked Human Core 1.0.0 (`js/human-core.js`)
-- **HARD INVARIANT**: Never modify `COMPANY_SOURCE/js/human-core.js` or `COMPANY_SOURCE/CORE_LOCK.json` (`SHA-256: fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
+## 2. Complete System Architecture (Up to Era 2.0.0)
+1. **10-Level Corporate Hierarchy (`Lv.1–Lv.10 / G1–G10`) & 4-Tier Organizational Tree**:
+   - Divisions: Executive (`executive`), White-Collar Office (`office`: Sales, Admin/Procurement/Finance, R&D), and Blue-Collar Factory (`factory`: Production, QC/QA, Warehouse/Logistics).
+   - 4-Tier Structure: Division ➔ Department ➔ Section ➔ Group (`D.ORG_TREE` & `D.resolveOrgAssignment`).
+   - Span-of-Control Headcount Quotas (`CAREER_QUOTAS` & `getDepartmentHeadroom`) and Boss Promotion Evaluation (`evaluatePromotions`: Merit vs Favoritism/Nepotism with `promotionGrievance` ripple effects).
+2. **56×34 Greenfield Industrial Estate & 14 Constructible Expansion Facilities (`D.EXPANSION_PLOTS`)**:
+   - 8 Core Campus Buildings (`hq`, `rnd`, `factory`, `warehouse`, `canteen`, `courtyard`, `training`, `gate`) + 14 Constructible Plots (`rawDepot`, `prodLineB`, `prodLineC`, `cleanroomPlant`, `dispatchHub`, `execAnnex`, `maintWorkshop`, `qaLab`, `solarPlant`, `waterPlant`, `refineryMill`, `bakeryPlant`, `expoHall`, `dormitory`).
+3. **10 Resource Classes, 58 Materials, 35 Multi-Stage Recipes & True Elemental Provenance (`D.RESOURCE_CLASSES`, `D.MATERIAL_RECIPES`)**:
+   - **True Natural Resources (`T0_NATURAL` — 9 items)**: `raw_water_m3`, `ambient_air_gas`, `iron_ore`, `copper_iron_ore`, `bauxite_ore`, `silica_bauxite_ore`, `limestone_mineral`, `phosphate_potash_rock`, `lithium_brine_ore`, `crude_petro_feedstock`.
+   - **Biological Seeds & Cuttings (`SEED_STOCK` — 5 items)**: `rice_seed`, `wheat_seed`, `cane_stalk_seed`, `palm_seedling`, `soybean_seed` (strict biological rule: `milled_rice`, `artisan_flour`, and `wheat_flour` have `cannotPlantAsSeed: true` and are rejected by `plantCropPlot`!).
+   - **Cultivated Crops, Livestock & Forestry Logs (`CULTIVATED_CROP` — 8 items)**: `paddy_grain`, `wheat_grain`, `raw_cane`, `crude_palm`, `soybean_crop`, `fresh_milk_soy`, `natural_latex`, `timber_bamboo_log`.
+   - **Refined T1, Intermediate T2 & High-Tech T3 Components**: True N-P-K synthesis (`ambient_air_gas` + `raw_water_m3` ➔ `nitrogen_ammonia` + `phosphate_potash_rock` ➔ `npk_fertilizer`), `wheat_flour`, `pharma_saline_water`, `silicon_wafer`, `microchip`, `power_inverter_ic`, etc.
+4. **9 Capability Domains (`D.CAPABILITY_DOMAINS`), 10 Product Families (`D.PRODUCT_FAMILIES`), and 36 Products**:
+   - 9 Domains: `food_fermentation`, `metal_machining`, `power_electronics`, `embedded_iot`, `semiconductor_optics`, `biomed_sterile`, `software_cloud`, `fleet_coldchain`, `agri_soil_science`.
+   - Switching between products in the same Product Family on a production line incurs **0 tooling changeover cost** (`sameFamily: true`).
+5. **8 Distinct Business Process Models & 6 Industrial B2B Services (`D.BUSINESS_PROCESS_MODELS`, `D.SECTOR_PROCESS_MODELS`, `D.INDUSTRIAL_SERVICES`)**:
+   - **4 Factory Sector Engines (`w.sectorProcesses`)**:
+     1. `food_bakery_batch`: Perishable `freshnessPct`, `shelfLifeDays` (3d base / 7d with `cold_chain_hub`), `expireFoodBatch` converts spoiled food to `+1 organic_compost`.
+     2. `electronics_smt_rma`: Firmware revisions (`firmwareRevision`), 14-day post-sale `warrantyLots`, `triggerRmaClaim` & `resolveRmaClaim` (consumes 1 `pcb` or pays `customerRefund`).
+     3. `automotive_oem_tooling`: Per-line `currentToolingProductId`, `triggerToolingChangeover`, and consecutive rhythm bonus.
+     4. `biomed_sterile_lot`: ISO Class-5 `sterilityIndex` (`0..100`), `certifyBiomedLot`, quarantine rejection if `< 70%`.
+   - **True Upstream Agriculture, Livestock, Mining & Forestry (`w.agriculture`)**: 8-stage crop cycle (`plantCropPlot`, `careCropPlot`, `harvestCropPlot`, `saveSeedFromCrop`), dairy herd feeding (`feedLivestockHerd`), finite mine reserve depletion & geological survey (`surveyNewMineVein`), and 3-age forestry rotation.
+   - **Fleet Freight Transport (`w.fleetTransport`)**: 3 vehicle types (`dry_6w`, `reefer_6w`, `heavy_10w`), round-trip fuel (`diesel_liter`) + empty backhaul accounting, `cargoCustody` separation, and `matchBackhaulCargo`.
+   - **Software House & SaaS (`w.softwareBusiness`)**: 8 apps, 30/40/30 milestone accounting (`unearnedDepositSatang`), strict engineer qualification & QA defect gate, and SaaS active subscriber billing (`0 subscribers = 0 revenue`).
+   - **6 Industrial B2B Services (`w.serviceBusiness`)**: `calibration_lab`, `field_maintenance`, `industrial_recycling`, `battery_second_life_lab`, `returnable_pallet_pool`, `cold_storage_3pl` with strict spare-part & custody gates.
+6. **Autonomous NPC Executive Board & Decision Ledger (`w.executiveBoard`, `evaluateExecutiveBoardAndBusinessEntry`)**:
+   - Computes `uncommittedCashSatang` after deducting `survivalReserveSatang` (weighted by CEO `prudence`), payables, unpaid wages, `unearnedDepositsSatang`, and `committedBudgetSatang`.
+   - Evaluates and logs proposals (`approved`, `pilot_or_buy_inputs`, `deferred_missing_staff`, `deferred_missing_materials`, `deferred_working_capital`, `deferred_unprofitable_market`, `hold_cash_prudent`, `deferred_no_executive_authority`) in `w.executiveBoard.decisionLedger`.
+7. **Era 2.0.0 Living Global Geopolitics & World Chronicle (`w.externalWorld.geopolitics`, `w.externalWorld.worldChronicle`)**:
+   - **8 Sovereign Nations & Blocs (`D.GLOBAL_NATIONS`)**: `TH`, `US`, `CN`, `JP`, `EU`, `ME`, `RU_EE`, `ASEAN`, each with multiple political/economic regimes (`changeForeignRegime`).
+   - **12 Global Geopolitical Events (`D.GEOPOLITICAL_EVENTS`)**: Wars/blockades (`red_sea_blockade_war`, `black_sea_grain_fertilizer_war`), trade/tech embargoes (`superpower_chip_embargo`), regime elections (`us_regime_tariff_shift`, `global_green_supercycle_election`, `china_rare_earth_quota_shift`), international treaties (`asean_jp_eu_free_trade_pact`, `global_food_medical_accord`, `apac_robotics_semi_alliance`), and shocks (`el_nino_agri_drought`, `global_port_congestion_crisis`, `global_cyber_cloud_alert`).
+   - **Real Economic Transmission (`recomputeGeopoliticalMultipliers`)**: Dynamically updates `fxRateBahtPerUsd`, `globalOilIndex`, `globalFreightRateMultiplier`, `globalLeadTimeMultiplier`, `materialPriceMultipliers`, `materialSpotPrices`, and `sectorDemandMultipliers`, feeding directly into `sellMaterialB2B`, `placePurchase`, `makeOffer`, `fleetTransport.openQuotes`, `stockMarket.indices`, and Executive Board asset scoring.
+   - **World Chronicle (`w.externalWorld.worldChronicle`)**: Logged and merged into `snap.chronicle` under `category: "WORLD_GEOPOLITICS"`.
 
-## 3. Multi-Industry Catalog, Corporate Divisions & External World (v0.4.0)
-- **14 Raw Materials**: `pcb`, `casing`, `driver`, `led`, `sensor`, `metal_sheet`, `wire_harness`, `microchip`, `raw_extract`, `glass_bottle`, `pack_carton`, `solar_cell`, `battery`, `heat_sink`.
-- **12 Products across 4 Industrial Sectors**:
-  1. **Electronics & Smart Tech**: `speaker`, `lamp`, `iotController`, `smartMeter`
-  2. **Automotive & EV Hardware**: `autoSensor`, `evController`, `batteryPack`
-  3. **Agro-Food & Health Beverage**: `herbalDrink`, `energyProtein`, `functionalShot`
-  4. **Green Energy & Clean Tech**: `solarCharger`, `homeInverter`
-- **External World (`w.externalWorld`)**:
-  - **6 B2B Client Corporations (`clients`)** with trust scores, contract counts, and total revenue.
-  - **4 Raw Material Suppliers (`suppliers`)** with trust scores, credit tiers (`Regular`, `VIP`, `Strategic`), and delivery counts.
-  - **5 Industry Competitors (`competitors`)** with market share % vs our company's `ourMarketSharePct`.
-  - **Government Policy Engine (`government`)**: 5 rotating macro policies (`boi_smart_industry`, `export_stimulus`, `green_esg_subsidy`, `labor_welfare_push`, `industrial_stability`).
-  - **Stock Market & Enterprise Valuation (`stockMarket`)**: 5 sector indices (`SET_IND`, `TECH`, `AUTO`, `FOOD`, `GREEN`), `companyValuation`, `sharePriceBaht`, `creditRating`, and `ipoReadinessPct`.
-
-## 4. High-Performance 500-NPC Architecture
-- `layout.js`: Pure LRU pathfinding cache (`MAX_PATH_CACHE = 8192`) for $O(1)$ route lookups.
-- `sim.js`: Per-tick `tickCtx` $O(1)$ indexing (`stationLoadMap`, `stationOccupants`, `workingByZone`, `helpersCount`, `firstHelperByTarget`, `trainingCount`) + batch job deduplication in `selectJob`. Achieves **~0.95 ms/tick at 500 concurrent NPCs**.
-- `campus-render.js`: Camera viewport culling and compact nameplate LOD when `people.length > 100 && zoom < 0.85`.
-
-## 5. Verification & Build Commands
+## 3. Verification & Benchmark Suite
 ```bash
 cd COMPANY_SOURCE
 node tools/verify.cjs
@@ -55,10 +56,4 @@ node tools/test.cjs
 node tools/build.cjs
 node tools/benchmark.cjs
 ```
-- All 112 unit tests in `tools/test.cjs` must pass with 0 failures before packaging.
-
-
-### อัปเดตล่าสุดรุ่น v1.2.0 (Chapters 19–24: True Upstream Resources & 8 Distinct Business Process Models)
-- แยก `RESOURCE_CLASSES` (10 คลาส) ออกจาก `tier` คงเหลือ `T0_NATURAL` เฉพาะทรัพยากรธรรมชาติแท้จริง 8 ชนิด และเพิ่มเมล็ดพันธุ์ พืชผล อาหารสัตว์ ปุ๋ยหมัก ปุ๋ยเคมี น้ำมันดีเซล รวมวัตถุดิบ 51 ชนิด และสูตรแปรรูป 32 สูตร
-- เพิ่มเอนจิน 8 โมเดลธุรกิจที่มีโปรเซสและ State Machine ของตัวเองแตกต่างกันจริง: (1) อาหารและเบเกอรี่มี Shelf-Life & Spoilage กลายเป็นปุ๋ยหมัก, (2) อิเล็กทรอนิกส์มี Firmware Rev & พูลรับประกัน RMA, (3) ยานยนต์ไฟฟ้ามี Die & Jig Tooling Changeover, (4) การแพทย์คลีนรูมมี ISO Class-5 Sterility & Quarantine Release, (5) ต้นน้ำธรรมชาติ 4 รูปแบบย่อย (เกษตร 8 ขั้นตอน/ปศุสัตว์/เหมืองแร่จำกัดปริมาณสำรอง/ป่าไม้ 3 รุ่นอายุ), (6) กองรถขนส่ง B2B 9 ขั้นตอนพร้อม Backhaul Matching, (7) ซอฟต์แวร์ตามสัญญา & SaaS 9 ขั้นตอน, และ (8) บริการวิศวกรรม B2B 3 โมเดล (`calibration_lab`, `field_maintenance`, `industrial_recycling`)
-- ผลทดสอบ `127/127` ผ่านครบ 100% (`0.994 ms/tick` ที่ 500 NPCs)
+- All **132/132** unit tests pass with 0 failures (`~0.80 ms/tick` at 500 concurrent NPCs).

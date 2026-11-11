@@ -1,48 +1,35 @@
 ---
 name: company-for-every-patch
-description: Evergreen pre-patch and post-patch workflow, architectural invariants, and mandatory documentation/skill update checklist for every patch of Siam Enterprise / Company Simulation (COMPANY_SOURCE/). Use on every Company patch alongside company-evolution-dev.
+description: Evergreen pre-patch and post-patch workflow, architectural invariants, Zero Code-Zero verification, 8 Business Process Models & Era 2.0.0 Geopolitics audit, and MANDATORY Master Skill update checklist for every patch of Siam Enterprise / Company Simulation (COMPANY_SOURCE/) up to v2.0.0. Use on every Company patch alongside company-evolution-dev.
 ---
-# Company Simulation — Evergreen Patch Workflow & Invariants (`company-for-every-patch`)
+# Company Simulation — Evergreen Patch Workflow & Master Skill Checklist (`company-for-every-patch` — Era 2.0.0)
 
-Use this skill on **every patch** of `Siam Enterprise: Autonomous Multi-Industry Company Simulation (COMPANY_SOURCE/)` alongside `company-evolution-dev`.
+Use this skill on **every patch** of `Siam Enterprise: Autonomous Multi-Industry Company Simulation (COMPANY_SOURCE/)` alongside the Master Skill `company-evolution-dev`.
 
 ## 1. Pre-Patch Onboarding Sequence
-Before writing code on any patch:
-1. Read `START_HERE_FOR_AI.md`, `AGENTS.md`, and `project_status_and_ai_onboarding.md`.
-2. Run baseline checks in `COMPANY_SOURCE/`:
+1. Read `START_HERE_FOR_AI.md`, `AGENTS.md`, `project_status_and_ai_onboarding.md`, and look up `company-evolution-dev` + `company-for-every-patch`.
+2. Run baseline verification in `COMPANY_SOURCE/`:
    ```bash
    node tools/verify.cjs
    node tools/test.cjs
    ```
-3. Check `docs/company/` and `ideas/company/` if the user's request touches workforce hierarchy, supply chain, multi-industry products, external world, or new systems.
 
 ## 2. Non-Negotiable Architectural Invariants
-1. **Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`)**:
-   - NEVER edit `js/human-core.js` or `CORE_LOCK.json`.
-   - `node tools/core-review.cjs` (called by `node tools/verify.cjs`) verifies exact byte-for-byte SHA-256 (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
-   - Never mutate `p.profile` directly unless cloning and re-freezing via `H.freezeProfile` inside a validated edit command.
-2. **100% Autonomous NPC & CEO Gameplay**:
-   - All operational actions (B2B sales negotiation, accepting customer offers, purchasing materials, assembling across Lines A/B/C, QC, packing, outbound fleet shipping, invoicing, R&D, facility upgrades, expansion plot construction, debt repayment, recruitment, promotions, bonuses, machine maintenance) must happen autonomously via NPC/CEO decisions.
-   - Policy and Campus Expansion sheets remain observational; player intervention is limited to time speed, camera/inspection, tracking NPCs (`⭐`), New Game startup presets (5-person Lean Startup vs 8-person Standard), and the **Sandbox Edit Hub (`directorEdit`)**.
-3. **Real-World Corporate Hierarchy, Headcount Quotas & Boss Promotion Evaluation**:
-   - Clearly distinguish Executive (`executive`), White-Collar Office (`office`: Sales, Procurement/Finance, R&D), and Blue-Collar Factory (`factory`: Production, QC/QA, Warehouse/Logistics) divisions.
-   - Promotions never happen automatically on hit of tenure/tasks. A vacant slot quota (`headroom`) must be open according to organizational hierarchy and company expansion.
-   - The department supervisor or CEO evaluates candidates using their Human Core (Merit weighted by boss's integrity/fairness vs. Favoritism weighted by trust/familiarity/influence), with `promotionGrievance` ripple effects when nepotism wins.
-4. **Closed-Loop Integer-Satang Accounting & Material Conservation**:
-   - All monetary values in `sim.js` and `economy.js` are integer satang (`100` satang = `฿1`).
-   - Core building upgrades (`FACILITY_RULES`) post to `equipment` with reference `facility:<id>`; constructible expansion plots (`EXPANSION_PLOTS`) post to `expansion` with reference `plot:<id>`.
-   - Every wage, overtime, or bonus payout must reconcile across `w.finance.entries`, `w.finance.totals`, `p.pay.totalEarned`, `p.pay.totalPaid`, and `p.pay.wallet + p.pay.outsideSpending`.
-   - Every raw material and finished unit must reconcile in `S.audit(w)` and `Save.validate(w)`.
-5. **High-Performance 500-NPC Scaling & Determinism**:
-   - Maintain $O(1)$ per-tick station/social/help indexing (`tickCtx`) and LRU pathfinding cache so 300–500 concurrent NPCs step in `< 2 ms/tick`.
-   - Never consume `w.rng` inside presentation (`api.js`, `debug.js`), cosmetic helpers (`D.createIdentity`), or daily macro index updates (`updateExternalWorld` uses deterministic `seedHash`).
-   - Keep `CAMPUS_BUILDINGS.length === 8` in `snap.campus.buildings` and expose constructible plots in `snap.campus.expansionPlots`.
-6. **100% Natural Thai UI (Zero Raw Internal Keys)**:
-   - Always translate motive factors (`value:*`, `personality:*`, `state:*`, `effort`, `skillFit`, `delay`, etc.) via `D.translateMotiveFactor` before displaying in Character Sheet thoughts or motive chips.
+1. **Permanently Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`)**:
+   - NEVER edit `js/human-core.js` or `CORE_LOCK.json` (`SHA-256: fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
+   - Preserve `S.VERSION = "0.1.0-review.3"` for legacy save migration tests while incrementing `D.RELEASE_VERSION` / `S.RELEASE_VERSION` (currently `"2.0.0"`).
+2. **100% Autonomous NPC, Executive Board & Living Geopolitical World**:
+   - All operational actions, Executive Board investment proposals (`w.executiveBoard.decisionLedger`), and Geopolitical World simulations (`w.externalWorld.geopolitics` & `w.externalWorld.worldChronicle`) run autonomously and deterministically.
+   - Normal viewing tabs remain observational; manual intervention and scenario triggers live in the **Sandbox Edit Hub (`directorEdit`)**.
+3. **Closed-Loop Integer-Satang Accounting & Material/Product Conservation**:
+   - `S.audit(w)` and `Save.validate(w)` must return `[]` (zero errors) at all times.
+   - Non-PO operational expenses post to `equipment` or `expansion` (never `materials`, which is reserved for `w.purchases` reconciliation); customer refunds/SLA penalties post to `customerRefund`.
+4. **High-Performance 500-NPC Scaling (`< 2 ms/tick`)**:
+   - Maintain $O(1)$ per-tick station/social indexing (`tickCtx`) and LRU pathfinding cache.
 
-## 3. Mandatory Post-Patch Checklist (Execute After Every Patch)
-Before finishing any patch turn:
-1. **Run Verification, Unit Tests, Build & Benchmark**:
+## 3. Mandatory Post-Patch & Master Skill Update Checklist
+Before finishing ANY patch turn:
+1. **Run Verification, Unit Tests (`132+` tests), Build & Benchmark**:
    ```bash
    cd COMPANY_SOURCE
    node tools/verify.cjs
@@ -50,17 +37,9 @@ Before finishing any patch turn:
    node tools/build.cjs
    node tools/benchmark.cjs
    ```
-   Also copy `COMPANY_SOURCE/CompanyFoundation_single.html` to `COMPANY_SOURCE/Company_single.html` so both filenames are up to date.
-2. **Update Project Status & Onboarding Docs**:
-   - Update `project_status_and_ai_onboarding.md` and `START_HERE_FOR_AI.md` with the new patch version, features implemented, and test count (112/112 PASS).
-3. **Write Patch Implementation Report**:
-   - Create `docs/company/PATCH_IMPLEMENTATION_REPORT_COMPANY_V<X_Y_Z>.md` (and copy to `PATCH_REPORTS/`).
-4. **Update Skills in Both ZIP and Gemini App**:
-   - Update `.agents/skills/company-evolution-dev/SKILL.md` (and root `SKILL.md`) and `.agents/skills/company-for-every-patch/SKILL.md` in the repository/ZIP.
-   - Call `skills:update_skill` in the Gemini App to keep `company-evolution-dev` and `company-for-every-patch` synchronized with the latest patch.
-
-
-### อัปเดตล่าสุดรุ่น v1.2.0 (Chapters 19–24: True Upstream Resources & 8 Distinct Business Process Models)
-- แยก `RESOURCE_CLASSES` (10 คลาส) ออกจาก `tier` คงเหลือ `T0_NATURAL` เฉพาะทรัพยากรธรรมชาติแท้จริง 8 ชนิด และเพิ่มเมล็ดพันธุ์ พืชผล อาหารสัตว์ ปุ๋ยหมัก ปุ๋ยเคมี น้ำมันดีเซล รวมวัตถุดิบ 51 ชนิด และสูตรแปรรูป 32 สูตร
-- เพิ่มเอนจิน 8 โมเดลธุรกิจที่มีโปรเซสและ State Machine ของตัวเองแตกต่างกันจริง: (1) อาหารและเบเกอรี่มี Shelf-Life & Spoilage กลายเป็นปุ๋ยหมัก, (2) อิเล็กทรอนิกส์มี Firmware Rev & พูลรับประกัน RMA, (3) ยานยนต์ไฟฟ้ามี Die & Jig Tooling Changeover, (4) การแพทย์คลีนรูมมี ISO Class-5 Sterility & Quarantine Release, (5) ต้นน้ำธรรมชาติ 4 รูปแบบย่อย (เกษตร 8 ขั้นตอน/ปศุสัตว์/เหมืองแร่จำกัดปริมาณสำรอง/ป่าไม้ 3 รุ่นอายุ), (6) กองรถขนส่ง B2B 9 ขั้นตอนพร้อม Backhaul Matching, (7) ซอฟต์แวร์ตามสัญญา & SaaS 9 ขั้นตอน, และ (8) บริการวิศวกรรม B2B 3 โมเดล (`calibration_lab`, `field_maintenance`, `industrial_recycling`)
-- ผลทดสอบ `127/127` ผ่านครบ 100% (`0.994 ms/tick` ที่ 500 NPCs)
+   Copy `CompanyFoundation_single.html` to `Company_single.html` and the output directory.
+2. **Update Master Skill & Onboarding Docs (MANDATORY ON EVERY PATCH)**:
+   - Update `.agents/skills/company-evolution-dev/SKILL.md`, `.agents/skills/company-for-every-patch/SKILL.md`, root `SKILL.md`, `START_HERE_FOR_AI.md`, and `project_status_and_ai_onboarding.md`.
+   - Call `skills:update_skill` for **both** `company-evolution-dev` and `company-for-every-patch` so the Master Skill in Gemini is always synchronized with the latest patch.
+3. **Write Patch Implementation Report & Package Full Project ZIP**:
+   - Create `PATCH_IMPLEMENTATION_REPORT_COMPANY_V<X.Y.Z>.md` and package `JHEvo-company-v<X.Y.Z>.zip` (excluding `.git` and `node_modules`).

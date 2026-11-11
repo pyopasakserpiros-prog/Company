@@ -1954,6 +1954,7 @@
       catRow.style.marginBottom = "8px";
       for (const [cId, cLb] of [
         ["ALL", "ทุกหมวด"],
+        ["WORLD_GEOPOLITICS", "🌍 พงศาวดารโลก/ภูมิรัฐศาสตร์"],
         ["SALES", "ฝ่ายขาย/ลูกค้า"],
         ["PROD", "โรงงาน/QC"],
         ["SUPPLY", "คลัง/จัดซื้อ"],
@@ -2386,10 +2387,141 @@
       byId("shTitle").textContent = "⚖️ กลยุทธ์ผู้บริหาร โลกภายนอก ตลาดหุ้น และนโยบายรัฐ";
       setSheetTabs([
         { id: "directives", label: "สถานะบริษัทและ CEO" },
+        { id: "geopolitics", label: "🌍 ภูมิรัฐศาสตร์โลก รัฐบาล 8 ประเทศ & พงศาวดารโลก (Era 2.0)" },
+        { id: "board_ledger", label: "🏛️ สมุดมติบอร์ดบริหาร & โดเมนความรู้ (บท 29/32)" },
         { id: "assets", label: "🌾 สินทรัพย์ภายนอก & ห่วงโซ่ลูกโซ่" },
         { id: "external", label: "🌐 คู่ค้า & คู่แข่ง" },
         { id: "macro", label: "📈 ตลาดหุ้น & รัฐบาล" },
       ]);
+      if (uiState.subTab === "geopolitics") {
+        const geo = v.externalWorld?.geopolitics || { nations: {}, activeEvent: null, fxRateBahtPerUsd: 34.5, globalOilIndex: 1.0, materialPriceMultipliers: {}, sectorDemandMultipliers: {} };
+        const wChron = v.externalWorld?.worldChronicle || [];
+        const ev = geo.activeEvent;
+
+        const activeEvCard = el("div", "card");
+        activeEvCard.append(
+          el("h3", "", "🌍 สถานการณ์ภูมิรัฐศาสตร์โลก الساخن สงคราม สนธิสัญญา และตัวคูณเศรษฐกิจมหภาค (Era 2.0.0)"),
+          el(
+            "div",
+            "muted",
+            "โลกภายนอกขับเคลื่อนแบบมีชีวิต: สงครามการค้า การปิดล้อมช่องแคบทางทะเล สนธิสัญญาการค้าเสรี และการเปลี่ยนขั้วรัฐบาลของ 8 ประเทศมหาอำนาจ/คู่ค้า ส่งผลต่อราคาวัตถุดิบทั้ง 58 ชนิด ค่าเงินบาท/USD ต้นทุนน้ำมันขนส่ง และดีมานด์สินค้าแต่ละอุตสาหกรรมโดยตรง",
+          ),
+          el(
+            "div",
+            "logrow",
+            `💱 อัตราแลกเปลี่ยน: ฿${(geo.fxRateBahtPerUsd || 34.5).toFixed(2)} / USD • 🛢️ ดัชนีราคาน้ำมันดิบโลก: ×${(geo.globalOilIndex || 1.0).toFixed(2)} • 🚢 ตัวคูณค่าระวางขนส่งโลก: ×${(geo.globalFreightRateMultiplier || 1.0).toFixed(2)} • ⏱️ ตัวคูณเวลานำเข้าซัพพลายเชน: ×${(geo.globalLeadTimeMultiplier || 1.0).toFixed(2)}`,
+          ),
+        );
+        if (ev) {
+          activeEvCard.append(
+            el("div", "logrow", `🔥 [เหตุการณ์โลกปัจจุบัน • วันที่ ${ev.startedDay}–${ev.expiresDay}] ${ev.badgeTh}: ${ev.titleTh} (${ev.regionTh})`),
+            el("div", "", `↳ รายละเอียด: ${ev.chronicleTh}`),
+            el("div", "muted", `💡 ข้อเสนอแนะเชิงกลยุทธ์: ${ev.strategicAdviceTh}`),
+          );
+        }
+
+        const secMultTxt = Object.entries(geo.sectorDemandMultipliers || {})
+          .map(([k, val]) => `${k}: ×${Number(val).toFixed(2)}`)
+          .join("  |  ");
+        activeEvCard.append(el("div", "logrow", `📊 ตัวคูณอุปสงค์และราคาส่งออกรายอุตสาหกรรม: ${secMultTxt}`));
+
+        const nationsCard = el("div", "card");
+        nationsCard.append(
+          el("h3", "", "🏛️ รัฐบาลและขั้วนโยบายของ 8 ประเทศมหาอำนาจและกลุ่มเศรษฐกิจคู่ค้า (Foreign Governments & Regimes)"),
+          el("div", "muted", "เมื่อประเทศมหาอำนาจหรือคู่ค้าเปลี่ยนรัฐบาล (จากการเลือกตั้งหรือการปรับขั้วนโยบาย) จะเปลี่ยนกำแพงภาษีและราคาวัตถุดิบเฉพาะกลุ่มทันที"),
+        );
+        for (const nat of Object.values(geo.nations || {})) {
+          const matEffects = Object.entries(nat.materialMods || {})
+            .map(([mId, mVal]) => {
+              const mName = v.catalog?.materials?.find((x) => x.id === mId)?.nameTh || mId;
+              return `${mName} ×${mVal}`;
+            })
+            .join(", ");
+          nationsCard.append(
+            el(
+              "div",
+              "logrow",
+              `${nat.flag} ${nat.nameTh} — รัฐบาลปัจจุบัน: "${nat.activeRegimeNameTh}" (${nat.leaderStyleTh}) • ภาษีการค้า ${nat.tariffModPct >= 0 ? "+" : ""}${nat.tariffModPct}% • ผลกระทบราคาวัตถุดิบ: ${matEffects || "สมดุลปกติ"} — ${nat.summaryTh}`,
+            ),
+          );
+        }
+
+        const worldChronCard = el("div", "card");
+        worldChronCard.append(
+          el("h3", "", `📜 พงศาวดารโลกภายนอกและเหตุการณ์ระหว่างประเทศ (${wChron.length} บันทึก)`),
+          el("div", "muted", "บันทึกเหตุการณ์สงคราม การเปลี่ยนรัฐบาล สนธิสัญญาความร่วมมือ และการแข่งขันของ 18 บริษัทนอกนิคมเรียงตามลำดับเวลา"),
+        );
+        for (const wc of wChron.slice(0, 18)) {
+          worldChronCard.append(
+            el(
+              "div",
+              "logrow",
+              `[วันที่ ${wc.day}] ${wc.badgeTh} (${wc.regionTh}): ${wc.headlineTh} — 📈 ผลกระทบราคา: ${wc.priceImpactSummaryTh} • ↳ ${wc.meaningTh}`,
+            ),
+          );
+        }
+
+        body.replaceChildren(activeEvCard, nationsCard, worldChronCard);
+        return;
+      }
+      if (uiState.subTab === "board_ledger") {
+        const eb = v.executiveBoard || { budgetPools: {}, decisionLedger: [] };
+        const pools = eb.budgetPools || {};
+        const cap = v.capabilities || { domains: {} };
+
+        const poolCard = el("div", "card");
+        poolCard.append(
+          el("h3", "", "💰 พอร์ตงบประมาณและเงินสดอิสระของคณะกรรมการบริหาร (Uncommitted Cash & Budget Pools — บทที่ 29/32)"),
+          el(
+            "div",
+            "muted",
+            "การตัดสินใจลงทุนของ CEO และบอร์ดบริหารคำนวณจากเงินสดอิสระ (Uncommitted Cash) หลังหักเงินสำรองฉุกเฉิน ค่าแรงค้างจ่าย เจ้าหนี้การค้า และเงินมัดจำลูกค้าที่มีภาระต้องส่งมอบ เพื่อป้องกันการนำเงินก้อนเดียวไปลงทุนซ้ำซ้อน",
+          ),
+          el(
+            "div",
+            "logrow",
+            `🏦 เงินสดในบัญชีรวม: ${moneyFull(v.company.cash)} • 🛡️ เงินสำรองฉุกเฉินขั้นต่ำ (${pools.reserveDaysRequired || 18} วัน): ${moneyFull(pools.survivalReserveSatang || 0)} • ⏳ เงินมัดจำลูกค้ามีภาระส่งมอบ: ${moneyFull(pools.unearnedDepositsSatang || 0)}`,
+          ),
+          el(
+            "div",
+            "logrow",
+            `🟢 เงินสดอิสระพร้อมพิจารณาลงทุน (Uncommitted Cash): ${moneyFull(pools.uncommittedCashSatang || 0)} • 📌 งบที่อนุมัติผูกพันแล้ว: ${moneyFull(eb.committedBudgetSatang || 0)} • 🧾 ลูกหนี้การค้ารอเรียกเก็บ: ${moneyFull(pools.receivableSatang || 0)}`,
+          ),
+        );
+
+        const domCard = el("div", "card");
+        domCard.append(
+          el("h3", "", "🧠 กราฟความสามารถ 9 โดเมนและ 10 ตระกูลผลิตภัณฑ์ (9 Capability Domains & 10 Product Families — บทที่ 28/32)"),
+          el("div", "muted", "แยกองค์ความรู้ตามโดเมนอุตสาหกรรมจริง การวิจัยเบเกอรี่ไม่ทำให้เกิดความรู้ผลิตชิปเซมิคอนดักเตอร์ และการสลับรุ่นสินค้าในตระกูลเดียวกันไม่ต้องเสียค่าตั้งแม่พิมพ์ใหม่"),
+        );
+        for (const d of v.catalog?.capabilityDomains || []) {
+          const lv = cap.domains?.[d.id] ?? d.baseLevel ?? 20;
+          domCard.append(
+            el("div", "logrow", `${d.icon || "🔬"} [${d.id}] ${d.nameTh} — ระดับความเชี่ยวชาญโดเมน: ${lv}/100 • ${d.descTh}`),
+          );
+        }
+
+        const ledgerCard = el("div", "card");
+        ledgerCard.append(
+          el("h3", "", `📜 สมุดบันทึกมติคณะกรรมการบริหารและเหตุผลการตัดสินใจ (${(eb.decisionLedger || []).length} รายการ)`),
+          el("div", "muted", "บันทึกทุกข้อเสนอที่ผ่านการพิจารณาของ CEO และหัวหน้าฝ่าย พร้อมผลตรวจ Hard Gates และเหตุผลที่อนุมัติ ชะลอ หรือเลือกถือเงินสด"),
+        );
+        if (!(eb.decisionLedger || []).length) {
+          ledgerCard.append(el("div", "muted", "ยังไม่มีมติการลงทุนในรอบนี้ (ระบบจะประเมินอัตโนมัติตามรอบวันหรือเมื่อเกิดคอขวดหน้างาน)"));
+        } else {
+          for (const item of (eb.decisionLedger || []).slice(0, 20)) {
+            ledgerCard.append(
+              el(
+                "div",
+                "logrow",
+                `[วันที่ ${item.day}] (${item.resolution}) ${item.titleTh} — ผู้ตัดสินใจ: ${item.deciderName} • เงินสดอิสระก่อนพิจารณา: ${moneyFull(item.uncommittedCashBefore || 0)} • เหตุผล: ${item.reasonTh}`,
+              ),
+            );
+          }
+        }
+        body.replaceChildren(poolCard, domCard, ledgerCard);
+        return;
+      }
       if (uiState.subTab === "assets") {
         body.replaceChildren(...renderExternalAssetsAndChainsView(v));
         return;
@@ -2745,6 +2877,12 @@
           ["🧬 ออกใบรับรองปลอดเชื้อ Clinical COA", { type: "directorEdit", action: "certifyBiomedLot", productId: "vital_monitor" }],
           ["🔬 รับงานแล็บสอบเทียบ ISO", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "calibration_lab", clientCorpId: "siam_auto" }],
           ["♻️ รับงานรีไซเคิลกากของเสีย ➔ กู้คืนวัตถุดิบ", { type: "directorEdit", action: "startServiceOrder", serviceTypeId: "industrial_recycling", clientCorpId: "eastern_chem" }],
+          ["⚔️ จำลองสงครามปิดล้อมทะเลแดง (น้ำมัน/ค่าระวางพุ่ง)", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "red_sea_blockade_war" }],
+          ["⚔️ จำลองสงครามทะเลดำ (ราคาปุ๋ย/แป้งสาลีพุ่ง)", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "black_sea_grain_fertilizer_war" }],
+          ["⚡ จำลองสงครามคว่ำบาตรชิป AI (ราคาชิป/เวเฟอร์พุ่ง)", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "superpower_chip_embargo" }],
+          ["🗳️ เปลี่ยนรัฐบาลสหรัฐฯ (ขึ้นกำแพงภาษี/กรีนดีล)", { type: "directorEdit", action: "changeForeignRegime", nationId: "US" }],
+          ["🗳️ เปลี่ยนรัฐบาลจีน (จำกัดโควตาส่งออกลิเธียม)", { type: "directorEdit", action: "changeForeignRegime", nationId: "CN", regimeId: "strategic_resource_control" }],
+          ["🤝 ลงนามสนธิสัญญาการค้าเสรี อาเซียน-ญี่ปุ่น-อียู", { type: "directorEdit", action: "triggerGeopoliticalEvent", eventId: "asean_jp_eu_free_trade_pact" }],
         ];
         for (const [labelTh, payload] of bpActions) {
           const btn = el("button", "btn", labelTh);
