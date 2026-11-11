@@ -71,6 +71,8 @@
 
 ดัชนีและสถานะข้อเสนอที่เหลืออยู่ใน [ideas/company/README.md](ideas/company/README.md) บท 1–18 และ 25–27 เป็นคลังเอกสารเก่าที่มีทั้งแนวคิดเดิมและส่วนที่อาจทับกับระบบปัจจุบัน ให้ตรวจรายข้อกับสถานะและ source ก่อนหยิบไปทำ
 
+รายงานวิเคราะห์ธุรกิจและการลงทุนฉบับ DOCX ที่รับมาเมื่อ 11 พฤศจิกายน 2026 เก็บไว้ใน [เอกสารวิจัยต้นฉบับ](docs/company/research/source_documents/Company_Business_Expansion_Investment_Report_2026-11-11.docx); เป็นข้อเสนอเพิ่มธุรกิจ 8 ประเภท ไม่ใช่สิ่งที่มีในเกม และยังไม่ยืนยันว่า Gemini ได้รับเอกสารนี้
+
 ## สกิลและขอบเขตที่ยังต้องติดตาม
 
 - มี Master Skill `company-evolution-dev` และ Evergreen Skill `company-for-every-patch` ใน repo; ดัชนีและสำเนาระดับ root (`SKILL.md`, `SKILL_COMPANY_EVOLUTION_DEV.md`, `SKILL_COMPANY_FOR_EVERY_PATCH.md`) อยู่ที่ [.agents/skills/README.md](.agents/skills/README.md)
@@ -80,7 +82,7 @@
 
 ## เริ่มงานกับ repo นี้
 
-อ่าน [AGENTS.md](AGENTS.md) ก่อนทุกครั้ง จากนั้นอ่าน [START_HERE_FOR_AI.md](START_HERE_FOR_AI.md), [workflow ระหว่างเอเจนต์](docs/company/AGENT_COLLABORATION_WORKFLOW.md), [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md), Master Skill และสกิลเฉพาะด้านที่เกี่ยวข้อง ก่อนแก้ source ให้รัน baseline จาก `COMPANY_SOURCE/` และอัปเดตสถานะ/รายงาน/สกิลตามผลตรวจจริง
+อ่าน [AGENTS.md](AGENTS.md) ก่อนทุกครั้ง จากนั้นอ่าน [START_HERE_FOR_AI.md](START_HERE_FOR_AI.md), [ดัชนีเอกสาร Company](docs/company/README.md), [workflow ระหว่างเอเจนต์](docs/company/AGENT_COLLABORATION_WORKFLOW.md), [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md), Master Skill และสกิลเฉพาะด้านที่เกี่ยวข้อง ก่อนแก้ source ให้รัน baseline จาก `COMPANY_SOURCE/` และอัปเดตสถานะ/รายงาน/สกิลตามผลตรวจจริง
 
 ## บั๊กที่ยืนยันแล้วใน source v2.0.0 ซึ่งยังไม่ได้แก้
 

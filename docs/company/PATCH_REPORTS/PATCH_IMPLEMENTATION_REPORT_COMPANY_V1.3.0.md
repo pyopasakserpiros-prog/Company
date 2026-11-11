@@ -37,4 +37,4 @@
   - 300 พนักงาน: `0.477 ms/tick`
   - 500 พนักงาน: `0.795 ms/tick` (`p95: 1.199 ms`)
 - **หมายเหตุเรื่อง `npm run test:browser`:** ในสภาพแวดล้อม VM ปัจจุบัน (`Node v18.20.4` โหมด Offline) ไม่มีแพ็กเกจ `playwright` ติดตั้งอยู่ใน `node_modules` (`Cannot find module 'playwright'`) จึงตรวจสอบความถูกต้องของ API, DOM Presenter และชุดทดสอบจำลองทั้งหมดผ่าน Node Test Runner ทั้ง 130 ข้อแทนตามข้อกำหนดการรายงานตามจริง
-- **ตาราง Coverage Matrix (`NPC_COVERAGE_MATRIX_V1.3.0.csv` & `docs/company/NPC_COVERAGE_MATRIX_TO_COMPLETE.csv`):** กรอกและยืนยันครบทั้ง **123 รายการ** (`VERIFIED_V130`)
+- **ตาราง Coverage Matrix (`NPC_COVERAGE_MATRIX_V1.3.0.csv` & `docs/company/validation/NPC_COVERAGE_MATRIX_TO_COMPLETE.csv`):** กรอกและยืนยันครบทั้ง **123 รายการ** (`VERIFIED_V130`)

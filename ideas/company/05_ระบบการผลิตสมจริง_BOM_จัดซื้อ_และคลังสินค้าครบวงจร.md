@@ -3,7 +3,7 @@
 
 > [!NOTE]
 > เอกสารฉบับนี้เป็นฉบับสรุปแนวคิดสำหรับคลังไอเดีย รายละเอียดพิมพ์เขียวทางเทคนิคฉบับเต็มพร้อมตารางราคาและสูตรคำนวณ ดูได้ที่:  
-> [`docs/company/MANUFACTURING_SUPPLY_CHAIN_AND_INVENTORY_SPEC.md`](../../docs/company/MANUFACTURING_SUPPLY_CHAIN_AND_INVENTORY_SPEC.md)
+> [`docs/company/design/MANUFACTURING_SUPPLY_CHAIN_AND_INVENTORY_SPEC.md`](../../docs/company/design/MANUFACTURING_SUPPLY_CHAIN_AND_INVENTORY_SPEC.md)
 
 ---
 

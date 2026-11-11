@@ -6,7 +6,7 @@
 
 1. [AGENTS.md](AGENTS.md) — กฎเหล็ก; ห้ามแก้โดยไม่ได้รับอนุญาตจากผู้ใช้โดยตรง
 2. [สถานะโครงการ](project_status_and_ai_onboarding.md) — ความสามารถที่มีจริง รุ่นเกม และผลตรวจล่าสุด
-3. [Workflow ทำงานร่วมกัน](docs/company/AGENT_COLLABORATION_WORKFLOW.md) และ [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
+3. [Workflow ทำงานร่วมกัน](docs/company/AGENT_COLLABORATION_WORKFLOW.md), [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md) และ [ดัชนีเอกสาร Company](docs/company/README.md)
 4. [Master Skills และดัชนีสกิล](.agents/skills/README.md) พร้อม `SKILL.md` ที่เกี่ยวข้องกับงาน
 5. อ่าน source/test จริงใน `COMPANY_SOURCE/` ก่อนยืนยันพฤติกรรม
 
@@ -33,4 +33,5 @@ Gemini/ChatGPT ที่ทำงานผ่านแอปแชตรับ Z
 
 ## Active prompt สำหรับงานถัดไป
 
-- [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) — พรอมต์เพิ่มความลึกธุรกิจ/ตลาดโลกและแก้บั๊ก business-entry NPC; เตรียมไว้ให้ผู้ใช้ส่ง ZIP จาก main ให้ Gemini ดู [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
+- [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) — พรอมต์เพิ่มความลึกธุรกิจ/ตลาดโลกและแก้บั๊ก business-entry NPC; ผู้ใช้แจ้งว่าส่งให้ Gemini แล้ว ดูสถานะใน [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
+- [รายงานธุรกิจและการลงทุน DOCX](docs/company/research/source_documents/Company_Business_Expansion_Investment_Report_2026-11-11.docx) — เอกสารเสริมที่เก็บไว้หลังส่งพรอมต์; ยังไม่ยืนยันว่า Gemini ได้รับ

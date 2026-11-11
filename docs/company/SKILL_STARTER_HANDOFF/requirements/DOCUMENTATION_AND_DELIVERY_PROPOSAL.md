@@ -17,7 +17,7 @@
 | ทุกงานแก้ไขและส่งมอบ | project_status_and_ai_onboarding.md และสำเนาใน COMPANY_SOURCE, รายงานงาน, AGENT_WORK_STATUS เมื่อสถานะงานร่วมเปลี่ยน, สกิลที่เกี่ยวข้อง |
 | ขั้นตอนพัฒนา/ตรวจ/แพ็ก/รับช่วง | company-for-every-patch ทั้งสองสำเนา, workflow, README/START_HERE, เอกสารส่งต่อ/พรอมต์ที่เกี่ยวข้อง |
 | ความสามารถ/โครงสร้างเกม/สัญญาใหม่ | company-evolution-dev ทั้งสามสำเนา, project status, รายงาน, คำอธิบาย API/ระบบที่เปลี่ยน |
-| API, snapshot, commands, save | docs/company/PRESENTATION_API.md, schema/คำสั่งที่เกี่ยวข้อง, วิธีใช้/ข้อจำกัดเซฟ และเทสต์ตามผลกระทบ |
+| API, snapshot, commands, save | docs/company/design/PRESENTATION_API.md, schema/คำสั่งที่เกี่ยวข้อง, วิธีใช้/ข้อจำกัดเซฟ และเทสต์ตามผลกระทบ |
 | NPC/ชีวิต/การตัดสินใจ/Edit Hub/UI | วิสัยทัศน์ผู้เล่น, คู่มือ UI/API ที่ได้รับผลกระทบ, ข้อเสนอที่เกี่ยวข้อง และภาพ/หลักฐานตามที่ตรวจจริง |
 | สินค้า วัตถุดิบ เทคโนโลยี ธุรกิจ | แผน/สเปก supply chain, coverage, ideas ที่เกี่ยวข้อง และสกิล master; snapshot แค็ตตาล็อกที่มีชื่อรุ่นเก่าให้คงเป็นหลักฐานฐานเดิม ไม่เขียนทับให้กลายเป็นรุ่นใหม่โดยเงียบ ๆ |
 | วิธีเปิด/ติดตั้ง/build/เทสต์ | README ราก, COMPANY_SOURCE/README.md, START_HERE, package manifest/lock เมื่อจำเป็น และสกิล workflow |

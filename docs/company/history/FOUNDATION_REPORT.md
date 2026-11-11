@@ -2,7 +2,7 @@
 
 ระบบบริษัทออฟฟิศ/โรงงานมีซอร์สและเครื่องมือตรวจแล้ว Gemini review.2 ถูกนำมาตรวจ/แก้ต่อโดยCodexตามดุลพินิจที่ผู้ใช้ให้ พร้อมค้นข้อมูลความสามารถข้ามธุรกิจจากแหล่งหลัก human core1.0.0 ล็อกถาวรแล้ว
 
-รายงานปัจจุบันที่มีหลักฐาน/ผลทดสอบและข้อจำกัดอยู่ [CODEX_CORE_ACCEPTANCE_REPORT.md](CODEX_CORE_ACCEPTANCE_REPORT.md) โครงสร้าง/สูตรดู [HUMAN_CORE_MODEL.md](HUMAN_CORE_MODEL.md) หลักฐานการออกแบบดู [FUTURE_BUSINESS_CORE_RESEARCH.md](FUTURE_BUSINESS_CORE_RESEARCH.md)
+รายงานปัจจุบันที่มีหลักฐาน/ผลทดสอบและข้อจำกัดอยู่ [CODEX_CORE_ACCEPTANCE_REPORT.md](../PATCH_REPORTS/CODEX_CORE_ACCEPTANCE_REPORT.md) โครงสร้าง/สูตรดู [HUMAN_CORE_MODEL.md](../design/HUMAN_CORE_MODEL.md) หลักฐานการออกแบบดู [FUTURE_BUSINESS_CORE_RESEARCH.md](../research/FUTURE_BUSINESS_CORE_RESEARCH.md)
 
 ขั้นถัดไปคือClaudeสร้างภาพ/ตัวละคร/ฉาก/UIจากระบบจริงตามCLAUDE_GRAPHICS_HANDOFF ไม่สร้างแกนใหม่ ไม่ยึดหน้าdebugเป็นแบบภาพบังคับ
 

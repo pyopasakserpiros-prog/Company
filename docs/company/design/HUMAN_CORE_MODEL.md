@@ -2,7 +2,7 @@
 
 แกนอยู่ใน `COMPANY_SOURCE/js/human-core.js` และลงทะเบียน SHA-256 ใน `COMPANY_SOURCE/CORE_LOCK.json` ห้ามแก้สูตร รายชื่อ/ความหมายมิติ ลำดับเดิม หรือ rebaseline โดยไม่มีคำสั่งผู้ใช้ งานต่อไปเพิ่มเนื้อหา/ระบบภายนอกแกนได้ตาม AGENTS
 
-ผู้ใช้อนุญาต Codex ตรวจและตัดสินใจหลัง Gemini review.2 และให้ค้นคว้ารองรับธุรกิจอนาคต อ่านหลักฐานและข้อจำกัดใน [FUTURE_BUSINESS_CORE_RESEARCH.md](FUTURE_BUSINESS_CORE_RESEARCH.md)
+ผู้ใช้อนุญาต Codex ตรวจและตัดสินใจหลัง Gemini review.2 และให้ค้นคว้ารองรับธุรกิจอนาคต อ่านหลักฐานและข้อจำกัดใน [FUTURE_BUSINESS_CORE_RESEARCH.md](../research/FUTURE_BUSINESS_CORE_RESEARCH.md)
 
 ## ชั้นข้อมูลของคน
 
