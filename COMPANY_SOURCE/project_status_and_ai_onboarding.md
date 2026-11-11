@@ -53,3 +53,12 @@
 - **Locked Human Core 1.0.0 Verification (`tools/verify.cjs`)**: `PASS` (`SHA-256: fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`)
 - **Automated Unit & Integration Tests (`tools/test.cjs`)**: ผ่านครบ **117 / 117 ชุดทดสอบ** (`0 failures`)
 - **500-NPC High-Scale Performance Benchmark (`tools/benchmark.cjs`)**: **`0.945 ms/tick`** ที่พนักงาน 500 คน (`p95: 1.656 ms`)
+
+
+## อัปเดตเอกสาร: ร่างสกิลเฉพาะ Company (11 พฤศจิกายน 2026)
+
+- เพิ่มโครง SKILL.md 14 หมวดใน .agents/skills โดยระบุ maturity: starter-draft และปรับดัชนีเลือกใช้ ยังไม่ใช่ Master Skill ที่ผ่านการประเมิน
+- แหล่งอ้างอิงและพรอมต์ยกระดับอยู่ใน docs/company/SKILL_STARTER_HANDOFF ให้ Gemini วิเคราะห์ คิดเพิ่ม และอัปเกรดเองตามคำสั่งผู้ใช้
+- คงสองสกิลเดิมและ AGENTS.md ไม่เปลี่ยนแปลง การอัปเดต installed skills ในแอป Gemini ยังไม่ได้ทำ/ยืนยัน และต้องส่งข้อมูลเสริมผ่านผู้ใช้
+- เป็นการเพิ่มเอกสาร ไม่มีการแก้โค้ดหรือเพิ่มฟีเจอร์เกม ไม่มีผลรันเทสต์เกมใหม่จากงานนี้ ตรวจรูปแบบร่าง ลิงก์ และขอบเขตไฟล์ก่อนส่งขึ้น repo
+- รายงานงาน: docs/company/PATCH_REPORTS/UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md

@@ -1,0 +1,39 @@
+---
+name: company-world-and-markets
+description: Use when changing suppliers, client demand, external corporations, commodity prices, competition, government events, or market news.
+metadata:
+  maturity: starter-draft
+  intended-project: Company
+---
+
+# ร่างตั้งต้น — โลกภายนอก ตลาด และบริษัทคู่ค้า
+
+**สถานะ: ร่างตั้งต้นใน repo รอ Gemini ยกระดับ ยังไม่ใช่ Master Skill ที่ผ่านการใช้งานจริง และยังไม่ยืนยันการอัปเดตสกิลในแอป Gemini**
+
+## จุดเริ่มในโครงการ
+
+ฐานอ้างอิง v1.2.0 ให้ Gemini ตรวจ source ล่าสุดก่อนเชื่อชื่อ/พฤติกรรม:
+
+- Source: `COMPANY_SOURCE/js/sim.js: freshExternalWorld, simulateOffsiteEcosystemDaily, updateExternalWorld, evaluateExternalAssetsDaily, sellMaterialB2B, setCorporationRelation` (รายการต่อจากไฟล์แรกใช้ราก COMPANY_SOURCE เช่นกัน)
+- ตัวอย่างหลักฐานเดิม: `COMPANY_SOURCE/test/ecosystem-multitier-dag-v100.test.cjs; scale-logistics-external-v040.test.cjs` (ชื่อที่ตามมาอยู่ test/ เว้นแต่ระบุ tools/)
+
+## หัวข้อที่เสนอให้ขยาย
+
+- แยกข่าว/ดัชนีที่เป็นข้อมูลกับธุรกรรมที่ย้ายเงินหรือสินค้า
+- ลูกค้า/supplier ต้องมีเงื่อนไขความต้องการ ราคา คุณภาพ lead time และความเสี่ยงที่ใช้จริง
+- ห้ามเติม stock/เงินให้บริษัทผู้เล่นจาก event โดยไม่มีแหล่งหรือบัญชีตามระบบ
+- ให้ผลที่ผู้เล่นเห็นโยงกับการตัดสินใจและความสัมพันธ์จริง ไม่อ้างว่า external corp มี inventory/capacity ละเอียดถ้ายังไม่มี
+
+## โจทย์ลองใช้หลังยกระดับ
+
+ข่าว supply shock เกิดขึ้นแล้วราคา/lead time/ปริมาณซื้อเปลี่ยนจริงหรือแค่มีข้อความ จะตรวจอย่างไร?
+
+ให้ Gemini เติมวิธีวิเคราะห์ ลำดับตัดสินใจ ตัวอย่างจากโค้ดจริง ข้อผิดพลาดที่พบบ่อย ขอบเขตกับสกิลข้างเคียง และหลักฐานที่ต้องตรวจ ห้ามประกาศว่าเทสต์ผ่านหรือระบบครบเพราะมีร่างนี้
+
+## แหล่งแนวคิด
+
+Update Method; systematic-debugging; ecosystem tests ของ Company — ดู [รายการแหล่งอ้างอิง](../../../docs/company/SKILL_STARTER_HANDOFF/SOURCES.md) ไม่คัดลอก API/ระบบจากเกมเก่ามาเป็นข้อเท็จจริงของ Company
+
+## เมื่อทำเป็น Master Skill
+
+อ่าน AGENTS.md ก่อนและเคารพไฟล์ที่ล็อก อัปเดตสกิล/สถานะ/เอกสาร/รายงานตามแพตช์จริง เลือกชื่อ/ขอบเขตใหม่ รวม/แยก หรือเพิ่มสกิลอื่นได้ตามเหตุผล แล้วอัปเกรดไฟล์ร่างใน `.agents/skills/<name>/SKILL.md` หลังตรวจ พร้อมเปลี่ยน maturity ตามจริง ไม่เปลี่ยนแค่ชื่อให้ดูเป็น master
