@@ -23,7 +23,7 @@
 | [company-workforce-and-careers](company-workforce-and-careers/SKILL.md) | กำลังคน อาชีพ และการเติบโต |
 | [company-world-and-markets](company-world-and-markets/SKILL.md) | โลกภายนอก ตลาด และบริษัทคู่ค้า |
 
-## สองสกิลเดิมของ workflow/แอป
+## สองสกิลเดิมของแอป Gemini และสำเนาที่ทุกเอเจนต์ใช้ร่วม
 
 - [company-evolution-dev](company-evolution-dev/SKILL.md) และสำเนา `SKILL.md` / `SKILL_COMPANY_EVOLUTION_DEV.md` ที่ราก
 - [company-for-every-patch](company-for-every-patch/SKILL.md) และสำเนา `SKILL_COMPANY_FOR_EVERY_PATCH.md` ที่ราก
@@ -33,3 +33,6 @@
 ## การรับช่วงและการอัปเดต
 
 อ่าน [ชุดส่งต่อและแหล่งอ้างอิง](../../docs/company/SKILL_STARTER_HANDOFF/README.md) และ [พรอมต์ Gemini](../../docs/company/SKILL_STARTER_HANDOFF/GEMINI_PROMPT.md) สำหรับรายละเอียด ทุกแพตช์ต้องทบทวนสกิลที่ได้รับผลกระทบพร้อมสถานะโครงการ เอกสารและรายงาน ไม่ต้องรอผู้ใช้ระบุชื่อไฟล์ ให้คงข้อมูลข้อเสนอ/ร่างแยกจากสิ่งที่เกมทำแล้ว และห้ามแก้กฎเหล็กโดยไม่มีคำอนุญาตโดยตรง
+
+
+**ข้อกำชับเรื่องการซิงก์:** สองสกิลเดิมต้องอัปเดตทั้งในแอป Gemini และใน .agents/skills พร้อมสำเนาราก ทุกเอเจนต์ใช้ชุดไฟล์ร่วมนี้ การ push อย่างเดียวไม่ถือว่าอัปเดตสกิลในแอปแล้ว ดู [ตารางชื่อ/เส้นทางและเกณฑ์ยืนยัน](../../docs/company/SKILL_STARTER_HANDOFF/GEMINI_APP_SKILL_SYNC.md)

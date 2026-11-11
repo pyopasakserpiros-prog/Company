@@ -62,3 +62,6 @@
 - คงสองสกิลเดิมและ AGENTS.md ไม่เปลี่ยนแปลง การอัปเดต installed skills ในแอป Gemini ยังไม่ได้ทำ/ยืนยัน และต้องส่งข้อมูลเสริมผ่านผู้ใช้
 - เป็นการเพิ่มเอกสาร ไม่มีการแก้โค้ดหรือเพิ่มฟีเจอร์เกม ไม่มีผลรันเทสต์เกมใหม่จากงานนี้ ตรวจรูปแบบร่าง ลิงก์ และขอบเขตไฟล์ก่อนส่งขึ้น repo
 - รายงานงาน: docs/company/PATCH_REPORTS/UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md
+
+
+คำกำชับเรื่องสกิลร่วม: สองสกิลเดิม company-evolution-dev / company-for-every-patch ต้องอัปเดตทั้ง installed skills ในแอป Gemini และไฟล์ .agents/skills/สำเนารากสำหรับทุกเอเจนต์ ดู docs/company/SKILL_STARTER_HANDOFF/GEMINI_APP_SKILL_SYNC.md ปัจจุบันยังไม่มีหลักฐานยืนยันการซิงก์ในแอป
