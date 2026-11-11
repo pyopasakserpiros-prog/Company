@@ -24,6 +24,8 @@
 | 30 | ทะเบียนวัตถุดิบ 60 รายการ | ตัด/รวมวัตถุดิบที่มีหรือซ้ำแล้ว 13 แถว รวม ID ใหม่ 7 ชนิด; เหลือ 47 รายการใน [บท 30](30_material_origin_and_supply_chain_registry.md) |
 | 31 | Audit/coverage และ acceptance tests | ประเด็น v1.3 ที่แก้แล้วถูกย้ายไป status; เหลือข้อเสนอการตรวจระยะยาวใน [บท 31](31_audit_evidence_and_acceptance_scenarios.md) |
 | 32 | ข้อเสนอเสริมและตัวอย่างมติ | ย้าย capability domains, budget pools และบริการที่ทำแล้วออก; คงเฉพาะส่วนต่อยอดใน [บท 32](32_additional_design_proposals_and_decision_examples.md) |
+| 34 | ความลึกธุรกิจ โลหะ ประเทศ/ตลาดใหม่ และ Audit business-entry NPC | ข้อเสนอประกอบพรอมต์ Gemini; ยืนยันบั๊ก CEO live-review และค่า lease NaN กับ source, ส่วน audit ย่อยอื่นให้ทวนอีกครั้งก่อนแก้ |
+
 
 ## เอกสารที่ย้ายออกหลังทำครบ
 

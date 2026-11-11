@@ -81,3 +81,15 @@
 ## เริ่มงานกับ repo นี้
 
 อ่าน [AGENTS.md](AGENTS.md) ก่อนทุกครั้ง จากนั้นอ่าน [START_HERE_FOR_AI.md](START_HERE_FOR_AI.md), [workflow ระหว่างเอเจนต์](docs/company/AGENT_COLLABORATION_WORKFLOW.md), [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md), Master Skill และสกิลเฉพาะด้านที่เกี่ยวข้อง ก่อนแก้ source ให้รัน baseline จาก `COMPANY_SOURCE/` และอัปเดตสถานะ/รายงาน/สกิลตามผลตรวจจริง
+
+## บั๊กที่ยืนยันแล้วใน source v2.0.0 ซึ่งยังไม่ได้แก้
+
+ผลตรวจวันที่ 11 พฤศจิกายน 2026 ใน checkout main HEAD 6182e0a662bf1dfe47360e64e20e635ea07abeae พบว่าการทบทวนของผู้บริหารมี implementation แต่เส้นทางอัตโนมัติจริงติด gate:
+
+- **การเปิด/ขยายธุรกิจอัตโนมัติ:** evaluator ต้องพบ CEO ที่ atWork แต่ถูกเรียกใน settleDay ตอนข้ามวัน/กลางคืน ผล repro 60 วันด้วย seed audit-main-v200: 60 รายการล่าสุดใน ledger เป็น governance|deferred_no_executive_authority, lastReviewDay = 0, ไม่ได้ซื้อสินทรัพย์/รถ/บริการเพิ่ม เทสต์เดิมยังผ่านเพราะเรียก evaluator ด้วย ignoreAtWork: true จึงยังไม่ครอบคลุมเส้นทาง live
+- **การเช่ารถของบอร์ด:** FLEET_VEHICLES ไม่มี leaseDepositSatang แต่ evaluator อ่านค่านี้ ขณะที่การจัดหารถคิดค่าเช่าล่วงหน้าเป็น dailyLeaseCost × 5; probe เส้นทางเช่าพบราคา NaN และ committedBudgetSatang เป็น NaN
+- **การหักงบที่ใช้ไปแล้วซ้ำ:** การซื้อรถโพสต์จ่ายเงินแล้ว แต่ committedBudgetSatang ถูกบวกและหักซ้ำในการคำนวณเงินสดอิสระ ไม่มีการคืน/ล้างค่านี้ใน code path ปัจจุบัน
+
+มี audit items เพิ่มที่ต้องตรวจ/ทดสอบต่อในงานที่เตรียมส่ง Gemini: เกณฑ์บริษัทเริ่มต้นที่ต้องมีพนักงานอย่างน้อย 10 คนหรือสินทรัพย์, service-entry ใช้ยอดเงินสดรวมแทนเงินอิสระหลังสำรอง, service/client ถูกเลือกแบบ round-robin/รายแรก และ nextReviewDay ถูกเขียนแต่ไม่ใช้คุมรอบ ตรวจรายละเอียด หลักฐาน และพรอมต์ส่งต่อใน [เอกสารข้อเสนอและ audit](ideas/company/34_business_depth_world_markets_and_npc_entry_audit.md) และ [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
+
+การตรวจ baseline รอบนี้ npm test ผ่าน 132/132 และ npm run check ผ่าน แต่การผ่านของชุดเดิมไม่ได้ลบล้าง repro ของเส้นทาง live; source ยังไม่ถูกแก้ใน commit นี้

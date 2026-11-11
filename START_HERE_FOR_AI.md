@@ -30,3 +30,7 @@ npm run test:browser
 ผู้ใช้ชอบเฝ้าดู NPC ใช้ชีวิตและตัดสินใจเอง พร้อมทดลองเปลี่ยนนิสัย เงิน บริษัท และทรัพยากรเพื่อดูผล ทีมพัฒนาต้องช่วยคิดและออกแบบต่อ ไม่รอให้ผู้ใช้แจกแจงทุกอย่าง Edit Hub ต้องเข้าใจง่าย ไม่บังคับจำ ID หรือแก้ JSON
 
 Gemini/ChatGPT ที่ทำงานผ่านแอปแชตรับ ZIP ผ่านผู้ใช้และต้องส่ง ZIP โครงการกลับ; ตรวจ ZIP ฉบับสุดท้ายและเทียบกับ repo ล่าสุดก่อนรวมเสมอ การอัปเดต repo ไม่ได้ซิงก์แอป Gemini ที่ทำงานจาก ZIP เก่าโดยอัตโนมัติ ดู [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md)
+
+## พรอมต์ที่เตรียมส่งต่อ
+
+- [พรอมต์เพิ่มความลึกธุรกิจ/ตลาดโลกและแก้บั๊ก business-entry NPC](docs/company/NEXT_PATCH_PROMPT_BUSINESS_DEPTH_WORLD_MARKETS_AND_NPC_BUGS.md) — ฐาน main v2.0.0 commit 6182e0a; รอผู้ใช้ส่ง ZIP นี้ให้ Gemini ดู [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
