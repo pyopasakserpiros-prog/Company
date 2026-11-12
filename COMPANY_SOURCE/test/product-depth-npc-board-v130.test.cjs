@@ -9,7 +9,7 @@ const API = require("../js/api.js");
 
 test("v1.3.0 Chapter 28 & 30: 58 Materials with true physical/chemical origins (N-P-K from Nitrogen Ammonia + Phosphate/Potash), 36 Products across 10 Families, 9 Capability Domains, and 6 B2B Industrial Services", () => {
   const cat = D.createCatalog();
-  assert.strictEqual(D.RELEASE_VERSION, "2.4.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.5.0");
   assert.strictEqual(Object.keys(cat.materials).length, 64, "Catalog has 58 materials");
   assert.strictEqual(Object.keys(cat.products).length, 42, "Catalog has 36 products");
   assert.strictEqual(Object.keys(D.MATERIAL_RECIPES).length, 40, "Catalog has 35 material recipes");
@@ -147,7 +147,7 @@ test("v1.3.0 Chapter 29 & 31 Acceptance Scenarios: Executive Board Decision Ledg
 
   const app = API.create("v130-api-snapshot", { autonomous: true });
   const snap = app.snapshot();
-  assert.strictEqual(snap.releaseVersion, "2.4.0");
+  assert.strictEqual(snap.releaseVersion, "2.5.0");
   assert.strictEqual(snap.catalog.capabilityDomains.length, 9);
   assert.strictEqual(snap.catalog.productFamilies.length, 10);
   assert.strictEqual(snap.catalog.industrialServices.length, 10);

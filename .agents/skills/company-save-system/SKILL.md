@@ -49,3 +49,7 @@ ensureKnowledge migration archives old point unlocks and retains finances/contra
 Save.validate delegates current `externalWorld.living` to S.worldAudit and rejects malformed balances/stock/market/references. Current saves preserve in-transit shipments, opening accounts, policy terms, finite reserves, temporary scenarios and histories. Missing legacy living state initializes on next daily world step; no daily reset. Test 180-day world save roundtrip and deterministic continuation to day200. Do not replace a valid living state during loading.
 
 Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
+
+## v2.5.0 integration
+
+sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.

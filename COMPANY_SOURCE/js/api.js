@@ -1151,6 +1151,7 @@
           serviceBusiness: w.serviceBusiness || null,
           capabilities: w.capabilities || null,
           companyKnowledge: S.companyKnowledgeView(w),
+          manufacturing: S.productionView(w),
           executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
           companyProgression: w.companyProgression || null,
@@ -1449,7 +1450,7 @@
           lastFrame = timestamp;
           if (dt < 0 || dt > 1000 || speed === 0 || world.status !== "running")
             return 0;
-          accumulator += (dt / 1000) * 10 * speed;
+          accumulator += (dt / 1000) * 2 * speed;
           const minutes = Math.floor(accumulator / S.TICK) * S.TICK;
           if (minutes) {
             accumulator -= minutes;

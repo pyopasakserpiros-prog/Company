@@ -60,3 +60,7 @@ For any new or revised subject, use `docs/company/templates/KNOWLEDGE_SUBJECT_TE
 Regenerate `docs/company/KNOWLEDGE_SUBJECT_CATALOG.md` using `node COMPANY_SOURCE/tools/knowledge-catalog.cjs`; update the system guide and research evidence when needed. Verify raw money/points do not bypass qualification, buying technology still needs staff and transfer, and legacy saves do not turn everybody into universal experts. `tools/build.cjs` now updates the three official HTML aliases directly.
 
 When an app-specific `skills:update_skill` tool is not available to the current agent, keep both repository master copies current and report Gemini-app sync as unavailable; never fabricate that update.
+
+## v2.5.0 integration
+
+sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.

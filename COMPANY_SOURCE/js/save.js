@@ -600,7 +600,7 @@
         add(
           record(o) &&
             o.id === id &&
-            Object.hasOwn(w.offers, o.offerId) &&
+            (Object.hasOwn(w.offers, o.offerId) || (o.stockBatch===true && o.offerId===null && o.deposit===0 && o.unitPrice===1)) &&
             Object.hasOwn(w.catalog.products, o.productId) &&
             int(o.quantity, 1, 200) &&
             int(o.unitPrice, 1) &&

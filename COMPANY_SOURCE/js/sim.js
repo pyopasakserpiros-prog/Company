@@ -15,7 +15,7 @@
   function (H, D, L, E, W) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.4.0",
+      RELEASE_VERSION = "2.5.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -5831,6 +5831,28 @@
       w.jobs[j.id] = j;
       return j;
     }
+    function productionSteps(product) {
+      const stages={food:["เตรียมและชั่งวัตถุดิบ","ผสมและขึ้นรูป","แปรรูปและพักก่อนตรวจ"],electronics:["เตรียมแผงและชิ้นส่วน","ประกอบและเชื่อมต่อวงจร","ตั้งค่าและทดสอบการทำงาน"],automotive:["เตรียมวัสดุและเครื่องมือ","ขึ้นรูปและประกอบ","ปรับแต่งและทดสอบ"],energy:["เตรียมวัสดุและชิ้นส่วน","ประกอบระบบพลังงาน","ทดสอบความปลอดภัย"],biomed:["เตรียมวัตถุดิบและพื้นที่","แปรรูปและควบคุมสภาวะ","ตรวจความสม่ำเสมอก่อนปล่อยล็อต"]};
+      return stages[product.industry==="tech"?"electronics":product.industry] || ["เตรียมวัตถุดิบ","แปรรูปและประกอบ","ตรวจการทำงานก่อนส่ง QC"];
+    }
+    function productionView(w) {
+      return Object.values(w.catalog.products).map(p=>({id:p.id,nameTh:p.nameTh,steps:productionSteps(p),stock:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).length,reserved:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&!w.orders[u.orderId]?.stockBatch).length,wip:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").length,activeSteps:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").map(u=>({id:u.id,step:u.stage==="assembly"?productionSteps(p)[u.processStep||0]:u.stage,history:u.processHistory||[]}))}));
+    }
+    function planStockProduction(w) {
+      if(!w.policies.autoAccept || tod(w)!==660 || !w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))return;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);
+      if(w.finance.cash<wages*21 || Object.keys(w.units).length>24)return;
+      for(const pid of w.research.unlocked){
+        const product=w.catalog.products[pid];if(!productReadiness(w,pid).ready)continue;
+        const existing=Object.values(w.units).filter(u=>u.productId===pid&&w.orders[u.orderId]?.stockBatch).length;
+        const target=product.industry==="food"?2:8;if(existing>=target)continue;
+        const quantity=Math.min(target-existing,4),cost=Object.entries(product.bom).reduce((a,[k,q])=>a+w.catalog.materials[k].unitCost*q,0);
+        if(product.priceMin<=cost*1.2 || Object.entries(product.bom).some(([k,q])=>safeAvailableToDeduct(w,k)<q*quantity))continue;
+        const oid=id(w,"stockLot"),o={id:oid,offerId:null,productId:pid,quantity,unitPrice:1,total:quantity,deposit:0,deadline:now(w)+1000000000,paymentMinutes:0,status:"accepted",acceptedAt:now(w),shipped:0,materialConsumed:false,completedAt:null,stockBatch:true,customerName:"ผลิตสะสมเข้าคลัง ยังไม่มีผู้ซื้อ"};
+        w.orders[oid]=o;for(let i=0;i<quantity;i++)addUnit(w,o);
+        event(w,"stockProductionPlanned",`ฝ่ายบริหารสั่งล็อต ${product.nameTh} ${quantity} ชิ้น เข้าคลังเพื่อเสนอขาย — มีวัตถุดิบและเงินสำรอง21วัน`,{orderId:oid,quantity});break;
+      }
+    }
     function addUnit(w, order) {
       const p = w.catalog.products[order.productId],
         u = {
@@ -5952,7 +5974,7 @@
     }
     function move(p) {
       p.previousPosition = { ...p.position };
-      const steps = p.path.splice(0, 4);
+      const steps = p.path.splice(0, 8);
       if (steps.length) p.position = { ...steps.at(-1) };
     }
     function ability(w, p, skill, context = {}) {
@@ -5976,7 +5998,7 @@
       return base;
     }
     function orderOpen(o) {
-      return !["paid", "cancelled"].includes(o.status);
+      return !o.stockBatch && !["paid", "cancelled"].includes(o.status);
     }
     function activeOrders(w) {
       return Object.values(w.orders).filter(orderOpen);
@@ -6238,7 +6260,9 @@
       offer.status = "accepted";
       w.orders[oid] = o;
       if (deposit) post(w, "sales", deposit, oid + ":deposit");
-      for (let i = 0; i < o.quantity; i++) addUnit(w, o);
+      const stocked=Object.values(w.units).filter(u=>u.productId===o.productId&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).slice(0,o.quantity);
+      for(const u of stocked){u.stockLotId=u.orderId;u.orderId=o.id;}
+      for (let i = stocked.length; i < o.quantity; i++) addUnit(w, o);
       if (salesActor) {
         ensurePersonExtensions(w, salesActor);
         salesActor.career.dealsNegotiated = (salesActor.career.dealsNegotiated || 0) + 1;
@@ -7717,6 +7741,12 @@
       p.experience.workMinutes += TICK;
       p.dayStats.workMinutes += TICK;
       if (time >= 1080) p.dayStats.otMinutes += TICK;
+      if(j.kind==="assembly" && w.units[j.unitId]){
+        const unit=w.units[j.unitId],steps=productionSteps(w.catalog.products[unit.productId]);unit.processHistory=unit.processHistory||[];
+        const completed=Math.min(steps.length,Math.floor(j.progress/j.required*steps.length));
+        while(unit.processHistory.length<completed){unit.processHistory.push({step:steps[unit.processHistory.length],completedAt:now(w),workerId:p.id});}
+        unit.processStep=completed;
+      }
       if (j.progress >= j.required) {
         if (stationLoadMap && p.stationId) {
           stationLoadMap.set(p.stationId, Math.max(0, (stationLoadMap.get(p.stationId) || 1) - 1));
@@ -9167,6 +9197,7 @@
       ensureJobs(w);
       autoAccept(w);
       planPurchases(w);
+      planStockProduction(w);
       if (tod(w) === 1020)
         for (const p of w.people.filter((p) => p.employed)) {
           const unpaidDays =
@@ -10448,6 +10479,9 @@
       evaluateExternalAssetsDaily,
       getActiveExternalAssetBonuses,
       scaleCompany,
+      productionView,
+      productionSteps,
+      planStockProduction,
       updateExternalWorld,
       worldAudit: W.validate,
       getDepartmentHeadroom,

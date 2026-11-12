@@ -80,7 +80,9 @@ check(
     const app = API.create("clock");
     app.setSpeed(1);
     app.frame(0);
-    assert.equal(app.frame(1000), 10);
+    assert.equal(app.frame(1000), 0);
+    assert.equal(app.frame(2000), 0);
+    assert.equal(app.frame(2500), 5);
     const t = app.snapshot().time.absoluteMinute;
     app.setSpeed(0);
     app.frame(2000);

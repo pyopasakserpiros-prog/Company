@@ -49,3 +49,7 @@ companyKnowledge snapshot powers the company sheet and character ความร
 `debug.js:renderWorldSheet` exposes six World categories; entity selectors hold UI-only IDs and stop live replacement while a native select is focused. A nation card can open its firm's details. Display real cash, input shortages, utilization, policy reasons, shipments and journal records. Do not generate news or mutate RNG during render. Browser tests include mobile entity selection and standalone save equality. `profit` in the external model is daily after-tax cash surplus: label it กระแสเงินสดสุทธิ, not statutory accounting profit.
 
 Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
+
+## v2.5.0 integration
+
+sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.

@@ -1,3 +1,5 @@
+รุ่นล่าสุด v2.5.0: อ่านรายงาน docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.5.0.md และงานผลิตที่ยังต้องต่อ ก่อนใช้ข้อมูลประวัติด้านล่าง
+
 # เริ่มงานกับ Company Simulation
 
 สถานะ source ของ branch `main` ล่าสุดคือ **รุ่นเกม v2.4.0** อ่าน [project status](project_status_and_ai_onboarding.md) เพื่อดูระบบที่ตรวจแล้ว ผลทดสอบ (166/166 tests) และรายงานทุกแพตช์

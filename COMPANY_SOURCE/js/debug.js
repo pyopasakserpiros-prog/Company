@@ -1636,6 +1636,9 @@
         for(const person of holders) {const insight=person.subjectInsights.find(s=>s.id===subject.id);row(person.name,`${tier(person.education.subjects[subject.id])} ${Math.floor(person.education.subjects[subject.id])}/100 • ประสบการณ์งานจริง ${Math.floor((person.education.appliedMinutes?.[subject.id] || 0)/60)} ชั่วโมง • ความเหมาะสมจากความถนัด ${Math.round(insight.talent)}/100`);}
       }
     } else if(uiState.subTab==="company_business") {
+      row("โรงงานและคลังสินค้าพร้อมขาย","บริษัทอาจผลิตสะสมเมื่อมีทุนและวัตถุดิบ ฝ่ายขายจัดสินค้าพร้อมขายให้ออเดอร์ก่อนเริ่มผลิตใหม่ สินค้าคงคลังยังไม่ใช่รายได้");
+      for(const m of v.manufacturing||[])if(m.stock||m.reserved||m.wip){row(m.nameTh,`พร้อมเสนอขาย ${m.stock} • จองให้ลูกค้า ${m.reserved} • ระหว่างผลิต ${m.wip}\nกระบวนการ: ${m.steps.join(" → ")} → QC → แพ็ก → คลัง\n${m.activeSteps.slice(0,5).map(x=>x.id+": "+x.step).join(" • ")}`);}
+
       for(const p of k.products) row(`${p.ready ? "✅ พร้อม" : "🔒 ยังไม่พร้อม"} ${p.nameTh}`,`ผลิตแล้ว ${v.production.completed[p.id] || 0} ชิ้น • วิชา${p.subjectNameTh || "เฉพาะทาง"} • ${p.reasons.join(" / ") || "มีทีมและกระบวนการพร้อม; ฝ่ายขายยังต้องประเมินกำไรและคำสั่งซื้อ"} • ${coverage(p.coverage)}`);
       for(const service of k.serviceReadiness || []) row(`${service.ready ? "✓ ทีมพร้อม" : "🔒 ขาดความรู้"} ${service.nameTh}`,coverage(service.coverage));
       row("ธุรกิจบริการ / ขนส่ง / ซอฟต์แวร์",`งานบริการ ${Object.keys(v.serviceBusiness?.orders || {}).length} • สัญญาขนส่ง ${Object.keys(v.fleetTransport?.contracts || {}).length} • โครงการซอฟต์แวร์ ${Object.keys(v.softwareBusiness?.projects || {}).length}`);

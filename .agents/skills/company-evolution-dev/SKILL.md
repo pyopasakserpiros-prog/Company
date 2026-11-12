@@ -62,3 +62,7 @@ Current release adds 170 learned subjects outside the locked Human Core. Read `d
 - Verify with `test/knowledge-and-company.test.cjs`, `test/campus-browser.cjs`, normal check/test/build and benchmark. Regenerate the subject reference with `node tools/knowledge-catalog.cjs` from COMPANY_SOURCE. Never copy old global-point-unlock fixtures into production logic.
 
 Repo skill updates do not update the Gemini app automatically. Record app-sync status truthfully if that app's skill update tool is unavailable.
+
+## v2.5.0 integration
+
+sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.

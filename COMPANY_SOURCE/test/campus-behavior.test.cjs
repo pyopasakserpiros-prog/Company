@@ -14,7 +14,7 @@ test("walking follows its route in bounded steps instead of skipping across the 
     for (const p of world.people.filter((person) => person.activity === "walking")) {
       const distance = Math.abs(p.position.x - p.previousPosition.x) +
         Math.abs(p.position.y - p.previousPosition.y);
-      assert.ok(distance <= 4, p.name + " skipped " + distance + " cells in one tick");
+      assert.ok(distance <= 8, p.name + " skipped " + distance + " cells in one tick");
       if (distance) moved++;
     }
   }
