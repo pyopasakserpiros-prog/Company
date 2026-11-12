@@ -2,6 +2,10 @@
 
 อัปเดต: 12 พฤศจิกายน 2026 (runtime v3.0.0; ยุค3มีระบบจริงพร้อมข้อจำกัดที่ระบุในรายงาน) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
 
+## Pending handoff — phone supplier ecosystem
+
+Task `gemini-phone-supplier-ecosystem`; prompt author Codex; intended implementer Gemini via owner-provided main ZIP. Runtime base `786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc` / v3.0.0. **Status: planned, prompt prepared; owner intends to download/send ZIP.** No evidence yet of transmission or Gemini starting. Scope: executable CPU/RAM/camera and wider supplier businesses accessible to campus NPCs, physical processes/stocks, independent world competition and default economic calibration. Canonical assignment: [ACTIVE_PROMPT](../../ACTIVE_PROMPT.md). This entry does not reserve or overwrite unrelated agent work. No new gameplay implemented by preparing the brief.
+
 ## Current implementation — Era3 v3.0.0
 
 Owner/integrator Codex, base `a2c5514`, previous runtime2.9.0. User authorised creative implementation. Five delegated implementation contributors supplied initial modules/UI/docs; parent completed integration/corrections. Independent review found profile-freeze, recruited education-reference and world settlement-order issues; parent added regressions and fixed them. No AGENTS/Human Core changes.

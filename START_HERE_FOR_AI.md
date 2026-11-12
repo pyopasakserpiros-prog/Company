@@ -1,5 +1,7 @@
 # เริ่มงานกับ Company v3.0.0
 
+**งานรับช่วงล่าสุด:** [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) — พัฒนาระบบนิเวศธุรกิจชิ้นส่วนโทรศัพท์ ให้บริษัทเราเข้าธุรกิจ CPU/RAM/กล้องและสายอื่นได้จริง มอบหมายให้ Gemini ผ่าน ZIP; ยังไม่ถือว่าเริ่มทำหรือส่งไฟล์ให้แล้ว Runtime ยังเป็น3.0.0
+
 อ่าน [AGENTS.md](AGENTS.md) ฉบับจริงทุกครั้ง → [สถานะ](project_status_and_ai_onboarding.md) → [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md) / [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md) → [.agents/skills](.agents/skills/README.md) → source/tests ที่เกี่ยวข้อง
 
 ล่าสุด: ธุรกิจโทรศัพท์แยก มีชิ้นส่วน/สต็อก/งานวิจัย/ต้นแบบ/ประกอบ/รอเปิดตัว/ขายจริง NPC ทำงานเอง ผู้เล่นดูและทดลองผ่าน Edit Hub ไม่ออกคำสั่งบริหารแทน NPC ระบบยุค3ยังมีข้อจำกัดด้านซัพพลายต้นน้ำและการปรับสมดุล ไม่ถือว่าข้อเสนอทุกฉบับทำครบแล้ว

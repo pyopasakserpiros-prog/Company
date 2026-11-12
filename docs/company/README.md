@@ -1,3 +1,5 @@
+> [Current Gemini assignment](../../ACTIVE_PROMPT.md) · [Prompt preparation report](PATCH_REPORTS/UPDATE_REPORT_2026-11-12_GEMINI_PHONE_ECOSYSTEM_PROMPT.md) — documentation only; runtime remains3.0.0.
+
 # Current v3.0.0 phone-sector references
 
 [Current status](../../project_status_and_ai_onboarding.md) · [phone contracts](ERA3_PHONE_SYSTEM.md) · [v3 report](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md) · [handoff](ERA3_V300_HANDOFF.md)

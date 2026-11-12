@@ -2,6 +2,10 @@
 
 **Updated:** 2026-11-12. **Runtime:** v3.0.0. **Implementation base:** `a2c5514` on `main`, repository `pyopasakserpiros-prog/Company` (previous runtime v2.9.0). This status is maintained identically at repository root, `COMPANY_SOURCE/` and `era3/`.
 
+## Current handoff assignment (not implemented features)
+
+The owner requests a Gemini implementation of a deeper phone-manufacturing ecosystem, including actual campus entry into CPU/SoC, RAM, camera and other supplier businesses. Canonical English assignment: repository-root `ACTIVE_PROMPT.md`; source base `786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc`. Prompt prepared, awaiting owner-mediated main ZIP handoff; Gemini start/receipt not verified. Runtime remains v3.0.0 and the limitations below still apply. This documentation update does not implement the requested supplier expansion.
+
 ## What this game is
 
 Company Simulation / Siam Enterprise is an **autonomous NPC life-and-business world**. Executives and employees decide, learn, work, trade and invest themselves. The player observes, controls time/camera and experiments through Edit Hub; normal management orders or approvals are not required. The owner is not a programmer and enjoys watching different people react differently to traits, knowledge, money and resources. AI collaborators must help design and create, not wait for every detail from the owner.
