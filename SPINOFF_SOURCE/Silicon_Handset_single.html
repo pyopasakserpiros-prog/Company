@@ -1,0 +1,2374 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Silicon & Handset — โลกของคนสร้างโทรศัพท์</title><style>:root{color-scheme:dark;--bg:#101a1e;--panel:#18262b;--line:#30464a;--ink:#eef1e7;--muted:#a2b6b4;--gold:#e9c67a;--green:#76c8a5}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.65 system-ui,sans-serif;color:var(--ink)}button,select,input{font:inherit;color:inherit;border:1px solid var(--line);background:#203338;border-radius:9px;padding:9px 14px;max-width:100%}button{cursor:pointer}button:hover,button.active{border-color:var(--gold);color:var(--gold)}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}header{padding:16px 4vw;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:24px;flex-wrap:wrap;background:#142226}.brand{display:flex;align-items:center;gap:12px;margin-right:auto}.mark{background:var(--gold);color:#152327;font-weight:900;border-radius:10px;padding:11px}h1{font-size:19px;margin:0}small,.muted{color:var(--muted)}.speeds{display:flex;gap:5px;flex-wrap:wrap}.speeds button{padding:6px 12px}main{max-width:1450px;margin:auto;padding:22px 4vw}.intro{display:flex;align-items:center;gap:20px;justify-content:space-between;margin:12px 0 25px}.eyebrow{font-size:11px;letter-spacing:2px;color:var(--gold)}h2{font-size:clamp(23px,3vw,34px);line-height:1.4;margin:10px 0}p{color:var(--muted);margin:8px 0}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}.kpi,.card{border:1px solid var(--line);border-radius:13px;padding:18px;background:var(--panel);min-width:0;overflow-wrap:anywhere}.kpi strong{display:block;font-size:26px;color:var(--gold);font-weight:650}.kpi span{color:var(--muted);font-size:13px}nav{display:flex;gap:5px;overflow:auto;padding-bottom:10px}nav button{white-space:nowrap;background:transparent}.workspace{border:1px solid var(--line);border-radius:14px;background:#132227;padding:20px}.toolbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:20px}.toolbar span{color:var(--muted);font-size:13px;flex:1}.toolbar select{margin-left:8px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr));gap:14px}.card h3{font-size:17px;margin:0 0 10px}.card h4{color:var(--gold);margin:0 0 8px}.stat{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #294047}.stat:last-child{border:0}.stat span{color:var(--muted)}.tag{display:inline-block;border:1px solid var(--line);color:var(--green);padding:1px 8px;border-radius:20px;font-size:12px;margin-bottom:10px}.big{font-size:25px;color:var(--gold)}.empty{padding:35px;text-align:center;color:var(--muted)}progress{width:100%;accent-color:var(--green);height:10px}.event{display:grid;grid-template-columns:70px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.event small{color:var(--gold)}.campus{width:100%;height:360px;display:block;border-radius:12px;background:#1e3331;margin-bottom:20px}.detail{white-space:pre-wrap;color:var(--muted)}.edit label{display:flex;flex-direction:column;gap:5px;margin:12px 0}.edit button{margin:8px 0}.notice{border-left:3px solid var(--gold);padding:12px 16px;background:#26352e;margin-bottom:18px}footer{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:24px 0;color:var(--muted);font-size:13px}footer div{display:flex;gap:8px;flex-wrap:wrap}.file-button{padding:8px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}.file-button input{display:none}dialog{color:var(--ink);background:#172a2e;border:1px solid var(--gold);border-radius:18px;width:min(92vw,510px);padding:25px}dialog::backdrop{background:#061114cc}dialog label{display:flex;flex-direction:column;margin:20px 0;gap:8px}dialog button[type=submit]{background:var(--gold);color:#162528;font-weight:700}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid var(--line)}@media(max-width:650px){header{gap:12px;padding:12px 16px}.brand{width:100%}.speeds{width:100%}main{padding:16px}.intro{align-items:flex-start}.intro>button{font-size:12px;min-width:80px}.kpis{grid-template-columns:repeat(2,1fr);gap:8px}.kpi{padding:12px}.kpi strong{font-size:21px}.workspace{padding:12px}.toolbar{gap:10px}.toolbar label{width:100%}.toolbar select{display:block;margin:7px 0;width:100%}.campus{height:300px}.stat{font-size:13px}footer button{font-size:12px}}
+</style></head><body><header><div class="brand"><span class="mark">S/H</span><div><h1>Silicon & Handset</h1><small>โลกของคนสร้างโทรศัพท์ · 0.1.0</small></div></div><div id="time"></div><div class="speeds"><button data-speed="0">หยุด</button><button data-speed="1">1×</button><button data-speed="5">5×</button><button data-speed="20">20×</button><button id="nextDay">ข้าม 1 วัน</button></div></header><main><section class="intro"><div><span class="eyebrow">AUTONOMOUS INDUSTRY / โลกที่ดำเนินไปเอง</span><h2 id="headline">เรื่องราวของบริษัทเล็ก ในโลกที่ไม่มีใครรอ</h2><p>เฝ้าดูผู้คนคิด เรียนรู้ สร้าง และแข่งขัน เปลี่ยนเงื่อนไข แล้วดูว่าโลกตอบสนองอย่างไร</p></div><button id="newWorld">เริ่มโลกใหม่</button></section><section id="kpis" class="kpis"></section><nav id="tabs" aria-label="หน้าต่างสังเกตการณ์"></nav><section class="workspace"><div class="toolbar"><label>บริษัทที่ติดตาม <select id="firm"></select></label><span id="firmReason"></span></div><div id="content"></div></section><footer><span id="message" role="status">NPC ตัดสินใจและทำงานเอง คุณคือผู้สังเกตการณ์</span><div><button id="export">ดาวน์โหลดเซฟ</button><label class="file-button">โหลดเซฟ<input id="import" type="file" accept=".json,application/json"></label><button id="help">วิธีดูโลกนี้</button></div></footer></main><dialog id="welcome"><form id="createWorld"><span class="eyebrow">A NEW WORLD</span><h2>แต่ละโลก มีคนละเรื่องราว</h2><p>บริษัท คู่แข่ง คน และทรัพยากรจะถูกสุ่มจากรหัสโลก ไม่มีคู่แข่งที่ปรับความเก่งตามเรา</p><label>รหัสโลก<input id="seed" value="แสงแรก" required maxlength="100"></label><label>กิจการเริ่มต้น<select id="startRole"><option value="brand">แบรนด์โทรศัพท์ SME</option><option value="chip">ซัพพลายเออร์ CPU</option><option value="memory">หน่วยความจำและสตอเรจ</option><option value="camera">โมดูลกล้อง</option><option value="display">หน้าจอ</option><option value="battery">แบตเตอรี่</option><option value="ems">ตัวถังและบริการประกอบ</option></select></label><button type="button" id="randomSeed">สุ่มรหัสโลก</button><button type="submit">เริ่มเฝ้าดูโลก</button><button type="button" id="resume">กลับโลกเดิม</button></form></dialog><script>
+(function (root, factory) {
+  "use strict";
+  const value = factory();
+  if (typeof module === "object" && module.exports) module.exports = value;
+  else root.CompanyCore = value;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+  const VERSION = "1.0.0";
+  const COMPATIBLE_VERSIONS = ["0.1.0-review.1", "0.1.0-review.2", VERSION];
+  const PERSONALITY = [
+    "sociability",
+    "conscientiousness",
+    "agreeableness",
+    "openness",
+    "riskTaking",
+    "stressReactivity",
+    "assertiveness",
+    "patience",
+    "integrity",
+    "adaptability",
+    "ambition",
+    "prudence",
+    "humility",
+    "optimism",
+  ];
+  const VALUES = [
+    "security",
+    "income",
+    "autonomy",
+    "fairness",
+    "belonging",
+    "learning",
+    "achievement",
+    "meaning",
+    "workLifeBalance",
+    "recognition",
+    "family",
+    "comfort",
+    "care",
+    "stewardship",
+    "influence",
+    "tradition",
+    "variety",
+    "craftsmanship",
+  ];
+  const APTITUDES = [
+    "analytical",
+    "creativity",
+    "communication",
+    "organization",
+    "precision",
+    "dexterity",
+    "learningSpeed",
+    "stamina",
+    "memory",
+    "emotionalInsight",
+    "spatial",
+    "strength",
+    "composure",
+    "sensory",
+    "numerical",
+    "verbal",
+    "attention",
+    "problemSensitivity",
+    "perceptualSpeed",
+    "reactionSpeed",
+    "controlPrecision",
+    "coordination",
+    "balance",
+    "flexibility",
+    "visualAcuity",
+    "colorDiscrimination",
+    "hearing",
+    "speechClarity",
+    "tasteSmell",
+    "uncertaintyReasoning",
+  ];
+  const STATE_DEFAULTS = {
+    energy: 90,
+    focus: 85,
+    hunger: 20,
+    stress: 15,
+    morale: 72,
+    health: 100,
+    burnout: 0,
+    socialNeed: 35,
+    sleepDebt: 0,
+    lifeBurden: 20,
+    fulfillment: 62,
+    drive: 65,
+  };
+  const ACTION_MOTIVES = [
+    ...VALUES,
+    "energy",
+    "focus",
+    "stress",
+    "hunger",
+    "social",
+    "health",
+    "burnout",
+    "sleep",
+    "fulfillment",
+    "drive",
+    "duty",
+    "help",
+    "novelty",
+    "risk",
+    "voice",
+    "integrity",
+    "change",
+    "craft",
+    "routine",
+    "ambition",
+    "physical",
+    "humility",
+    "optimism",
+  ];
+  const clamp = (n, a = 0, b = 100) => Math.max(a, Math.min(b, n));
+  const finite = (n, fallback = 0) =>
+    typeof n === "number" && Number.isFinite(n) ? n : fallback;
+  const freeze = (o, seen = new WeakSet()) => {
+    if (o && typeof o === "object" && !seen.has(o)) {
+      seen.add(o);
+      Object.values(o).forEach((v) => freeze(v, seen));
+      Object.freeze(o);
+    }
+    return o;
+  };
+  function uniform(seed, id, domain) {
+    let h = 2166136261;
+    const key = JSON.stringify([seed, id, domain]);
+    for (let i = 0; i < key.length; i++) {
+      h ^= key.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    h ^= h >>> 16;
+    h = Math.imul(h, 0x7feb352d);
+    h ^= h >>> 15;
+    h = Math.imul(h, 0x846ca68b);
+    h ^= h >>> 16;
+    return ((h >>> 0) + 0.5) / 4294967296;
+  }
+  function normal(seed, id, domain) {
+    return Math.round(
+      clamp(
+        50 +
+          16 *
+            Math.sqrt(-2 * Math.log(uniform(seed, id, domain + ":a"))) *
+            Math.cos(2 * Math.PI * uniform(seed, id, domain + ":b")),
+        5,
+        95,
+      ),
+    );
+  }
+  function createProfile(seed, id) {
+    if (
+      !(
+        typeof seed === "string" ||
+        (typeof seed === "number" && Number.isFinite(seed))
+      ) ||
+      typeof id !== "string" ||
+      !id.length
+    )
+      throw new TypeError(
+        "seed must be a string/finite number and id must be a nonempty string",
+      );
+    const p = {
+      version: VERSION,
+      seed: String(seed),
+      id,
+      personality: {},
+      values: {},
+      aptitudes: {},
+      potential: {},
+    };
+    for (const [group, keys] of [
+      ["personality", PERSONALITY],
+      ["values", VALUES],
+      ["aptitudes", APTITUDES],
+    ])
+      for (const k of keys) p[group][k] = normal(p.seed, id, group + ":" + k);
+    for (const k of APTITUDES) {
+      const base = Math.max(p.aptitudes[k] + 12, 42);
+      p.potential[k] = Math.round(
+        clamp(
+          base + uniform(p.seed, id, "potential:" + k) * Math.max(0, 96 - base),
+          p.aptitudes[k],
+          100,
+        ),
+      );
+    }
+    return freeze(p);
+  }
+  function migrateProfile(p) {
+    if (!p || typeof p !== "object")
+      throw new TypeError("profile missing for migration");
+    if (!COMPATIBLE_VERSIONS.includes(p.version))
+      throw new TypeError("unsupported core version");
+    if (typeof p.id !== "string" || !p.id.length || typeof p.seed !== "string")
+      throw new TypeError("invalid profile identity");
+    const counts =
+      p.version === "0.1.0-review.1"
+        ? [9, 9, 10]
+        : p.version === "0.1.0-review.2"
+          ? [12, 12, 14]
+          : [PERSONALITY.length, VALUES.length, APTITUDES.length];
+    const groups = [
+      ["personality", PERSONALITY, counts[0]],
+      ["values", VALUES, counts[1]],
+      ["aptitudes", APTITUDES, counts[2]],
+      ["potential", APTITUDES, counts[2]],
+    ];
+    for (const [group, keys, count] of groups) {
+      if (!p[group] || typeof p[group] !== "object" || Array.isArray(p[group]))
+        throw new TypeError("missing legacy " + group);
+      for (const key of keys.slice(0, count)) {
+        const value = p[group][key];
+        if (
+          typeof value !== "number" ||
+          !Number.isFinite(value) ||
+          value < 0 ||
+          value > 100
+        )
+          throw new TypeError("invalid legacy " + group + "." + key);
+      }
+    }
+    for (const key of APTITUDES.slice(0, counts[2]))
+      if (p.potential[key] < p.aptitudes[key])
+        throw new TypeError("legacy potential below aptitude");
+    const next = {
+      version: VERSION,
+      seed: p.seed,
+      id: p.id,
+      personality: {},
+      values: {},
+      aptitudes: {},
+      potential: {},
+    };
+    const generated = createProfile(p.seed, p.id);
+    for (const [group, keys, count] of groups)
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        next[group][key] = i < count ? p[group][key] : generated[group][key];
+      }
+    return freezeProfile(next);
+  }
+  function validateProfile(p) {
+    const errors = [];
+    if (!p || typeof p !== "object") return ["profile missing"];
+    if (p.version !== VERSION) errors.push("unsupported core version");
+    if (typeof p.id !== "string" || !p.id.length || typeof p.seed !== "string")
+      errors.push("invalid profile identity");
+    for (const [group, keys] of [
+      ["personality", PERSONALITY],
+      ["values", VALUES],
+      ["aptitudes", APTITUDES],
+      ["potential", APTITUDES],
+    ]) {
+      if (!p[group] || typeof p[group] !== "object") {
+        errors.push(group + " missing");
+        continue;
+      }
+      for (const k of keys) {
+        const v = p[group][k];
+        if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 100)
+          errors.push(group + "." + k + " invalid");
+      }
+    }
+    if (p.aptitudes && p.potential)
+      for (const k of APTITUDES)
+        if (p.potential[k] < p.aptitudes[k])
+          errors.push(k + " potential below aptitude");
+    return errors;
+  }
+  function freezeProfile(p) {
+    const errors = validateProfile(p);
+    if (errors.length) throw new TypeError(errors.join("; "));
+    return freeze(p);
+  }
+  function normaliseState(input = {}) {
+    const state = {};
+    for (const [k, def] of Object.entries(STATE_DEFAULTS))
+      state[k] = clamp(finite(input && input[k], def));
+    return state;
+  }
+  function createState(profile) {
+    const p = profile && profile.personality ? profile.personality : {},
+      v = profile && profile.values ? profile.values : {},
+      burden = Math.round(
+        10 + uniform(profile.seed, profile.id, "lifeBurden") * 45,
+      );
+    return normaliseState({
+      socialNeed: Math.round(
+        clamp(18 + finite(p.sociability, 50) * 0.35, 10, 65),
+      ),
+      lifeBurden: burden,
+      fulfillment: Math.round(clamp(68 - (burden - 25) * 0.2, 45, 80)),
+      drive: Math.round(
+        clamp(
+          40 +
+            finite(p.ambition, 50) * 0.35 +
+            finite(v.achievement, 50) * 0.15 +
+            burden * 0.15,
+          30,
+          92,
+        ),
+      ),
+    });
+  }
+  function weights(spec) {
+    if (
+      !spec ||
+      typeof spec.id !== "string" ||
+      !spec.id.length ||
+      !spec.aptitudes ||
+      typeof spec.aptitudes !== "object"
+    )
+      throw new TypeError("skill spec requires id and aptitude weights");
+    const list = Object.entries(spec.aptitudes);
+    if (
+      !list.length ||
+      list.some(
+        ([k, v]) =>
+          !APTITUDES.includes(k) ||
+          typeof v !== "number" ||
+          !Number.isFinite(v) ||
+          v <= 0,
+      )
+    )
+      throw new TypeError("unknown aptitude or invalid weight");
+    return list;
+  }
+  function fit(profile, spec, group = "aptitudes") {
+    const list = weights(spec),
+      scale = Math.max(...list.map(([, v]) => v)),
+      normalized = list.map(([k, v]) => [k, v / scale]),
+      sum = normalized.reduce((n, [, v]) => n + v, 0);
+    return normalized.reduce((n, [k, v]) => n + profile[group][k] * v, 0) / sum;
+  }
+  const skillCap = (profile, spec) =>
+    clamp(fit(profile, spec, "potential"), 1, 100);
+  function cumulativeXpForLevel(baseLevel, currentLevel) {
+    let sum = 0;
+    for (let lvl = Math.floor(baseLevel); lvl < Math.floor(currentLevel); lvl++)
+      sum += 12 + lvl * 1.5;
+    return sum;
+  }
+  function createSkill(profile, spec) {
+    return {
+      id: spec.id,
+      level: Math.min(
+        skillCap(profile, spec),
+        Math.round(
+          clamp(
+            fit(profile, spec) * 0.65 +
+              (uniform(profile.seed, profile.id, "skill:" + spec.id) - 0.5) *
+                20,
+            5,
+            80,
+          ),
+        ),
+      ),
+      xp: 0,
+      totalXp: 0,
+    };
+  }
+  function validateSkillRecord(skill, spec, cap) {
+    if (
+      !skill ||
+      skill.id !== spec.id ||
+      !Number.isFinite(skill.level) ||
+      skill.level < 0 ||
+      skill.level > cap ||
+      !Number.isFinite(skill.xp) ||
+      skill.xp < 0 ||
+      skill.xp > Number.MAX_SAFE_INTEGER ||
+      !Number.isFinite(skill.totalXp) ||
+      skill.totalXp < 0 ||
+      skill.totalXp > Number.MAX_SAFE_INTEGER
+    )
+      throw new TypeError("invalid skill record");
+  }
+  function learn(profile, skill, spec, minutes, context = {}) {
+    if (
+      typeof minutes !== "number" ||
+      !Number.isFinite(minutes) ||
+      minutes < 0 ||
+      minutes > Number.MAX_SAFE_INTEGER
+    )
+      throw new TypeError("invalid practice minutes");
+    weights(spec);
+    const cap = skillCap(profile, spec),
+      aptFit = fit(profile, spec),
+      p = profile.personality,
+      next = { ...skill };
+    validateSkillRecord(skill, spec, cap);
+    const ambitionBoost = (finite(p.ambition, 50) - 50) / 500;
+    const baseRate =
+      0.55 +
+      (profile.aptitudes.learningSpeed / 100) * 0.5 +
+      (aptFit / 100) * 0.3 +
+      (profile.aptitudes.memory / 100) * 0.2 +
+      ambitionBoost;
+    const headroom =
+      next.level < aptFit
+        ? 1.15
+        : cap > aptFit
+          ? clamp(1 - ((next.level - aptFit) / (cap - aptFit)) * 0.55, 0.4, 1.1)
+          : 0.45;
+    const initial = createSkill(profile, spec).level,
+      expectedTotal = cumulativeXpForLevel(initial, next.level);
+    const rustBonus =
+      next.totalXp > expectedTotal + 10
+        ? 1 + (0.35 + (profile.aptitudes.memory / 100) * 0.45)
+        : 1;
+    const extMult = clamp(
+      1 +
+        finite(context && context.mentorBonus, 0) +
+        finite(context && context.toolBonus, 0),
+      0.5,
+      2.5,
+    );
+    const gained = minutes * 0.18 * baseRate * headroom * rustBonus * extMult;
+    if (
+      !Number.isFinite(gained) ||
+      next.xp + gained > Number.MAX_SAFE_INTEGER ||
+      next.totalXp + gained > Number.MAX_SAFE_INTEGER
+    )
+      throw new TypeError("invalid skill record or XP overflow");
+    next.xp += gained;
+    next.totalXp += gained;
+    while (next.level < cap && next.xp >= 12 + next.level * 1.5) {
+      next.xp -= 12 + next.level * 1.5;
+      next.level = Math.min(cap, next.level + 1);
+    }
+    if (next.level >= cap) next.xp = 0;
+    return next;
+  }
+  function decaySkill(profile, skill, spec, daysIdle) {
+    if (
+      typeof daysIdle !== "number" ||
+      !Number.isFinite(daysIdle) ||
+      daysIdle < 0 ||
+      daysIdle > Number.MAX_SAFE_INTEGER
+    )
+      throw new TypeError("invalid idle days");
+    weights(spec);
+    validateSkillRecord(skill, spec, skillCap(profile, spec));
+    const next = { ...skill };
+    if (daysIdle <= 3) return next;
+    const floor = Math.min(
+        next.level,
+        Math.max(5, Math.round(fit(profile, spec) * 0.5)),
+      ),
+      retention = 0.35 + (profile.aptitudes.memory / 100) * 0.55,
+      loss = Math.floor(((daysIdle - 3) * (1 - retention)) / 7);
+    if (loss > 0 && next.level > floor) {
+      next.level = Math.max(floor, next.level - loss);
+      next.xp = 0;
+    }
+    return next;
+  }
+  function evaluateAbility(profile, input, skill, spec, context = {}) {
+    const modifiers = context.aptitudeMultipliers || {};
+    if (
+      typeof modifiers !== "object" ||
+      Array.isArray(modifiers) ||
+      Object.entries(modifiers).some(
+        ([k, v]) =>
+          !APTITUDES.includes(k) ||
+          typeof v !== "number" ||
+          !Number.isFinite(v) ||
+          v < 0 ||
+          v > 2,
+      )
+    )
+      throw new TypeError("invalid aptitude performance multipliers");
+    const effective = Object.fromEntries(
+      APTITUDES.map((k) => [
+        k,
+        clamp(
+          profile.aptitudes[k] *
+            (modifiers[k] === undefined ? 1 : modifiers[k]),
+        ),
+      ]),
+    );
+    const s = normaliseState(input),
+      level = clamp(finite(skill && skill.level)),
+      aptFit = fit({ aptitudes: effective }, spec),
+      p = profile.personality,
+      a = effective,
+      hazard = clamp(finite(context && context.hazard, 0), 0, 1),
+      complexity = clamp(finite(context && context.complexity, 0), 0, 1);
+    const composureShield = finite(a.composure, 50) * 0.0025;
+    const stressMult =
+      s.stress <= 25
+        ? 0.97 + (s.stress / 25) * 0.03
+        : s.stress <= 55
+          ? 1 + ((55 - Math.abs(s.stress - 40)) / 55) * 0.04
+          : Math.max(
+              0.2,
+              1 - ((s.stress - 55) / 100) * (0.95 - composureShield),
+            );
+    const hazardFactor =
+      hazard > 0
+        ? clamp(
+            1 -
+              hazard *
+                (0.22 -
+                  (finite(a.composure, 50) + finite(a.spatial, 50)) * 0.0009),
+            0.7,
+            1.05,
+          )
+        : 1;
+    const complexityBonus =
+      complexity > 0
+        ? ((a.analytical + a.memory + a.learningSpeed - 150) / 300) *
+          complexity *
+          0.08
+        : 0;
+    const moraleMult = 0.88 + (s.morale / 100) * 0.16 + (s.drive / 100) * 0.06;
+    const hungerMult = s.hunger <= 70 ? 1 : 1 - ((s.hunger - 70) / 30) * 0.18;
+    const extMult = clamp(
+      finite(context && context.toolMultiplier, 1) *
+        (1 + finite(context && context.teamSynergy, 0)),
+      0.5,
+      2.0,
+    );
+    const stateMult =
+      (0.4 + s.energy * 0.006) *
+      (0.55 + s.focus * 0.0045) *
+      (0.4 + s.health * 0.006) *
+      stressMult *
+      moraleMult *
+      hungerMult *
+      hazardFactor *
+      (1 - s.burnout * 0.005) *
+      (1 - s.sleepDebt * 0.003);
+    return {
+      aptitudeFit: aptFit,
+      stateMultiplier: stateMult,
+      speedMultiplier: clamp(
+        (0.5 + level * 0.012) * (0.65 + aptFit * 0.007) * stateMult * extMult,
+        0.12,
+        1.8,
+      ),
+      qualityChance: clamp(
+        0.43 +
+          level * 0.0033 +
+          aptFit * 0.0008 +
+          a.precision * 0.001 +
+          finite(a.sensory, 50) * 0.0003 +
+          finite(a.composure, 50) * 0.0003 +
+          p.conscientiousness * 0.0005 +
+          p.integrity * 0.0003 +
+          complexityBonus -
+          (100 - s.focus) * 0.0015 -
+          Math.max(0, s.stress - 50) * 0.003 -
+          s.burnout * 0.0022 -
+          s.sleepDebt * 0.0012 -
+          Math.max(0, 70 - s.health) * 0.0015 -
+          Math.max(0, s.hunger - 75) * 0.0015,
+        0.1,
+        0.98,
+      ),
+    };
+  }
+  function tickState(profile, input, context) {
+    if (
+      !context ||
+      typeof context.minutes !== "number" ||
+      !Number.isFinite(context.minutes) ||
+      context.minutes < 0 ||
+      context.minutes > Number.MAX_SAFE_INTEGER
+    )
+      throw new TypeError("invalid duration");
+    const s = normaliseState(input),
+      h = context.minutes / 60,
+      p = profile.personality,
+      v = profile.values,
+      a = profile.aptitudes,
+      workload = clamp(finite(context.workload, 1), 0.2, 2),
+      domain = context.domain || "balanced",
+      hazard = clamp(finite(context.hazard, 0), 0, 1);
+    const activity = context.activity || "idle";
+    const socialRate = 0.35 + (p.sociability / 100) * 1.65;
+    if (activity !== "sleep")
+      s.sleepDebt += h * (activity === "offDuty" ? 0.45 : 0.6);
+    if (activity === "work" || activity === "learn" || activity === "help") {
+      const physicalScale =
+        domain === "physical" ? 1.25 : domain === "cognitive" ? 0.85 : 1;
+      const cognitiveScale =
+        domain === "cognitive" ? 1.25 : domain === "physical" ? 0.85 : 1;
+      const physicalRelief = a.stamina * 0.02 + finite(a.strength, 50) * 0.006;
+      s.energy -=
+        h * Math.max(2.0, 6 - physicalRelief) * workload * physicalScale;
+      s.focus -=
+        h *
+        Math.max(2.2, 5.2 - a.memory * 0.012 - p.conscientiousness * 0.008) *
+        workload *
+        cognitiveScale;
+      const adaptRelief =
+        finite(p.adaptability, 50) * 0.004 + finite(a.composure, 50) * 0.003;
+      const hazardStrain =
+        hazard * Math.max(0.1, 1.2 - finite(a.composure, 50) * 0.008);
+      s.stress +=
+        h *
+        (Math.max(0.25, 0.6 + p.stressReactivity * 0.025 - adaptRelief) *
+          workload +
+          hazardStrain);
+      s.hunger += h * (domain === "physical" ? 5.8 : 5);
+      if (domain === "social")
+        s.socialNeed -= h * (4 + (p.sociability / 100) * 6);
+      else
+        s.socialNeed +=
+          h * (activity === "help" ? socialRate * 0.3 : socialRate);
+      if (activity === "help") {
+        s.socialNeed -= h * (8 + (p.agreeableness / 100) * 6);
+        if (v.belonging > 55 || p.agreeableness > 55) s.fulfillment += h * 0.35;
+      }
+      if (activity === "learn") {
+        if (p.openness > 60 || v.learning > 65) s.morale += h * 0.4;
+        s.fulfillment += h * (0.3 + (finite(p.ambition, 50) / 100) * 0.35);
+      }
+      if (s.stress > 65 || s.energy < 20 || s.sleepDebt > 65)
+        s.burnout +=
+          h *
+          (1 + (100 - s.energy) * 0.015 + Math.max(0, s.stress - 65) * 0.015);
+      if (s.stress > 78 || s.burnout > 60 || s.energy < 15) {
+        s.morale -=
+          h *
+          (0.45 +
+            Math.max(0, s.stress - 75) * 0.025 +
+            Math.max(0, s.burnout - 55) * 0.03);
+        s.drive -= h * 0.4;
+      } else if (
+        s.energy > 55 &&
+        s.focus > 55 &&
+        s.stress < 50 &&
+        (p.conscientiousness > 60 ||
+          v.achievement > 60 ||
+          finite(p.ambition, 50) > 65)
+      ) {
+        s.morale += h * 0.2;
+        s.fulfillment += h * 0.15;
+      }
+    } else if (activity === "sleep") {
+      const quality = clamp(
+        finite(context.sleepQuality, 1) * finite(context.homeComfort, 1),
+        0.2,
+        1.4,
+      );
+      s.energy += h * 14 * quality;
+      s.focus += h * 12 * quality;
+      s.stress -= h * 4.5 * quality;
+      s.burnout -= h * 1.8 * quality;
+      s.sleepDebt -= h * 1.35 * quality;
+      s.health += h * 0.35 * quality;
+      const targetDrive =
+        40 +
+        finite(p.ambition, 50) * 0.35 +
+        v.achievement * 0.15 +
+        s.lifeBurden * 0.12 -
+        s.burnout * 0.25;
+      s.drive += (targetDrive - s.drive) * Math.min(1, h * 0.12);
+    } else if (activity === "meal") {
+      const wasHungry = s.hunger > 45;
+      s.hunger -= h * 120;
+      s.energy += h * 9;
+      s.focus += h * 8;
+      s.stress -= h * 5;
+      if (wasHungry) s.morale += h * 1.8;
+    } else if (activity === "rest" || activity === "social") {
+      const extrovert = (p.sociability - 50) / 50;
+      s.energy +=
+        h * (activity === "rest" ? 8.5 : 7.5 + Math.max(0, extrovert) * 2);
+      s.focus += h * 16;
+      const stressDrop =
+        activity === "social"
+          ? 6.5 + extrovert * 2.5
+          : 8.5 - Math.min(0, extrovert) * 2;
+      s.stress -= h * stressDrop;
+      s.burnout -= h * 0.8;
+      s.hunger += h * 3;
+      if (activity === "social") {
+        s.socialNeed -= h * 45;
+        s.morale += h * (0.8 + Math.max(0, extrovert) * 0.8);
+      } else {
+        s.socialNeed -= h * Math.max(4, (100 - p.sociability) * 0.18);
+        s.morale += h * 0.4;
+      }
+    } else if (activity === "offDuty") {
+      const homeComfort = clamp(finite(context.homeComfort, 1), 0.6, 1.5);
+      const burdenFactor =
+        clamp(1 - (s.lifeBurden / 100) * 0.65, 0.25, 1) * homeComfort;
+      s.energy += h * 2.2 * burdenFactor;
+      s.focus += h * 2.5 * burdenFactor;
+      s.stress -= h * 2.2 * burdenFactor;
+      s.burnout -= h * 0.35 * burdenFactor;
+      if (s.hunger > 22) s.hunger = Math.max(20, s.hunger - h * 14);
+      else s.hunger += h * 1.5;
+      s.socialNeed -= h * 5;
+      if (finite(v.family, 50) > 60 || v.workLifeBalance > 60)
+        s.fulfillment += h * 0.25 * burdenFactor;
+    } else if (activity === "commute") {
+      const vehicleRelief = clamp(finite(context.vehicleComfort, 0), 0, 0.7);
+      s.energy -= h * 2.2 * (1 - vehicleRelief);
+      s.stress +=
+        h *
+        (1.2 +
+          (p.stressReactivity / 100) * 1.2 -
+          finite(a.composure, 50) * 0.005) *
+        (1 - vehicleRelief);
+      s.hunger += h * 2.5;
+    } else {
+      s.energy -= h * 0.8;
+      s.focus += h * 2;
+      s.hunger += h * 3;
+      s.socialNeed += h * (0.4 + (p.sociability / 100) * 0.8);
+    }
+    if (s.hunger > 80) {
+      s.focus -= h * 3;
+      s.stress += h * 2;
+      s.morale -= h * 0.5;
+    }
+    if (s.energy < 10) s.health -= h * 0.8;
+    if (context.moraleDelta) s.morale += finite(context.moraleDelta);
+    if (context.lifeBurdenDelta)
+      s.lifeBurden += finite(context.lifeBurdenDelta);
+    if (context.fulfillmentDelta)
+      s.fulfillment += finite(context.fulfillmentDelta);
+    if (context.driveDelta) s.drive += finite(context.driveDelta);
+    return normaliseState(s);
+  }
+  function deriveAspirations(profile, input, context = {}) {
+    const s = normaliseState(input),
+      p = profile.personality,
+      v = profile.values,
+      wallet = Math.max(0, finite(context.wallet, 0)),
+      owned = new Set(
+        Array.isArray(context.ownedAssets) ? context.ownedAssets : [],
+      );
+    let candidates = [
+      {
+        id: "emergencyFund",
+        targetSavings: 1500000,
+        score:
+          v.security * 0.55 +
+          finite(p.prudence, 50) * 0.4 +
+          s.lifeBurden * 0.45 -
+          Math.min(40, (wallet / 1500000) * 35),
+      },
+      {
+        id: "familySupport",
+        targetSavings: 3000000,
+        score:
+          finite(v.family, 50) * 0.65 +
+          v.belonging * 0.25 +
+          s.lifeBurden * 0.5 +
+          p.agreeableness * 0.2,
+      },
+      {
+        id: "romanceAndFamily",
+        targetSavings: 5000000,
+        score: context.hasPartner
+          ? 12
+          : finite(v.family, 50) * 0.6 +
+            v.belonging * 0.35 +
+            p.sociability * 0.2 +
+            s.socialNeed * 0.25,
+      },
+      {
+        id: "personalVehicle",
+        targetSavings: 12000000,
+        score: owned.has("vehicle")
+          ? 5
+          : finite(v.comfort, 50) * 0.5 +
+            v.autonomy * 0.35 +
+            v.recognition * 0.3 +
+            finite(p.ambition, 50) * 0.3,
+      },
+      {
+        id: "homeOwnership",
+        targetSavings: 45000000,
+        score: owned.has("home")
+          ? 8
+          : v.security * 0.45 +
+            finite(v.family, 50) * 0.45 +
+            finite(v.comfort, 50) * 0.4 +
+            finite(p.ambition, 50) * 0.3 +
+            finite(p.prudence, 50) * 0.2,
+      },
+      {
+        id: "skillMastery",
+        targetSavings: 2500000,
+        score:
+          v.learning * 0.65 +
+          p.openness * 0.4 +
+          v.achievement * 0.35 +
+          finite(p.ambition, 50) * 0.3,
+      },
+      {
+        id: "careerAdvancement",
+        targetSavings: 6000000,
+        score:
+          finite(p.ambition, 50) * 0.65 +
+          v.recognition * 0.55 +
+          v.achievement * 0.4 +
+          p.assertiveness * 0.25,
+      },
+      {
+        id: "wealthAndFreedom",
+        targetSavings: 25000000,
+        score:
+          v.income * 0.55 +
+          v.autonomy * 0.45 +
+          finite(p.ambition, 50) * 0.35 +
+          finite(p.prudence, 50) * 0.25,
+      },
+    ].sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+    if (context.goalSpecs !== undefined) {
+      if (
+        !Array.isArray(context.goalSpecs) ||
+        !context.goalSpecs.length ||
+        context.goalSpecs.length > 100
+      )
+        throw new TypeError("goalSpecs must contain 1..100 goals");
+      const ids = new Set();
+      candidates = context.goalSpecs
+        .map((g) => {
+          if (
+            !g ||
+            typeof g.id !== "string" ||
+            !g.id.length ||
+            ids.has(g.id) ||
+            !Number.isSafeInteger(g.targetSavings) ||
+            g.targetSavings < 0 ||
+            (g.baseScore !== undefined &&
+              (typeof g.baseScore !== "number" ||
+                !Number.isFinite(g.baseScore) ||
+                Math.abs(g.baseScore) > 1000))
+          )
+            throw new TypeError("invalid goal spec");
+          ids.add(g.id);
+          let score = g.baseScore || 0;
+          const groups = {
+            personality: PERSONALITY,
+            values: VALUES,
+            aptitudes: APTITUDES,
+            state: Object.keys(STATE_DEFAULTS),
+          };
+          const weights = g.weights || {};
+          if (typeof weights !== "object" || Array.isArray(weights))
+            throw new TypeError("invalid goal weights");
+          for (const [group, terms] of Object.entries(weights)) {
+            if (
+              !Object.hasOwn(groups, group) ||
+              !terms ||
+              typeof terms !== "object" ||
+              Array.isArray(terms)
+            )
+              throw new TypeError("invalid goal group");
+            for (const [k, weight] of Object.entries(terms)) {
+              if (
+                !groups[group].includes(k) ||
+                typeof weight !== "number" ||
+                !Number.isFinite(weight) ||
+                Math.abs(weight) > 5
+              )
+                throw new TypeError("invalid goal weight");
+              score += (group === "state" ? s[k] : profile[group][k]) * weight;
+            }
+          }
+          return { id: g.id, targetSavings: g.targetSavings, score };
+        })
+        .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+    }
+    const top = candidates[0];
+    const savingPropensity = +clamp(
+      0.15 +
+        (finite(p.prudence, 50) / 100) * 0.45 +
+        (p.patience / 100) * 0.15 +
+        (v.security / 100) * 0.15 -
+        (finite(v.comfort, 50) / 100) * 0.12,
+      0.08,
+      0.85,
+    ).toFixed(3);
+    const hustleDrive = Math.round(
+      clamp(
+        finite(p.ambition, 50) * 0.4 +
+          s.drive * 0.35 +
+          v.income * 0.15 +
+          s.lifeBurden * 0.2 -
+          s.burnout * 0.25,
+        10,
+        100,
+      ),
+    );
+    return {
+      primaryGoal: top.id,
+      targetSavings: top.targetSavings,
+      progressRatio: +clamp(
+        wallet / Math.max(1, top.targetSavings),
+        0,
+        1,
+      ).toFixed(3),
+      savingPropensity,
+      hustleDrive,
+      goals: candidates.map((c) => ({
+        id: c.id,
+        targetSavings: c.targetSavings,
+        score: +c.score.toFixed(2),
+      })),
+    };
+  }
+  function evaluateLifePurchase(profile, input, itemSpec, wallet = 0) {
+    if (
+      !itemSpec ||
+      typeof itemSpec.id !== "string" ||
+      !itemSpec.id ||
+      typeof itemSpec.cost !== "number" ||
+      !Number.isSafeInteger(itemSpec.cost) ||
+      itemSpec.cost < 0 ||
+      !Number.isSafeInteger(wallet) ||
+      wallet < 0
+    )
+      throw new TypeError("invalid life purchase itemSpec");
+    const s = normaliseState(input),
+      p = profile.personality,
+      impacts = itemSpec.impacts || { comfort: 0.6, recognition: 0.3 },
+      scored = scoreOptions(profile, s, [
+        { id: itemSpec.id, impacts, effort: 0 },
+      ])[0];
+    const safetyMultiplier =
+      1.05 +
+      (finite(p.prudence, 50) / 100) * 0.45 +
+      (profile.values.security / 100) * 0.25 -
+      (p.riskTaking / 100) * 0.2;
+    const reserveRequired = Math.round(
+      itemSpec.cost * Math.max(1, safetyMultiplier),
+    );
+    if (!Number.isSafeInteger(reserveRequired))
+      throw new TypeError("purchase reserve overflow");
+    const affordableNow = wallet >= reserveRequired;
+    const desired = scored.score >= 6;
+    return {
+      id: itemSpec.id,
+      desired,
+      affordableNow,
+      priorityScore: +scored.score.toFixed(2),
+      reserveRequired,
+      fulfillmentGain: Math.round(clamp(scored.score * 0.8, 2, 25)),
+      moraleGain: Math.round(clamp(scored.score * 0.5, 1, 18)),
+      reasons: scored.contributions.map((c) => c.factor),
+    };
+  }
+  function evaluateLifeEvent(profile, input, eventSpec) {
+    if (
+      !eventSpec ||
+      typeof eventSpec.type !== "string" ||
+      !eventSpec.type.length
+    )
+      throw new TypeError("invalid life event spec");
+    const s = normaliseState(input),
+      p = profile.personality,
+      v = profile.values,
+      intensity = clamp(finite(eventSpec.intensity, 1), 0, 2.5),
+      reasons = [];
+    let moraleDelta = 0,
+      fulfillmentDelta = 0,
+      stressDelta = 0,
+      driveDelta = 0,
+      lifeBurdenDelta = 0;
+    switch (eventSpec.type) {
+      case "assetPurchased": {
+        const cat = eventSpec.category || "comfort";
+        const valWeight =
+          cat === "home"
+            ? (v.security + finite(v.family, 50) + finite(v.comfort, 50)) / 300
+            : cat === "vehicle"
+              ? (finite(v.comfort, 50) + v.autonomy + v.recognition) / 300
+              : (finite(v.comfort, 50) + v.recognition) / 200;
+        fulfillmentDelta = Math.round((8 + valWeight * 14) * intensity);
+        moraleDelta = Math.round((5 + valWeight * 9) * intensity);
+        stressDelta = -Math.round((3 + valWeight * 5) * intensity);
+        driveDelta = Math.round(
+          (2 + (finite(p.ambition, 50) / 100) * 6) * intensity,
+        );
+        if (cat === "home") lifeBurdenDelta = -Math.round(4 * intensity);
+        reasons.push("achievedAssetMilestone:" + cat);
+        break;
+      }
+      case "romanceStarted":
+      case "married": {
+        const fam = (finite(v.family, 50) + v.belonging) / 200;
+        fulfillmentDelta = Math.round((10 + fam * 15) * intensity);
+        moraleDelta = Math.round((6 + fam * 10) * intensity);
+        stressDelta = -Math.round((4 + fam * 6) * intensity);
+        driveDelta = Math.round((3 + fam * 7) * intensity);
+        if (eventSpec.type === "married")
+          lifeBurdenDelta = Math.round(4 * intensity);
+        reasons.push(eventSpec.type);
+        break;
+      }
+      case "childBorn": {
+        const fam = finite(v.family, 50) / 100;
+        fulfillmentDelta = Math.round((12 + fam * 16) * intensity);
+        moraleDelta = Math.round((4 + fam * 8) * intensity);
+        driveDelta = Math.round((6 + fam * 10) * intensity);
+        lifeBurdenDelta = Math.round(12 * intensity);
+        stressDelta = Math.round(4 * intensity);
+        reasons.push("newFamilyMember");
+        break;
+      }
+      case "familySupportSent": {
+        const fam = (finite(v.family, 50) + p.agreeableness) / 200;
+        fulfillmentDelta = Math.round((5 + fam * 8) * intensity);
+        moraleDelta = Math.round((3 + fam * 5) * intensity);
+        lifeBurdenDelta = -Math.round(5 * intensity);
+        stressDelta = -Math.round(3 * intensity);
+        reasons.push("supportedFamily");
+        break;
+      }
+      case "familyCrisis":
+      case "breakup": {
+        const sens = (p.stressReactivity + finite(v.family, 50)) / 200;
+        fulfillmentDelta = -Math.round((8 + sens * 12) * intensity);
+        moraleDelta = -Math.round((6 + sens * 10) * intensity);
+        stressDelta = Math.round((10 + sens * 14) * intensity);
+        if (eventSpec.type === "familyCrisis")
+          lifeBurdenDelta = Math.round(10 * intensity);
+        reasons.push(eventSpec.type);
+        break;
+      }
+      case "promoted":
+      case "recognized":
+      case "bonusReceived": {
+        const amb =
+          (finite(p.ambition, 50) + v.recognition + v.achievement) / 300;
+        fulfillmentDelta = Math.round((7 + amb * 12) * intensity);
+        moraleDelta = Math.round((8 + amb * 12) * intensity);
+        driveDelta = Math.round((5 + amb * 9) * intensity);
+        stressDelta = -Math.round(3 * intensity);
+        reasons.push(eventSpec.type);
+        break;
+      }
+      case "passedOver":
+      case "payCut": {
+        const amb = (finite(p.ambition, 50) + v.fairness + v.recognition) / 300;
+        fulfillmentDelta = -Math.round((6 + amb * 10) * intensity);
+        moraleDelta = -Math.round((9 + amb * 12) * intensity);
+        stressDelta = Math.round((6 + amb * 8) * intensity);
+        driveDelta = -Math.round((4 + amb * 6) * intensity);
+        reasons.push(eventSpec.type);
+        break;
+      }
+      default: {
+        fulfillmentDelta = Math.round(
+          clamp(finite(eventSpec.fulfillmentDelta, 0), -100, 100) * intensity,
+        );
+        moraleDelta = Math.round(
+          clamp(finite(eventSpec.moraleDelta, 0), -100, 100) * intensity,
+        );
+        stressDelta = Math.round(
+          clamp(finite(eventSpec.stressDelta, 0), -100, 100) * intensity,
+        );
+        driveDelta = Math.round(
+          clamp(finite(eventSpec.driveDelta, 0), -100, 100) * intensity,
+        );
+        lifeBurdenDelta = Math.round(
+          clamp(finite(eventSpec.lifeBurdenDelta, 0), -100, 100) * intensity,
+        );
+        reasons.push(eventSpec.type);
+      }
+    }
+    const nextState = normaliseState({
+      ...s,
+      morale: s.morale + moraleDelta,
+      fulfillment: s.fulfillment + fulfillmentDelta,
+      stress: s.stress + stressDelta,
+      drive: s.drive + driveDelta,
+      lifeBurden: s.lifeBurden + lifeBurdenDelta,
+    });
+    return {
+      state: nextState,
+      deltas: {
+        morale: nextState.morale - s.morale,
+        fulfillment: nextState.fulfillment - s.fulfillment,
+        stress: nextState.stress - s.stress,
+        drive: nextState.drive - s.drive,
+        lifeBurden: nextState.lifeBurden - s.lifeBurden,
+      },
+      reasons,
+    };
+  }
+  function evaluateIndustryFit(profile, skillSpecs = {}) {
+    if (!profile || !skillSpecs || typeof skillSpecs !== "object")
+      throw new TypeError("invalid profile or skillSpecs");
+    return Object.values(skillSpecs)
+      .map((spec) => {
+        const currentFit = fit(profile, spec, "aptitudes"),
+          potentialCap = skillCap(profile, spec),
+          adaptScore =
+            currentFit * 0.6 +
+            potentialCap * 0.25 +
+            finite(profile.personality.adaptability, 50) * 0.15;
+        return {
+          skillId: spec.id,
+          aptitudeFit: +currentFit.toFixed(2),
+          potentialCap: +potentialCap.toFixed(2),
+          transitionScore: +adaptScore.toFixed(2),
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.transitionScore - a.transitionScore ||
+          a.skillId.localeCompare(b.skillId),
+      );
+  }
+  function deriveAffect(profile, input, context = {}) {
+    const s = normaliseState(input),
+      p = profile.personality,
+      v = profile.values,
+      unpaid = finite(context.unpaidDays);
+    const valence = clamp(
+      (s.morale - 50) * 0.75 +
+        (s.fulfillment - 50) * 0.35 +
+        (s.energy - 50) * 0.3 -
+        Math.max(0, s.stress - 40) * 0.65 -
+        s.burnout * 0.6 -
+        unpaid * 6 +
+        (p.optimism - 50) * 0.08,
+      -100,
+      100,
+    );
+    const arousal = clamp(
+      s.stress * 0.5 +
+        s.drive * 0.25 +
+        s.focus * 0.15 +
+        (100 - s.sleepDebt) * 0.1,
+      0,
+      100,
+    );
+    let mood = "content";
+    if (s.burnout > 70 || (s.morale < 25 && s.stress > 70)) mood = "burnedOut";
+    else if (unpaid >= 3 || (s.morale < 35 && p.assertiveness >= 50))
+      mood = "frustrated";
+    else if (s.stress > 72) mood = "anxious";
+    else if (s.energy < 28 || s.sleepDebt > 65) mood = "tired";
+    else if (s.morale > 78 && s.energy > 65 && s.focus > 70) mood = "inspired";
+    else if (s.drive > 75 && s.focus > 65 && s.energy > 55) mood = "driven";
+    else if (s.focus > 68 && s.stress >= 25 && s.stress <= 58) mood = "focused";
+    const needs = [
+      ["recovery", Math.max(100 - s.energy, s.burnout, 100 - s.health)],
+      ["sleep", s.sleepDebt],
+      ["nutrition", s.hunger],
+      ["calm", s.stress],
+      ["connection", s.socialNeed * (0.4 + p.sociability / 100)],
+      [
+        "income",
+        (s.lifeBurden * 0.5 + v.income * 0.3 + finite(v.family, 50) * 0.2) *
+          (unpaid > 0 ? 1.4 : 0.75),
+      ],
+      [
+        "ambition",
+        (finite(p.ambition, 50) * 0.55 + v.recognition * 0.45) * 0.8,
+      ],
+      ["growth", (v.learning + p.openness) * 0.45],
+      ["purpose", (v.meaning + v.achievement) * 0.45],
+    ].sort((a, b) => b[1] - a[1]);
+    const retentionRisk = clamp(
+      (Math.max(0, 45 - s.morale) * 1.2 +
+        Math.max(0, s.burnout - 50) * 1.1 +
+        Math.max(0, 40 - s.fulfillment) * 0.5 +
+        unpaid * 8) /
+        100,
+      0,
+      1,
+    );
+    return {
+      mood,
+      valence: Math.round(valence),
+      arousal: Math.round(arousal),
+      dominantNeed: needs[0][0],
+      retentionRisk: +retentionRisk.toFixed(3),
+    };
+  }
+  function evaluateInteraction(
+    profileA,
+    inputA,
+    profileB,
+    inputB,
+    context = {},
+  ) {
+    const sA = normaliseState(inputA),
+      sB = normaliseState(inputB),
+      pA = profileA.personality,
+      pB = profileB.personality,
+      vA = profileA.values,
+      vB = profileB.values,
+      aA = profileA.aptitudes,
+      aB = profileB.aptitudes;
+    let valueDiff = 0;
+    for (const k of VALUES)
+      valueDiff += Math.abs(finite(vA[k], 50) - finite(vB[k], 50));
+    const valueAlignment = 1 - valueDiff / (VALUES.length * 100);
+    const empathy =
+      (pA.agreeableness +
+        pB.agreeableness +
+        aA.emotionalInsight +
+        aB.emotionalInsight +
+        aA.communication +
+        aB.communication) /
+      600;
+    const dominanceClash =
+      pA.assertiveness > 70 &&
+      pB.assertiveness > 70 &&
+      pA.agreeableness < 45 &&
+      pB.agreeableness < 45
+        ? 0.22
+        : 0;
+    const stressStrain = Math.max(0, (sA.stress + sB.stress - 130) / 200);
+    const compatibility = clamp(
+      (valueAlignment * 0.45 + empathy * 0.55 - dominanceClash - stressStrain) *
+        100,
+      5,
+      98,
+    );
+    const familyHarmony =
+      1 -
+      (Math.abs(finite(vA.family, 50) - finite(vB.family, 50)) +
+        Math.abs(pA.integrity - pB.integrity) +
+        Math.abs(vA.workLifeBalance - vB.workLifeBalance)) /
+        300;
+    const romanticSpark =
+      context.romanceEligible === false
+        ? 0
+        : Math.round(
+            clamp(
+              compatibility * 0.55 +
+                familyHarmony * 30 +
+                ((aA.emotionalInsight + aB.emotionalInsight) / 200) * 15,
+              5,
+              99,
+            ),
+          );
+    const norm = (compatibility - 38) / 60;
+    const trustDelta = +clamp(0.05 + norm * 0.35, -0.25, 0.45).toFixed(3);
+    const familiarityDelta = +(
+      context.mode === "help" || context.mode === "romance" ? 1.2 : 1.0
+    ).toFixed(2);
+    const affectionDelta =
+      context.romanceEligible !== false &&
+      (context.mode === "romance" || context.mode === "family")
+        ? +clamp(((romanticSpark - 45) / 55) * 0.6, -0.2, 0.65).toFixed(3)
+        : 0;
+    const conflictRisk = +clamp(
+      dominanceClash + stressStrain * 0.6 + Math.max(0, -norm * 0.35),
+      0,
+      1,
+    ).toFixed(3);
+    const moraleDelta = +clamp(0.05 + norm * 0.22, -0.1, 0.3).toFixed(3);
+    const collaborationMultiplier = +(
+      1.04 +
+      clamp(
+        ((aA.communication + aA.emotionalInsight + pA.agreeableness) / 300) *
+          0.08 +
+          Math.max(0, norm) * 0.04 +
+          clamp(finite(context.existingTrust, 0) / 100, -0.2, 0.5) * 0.04,
+        0,
+        0.14,
+      )
+    ).toFixed(3);
+    return {
+      compatibility: Math.round(compatibility),
+      romanticSpark,
+      trustDelta,
+      familiarityDelta,
+      affectionDelta,
+      conflictRisk,
+      moraleDelta,
+      collaborationMultiplier,
+    };
+  }
+  function respondToRequest(profile, input, request = {}) {
+    const s = normaliseState(input),
+      v = profile.values,
+      p = profile.personality,
+      kind = request.kind || "overtime",
+      hours = clamp(finite(request.hours, 1), 0, 4),
+      pay = clamp(finite(request.payMultiplier, 1.5), 0, 4),
+      urgency = clamp(finite(request.urgency), 0, 1),
+      unpaidDays = clamp(finite(request.unpaidDays, 0), 0, 60),
+      reasons = [];
+    if (s.health < 35 || s.energy < 15 || s.burnout > 80 || s.sleepDebt > 85)
+      return { decision: "decline", maxMinutes: 0, reasons: ["needsRecovery"] };
+    if (unpaidDays >= 7 && p.agreeableness < 75)
+      return { decision: "decline", maxMinutes: 0, reasons: ["unpaidWages"] };
+    if (kind === "roleChange" || kind === "relocation") {
+      const changeScore =
+        finite(p.adaptability, 50) * 0.35 +
+        p.openness * 0.25 +
+        p.agreeableness * 0.2 +
+        finite(p.ambition, 50) * 0.2 +
+        urgency * 12 -
+        s.stress * 0.2 -
+        s.burnout * 0.25;
+      if (changeScore >= 52)
+        return {
+          decision: "accept",
+          maxMinutes: Math.round(hours * 60),
+          reasons: ["adaptableToChange", "growthOpportunity"],
+        };
+      if (changeScore >= 32)
+        return {
+          decision: "negotiate",
+          maxMinutes: Math.round(hours * 30),
+          reasons: ["needsTransitionSupport"],
+        };
+      return {
+        decision: "decline",
+        maxMinutes: 0,
+        reasons: ["prefersStability"],
+      };
+    }
+    const financialDrive =
+      (finite(p.ambition, 50) * 0.05 +
+        finite(v.comfort, 50) * 0.04 +
+        finite(v.family, 50) * 0.04) *
+      Math.max(0.5, pay - 0.5);
+    const score =
+      pay * 11.2 +
+      s.energy * 0.28 +
+      (s.morale - 50) * 0.08 +
+      (s.drive - 50) * 0.06 +
+      v.income * 0.14 +
+      financialDrive +
+      v.security * urgency * 0.08 +
+      v.achievement * urgency * 0.06 +
+      p.agreeableness * 0.08 +
+      p.conscientiousness * 0.06 +
+      finite(p.adaptability, 50) * 0.04 +
+      urgency * 7.5 -
+      s.lifeBurden * 0.24 -
+      s.stress * 0.15 -
+      s.burnout * 0.35 -
+      s.sleepDebt * 0.12 -
+      v.workLifeBalance * 0.18 -
+      v.autonomy * 0.07 -
+      unpaidDays * 2.5 -
+      hours * 5;
+    if (score >= 25) {
+      if (pay >= 1.5) reasons.push("fairCompensation");
+      if (finite(p.ambition, 50) > 65 || v.income > 65)
+        reasons.push("savingForGoals");
+      if (urgency >= 0.5) reasons.push("urgentDeadline");
+      reasons.push("availableCapacity");
+      return {
+        decision: "accept",
+        maxMinutes: Math.round(hours * 60),
+        reasons,
+      };
+    }
+    if (score >= 5) {
+      const half = Math.max(
+        30,
+        Math.min(60, Math.round((hours * 30) / 5) * 5 || 30),
+      );
+      if (
+        s.lifeBurden > 55 ||
+        v.workLifeBalance > 65 ||
+        finite(v.family, 50) > 65
+      )
+        reasons.push("personalPriorities");
+      reasons.push("limitedCapacity");
+      return {
+        decision: "negotiate",
+        maxMinutes: Math.min(Math.round(hours * 60), half),
+        reasons,
+      };
+    }
+    if (s.stress > 65 || s.burnout > 50) reasons.push("highFatigueOrStress");
+    reasons.push("personalPriorities");
+    return {
+      decision: "decline",
+      maxMinutes: 0,
+      reasons,
+    };
+  }
+  // Extensible actions provide motives, not code or changes to intrinsic traits.
+  function scoreOptions(profile, input, options, context = {}) {
+    const state = normaliseState(input);
+    if (!Array.isArray(options) || options.length > 1000)
+      throw new TypeError("invalid action options");
+    return options
+      .map((option) => {
+        if (
+          !option ||
+          typeof option.id !== "string" ||
+          !option.id ||
+          !option.impacts ||
+          typeof option.impacts !== "object" ||
+          Object.entries(option.impacts).some(
+            ([k, v]) =>
+              !ACTION_MOTIVES.includes(k) ||
+              typeof v !== "number" ||
+              !Number.isFinite(v) ||
+              v < -1 ||
+              v > 1,
+          )
+        )
+          throw new TypeError("invalid action motives");
+        const c = [],
+          imp = (key) => option.impacts[key] || 0,
+          p = profile.personality,
+          a = profile.aptitudes;
+        const add = (factor, amount) => {
+          if (amount) c.push({ factor, amount });
+        };
+        for (const value of VALUES) {
+          let weight = (finite(profile.values[value], 50) / 100) * 12;
+          if (value === "income")
+            weight +=
+              (state.lifeBurden / 100) * 4 +
+              (finite(p.ambition, 50) / 100) * 2.5;
+          if (value === "workLifeBalance")
+            weight += (state.burnout / 100) * 5 + (state.sleepDebt / 100) * 3;
+          if (value === "belonging") weight += (state.socialNeed / 100) * 3;
+          if (value === "family") weight += (state.lifeBurden / 100) * 3;
+          if (value === "recognition")
+            weight += (finite(p.ambition, 50) / 100) * 3;
+          add("value:" + value, weight * imp(value));
+        }
+        add(
+          "need:energy",
+          (((100 - state.energy) / 100) * 30 + (state.burnout / 100) * 8) *
+            imp("energy"),
+        );
+        add("need:focus", ((100 - state.focus) / 100) * imp("focus") * 18);
+        add(
+          "need:stress",
+          ((state.stress / 100) * 24 + (state.burnout / 100) * 8) *
+            imp("stress"),
+        );
+        add("need:hunger", (state.hunger / 100) * imp("hunger") * 26);
+        add("need:health", ((100 - state.health) / 100) * imp("health") * 24);
+        add("need:burnout", (state.burnout / 100) * imp("burnout") * 22);
+        add("need:sleep", (state.sleepDebt / 100) * imp("sleep") * 24);
+        add(
+          "need:fulfillment",
+          ((100 - state.fulfillment) / 100) * imp("fulfillment") * 16,
+        );
+        add("drive", (state.drive / 100) * imp("drive") * 14);
+        add(
+          "sociability",
+          ((p.sociability / 100) * 10 + (state.socialNeed / 100) * 10) *
+            imp("social"),
+        );
+        add(
+          "conscientiousness",
+          (p.conscientiousness / 100) * imp("duty") * 12,
+        );
+        add("agreeableness", (p.agreeableness / 100) * imp("help") * 12);
+        add(
+          "openness",
+          ((p.openness / 100) * 9 + (a.creativity / 100) * 4) * imp("novelty"),
+        );
+        add("humility", (p.humility / 100) * imp("humility") * 10);
+        add("optimism", ((p.optimism - 50) / 50) * imp("optimism") * 8);
+        add("riskTaking", ((p.riskTaking - 50) / 50) * imp("risk") * 10);
+        add(
+          "stressReactivity",
+          (-p.stressReactivity / 100) * Math.max(0, imp("risk")) * 5,
+        );
+        add("assertiveness", (p.assertiveness / 100) * imp("voice") * 12);
+        add("integrity", (p.integrity / 100) * imp("integrity") * 16);
+        add(
+          "adaptability",
+          ((finite(p.adaptability, 50) - 45) / 55) * imp("change") * 9,
+        );
+        add(
+          "ambition",
+          ((finite(p.ambition, 50) / 100) * 11 + (state.drive / 100) * 5) *
+            imp("ambition"),
+        );
+        add(
+          "craft",
+          ((a.precision +
+            a.dexterity +
+            finite(a.sensory, 50) +
+            p.conscientiousness) /
+            400) *
+            imp("craft") *
+            10,
+        );
+        add(
+          "physical",
+          ((finite(a.strength, 50) + a.stamina + finite(a.spatial, 50)) / 300) *
+            imp("physical") *
+            10,
+        );
+        add(
+          "routine",
+          ((100 - p.openness + p.patience + finite(p.prudence, 50)) / 300) *
+            imp("routine") *
+            8,
+        );
+        if (
+          typeof option.skillFit === "number" &&
+          Number.isFinite(option.skillFit)
+        )
+          add(
+            "skillFit",
+            clamp(option.skillFit, -1, 1) *
+              (6 + (profile.values.achievement / 100) * 5),
+          );
+        if (
+          typeof option.memoryBias === "number" &&
+          Number.isFinite(option.memoryBias)
+        )
+          add("memory", clamp(option.memoryBias, -1, 1) * 8);
+        if (
+          context &&
+          context.memoryBiases &&
+          typeof context.memoryBiases[option.id] === "number" &&
+          Number.isFinite(context.memoryBiases[option.id])
+        )
+          add(
+            "contextMemory",
+            clamp(context.memoryBiases[option.id], -1, 1) * 8,
+          );
+        const effort = clamp(finite(option.effort), 0, 1),
+          delay = clamp(finite(option.delay), 0, 1);
+        add(
+          "effort",
+          -effort *
+            (1 + (100 - state.energy) / 100 + (state.burnout / 100) * 0.5) *
+            10,
+        );
+        add("patience", -(1 - p.patience / 100) * delay * 8);
+        return {
+          id: option.id,
+          score: c.reduce((n, v) => n + v.amount, 0),
+          contributions: c,
+        };
+      })
+      .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+  }
+  function workplaceVoice(profile, input, context = {}) {
+    const s = normaliseState(input),
+      p = profile.personality,
+      v = profile.values,
+      unpaid = finite(context.unpaidDays),
+      unresolved = finite(context.unresolvedDays),
+      wageFairness = finite(context.wageFairness, 1),
+      reasons = [];
+    if (unpaid > 0) reasons.push("unpaidWages");
+    if (s.burnout > 60) reasons.push("overload");
+    if (s.morale < 35) reasons.push("lowMorale");
+    if (s.health < 35) reasons.push("healthRisk");
+    if (
+      wageFairness < 0.82 &&
+      (v.fairness > 55 || v.income > 60 || finite(p.ambition, 50) > 65)
+    )
+      reasons.push("unfairCompensation");
+    if (s.fulfillment < 28 && finite(p.ambition, 50) > 70)
+      reasons.push("stagnantGrowth");
+    if (!reasons.length) return { action: "none", reasons: [] };
+    if (
+      p.assertiveness < 35 &&
+      unpaid === 0 &&
+      s.morale >= 25 &&
+      s.burnout < 80 &&
+      s.health >= 35
+    )
+      return { action: "none", reasons };
+    const patienceBuffer = p.patience > 75 && unpaid < 7 ? 1 : 0;
+    if (
+      (unpaid >= 7 ||
+        s.morale < 15 ||
+        s.burnout >= 85 ||
+        (s.burnout > 70 && s.morale < 28) ||
+        s.health < 22) &&
+      unresolved >= 4 + patienceBuffer
+    )
+      return { action: "considerLeaving", reasons };
+    return { action: "raiseConcern", reasons };
+  }
+  return freeze({
+    VERSION,
+    COMPATIBLE_VERSIONS,
+    PERSONALITY,
+    VALUES,
+    APTITUDES,
+    STATE_DEFAULTS,
+    ACTION_MOTIVES,
+    createProfile,
+    migrateProfile,
+    validateProfile,
+    freezeProfile,
+    createState,
+    normaliseState,
+    createSkill,
+    skillCap,
+    learn,
+    decaySkill,
+    evaluateAbility,
+    tickState,
+    deriveAffect,
+    deriveAspirations,
+    evaluateLifePurchase,
+    evaluateLifeEvent,
+    evaluateIndustryFit,
+    evaluateInteraction,
+    respondToRequest,
+    scoreOptions,
+    workplaceVoice,
+  });
+});
+
+</script><script>
+(function(root,factory){const v=factory();if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyPhoneEngineering=v;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+// Pure deterministic engineering estimates & reusable business-role/process/material-grade contracts.
+// Power W, capacity MB/Wh, area mm², latency ns, brightness nits, costs integer satang.
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const num=(v,d=0,a=0,b=1e9)=>typeof v==='number'&&Number.isFinite(v)?clamp(v,a,b):d;
+const round=v=>Math.round(v*10000)/10000;
+const money=v=>Math.round(clamp(v,0,Number.MAX_SAFE_INTEGER));
+function rng(seed){let h=2166136261;for(const c of String(seed)){h=Math.imul(h^c.charCodeAt(0),16777619);}return()=>{h+=0x6D2B79F5;let t=Math.imul(h^h>>>15,1|h);t^=t+Math.imul(t^t>>>7,61|t);return((t^t>>>14)>>>0)/4294967296;};}
+
+const MATERIAL_GRADES=Object.freeze({
+  electronic_silicon_wafer_9n:{
+    id:'electronic_silicon_wafer_9n',
+    nameTh:'เวเฟอร์ซิลิคอนเกรดอิเล็กทรอนิกส์ 9N (Electronic-Grade Silicon Wafer)',
+    unit:'wafer_lot',
+    purityGrade:'9N (99.9999999%)',
+    rawInputs:{silicon_wafer:1,copper_coil:1},
+    processStepTh:'ขัดผิวเคมีกล (CMP) และตรวจสอบความหนาแน่นจุดบกพร่องก่อนเข้าห้องสะอาด',
+    usedByRoles:['wafer_foundry','fabless_soc','dram_memory','nand_storage']
+  },
+  tested_wafer_die_lot:{
+    id:'tested_wafer_die_lot',
+    nameTh:'ล็อตดายซิลิคอนผ่านการวัดผลบนเวเฟอร์ (Probed Good Die Lot)',
+    unit:'die_lot',
+    purityGrade:'Class-100 Cleanroom Wafer Probe',
+    rawInputs:{silicon_wafer:1,copper_coil:1},
+    processStepTh:'ลิโธกราฟี กัดลาย โดปปิ้ง และวัดไฟฟ้าระดับเวเฟอร์ (Wafer Sort)',
+    usedByRoles:['wafer_foundry','osat_packaging','fabless_soc']
+  },
+  packaged_tested_ic_grade:{
+    id:'packaged_tested_ic_grade',
+    nameTh:'ชิปบรรจุแพ็กเกจและคัดเกรดความถี่/ความร้อน (Binned BGA/CSP Package)',
+    unit:'chip_lot',
+    purityGrade:'JEDEC Moisture/Thermal Qualified',
+    rawInputs:{copper_coil:1,polymer_resin:1},
+    processStepTh:'ยึดดาย ต่อลวดทองแดง/ฟลิปชิป หุ้มเรซินอีพ็อกซี และคัดเกรด A-Bin/B-Bin',
+    usedByRoles:['osat_packaging','fabless_soc','dram_memory','nand_storage']
+  },
+  cmos_optical_wafer_grade:{
+    id:'cmos_optical_wafer_grade',
+    nameTh:'ชุดเซ็นเซอร์รับภาพ CMOS และชิ้นเลนส์เคลือบมัลติโค้ต (CMOS & Multi-Coat Optics)',
+    unit:'optics_lot',
+    purityGrade:'ISO-6 Optical Alignment Grade',
+    rawInputs:{optical_lens:1,sensor:1},
+    fallbackRawInputs:{glass_bottle:1,silicon_wafer:1,polymer_resin:1},
+    processStepTh:'จัดแนวแกนแสงเลนส์ ประกอบแอคชูเอเตอร์ และสอบเทียบ MTF/สีในห้องมืด',
+    usedByRoles:['camera_module']
+  },
+  aluminosilicate_panel_substrate:{
+    id:'aluminosilicate_panel_substrate',
+    nameTh:'กระจกอะลูมิโนซิลิเกตเคลือบ ITO และชั้นพิกเซลจอภาพ (Tempered ITO Display Substrate)',
+    unit:'panel_lot',
+    purityGrade:'Optical Zero-Bubble Lamination',
+    rawInputs:{glass_bottle:1,copper_coil:1},
+    processStepTh:'หลอมปรับโครงสร้างกระจกผิวเรียบ เคลือบขั้วโปร่งใส ITO ประกบชั้นแบ็กไลต์/พิกเซล และตรวจพิกเซลเสีย',
+    usedByRoles:['display_panel']
+  },
+  high_cycle_lipo_cell_grade:{
+    id:'high_cycle_lipo_cell_grade',
+    nameTh:'เซลล์ลิเธียมคัดความต้านทานภายในพร้อมวงจรป้องกัน BMS (Matched Li-Ion/Li-Po Cell Pack)',
+    unit:'cell_lot',
+    purityGrade:'UN38.3 Thermal & Overcharge Certified',
+    rawInputs:{battery:1},
+    fallbackRawInputs:{cathode_electrolyte:1,foil_pouch:1,copper_coil:1},
+    processStepTh:'คัดเกรดความจุ/ความต้านทานภายใน เชื่อมแถบนิกเกิล ประกอบวงจร BMS และทดสอบโหลดความร้อน',
+    usedByRoles:['battery_pack']
+  },
+  hdi_rf_copper_laminate:{
+    id:'hdi_rf_copper_laminate',
+    nameTh:'แผงวงจรหลายชั้น HDI และวงจรกรองคลื่นวิทยุ RF (HDI Multi-Layer & RF Front-End Board)',
+    unit:'board_lot',
+    purityGrade:'Controlled Impedance 50-Ohm RF',
+    rawInputs:{pcb:1,copper_coil:1},
+    processStepTh:'เจาะไมโครเวีย ชุบทองแดง วางวงจรกรองความถี่วิทยุ และวัดความสมบูรณ์สัญญาณ/EMI',
+    usedByRoles:['pcb_rf','brand','ems']
+  },
+  anodized_thermal_enclosure_grade:{
+    id:'anodized_thermal_enclosure_grade',
+    nameTh:'โครงตัวถังขึ้นรูปแม่นยำพร้อมแผ่นกระจายความร้อน (Precision Thermal Chassis)',
+    unit:'chassis_lot',
+    purityGrade:'CMM Dimensional Tolerance ±0.05mm',
+    rawInputs:{polymer_resin:1,metal_sheet:1},
+    processStepTh:'อัดขึ้นรูป/กัด CNC ชุบผิวอโนไดซ์ ติดแผ่นกราไฟต์นำความร้อน และวัดมิติ',
+    usedByRoles:['enclosure']
+  }
+});
+
+const ROLE_CONTRACTS=Object.freeze({
+  fabless_soc:{
+    id:'fabless_soc',
+    legacyRole:'chip',
+    nameTh:'ผู้ออกแบบชิปประมวลผล/SoC แบบไร้โรงหล่อ (Fabless CPU/SoC Design)',
+    family:'semiconductor_design',
+    outputs:['chip'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{semiconductor_physics:42,circuit_design:40,embedded_firmware:32},
+    keySpecialistSubject:'semiconductor_physics',
+    requiredEquipment:['developer_pc','test_rig'],
+    utilityKw:0.8,
+    entryCapitalSatang:180000000,
+    nreCostSatang:1500000,
+    licenseFeeSatang:1800000,
+    workingCapitalDays:45,
+    qualifiedMaterialGrade:'electronic_silicon_wafer_9n',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:25,
+    minBatchSize:10,
+    baseYield:0.82,
+    entryAlternatives:['in_house_rnd','license_core_ip','contract_foundry_osat'],
+    processStages:[
+      {code:'soc_arch_rtl',nameTh:'ออกแบบสถาปัตยกรรมชุดคำสั่งและรวมบล็อก RTL/ISP',workShare:0.4,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'จำลองชุดคำสั่งและตรวจ Timing Closure ผ่าน'},
+      {code:'physical_verification_tapeout',nameTh:'วางผังวงจร Physical Design และส่งแม่พิมพ์ Tape-Out',workShare:0.35,passiveHoldMinutes:60,cleanroomRequired:false,qualityGateTh:'ผ่านกฎ DRC/LVS ของโหนดการผลิต'},
+      {code:'foundry_osat_qualification',nameTh:'สั่งผลิตเวเฟอร์ผ่าน Foundry และคัดเกรดแพ็กเกจ OSAT',workShare:0.25,passiveHoldMinutes:180,cleanroomRequired:true,qualityGateTh:'ตรวจวัดกำลังไฟและความถี่ชิป A-Bin/B-Bin ผ่านเกณฑ์'}
+    ]
+  },
+  wafer_foundry:{
+    id:'wafer_foundry',
+    legacyRole:'chip',
+    nameTh:'โรงหล่อเวเฟอร์ซิลิคอนและห้องสะอาด (Semiconductor Wafer Foundry)',
+    family:'semiconductor_manufacturing',
+    outputs:['chip','wafer_die'],
+    actualBuyers:['fabless_soc','dram_memory','nand_storage','brand'],
+    subjectRequirements:{semiconductor_process:48,physical_chemistry:42,cleanroom_operations:38,metrology:38},
+    keySpecialistSubject:'semiconductor_process',
+    requiredEquipment:['semiconductor_fab','diagnostic_kit'],
+    utilityKw:20,
+    entryCapitalSatang:800000000,
+    nreCostSatang:5000000,
+    licenseFeeSatang:4500000,
+    workingCapitalDays:60,
+    qualifiedMaterialGrade:'tested_wafer_die_lot',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:20,
+    baseYield:0.78,
+    entryAlternatives:['build_cleanroom_fab','contract_wafer_capacity'],
+    processStages:[
+      {code:'wafer_clean_oxidation',nameTh:'ล้างเวเฟอร์ด้วยน้ำบริสุทธิ์และสร้างชั้นออกไซด์',workShare:0.25,passiveHoldMinutes:60,cleanroomRequired:true,qualityGateTh:'ควบคุมฝุ่นห้องสะอาดและความหนาออกไซด์'},
+      {code:'lithography_etch_implant',nameTh:'ฉายแสงลิโธกราฟี กัดลาย และฝังไอออน',workShare:0.45,passiveHoldMinutes:180,cleanroomRequired:true,qualityGateTh:'ความแม่นยำการซ้อนทับเลเยอร์และค่า Defect Density D0'},
+      {code:'metallization_wafer_probe',nameTh:'เดินสายโลหะเชื่อมวงจรและวัดผลไฟฟ้าบนเวเฟอร์ (Wafer Sort)',workShare:0.3,passiveHoldMinutes:60,cleanroomRequired:true,qualityGateTh:'คัดแยก Good Dies ตามสมการ Murphy Yield'}
+    ]
+  },
+  osat_packaging:{
+    id:'osat_packaging',
+    legacyRole:'ems',
+    nameTh:'โรงงานประกอบแพ็กเกจชิปและทดสอบไฟฟ้า (OSAT Packaging & Test)',
+    family:'semiconductor_packaging',
+    outputs:['packaged_chip','pcb_rf'],
+    actualBuyers:['fabless_soc','wafer_foundry','dram_memory','nand_storage','brand'],
+    subjectRequirements:{semiconductor_process:35,smt_process:35,metrology:35,quality:32},
+    keySpecialistSubject:'smt_process',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.4,
+    entryCapitalSatang:150000000,
+    nreCostSatang:800000,
+    licenseFeeSatang:1200000,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'packaged_tested_ic_grade',
+    bom:{copper_coil:1,polymer_resin:1},
+    workMinutesPerUnit:20,
+    minBatchSize:15,
+    baseYield:0.96,
+    entryAlternatives:['in_house_osat','contract_packaging'],
+    processStages:[
+      {code:'die_attach_wirebond',nameTh:'ตัดเวเฟอร์ ยึดดาย และเชื่อมสัญญาณ (Die Attach & Interconnect)',workShare:0.4,passiveHoldMinutes:20,cleanroomRequired:true,qualityGateTh:'แรงยึดลวดเชื่อมและความต้านทานจุดสัมผัส'},
+      {code:'molding_encapsulation',nameTh:'ฉีดเรซินห่อหุ้มป้องกันความชื้นและอบบ่ม',workShare:0.25,passiveHoldMinutes:45,cleanroomRequired:false,qualityGateTh:'ไร้โพรงอากาศและการโก่งตัวของแพ็กเกจ'},
+      {code:'final_electrical_binning',nameTh:'ทดสอบไฟฟ้า-ความร้อนและคัดเกรดความเร็ว (Final Test & Binning)',workShare:0.35,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'แยก A-Bin / B-Bin และตัดของเสีย'}
+    ]
+  },
+  dram_memory:{
+    id:'dram_memory',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตหน่วยความจำชั่วคราวความเร็วสูง (DRAM / Volatile Memory Supplier)',
+    family:'memory_supplier',
+    outputs:['ram'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{semiconductor_physics:38,circuit_design:38,metrology:35},
+    keySpecialistSubject:'circuit_design',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.5,
+    entryCapitalSatang:220000000,
+    nreCostSatang:1400000,
+    licenseFeeSatang:1800000,
+    workingCapitalDays:40,
+    qualifiedMaterialGrade:'electronic_silicon_wafer_9n',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.88,
+    entryAlternatives:['in_house_rnd','license_jedec_dram','contract_wafer_fab'],
+    processStages:[
+      {code:'dram_cell_controller',nameTh:'ออกแบบตัวเก็บประจุเซลล์หน่วยความจำและวงจรควบคุมจังหวะ',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ตรงตามมาตรฐานอินเทอร์เฟซ SDRAM/LPDDR ของชิป'},
+      {code:'dram_wafer_packaging',nameTh:'แปรรูปดายหน่วยความจำและประกอบแพ็กเกจความหนาแน่นสูง',workShare:0.35,passiveHoldMinutes:45,cleanroomRequired:true,qualityGateTh:'ตรวจสอบกระแสรั่วไหล أثناءรีเฟรช (Self-Refresh Power)'},
+      {code:'dram_bandwidth_timing_qa',nameTh:'ทดสอบแบนด์วิดท์และค่าความหน่วงที่ความถี่จริง',workShare:0.3,passiveHoldMinutes:20,cleanroomRequired:false,qualityGateTh:'แบนด์วิดท์และ Latency ผ่านเกณฑ์โดยไม่มีบิตเพี้ยน'}
+    ]
+  },
+  nand_storage:{
+    id:'nand_storage',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตหน่วยเก็บข้อมูลแฟลชถาวร (NAND Flash / eMMC / UFS Supplier)',
+    family:'storage_supplier',
+    outputs:['storage'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{embedded_firmware:38,circuit_design:35,semiconductor_process:32,quality:30},
+    keySpecialistSubject:'embedded_firmware',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.2,
+    entryCapitalSatang:200000000,
+    nreCostSatang:1200000,
+    licenseFeeSatang:1600000,
+    workingCapitalDays:35,
+    qualifiedMaterialGrade:'electronic_silicon_wafer_9n',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.9,
+    entryAlternatives:['in_house_rnd','license_flash_controller'],
+    processStages:[
+      {code:'nand_controller_ecc',nameTh:'พัฒนาคอนโทรลเลอร์จัดการบล็อกเสียและรหัสแก้ข้อมูลผิดพลาด (ECC/Wear-Leveling)',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'เฟิร์มแวร์รองรับอินเทอร์เฟซ SPI/eMMC และป้องกันข้อมูลสูญหาย'},
+      {code:'nand_die_stack_package',nameTh:'ซ้อนดายแฟลช (Die Stacking) และเชื่อมลงบอร์ดโมดูล',workShare:0.35,passiveHoldMinutes:30,cleanroomRequired:true,qualityGateTh:'ความสมบูรณ์ของการเชื่อมสายสัญญาณทุกเลเยอร์'},
+      {code:'endurance_read_write_test',nameTh:'คัดกรองบล็อกเสียและวัดความเร็วอ่าน/เขียนต่อเนื่อง',workShare:0.3,passiveHoldMinutes:30,cleanroomRequired:false,qualityGateTh:'ความเร็วอ่านเขียนและรอบอายุการใช้งาน (P/E Cycles) ผ่านเกณฑ์'}
+    ]
+  },
+  camera_module:{
+    id:'camera_module',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตโมดูลกล้อง เซ็นเซอร์รับภาพ และชุดเลนส์ออปติคัล (Camera & Optics Supplier)',
+    family:'optics_sensor_supplier',
+    outputs:['camera'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{semiconductor_optics:35,metrology:35,electrical_basics:35,quality:30},
+    keySpecialistSubject:'semiconductor_optics',
+    requiredEquipment:['electronics_bench','diagnostic_kit'],
+    utilityKw:1.8,
+    entryCapitalSatang:180000000,
+    nreCostSatang:1200000,
+    licenseFeeSatang:1600000,
+    workingCapitalDays:35,
+    qualifiedMaterialGrade:'cmos_optical_wafer_grade',
+    bom:{polymer_resin:1,metal_sheet:1},
+    preferredBom:{optical_lens:1,sensor:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.87,
+    entryAlternatives:['in_house_rnd','license_optics_module'],
+    processStages:[
+      {code:'cmos_pixel_optics_design',nameTh:'ออกแบบพื้นที่รับแสงเซ็นเซอร์ ชุดเลนส์ และอัลกอริทึมลดสัญญาณรบกวน',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'สมดุลขนาดพิกเซล รูรับแสง และความคมชัด'},
+      {code:'active_alignment_assembly',nameTh:'ประกอบชุดเลนส์ มอเตอร์โฟกัส และเซ็นเซอร์ในห้องไร้ฝุ่น',workShare:0.35,passiveHoldMinutes:20,cleanroomRequired:true,qualityGateTh:'ไร้ฝุ่นบนหน้าเซ็นเซอร์และระนาบโฟกัสตรงศูนย์'},
+      {code:'mtf_lowlight_isp_calibration',nameTh:'สอบเทียบความคมชัด MTF สมดุลแสงสีขาว และประสิทธิภาพแสงน้อย',workShare:0.3,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ค่าความคมชัดและคุณภาพประมวลผลภาพผ่านเกณฑ์'}
+    ]
+  },
+  display_panel:{
+    id:'display_panel',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตแผงหน้าจอและโมดูลสัมผัส (Display & Touch Panel Supplier)',
+    family:'display_supplier',
+    outputs:['display'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{electrical_basics:38,circuit_design:35,metrology:32,quality:35},
+    keySpecialistSubject:'electrical_basics',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:3.0,
+    entryCapitalSatang:240000000,
+    nreCostSatang:1600000,
+    licenseFeeSatang:2000000,
+    workingCapitalDays:40,
+    qualifiedMaterialGrade:'aluminosilicate_panel_substrate',
+    bom:{glass_bottle:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.86,
+    entryAlternatives:['in_house_rnd','license_panel_module'],
+    processStages:[
+      {code:'glass_ito_backplane',nameTh:'แปรรูปซับสเตรตกระจก เคลือบวงจรทรานซิสเตอร์ และไดรเวอร์จอ',workShare:0.35,passiveHoldMinutes:30,cleanroomRequired:true,qualityGateTh:'อินเทอร์เฟซ RGB/MIPI และความละเอียดตรงขีดจำกัดชิป'},
+      {code:'backlight_touch_lamination',nameTh:'ประกบชั้นกระจายแสง แผงสัมผัส และซีลขอบกันฝุ่น',workShare:0.35,passiveHoldMinutes:25,cleanroomRequired:true,qualityGateTh:'ไร้ฟองอากาศและจุดสว่างรั่ว'},
+      {code:'pixel_power_optical_inspection',nameTh:'ตรวจสอบพิกเซลเสีย ความสว่าง และอัตราการกินไฟของหน้าจอ',workShare:0.3,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ผ่านเกณฑ์ Dead Pixel และการใช้พลังงาน'}
+    ]
+  },
+  battery_pack:{
+    id:'battery_pack',
+    legacyRole:'battery',
+    nameTh:'ผู้ผลิตเซลล์แบตเตอรี่และระบบจัดการพลังงาน (Battery & BMS Pack Supplier)',
+    family:'power_supplier',
+    outputs:['battery'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{power_electronics:35,electrical_safety:38,quality:30},
+    keySpecialistSubject:'power_electronics',
+    requiredEquipment:['test_rig','electronics_bench'],
+    utilityKw:3.5,
+    entryCapitalSatang:180000000,
+    nreCostSatang:1100000,
+    licenseFeeSatang:1500000,
+    workingCapitalDays:35,
+    qualifiedMaterialGrade:'high_cycle_lipo_cell_grade',
+    bom:{battery:1},
+    fallbackBom:{cathode_electrolyte:1,foil_pouch:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.91,
+    entryAlternatives:['in_house_rnd','license_bms_pack'],
+    processStages:[
+      {code:'cell_matching_grading',nameTh:'คัดเกรดเซลล์เคมีลิเธียมและวัดความต้านทานภายใน',workShare:0.3,passiveHoldMinutes:20,cleanroomRequired:false,qualityGateTh:'ความจุ Wh และกำลังจ่ายไฟสูงสุด (Max Discharge W) เพียงพอ'},
+      {code:'bms_protection_assembly',nameTh:'ประกอบวงจรป้องกันไฟเกิน/ความร้อน (BMS) และหุ้มฉนวนนิรภัย',workShare:0.35,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'วงจรตัดไฟลัดวงจรและควบคุมอุณหภูมิทำงานแม่นยำ'},
+      {code:'charge_aging_safety_test',nameTh:'ชาร์จกระตุ้นเซลล์ (Formation Aging) และทดสอบความปลอดภัยภายใต้โหลด',workShare:0.35,passiveHoldMinutes:45,cleanroomRequired:false,qualityGateTh:'ไม่มีอาการบวมหรือความร้อนสะสมเกินพิกัด'}
+    ]
+  },
+  pcb_rf:{
+    id:'pcb_rf',
+    legacyRole:'materials',
+    nameTh:'ผู้ผลิตแผงวงจรหลายชั้น HDI และโมดูลคลื่นวิทยุ RF (PCB / Interconnect / RF Supplier)',
+    family:'interconnect_rf_supplier',
+    outputs:['pcb_rf','enclosure'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{electrical_basics:35,smt_process:35,circuit_design:32},
+    keySpecialistSubject:'smt_process',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.0,
+    entryCapitalSatang:140000000,
+    nreCostSatang:900000,
+    licenseFeeSatang:1200000,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'hdi_rf_copper_laminate',
+    bom:{polymer_resin:1,metal_sheet:1},
+    preferredBom:{pcb:1,copper_coil:1},
+    workMinutesPerUnit:25,
+    minBatchSize:5,
+    baseYield:0.92,
+    entryAlternatives:['in_house_rnd','license_rf_board'],
+    processStages:[
+      {code:'hdi_stackup_impedance',nameTh:'ออกแบบเลเยอร์บอร์ด HDI และคำนวณอิมพีแดนซ์สายอากาศ RF',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ลดการสูญเสียสัญญาณและคลื่นรบกวนข้ามช่อง'},
+      {code:'microvia_smt_shielding',nameTh:'เดินลายทองแดง วางคอนเน็กเตอร์ และครอบเกราะป้องกันคลื่นแม่เหล็กไฟฟ้า (EMI Shield)',workShare:0.35,passiveHoldMinutes:20,cleanroomRequired:false,qualityGateTh:'จุดบัดกรีและฝาครอบกันกวนสัญญาณสมบูรณ์'},
+      {code:'rf_emi_power_integrity_test',nameTh:'ทดสอบความแรงสัญญาณวิทยุและเสถียรภาพไฟเลี้ยงบนบอร์ด',workShare:0.3,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ผ่านเกณฑ์ Signal Integrity และ EMI'}
+    ]
+  },
+  enclosure:{
+    id:'enclosure',
+    legacyRole:'enclosure',
+    nameTh:'ผู้ผลิตตัวถัง โครงสร้างระบายความร้อน และซีลกันฝุ่น (Mechanical & Thermal Enclosure Supplier)',
+    family:'mechanical_thermal_supplier',
+    outputs:['enclosure'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{metal_machining:40,quality:30},
+    keySpecialistSubject:'metal_machining',
+    requiredEquipment:['press'],
+    utilityKw:5.0,
+    entryCapitalSatang:150000000,
+    nreCostSatang:900000,
+    licenseFeeSatang:2000000,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'anodized_thermal_enclosure_grade',
+    bom:{polymer_resin:1,metal_sheet:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.93,
+    entryAlternatives:['license_enclosure_design','in_house_cad_tooling'],
+    processStages:[
+      {code:'cad_mold_thermal_design',nameTh:'ออกแบบแม่พิมพ์ตัวถังและช่องทางกระจายความร้อน Rth',workShare:0.3,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ค่าความต้านทานความร้อน Rth เหมาะสมกับกำลังไฟชิป'},
+      {code:'press_cnc_forming',nameTh:'อัดขึ้นรูปพอลิเมอร์/แผ่นโลหะและกัดร่องยึดบอร์ด',workShare:0.45,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ความแม่นยำมิติและจุดยึดโมดูล'},
+      {code:'surface_finish_drop_qc',nameTh:'เคลือบผิว ติดแผ่นนำความร้อน และตรวจความทนทานการตกกระแทก',workShare:0.25,passiveHoldMinutes:10,cleanroomRequired:false,qualityGateTh:'ผ่านด่านตรวจมิติและซีลตัวเรือน'}
+    ]
+  },
+  os_platform:{
+    id:'os_platform',
+    legacyRole:'brand',
+    nameTh:'ผู้พัฒนาระบบปฏิบัติการ เฟิร์มแวร์ ไดรเวอร์ BSP และแพลตฟอร์ม (OS / Firmware / Platform Vendor)',
+    family:'software_platform',
+    outputs:['os'],
+    actualBuyers:['brand'],
+    subjectRequirements:{software:40,programming:40,embedded_firmware:35},
+    keySpecialistSubject:'software',
+    requiredEquipment:['developer_pc'],
+    utilityKw:0.4,
+    entryCapitalSatang:120000000,
+    nreCostSatang:1000000,
+    licenseFeeSatang:1200,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'hdi_rf_copper_laminate',
+    bom:{polymer_resin:1,copper_coil:1},
+    workMinutesPerUnit:20,
+    minBatchSize:1,
+    baseYield:0.98,
+    entryAlternatives:['in_house_os_rnd','license_commercial_os'],
+    processStages:[
+      {code:'kernel_bsp_driver_port',nameTh:'พัฒนาเคอร์เนลและชุดไดรเวอร์ BSP รองรับชุดคำสั่งชิปและชิ้นส่วน',workShare:0.4,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ความครอบคลุมไดรเวอร์ >= 95% และรองรับ ISA'},
+      {code:'power_scheduler_ui_sdk',nameTh:'ปรับจูนตัวจัดการพลังงานพื้นหลังและชุดเครื่องมือนักพัฒนาแอป (SDK)',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ควบคุม OS Overhead และการใช้แรมขั้นต่ำ'},
+      {code:'hardware_in_loop_security_qa',nameTh:'ทดสอบความเสถียรบนบอร์ดจริงและแพตช์ความปลอดภัย',workShare:0.25,passiveHoldMinutes:30,cleanroomRequired:false,qualityGateTh:'ผ่านการทดสอบความเข้ากันได้และพร้อมปล่อยไลเซนส์'}
+    ]
+  },
+  brand:{
+    id:'brand',
+    legacyRole:'brand',
+    nameTh:'แบรนด์โทรศัพท์ ผู้พัฒนาเครื่องต้นแบบ และผู้ประกอบขั้นสุดท้าย (Handset Brand / ODM / EMS)',
+    family:'handset_oem_odm',
+    outputs:['phone'],
+    actualBuyers:['household','carrier','distributor'],
+    subjectRequirements:{electrical_basics:40,software:40,quality:30},
+    keySpecialistSubject:'electrical_basics',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.5,
+    entryCapitalSatang:500000000,
+    nreCostSatang:2000000,
+    licenseFeeSatang:1200,
+    workingCapitalDays:60,
+    qualifiedMaterialGrade:'hdi_rf_copper_laminate',
+    bom:{pcb:1,copper_coil:1},
+    workMinutesPerUnit:20,
+    minBatchSize:2,
+    baseYield:0.94,
+    entryAlternatives:['in_house_brand_rnd','contract_ems_assembly','acquire_existing_brand'],
+    processStages:[
+      {code:'system_architecture_evt',nameTh:'กำหนดสถาปัตยกรรมเครื่อง คัดเลือกชิป/ชิ้นส่วน และสร้างต้นแบบ EVT',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ตรวจความเข้ากันได้ของชิป แรม จอ แบต ตัวถัง และ OS'},
+      {code:'pcba_box_build_assembly',nameTh:'ประกอบชิ้นส่วนจริงลงแผงวงจรและตัวถัง (Box-Build Assembly)',workShare:0.35,passiveHoldMinutes:30,cleanroomRequired:false,qualityGateTh:'ใช้ชิ้นส่วนจริงครบทุกชิ้นจากคลังล็อตที่ถือครอง'},
+      {code:'pilot_validation_certification',nameTh:'ผลิตนำร่อง ทดสอบความร้อน/แบต/คลื่นวิทยุ 1,200 นาที ก่อนวางตลาด',workShare:0.3,passiveHoldMinutes:120,cleanroomRequired:false,qualityGateTh:'มีเครื่องนำร่อง >= 2 เครื่อง และผ่านเวลาทดสอบ 7 วัน'}
+    ]
+  }
+});
+
+const ROLE_ALIASES=Object.freeze({
+  chip:'fabless_soc',
+  display:'display_panel',
+  battery:'battery_pack',
+  materials:'pcb_rf',
+  ems:'osat_packaging',
+  enclosure:'enclosure',
+  brand:'brand',
+  fabless_soc:'fabless_soc',
+  wafer_foundry:'wafer_foundry',
+  osat_packaging:'osat_packaging',
+  dram_memory:'dram_memory',
+  nand_storage:'nand_storage',
+  camera_module:'camera_module',
+  display_panel:'display_panel',
+  battery_pack:'battery_pack',
+  pcb_rf:'pcb_rf',
+  os_platform:'os_platform'
+});
+
+function roleContract(roleId){
+  const canonical=ROLE_ALIASES[roleId]||roleId;
+  return ROLE_CONTRACTS[canonical]||ROLE_CONTRACTS.brand;
+}
+
+function synthesizeChip(seed,capability=40,options={}){
+ options=options||{};const r=rng(seed),c=num(capability,40,0,100),level=Math.floor(num(options.level,0,0,6)),q=.85+r()*.3;
+ const focus=['balanced','performance','low_power','budget_yield','ai_isp'].includes(options.focus)?options.focus:(['balanced','performance','low_power','ai_isp'][Math.floor(r()*4)]||'balanced');
+ const nodeNm=num(options.nodeNm,Math.max(22,130/Math.pow(1.35,level)),10,350),cores=level?Math.min(8,1+level+Math.floor(r()*2)):1;
+ const clockGhz=round((.18+c*.005+level*.22)*q),dieAreaMm2=round((12+cores*8+level*7)*(nodeNm/130)**1.5*(1.15-c*.003)*(.9+r()*.2));
+ const loadW=round((.22+cores*clockGhz*.5)*(nodeNm/130)**.65*(1.15-c*.003));
+ const ipcIndex=round(.65+c/120),gpuGflops=level?round(cores*clockGhz*(8+c/20)):0;
+ const latencyNs=round(Math.max(12,95-level*11-c*.22+(focus==='low_power'?4:focus==='performance'?-4:0)));
+ const npuTops=level>=2?round((level-1)*(.6+c/80)*(focus==='ai_isp'?1.25:1)):0;
+ const ispMpLimit=level?Math.round(4*2**Math.min(4,level)*(focus==='ai_isp'?1.25:1)):2;
+ const maskCostSatang=money(Math.round(1200000*(130/Math.max(14,nodeNm))**1.15));
+ return{id:'chip-'+String(seed).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,48)+'-'+level+'-'+Math.floor(r()*1e6),isa:'arm32',cores,clockGhz,nodeNm:round(nodeNm),dieAreaMm2,ipcIndex,gpuGflops,memoryType:level?'LPDDR':'SDRAM',maxRamMB:level?128*2**level:32,maxPixels:level?320*480*2**(level-1):240*320,radioGeneration:Math.min(5,2+Math.floor(level/2)),idleW:round(loadW*.055),loadW,peakW:round(loadW*1.35),level,focus,latencyNs,npuTops,ispMpLimit,maskCostSatang};
+}
+
+function parts(seed,level=0,options={}){
+ options=options||{};const r=rng(seed),l=Math.floor(num(level,0,0,6)),cap=num(options.capability,45,0,100),capFactor=.92+cap/500;
+ const width=l?240+80*l:128+Math.floor(r()*3)*16,height=l?320+160*l:160+Math.floor(r()*3)*16;
+ const camMp=l?2*2**l:.3,sensorArea=round((2+l*2)*capFactor),fNumber=round(Math.max(1.6,2.8-l*.18-(cap-45)*.002));
+ const lowLightScore=round(clamp((sensorArea/Math.max(1,camMp))*18+(3.2-fNumber)*22+l*8,10,98));
+ const ramCap=l?64*2**l:8+Math.floor(r()*3)*8,ramBw=round((l?.6+l*.8:.08)*(.9+r()*.2));
+ const ramLatencyNs=round(Math.max(14,75-l*8-(cap-45)*.15)),ramPowerMw=round(Math.max(25,(l?85+l*30:40)*(1.08-cap*.0015)));
+ const storageRead=round((l?30+l*25:8)*(.85+r()*.3)),storageWrite=round(storageRead*.68),storageCap=l?512*2**l:16+Math.floor(r()*4)*8;
+ const enduranceCycles=Math.round((l?1500+l*600:1000)*capFactor);
+ const displayWatts=round((.12+l*.25)*(.85+r()*.3)),brightnessNits=Math.round((l?320+l*75:180)*capFactor),refreshHz=l>=3?90:60;
+ const battWh=round((3.5+l*2)*(.85+r()*.3)),maxDischargeW=round(3+l*2+r()),chargeW=round(Math.min(maxDischargeW*1.1,2.5+l*3.5)),cycleLife=Math.round((350+l*75)*capFactor);
+ const rth=round((l?3.3:5)*(.9+r()*.2)),dropResistanceScore=round(clamp((l?68:74)+(cap-45)*.2,35,96));
+ const osOverhead=l?round(.16/(1+l*.2)):.03,securityScore=round(clamp(55+l*7+(cap-45)*.25,30,98));
+ return{
+   camera:{megapixels:camMp,sensorAreaMm2:2+l*2,processingQuality:round(.4+l*.1),fNumber,lowLightScore,hasOis:l>=2?1:0},
+   ram:{type:l?'LPDDR':'SDRAM',capacityMB:ramCap,bandwidthGBps:ramBw,latencyNs:ramLatencyNs,powerMw:ramPowerMw},
+   storage:{readMBps:storageRead,writeMBps:storageWrite,capacityMB:storageCap,interface:l?'eMMC':'SPI',enduranceCycles},
+   display:{pixels:width*height,width,height,watts:displayWatts,interface:l?'MIPI':'RGB',brightnessNits,refreshHz},
+   battery:{wh:battWh,maxDischargeW,chargeW,cycleLife,protectionScore:round(clamp(65+l*5+(cap-45)*.2,40,99))},
+   enclosure:{material:l?'aluminium_graphite':'polymer',rth,dropResistanceScore,ipRatingCode:l>=2?67:l>=1?54:50},
+   pcb_rf:{layers:l?4+l*2:2,signalIntegrity:round(clamp(.78+l*.035+(cap-45)*.0015,.5,0.99)),emiShieldingScore:round(clamp(62+l*6,40,98)),radioGeneration:Math.min(5,2+Math.floor(l/2)),maxPowerDeliveryW:round(maxDischargeW*1.25+2)},
+   os:{id:l?'open_mobile':'embedded_rtos',isa:'arm32',minRamMB:l?64:4,installableApps:!!l,apiLevel:l,version:1+l,driverCoverage:1,overhead:osOverhead,securityScore,supportMonths:12+l*6}
+ };
+}
+
+function synthesizeComponent(seed,kind,capability=45,level=0,options={}){
+  const base=parts(seed+':'+kind,level,{capability,...options});
+  return base[kind]||base.enclosure;
+}
+
+function isCompatiblePart(chip,kind,spec){
+  if(!chip||!spec||typeof spec!=='object')return false;
+  const cLevel=num(chip.level,0,0,6);
+  if(kind==='ram')return spec.type===chip.memoryType&&num(spec.capacityMB)>0&&num(spec.capacityMB)<=num(chip.maxRamMB);
+  if(kind==='storage')return spec.interface===(cLevel>0?'eMMC':'SPI')&&num(spec.capacityMB)>0;
+  if(kind==='display')return spec.interface===(cLevel>0?'MIPI':'RGB')&&num(spec.pixels)>0&&num(spec.pixels)<=num(chip.maxPixels)&&spec.pixels===spec.width*spec.height;
+  if(kind==='battery')return num(spec.wh)>0&&num(spec.maxDischargeW)>=num(chip.peakW,1)*1.05;
+  if(kind==='camera')return num(spec.megapixels)>0&&num(spec.sensorAreaMm2)>0;
+  if(kind==='enclosure')return num(spec.rth)>0;
+  if(kind==='pcb_rf')return num(spec.signalIntegrity,0.8)>=0.55&&num(spec.maxPowerDeliveryW,10)>=num(chip.peakW,1);
+  if(kind==='os')return spec.isa===chip.isa&&num(spec.driverCoverage,0)>=0.95&&num(spec.minRamMB,4)<=num(chip.maxRamMB,32);
+  return true;
+}
+
+function evaluate(chip,p,options={}){
+ chip=chip||{};p=p||{};options=options||{};const reasonsTh=[],bad=s=>reasonsTh.push(s),ram=p.ram||{},storage=p.storage||{},display=p.display||{},battery=p.battery||{},enclosure=p.enclosure||{},os=p.os||{},pcbRf=p.pcb_rf||null;
+ const required=[chip.cores,chip.clockGhz,chip.nodeNm,chip.dieAreaMm2,chip.maxRamMB,chip.maxPixels,ram.capacityMB,ram.bandwidthGBps,storage.capacityMB,display.pixels,display.width,display.height,battery.wh,battery.maxDischargeW,enclosure.rth];
+ if(required.some(v=>typeof v!=='number'||!Number.isFinite(v)||v<=0))bad('ข้อมูลชิ้นส่วนหรือหน่วยไม่ถูกต้อง');
+ if([chip.idleW,chip.loadW,chip.peakW,display.watts,os.overhead,os.minRamMB,os.driverCoverage].some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0))bad('ข้อมูลพลังงานหรือระบบปฏิบัติการไม่ถูกต้อง');
+ if(!chip.isa||!os.id||chip.isa!==os.isa)bad('ระบบปฏิบัติการไม่รองรับชุดคำสั่งของชิป');
+ if(!chip.memoryType||ram.type!==chip.memoryType)bad('ชนิดแรมไม่ตรงกับตัวควบคุมหน่วยความจำ');
+ if(num(ram.capacityMB)>num(chip.maxRamMB))bad('ความจุแรมเกินขีดจำกัดของชิป');
+ if(num(ram.capacityMB)<num(os.minRamMB))bad('แรมไม่พอสำหรับระบบปฏิบัติการ');
+ if(num(display.pixels)>num(chip.maxPixels)||display.pixels!==display.width*display.height)bad('ความละเอียดจอไม่ตรงกับขีดจำกัดของชิป');
+ if(num(os.driverCoverage,0,0,1)<.95)bad('ไดรเวอร์ชิ้นส่วนยังไม่ครบ');
+
+ if(storage.interface!==(num(chip.level)>0?'eMMC':'SPI')||display.interface!==(num(chip.level)>0?'MIPI':'RGB'))bad('อินเทอร์เฟซจอหรือหน่วยเก็บข้อมูลไม่รองรับ');
+ const idle=num(chip.idleW),load=Math.max(idle,num(chip.loadW)),peak=Math.max(load,num(chip.peakW)),screen=num(display.watts),overhead=num(os.overhead,0,0,1),aux=.035+num(ram.capacityMB)*.00007;
+ const duties={standby:[.01,.01],call:[.32,.12],web:[.55,.8],game:[.95,1],mixed:[.24,.35]},d=Object.hasOwn(duties,options.workload)?duties[options.workload]:duties.mixed;
+ const averagePowerW=round(Math.max(.0001,(idle+(load-idle)*d[0]+screen*d[1]+aux)*(1+overhead))),peakPowerW=round((peak+screen+aux)*(1+overhead));
+ if(num(battery.maxDischargeW)<peakPowerW)bad('แบตเตอรี่จ่ายกำลังสูงสุดไม่พอ');
+ if(pcbRf&&typeof pcbRf==='object'){
+   if(typeof pcbRf.signalIntegrity==='number'&& (!Number.isFinite(pcbRf.signalIntegrity)||pcbRf.signalIntegrity<.5))bad('ความสมบูรณ์สัญญาณแผงวงจรและคลื่นวิทยุต่ำกว่าเกณฑ์');
+   if(typeof pcbRf.maxPowerDeliveryW==='number'&& (!Number.isFinite(pcbRf.maxPowerDeliveryW)||pcbRf.maxPowerDeliveryW<peakPowerW))bad('แผงวงจรจ่ายกำลังไฟสูงสุดไม่เพียงพอ');
+ }
+ const ambient=num(options.ambientC,30,-50,80),rth=num(enclosure.rth,5,.01,100),surfaceC=round(ambient+peakPowerW*rth),budget=Math.max(0,(43-ambient)/rth),sustainedFactor=round(Math.min(1,(budget/Math.max(.0001,peakPowerW))**.8));
+ const compatible=!reasonsTh.length,compute=num(chip.cores)*num(chip.clockGhz)*num(chip.ipcIndex,1,.1,4)*sustainedFactor/(1+overhead),memory=Math.min(1,num(ram.bandwidthGBps)/.6),score=v=>compatible?round(clamp(v,0,100)):0;
+ const taskScores={call:score(65+compute*25),web:score((os.installableApps?compute*40*memory:compute*8)*Math.min(1,Math.max(0,ram.capacityMB-os.minRamMB)/64)*Math.min(1,(storage.readMBps||8)/30)),game:score((os.installableApps?compute*25*memory:compute*4)*Math.min(1,Math.max(0,ram.capacityMB-os.minRamMB)/128)*Math.min(1,153600/Math.max(1,display.pixels)))};
+ const silicon=wafer({dieAreaMm2:num(chip.dieAreaMm2,25,.01,1e6)}).unitCostSatang;
+ const cameraQuality=round((p.camera?.megapixels||0)*(.5+(p.camera?.sensorAreaMm2||0)/10)*(p.camera?.processingQuality||.4));
+ const photoLowLightScore=score(cameraQuality*12+num(p.camera?.lowLightScore,35,0,100)*.55);
+ const displayQualityScore=score(num(display.brightnessNits,220,50,2000)/12+num(display.refreshHz,60,30,240)/4);
+ const bottleneckSummaryTh=!compatible?reasonsTh[0]:sustainedFactor<.75?'ติดคอขวดความร้อนสะสมของตัวถังและกำลังไฟสูงสุด':memory<.7?'ติดคอขวดแบนด์วิดท์หน่วยความจำ RAM':(storage.readMBps||8)<25?'ติดคอขวดความเร็วอ่านข้อมูลหน่วยเก็บข้อมูล':!os.installableApps?'จำกัดด้วยเฟิร์มแวร์ฟีเจอร์โฟน (ไม่รองรับแอปภายนอก)':'สมดุลฮาร์ดแวร์และระบบปฏิบัติการทำงานเต็มประสิทธิภาพ';
+ return{compatible,reasonsTh,batteryHours:round(num(battery.wh)*.92/averagePowerW),averagePowerW,peakPowerW,surfaceC,sustainedFactor,taskScores,cpuThroughput:round(compute),ramCapacityMB:ram.capacityMB,storageCapacityMB:storage.capacityMB,cameraQuality,photoLowLightScore,displayQualityScore,osOverhead:overhead,bottleneckSummaryTh,costEstimateSatang:money(silicon+num(ram.capacityMB)*35+num(storage.capacityMB)*3+num(display.pixels)*.08+num(battery.wh)*1800+(enclosure.material==='polymer'?4500:9500)+12000)};
+}
+
+function wafer(options={}){
+ options=options||{};const diameterMm=num(options.diameterMm,200,0,1000),area=num(options.dieAreaMm2,25,.0001,1e6),defects=num(options.defectsPerCm2,.1,0,1e6),packYield=num(options.packYield,.98,0,1),bin=num(options.binAFraction,.8,0,1);
+ const grossDies=Math.floor(clamp(Math.PI*(diameterMm/2)**2/area-Math.PI*diameterMm/Math.sqrt(2*area),0,1e9)),x=area/100*defects,dieYield=x===0?1:(-Math.expm1(-x)/x)**2,goodDies=Math.round(grossDies*dieYield),packagedGood=Math.floor(goodDies*packYield),aBin=Math.floor(packagedGood*bin),bBin=packagedGood-aBin,scrap=grossDies-packagedGood;
+ // All wafer and attempted packaging spend is borne by sellable dies, including failed packages.
+ const total=num(options.waferCostSatang,3000000,0,1e12)+goodDies*num(options.packCostSatang,1200,0,1e12)+packagedGood*num(options.royaltySatang,400,0,1e12);
+ return{grossDies,dieYield,goodDies,packagedGood,aBin,bBin,scrap,unitCostSatang:packagedGood?money(Math.ceil(total/packagedGood)):0};
+}
+
+function evaluateRoleFeasibility(snapshotOrContext,roleId){
+  const contract=roleContract(roleId);
+  const ctx=snapshotOrContext||{};
+  const subjects=ctx.subjects||{};
+  const machines=ctx.machines||{};
+  const cashSatang=num(ctx.cashSatang,0,0,1e15);
+  const wageReserveSatang=num(ctx.wageReserveSatang,0,0,1e15);
+  const riskTaking=num(ctx.riskTaking,50,0,100);
+  const prudence=num(ctx.prudence,50,0,100);
+  const brownout=Boolean(ctx.brownoutActive);
+  const missingSubjects=[];
+  let totalSubjectMargin=0;
+  for(const [subj,reqLv]of Object.entries(contract.subjectRequirements||{})){
+    const actual=num(subjects[subj],0,0,100);
+    if(actual<reqLv)missingSubjects.push({subjectId:subj,required:reqLv,actual:Math.round(actual)});
+    else totalSubjectMargin+=actual-reqLv;
+  }
+  const missingEquipment=[];
+  const brokenEquipment=[];
+  for(const eqId of contract.requiredEquipment||[]){
+    const m=machines[eqId];
+    if(!m)missingEquipment.push(eqId);
+    else if(m.status!=='ready'||num(m.condition,100)<25)brokenEquipment.push(eqId);
+  }
+  const requiredCash=wageReserveSatang+contract.entryCapitalSatang;
+  const missingCapitalSatang=Math.max(0,requiredCash-cashSatang);
+  const utilityBlocked=brownout&&contract.utilityKw>=2.0;
+  const feasible=missingSubjects.length===0&&missingEquipment.length===0&&brokenEquipment.length===0&&missingCapitalSatang===0&&!utilityBlocked;
+  const safetyBuffer=wageReserveSatang*(1.25+prudence/100)+contract.entryCapitalSatang*(1.1+Math.max(0,prudence-55)/100);
+  const feasibleButDeclined=feasible&&(riskTaking<40||(prudence>78&&cashSatang<safetyBuffer));
+  const strategicScore=round((feasible?100:0)+totalSubjectMargin*1.4+(riskTaking-prudence*.45)*.6+Math.min(40,(cashSatang-requiredCash)/Math.max(1,contract.entryCapitalSatang)*15));
+  let reasonTh='พร้อมเข้าดำเนินธุรกิจตามความเชี่ยวชาญ เครื่องจักร และเงินทุนจริง';
+  if(!feasible){
+    const partsTh=[];
+    if(missingSubjects.length)partsTh.push('ขาดผู้เชี่ยวชาญวิชา '+missingSubjects.map(x=>`${x.subjectId}(${x.actual}/${x.required})`).join(', '));
+    if(missingEquipment.length)partsTh.push('ยังไม่มีเครื่องจักร '+missingEquipment.join(', '));
+    if(brokenEquipment.length)partsTh.push('เครื่องจักรชำรุดรอซ่อม '+brokenEquipment.join(', '));
+    if(missingCapitalSatang>0)partsTh.push(`ต้องการทุนและสำรองเพิ่มอีก ${Math.ceil(missingCapitalSatang/100).toLocaleString()} บาท`);
+    if(utilityBlocked)partsTh.push('ระบบไฟฟ้าในนิคมกำลังไฟตก');
+    reasonTh=partsTh.join(' • ');
+  }else if(feasibleButDeclined){
+    reasonTh='ผ่านเกณฑ์ความรู้ เครื่องจักร และทุนขั้นต้นแล้ว แต่ผู้บริหารสายรอบคอบเลือกสำรองเงินสดและโฟกัสงานหลักก่อน';
+  }
+  return {
+    roleId:contract.id,
+    nameTh:contract.nameTh,
+    outputs:contract.outputs,
+    entryCapitalSatang:contract.entryCapitalSatang,
+    feasible,
+    feasibleButDeclined,
+    missingSubjects,
+    missingEquipment,
+    brokenEquipment,
+    missingCapitalSatang,
+    utilityBlocked,
+    strategicScore,
+    reasonTh
+  };
+}
+
+return Object.freeze({
+  MATERIAL_GRADES,
+  ROLE_CONTRACTS,
+  ROLE_ALIASES,
+  roleContract,
+  synthesizeChip,
+  synthesizeComponent,
+  parts,
+  isCompatiblePart,
+  evaluate,
+  wafer,
+  evaluateRoleFeasibility
+});
+});
+
+</script><script>
+/* Silicon & Handset: independent, deterministic observer simulation. Money: integer satang. */
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('../../COMPANY_SOURCE/js/human-core.js'):root.CompanyCore,typeof module==='object'&&module.exports?require('../../COMPANY_SOURCE/js/phone-engineering.js'):root.CompanyPhoneEngineering);if(typeof module==='object'&&module.exports)module.exports=api;else root.SiliconSim=api;})(typeof globalThis!=='undefined'?globalThis:this,function(H,E){
+'use strict';
+const SUBJECTS=['electronics','software','quality','semiconductor','optics','manufacturing','sales'];
+const KINDS=['chip','ram','storage','display','camera','battery','enclosure'];
+const OUTPUT={chip:['chip'],memory:['ram','storage'],display:['display'],camera:['camera'],battery:['battery'],ems:['enclosure']};
+const PRICE={chip:17000,ram:6500,storage:5500,display:10000,camera:6500,battery:7500,enclosure:5000};
+const clone=x=>JSON.parse(JSON.stringify(x));
+function hash(s){let n=2166136261;for(const c of String(s)){n^=c.charCodeAt(0);n=Math.imul(n,16777619);}return n>>>0;}
+const random=(s,id)=>hash(s+':'+id)/4294967296;
+const day=w=>Math.floor(w.minute/1440);
+const firm=(w,id)=>w.firms.find(f=>f.id===id);
+const person=(w,id)=>w.people.find(p=>p.id===id);
+function event(w,text,firmId=null){w.events.push({day:day(w),minute:w.minute,text,firmId});if(w.events.length>400)w.events.shift();}
+function transfer(w,a,b,n,reason){if(!Number.isSafeInteger(n)||n<0||a.cash<n)return false;a.cash-=n;b.cash+=n;w.ledger.push({minute:w.minute,from:a.id,to:b.id,amount:n,reason});if(w.ledger.length>1200)w.ledger.shift();return true;}
+function spec(w,kind,level){const supplier=w.firms.find(f=>(OUTPUT[f.role]||[]).includes(kind)&&f.capability>=level);const seed=w.seed+':'+supplier.id+':'+level;return kind==='chip'?E.synthesizeChip(seed,45+level*10,{level}):E.synthesizeComponent(seed,kind,45+level*10,level);}
+function create(seed='silicon-1',options={}){
+ seed=String(seed);const w={schema:1,release:'0.1.0',seed,minute:0,playerFirmId:'player',firms:[],people:[],designs:[],shipments:[],WIP:[],offers:[],events:[],ledger:[],nextId:1,treasury:{id:'upstream',cash:500000000,stock:100000},households:{id:'households',cash:1200000000,purchases:0},openingCapital:0,editCapital:0,materials:{opening:100000,consumed:0,componentOpening:0,componentsConsumed:0},settings:{market:true,recruitment:true}};
+ const count=4+hash(seed)%5;
+ const names=['นที','อรุณ','เมฆา','ศิลา','ดาวเหนือ','ลานนา','คีรี','บุษบา'];
+ const familyNames=['ศรีสุวรรณ','วัฒนกุล','รุ่งเรือง','จิตรมั่น','สุขสวัสดิ์','ธาราทิพย์','เกียรติไพศาล','แสงอรุณ','วงศ์ประเสริฐ','รัตนชัย','ใจดี','ชาญวิทย์','พงศ์เจริญ','อินทรรักษ์','พรหมพิทักษ์','กิตติธร'];
+ const companyBases=['อรุณ','ธารา','นภา','ศิลา','สุริยา','คีรี','จันทรา','วารี','นที','เมฆา','บุษบา','รัตนา'];
+ const companySuffixes=['ก้าวหน้า','รุ่งเรือง','สร้างสรรค์','วิชั่น','อินโนเวชัน','พัฒนา','ไพศาล','ก้าวไกล','เจริญ','ประสาน'];
+ const businessNames={brand:'โมบาย',chip:'เซมิคอนดักเตอร์',memory:'เมมโมรี',display:'จอภาพ',camera:'ออปติกส์',battery:'พลังเซลล์',ems:'งานประกอบ'};
+ const personName=id=>names[hash(seed+id+'given')%names.length]+' '+familyNames[hash(seed+id+'family')%familyNames.length];
+ function companyName(id,role){let n=hash(seed+id+'company')%(companyBases.length*companySuffixes.length),candidate;do{candidate=companyBases[n%companyBases.length]+' '+companySuffixes[Math.floor(n/companyBases.length)]+' '+businessNames[role];n=(n+1)%(companyBases.length*companySuffixes.length);}while(w.firms.some(f=>f.name===candidate));return candidate;}
+
+ function add(id,name,role,index){if(id!=='player')name=companyName(id,role);const f={id,name,role,cash:Math.round((role==='brand'?35000000:50000000)*(0.8+random(seed,id+'capital')*.8)),stock:{},people:[],products:[],project:null,decision:'เตรียมทีมและสำรวจตลาด',capability:0,research:0,workDone:0,raw:role==='brand'?0:100+Math.floor(random(seed,id+'raw')*120),paidToday:false,production:0,sales:0,revenue:0,costs:0,history:[],index};w.firms.push(f);w.materials.opening+=f.raw;
+  for(let j=0;j<3+Math.floor(random(seed,id+'team')*3);j++){const pid=id+'-p'+j,profile=H.createProfile(seed,pid),p={id:pid,name:personName(pid),employerId:id,role:j===0?'ceo':'engineer',profile,state:H.createState(profile),subjects:{},cash:100000,wage:14000+Math.floor(random(seed,pid)*7000),activity:'sleep',position:{x:20+index*65,y:120},notice:null,workMinutes:0,unpaidDays:0};for(const s of SUBJECTS)p.subjects[s]=Math.min(p.profile.potential.memory,18+Math.floor(random(seed,pid+s)*42)+(s===(role==='chip'?'semiconductor':role==='camera'?'optics':role==='brand'?'electronics':'manufacturing')?16:0));f.people.push(pid);w.people.push(p);}
+  if(role!=='brand')for(const k of OUTPUT[role]){const q=18+Math.floor(random(seed,id+k+'stock')*24);f.stock[k+':0']=q;w.materials.componentOpening+=q;}
+ }
+ const playerRole=['brand',...Object.keys(OUTPUT)].includes(options.role)?options.role:'brand';add('player',playerRole==='brand'?'สยามโทรศัพท์ SME':'สยาม '+playerRole+' SME',playerRole,0);for(let i=0;i<count;i++)add('rival-'+i,names[(i+hash(seed+'names'))%names.length]+' โมบาย','brand',i+1);
+ for(const [i,r] of ['chip','memory','display','camera','battery','ems'].entries())add('supplier-'+r,{chip:'อิสระเซมิคอนดักเตอร์',memory:'ธาราเมมโมรี',display:'แสงจอภาพ',camera:'เลนส์สยาม',battery:'พลังเซลล์',ems:'ร่วมประกอบ EMS'}[r],r,count+i+1);
+ for(let i=0;i<8;i++){let p=clone(w.people[1]);p.id='outside-'+i;p.name=personName(p.id);p.employerId=null;p.profile=H.createProfile(seed,p.id);p.state=H.createState(p.profile);p.subjects={};for(const s of SUBJECTS)p.subjects[s]=45+Math.floor(random(seed,p.id+s)*25);p.notice=null;w.people.push(p);}
+ // All opening endowments are explicit paid capital; goods have an opening cost.
+ for(const f of w.firms){const price=f.raw*1200+Object.entries(f.stock).reduce((n,[k,q])=>n+q*PRICE[k.split(':')[0]],0);transfer(w,f,w.treasury,price,'opening paid stock');}
+ w.openingCapital=totalCash(w);event(w,'โลกใหม่: ทุกบริษัทเริ่มจากเทคโนโลยีฟีเจอร์โฟน ทุนและทรัพยากรมีจำกัด');return w;
+}
+function totalCash(w){return w.treasury.cash+w.households.cash+w.firms.reduce((a,f)=>a+f.cash,0)+w.people.reduce((a,p)=>a+p.cash,0);}
+function acquire(w,f,level,target){for(const k of KINDS){const key=k+':'+level,owned=f.stock[key]||0,pending=w.shipments.filter(s=>s.to===f.id&&s.key===key).reduce((a,s)=>a+s.quantity,0),need=target-owned-pending;if(need<=0)continue;const seller=w.firms.filter(s=>s.id!==f.id&&(OUTPUT[s.role]||[]).includes(k)).sort((a,b)=>(b.stock[key]||0)-(a.stock[key]||0)||a.id.localeCompare(b.id))[0];const q=Math.min(need,seller.stock[key]||0),cost=q*PRICE[k]*(1+level);if(q&&transfer(w,f,seller,cost,'ซื้อ '+k)){seller.stock[key]-=q;seller.revenue+=cost;f.costs+=cost;w.shipments.push({id:'s'+w.nextId++,from:seller.id,to:f.id,key,quantity:q,eta:w.minute+1440+f.index*60});}}}
+function hasParts(f,l,q){return KINDS.every(k=>(f.stock[k+':'+l]||0)>=q);}
+function consume(w,f,l,q){for(const k of KINDS)f.stock[k+':'+l]-=q;w.materials.componentsConsumed+=q*7;}
+function makeDesign(w,f,l){const parts=E.parts(w.seed+f.id,l);for(const k of KINDS.slice(1))parts[k]=spec(w,k,l);const chip=spec(w,'chip',l),evaluation=E.evaluate(chip,parts);return {id:'d'+w.nextId++,firmId:f.id,name:f.name+' '+(f.products.length+1),level:l,chip,parts,evaluation,price:Math.round(150000*(1+l*.65)),produced:0,sold:0,inventory:0,prototypeConsumed:0,released:false,created:w.minute};}
+function research(w,f,budget){const ceo=person(w,f.people[0]);if(f.capability>=3||!ceo||f.cash<1500000+ceo.profile.personality.conscientiousness*15000)return 0;const spent=Math.min(budget,Math.max(0,12000*(f.capability+1)-f.research));if(!transfer(w,f,w.treasury,Math.ceil(spent*4),'ห้องทดลองและเครื่องมือวิจัย'))return 0;f.research+=spent;if(f.research>=12000*(f.capability+1)){f.research=0;f.capability++;event(w,f.name+' วิจัยเทคโนโลยีระดับ '+f.capability+' สำเร็จ',f.id);f.history.push({day:day(w),type:'research',level:f.capability});}return spent;}
+function operate(w,f,budget){if(budget<=0)return;f.workDone+=budget;
+ if(f.role!=='brand'){
+  budget-=research(w,f,budget*.3);
+  const outputs=OUTPUT[f.role];let candidates=[];for(let l=0;l<=f.capability;l++)for(const k of outputs)candidates.push({k,l,q:f.stock[k+':'+l]||0});candidates.sort((a,b)=>a.q-b.q||a.l-b.l);const c=candidates[0];
+  let batch=w.WIP.find(b=>b.firmId===f.id);if(!batch&&c.q<120&&f.raw>=12&&transfer(w,f,w.treasury,3000,'พลังงาน/วัสดุสิ้นเปลือง')){f.raw-=12;w.materials.consumed+=12;batch={id:'b'+w.nextId++,firmId:f.id,kind:c.k,level:c.l,quantity:12,work:0,required:240,stage:'manufacture',inputs:12};w.WIP.push(batch);}
+  if(batch){batch.work+=budget;if(batch.work>=batch.required){const key=batch.kind+':'+batch.level;f.stock[key]=(f.stock[key]||0)+batch.quantity;f.production+=batch.quantity;w.WIP.splice(w.WIP.indexOf(batch),1);}}
+  f.decision=batch?'ผลิต '+batch.kind+' • งาน '+Math.floor(batch.work)+'/'+batch.required:'วิจัยและรักษาสต็อก';return;
+ }
+ if(!f.project){const ceo=person(w,f.people[0]);const reserve=ceo?Math.round(300000+ceo.profile.personality.conscientiousness*5000):800000;
+  const current=w.designs.filter(d=>d.firmId===f.id).at(-1);if(current&&current.inventory>20){f.decision='ระบายสินค้าคงคลังก่อนลงทุนเพิ่ม';return;}
+  if(f.cash<reserve){f.decision='รักษาเงินสำรอง ยังไม่เริ่มโครงการใหม่';return;}
+  const level=Math.min(f.capability,...KINDS.map(kind=>Math.max(...w.firms.filter(s=>(OUTPUT[s.role]||[]).includes(kind)).map(s=>s.capability))));
+  if(current&&current.level===level){f.project={stage:'procurement',work:0,required:1,designId:current.id,level,batch:12};}
+  else{if(!transfer(w,f,w.treasury,80000*(level+1),'ทุนวิจัยผลิตภัณฑ์'))return;const d=makeDesign(w,f,level);w.designs.push(d);f.project={stage:'research',work:0,required:1800*(level+1),designId:d.id,level,batch:12};event(w,f.name+' เริ่มออกแบบ '+d.name,f.id);}
+ }
+ const p=f.project,d=w.designs.find(d=>d.id===p.designId);f.decision=p.stage;
+ if(p.stage==='research'){p.work+=budget;if(p.work>=p.required){p.stage='prototype';p.work=0;p.required=600;}}
+ else if(p.stage==='prototype'){acquire(w,f,p.level,1);if(!p.inputs){if(!hasParts(f,p.level,1)){f.decision='รอชิ้นส่วนสำหรับต้นแบบ';return;}consume(w,f,p.level,1);p.inputs=1;d.prototypeConsumed=1;}p.work+=budget;if(p.work>=p.required){p.stage='validation';p.work=0;p.required=900;}}
+ else if(p.stage==='validation'){p.work+=budget;if(p.work>=p.required){if(!d.evaluation.compatible){f.decision='ต้นแบบไม่ผ่านความเข้ากันได้';p.stage='failed';p.work=0;p.required=900;event(w,f.name+' ต้นแบบไม่ผ่านการทดสอบ',f.id);}else{p.stage='procurement';p.work=0;p.required=1;}}}
+ else if(p.stage==='procurement'){acquire(w,f,p.level,p.batch);if(hasParts(f,p.level,p.batch)){const ems=firm(w,'supplier-ems');if(!transfer(w,f,ems,24000,'สิทธิ์ใช้สายประกอบ EMS'))return;consume(w,f,p.level,p.batch);p.stage='pilot';p.work=0;p.required=600;w.WIP.push({id:'b'+w.nextId++,firmId:f.id,designId:d.id,kind:'phone',level:p.level,quantity:p.batch,work:0,required:1800,stage:'pilot',inputs:p.batch*7});}}
+ else if(p.stage==='pilot'||p.stage==='manufacture'){const b=w.WIP.find(b=>b.firmId===f.id);if(!b)return;b.work+=budget;p.work+=budget;if(p.stage==='pilot'&&p.work>=p.required){p.stage='manufacture';p.work=0;p.required=1200;b.stage='manufacture';}else if(p.stage==='manufacture'&&p.work>=p.required){d.inventory+=p.batch;d.produced+=p.batch;f.production+=p.batch;w.WIP.splice(w.WIP.indexOf(b),1);p.stage='release';p.work=0;p.required=180;}}
+ else if(p.stage==='failed'){p.work+=budget;f.decision='วิเคราะห์ข้อผิดพลาดและเตรียมแบบสำรอง';if(p.work>=p.required&&transfer(w,f,w.treasury,80000,'ออกแบบใหม่หลังทดสอบล้มเหลว')){const level=Math.max(0,p.level-1),replacement=makeDesign(w,f,level);w.designs.push(replacement);f.project={stage:'research',work:0,required:1800*(level+1),designId:replacement.id,level,batch:12};event(w,f.name+' เริ่มแบบสำรองระดับ '+level+' หลังต้นแบบไม่ผ่าน',f.id);}}
+ else if(p.stage==='release'){p.work+=budget;if(p.work>=p.required){if(!d.released){d.released=true;f.products.push(d.id);event(w,f.name+' เปิดขาย '+d.name+' • แบตเตอรี่ '+d.evaluation.batteryHours+' ชั่วโมง',f.id);f.history.push({day:day(w),type:'launch',designId:d.id});}f.project=null;}}
+ // The same finite team splits engineering and product work; research does not get a second budget.
+}
+function recruit(w,f){if(!w.settings.recruitment||f.people.length>=6||f.cash<2500000||w.offers.some(o=>o.to===f.id&&o.status==='notice'))return;
+ const ceo=person(w,f.people[0]);if(!ceo)return;const need=f.role==='chip'?'semiconductor':f.role==='camera'?'optics':'electronics';
+ const candidates=w.people.filter(p=>p.role!=='ceo'&&p.employerId!==f.id&&!p.notice&&(p.employerId===null||(day(w)>30&&firm(w,p.employerId).people.length>3&&(!p.lastJoined||w.minute-p.lastJoined>60*1440)))).sort((a,b)=>b.subjects[need]-a.subjects[need]||a.id.localeCompare(b.id));const p=candidates[0];if(!p)return;
+ const wage=Math.ceil(p.wage*(1.1+ceo.profile.personality.ambition/500));const accept=wage>p.wage*(p.employerId?(1.12+p.profile.values.security/700+p.profile.personality.patience/1500-p.unpaidDays*.04):(1.05+p.profile.values.security/2000));if(!accept)return;const offer={id:'o'+w.nextId++,personId:p.id,from:p.employerId,to:f.id,wage,created:w.minute,eta:w.minute+(p.employerId?7:3)*1440,status:'notice'};p.notice=offer.id;w.offers.push(offer);event(w,p.name+' รับข้อเสนอจาก '+f.name+' เริ่มงานหลังแจ้งล่วงหน้า',f.id);
+}
+function daily(w){for(const f of w.firms){let due=f.people.reduce((n,id)=>n+person(w,id).wage,0);f.paidToday=f.cash>=due;if(f.paidToday)for(const id of f.people){const p=person(w,id);transfer(w,f,p,p.wage,'ค่าจ้างรายวัน');p.unpaidDays=0;}else for(const id of f.people)person(w,id).unpaidDays++;
+ if(f.role!=='brand'&&f.raw<100&&!w.shipments.some(s=>s.to===f.id&&s.key==='raw')){const q=Math.min(180,w.treasury.stock);if(q&&transfer(w,f,w.treasury,q*1200,'วัตถุดิบต้นน้ำ')){w.treasury.stock-=q;w.shipments.push({id:'s'+w.nextId++,from:'upstream',to:f.id,key:'raw',quantity:q,eta:w.minute+2*1440});}}
+ if(day(w)%14===2+f.index%7)recruit(w,f);
+ }
+ if(w.settings.market){const products=w.designs.filter(d=>d.released&&d.inventory>0).sort((a,b)=>{const score=d=>(d.evaluation.cpuThroughput+10)*d.evaluation.batteryHours/d.price;return score(b)-score(a)||a.id.localeCompare(b.id);});let demand=5+hash(w.seed+day(w))%9;for(const d of products){if(!demand)break;const q=Math.min(d.inventory,demand,Math.floor(w.households.cash/d.price));if(q){const f=firm(w,d.firmId);transfer(w,w.households,f,q*d.price,'ครัวเรือนซื้อโทรศัพท์');d.inventory-=q;d.sold+=q;f.sales+=q;f.revenue+=q*d.price;w.households.purchases+=q;demand-=q;}}}
+}
+function tick(w){const hour=Math.floor(w.minute%1440/60);if(hour===0)daily(w);
+ for(const s of [...w.shipments])if(s.eta<=w.minute){const f=firm(w,s.to);if(s.key==='raw')f.raw+=s.quantity;else f.stock[s.key]=(f.stock[s.key]||0)+s.quantity;w.shipments.splice(w.shipments.indexOf(s),1);}
+ for(const o of w.offers)if(o.status==='notice'&&o.eta<=w.minute){const p=person(w,o.personId),old=firm(w,p.employerId),f=firm(w,o.to);if(old)old.people=old.people.filter(id=>id!==p.id);p.employerId=f.id;p.lastJoined=w.minute;p.wage=o.wage;p.notice=null;f.people.push(p.id);o.status='joined';event(w,p.name+' เริ่มงานที่ '+f.name+' พร้อมความรู้เดิม',f.id);}
+ const budgets={};for(const p of w.people){const f=firm(w,p.employerId);let activity=hour<7||hour>=23?'sleep':hour===8||hour===18?'travel':hour===7||hour===12||hour===19?'meal':hour>=9&&hour<18&&f&&f.paidToday?'work':'rest';if(activity==='work'&&(p.state.energy<22||p.state.stress>80))activity='rest';if(activity==='meal'){if(!transfer(w,p,w.treasury,2000,'ค่าอาหาร'))activity='rest';}p.activity=activity;p.state=H.tickState(p.profile,p.state,{minutes:60,activity:activity==='travel'?'commute':activity,domain:'cognitive',workload:.75,sleepQuality:1});const x=f?30+f.index*65:30; p.position={x:activity==='travel'?x-15:activity==='work'?x:20+(hash(p.id)%15)*45,y:activity==='work'?120:activity==='travel'?230:330};
+ if(activity==='work'){const stage=f.project?.stage;const subject=['validation','pilot'].includes(stage)?'quality':stage==='manufacture'?'manufacturing':stage==='research'?'software':f.role==='chip'?'semiconductor':f.role==='camera'?'optics':['battery','ems'].includes(f.role)?'manufacturing':'electronics';const skill=p.subjects[subject],factor=(.3+skill/100)*(.45+p.state.focus/180)*(.6+p.profile.personality.conscientiousness/200);const amount=60*factor;budgets[f.id]=(budgets[f.id]||0)+amount;p.workMinutes+=60;p.subjects[subject]=Math.min(Math.max(skill,p.profile.potential.memory),skill+.008*(.5+p.profile.aptitudes.memory/100)*(1-skill/110));}
+ }
+ for(const f of w.firms){let budget=budgets[f.id]||0;if(f.role==='brand'&&budget){const spent=research(w,f,budget*.18);budget-=spent;}operate(w,f,budget);}w.minute+=60;
+}
+function advance(w,minutes){if(!Number.isSafeInteger(minutes)||minutes<0||minutes>1440*3650)throw new Error('ระยะเวลาไม่ถูกต้อง');const target=w.minute+minutes;while(Math.floor(w.minute/60)<Math.floor(target/60)){const rem=w.minute%60;w.minute-=rem;tick(w);}w.minute=target;return w;}
+function snapshot(w){const result=clone(w);result.wip=result.WIP;return result;}
+function command(w,c){if(!c||typeof c.type!=='string')throw new Error('คำสั่งไม่ถูกต้อง');if(c.type==='grantCash'){const f=firm(w,c.firmId);if(!f||!Number.isSafeInteger(c.amount)||c.amount<=0||c.amount>100000000000||!Number.isSafeInteger(totalCash(w)+c.amount))throw new Error('บริษัทหรือจำนวนเงินไม่ถูกต้อง');f.cash+=c.amount;w.editCapital+=c.amount;event(w,'Edit Hub เพิ่มทุน '+c.amount+' สตางค์ ให้ '+f.name,f.id);return true;}
+ const p=person(w,c.personId);if(!p)throw new Error('ไม่พบบุคคล');if(!Number.isFinite(c.level)||c.level<0||c.level>100)throw new Error('ระดับต้องอยู่ระหว่าง 0 ถึง 100');if(c.type==='setSubject'){if(!SUBJECTS.includes(c.subjectId))throw new Error('ไม่พบวิชา');p.subjects[c.subjectId]=c.level;}else if(c.type==='setTrait'){if(!H.PERSONALITY.includes(c.key))throw new Error('ไม่พบนิสัย');const profile=clone(p.profile);profile.personality[c.key]=c.level;p.profile=H.freezeProfile(profile);}else throw new Error('คำสั่งไม่รองรับ');event(w,'Edit Hub เปลี่ยนข้อมูลเฉพาะตัวของ '+p.name,p.employerId);return true;}
+function audit(w){const errors=[];try{if(w.schema!==1||w.release!=='0.1.0')errors.push('unsupported schema');if(typeof w.seed!=='string'||!['firms','people','designs','shipments','WIP','offers','events','ledger'].every(k=>Array.isArray(w[k])))throw Error('missing arrays');if(!Number.isSafeInteger(w.minute)||w.minute<0)errors.push('invalid time');const ids=new Set(w.firms.map(f=>f.id)),pids=new Set(w.people.map(p=>p.id)),dids=new Set(w.designs.map(d=>d.id));if(ids.size!==w.firms.length||pids.size!==w.people.length||dids.size!==w.designs.length||!ids.has(w.playerFirmId))errors.push('invalid identities');const integer=n=>Number.isSafeInteger(n)&&n>=0;
+ for(const a of [w.treasury,w.households,...w.firms,...w.people])if(!integer(a.cash))errors.push('invalid cash '+a.id);
+ if(totalCash(w)!==w.openingCapital+w.editCapital)errors.push('money conservation');
+ const raw=w.treasury.stock+w.firms.reduce((n,f)=>n+f.raw,0)+w.shipments.filter(s=>s.key==='raw').reduce((n,s)=>n+s.quantity,0)+w.materials.consumed;if(raw!==w.materials.opening)errors.push('raw conservation');
+ const components=w.firms.reduce((n,f)=>n+Object.values(f.stock).reduce((a,q)=>a+q,0),0)+w.shipments.filter(s=>s.key!=='raw').reduce((n,s)=>n+s.quantity,0)+w.materials.componentsConsumed;
+ if(components!==w.materials.componentOpening+w.firms.filter(f=>f.role!=='brand').reduce((n,f)=>n+f.production,0))errors.push('component conservation');
+ const scan=x=>{if(typeof x==='number'&&!Number.isFinite(x))throw Error('nonfinite');if(x&&typeof x==='object')for(const v of Object.values(x))scan(v);};scan(w);
+ if(!integer(w.nextId)||!integer(w.treasury.stock)||!integer(w.openingCapital)||!integer(w.editCapital)||!w.settings||typeof w.settings.market!=='boolean'||typeof w.settings.recruitment!=='boolean')errors.push('invalid world fields');
+ const batchFirms=new Set(),batchIds=new Set();
+ for(const b of w.WIP){if(batchFirms.has(b.firmId)||batchIds.has(b.id)||typeof b.id!=='string')errors.push('duplicate WIP');batchFirms.add(b.firmId);batchIds.add(b.id);
+ const owner=firm(w,b.firmId);if(!owner)continue;
+ if(b.kind==='phone'){const p=owner.project,d=w.designs.find(d=>d.id===b.designId);if(owner.role!=='brand'||!p||!d||d.firmId!==owner.id||p.designId!==b.designId||p.level!==b.level||p.stage!==b.stage||p.batch!==b.quantity||b.inputs!==b.quantity*7||b.required!==1800)errors.push('phone reservation');}
+ else if(!(OUTPUT[owner.role]||[]).includes(b.kind)||!integer(b.level)||b.level>owner.capability||b.stage!=='manufacture'||b.inputs!==b.quantity||b.quantity!==12||b.required!==240)errors.push('supplier reservation');
+ }
+ if(w.materials.consumed!==w.firms.filter(f=>f.role!=='brand').reduce((n,f)=>n+f.production,0)+w.WIP.filter(b=>b.kind!=='phone').reduce((n,b)=>n+b.inputs,0))errors.push('raw work reservations');
+ if(w.materials.componentsConsumed!==w.firms.filter(f=>f.role==='brand').reduce((n,f)=>n+f.production*7,0)+w.WIP.filter(b=>b.kind==='phone').reduce((n,b)=>n+b.inputs,0)+w.designs.reduce((n,d)=>n+d.prototypeConsumed*7,0))errors.push('component work reservations');
+ for(const f of w.firms){if(f.project){const p=f.project,d=w.designs.find(d=>d.id===p.designId);const expected={research:1800*(p.level+1),prototype:600,validation:900,failed:900,procurement:1,pilot:600,manufacture:1200,release:180};if(f.role!=='brand'||!d||d.firmId!==f.id||d.level!==p.level||!Number.isFinite(p.required)||p.required<=0||p.required!==expected[p.stage]||(['pilot','manufacture'].includes(p.stage)!==batchFirms.has(f.id)))errors.push('project work contract');}
+ if(!integer(f.raw)||Object.values(f.stock).some(n=>!integer(n)))errors.push('invalid stock '+f.id);if(f.people.some(id=>!pids.has(id)||person(w,id).employerId!==f.id)||new Set(f.people).size!==f.people.length)errors.push('staff references');if(!['brand',...Object.keys(OUTPUT)].includes(f.role)||!integer(f.capability)||f.capability>3||!Number.isFinite(f.research)||f.research<0||!integer(f.production))errors.push('invalid firm');if(f.project&&(!dids.has(f.project.designId)||!['research','prototype','validation','procurement','pilot','manufacture','release','failed'].includes(f.project.stage)||!Number.isFinite(f.project.work)||f.project.work<0||!integer(f.project.level)||f.project.level>3||!integer(f.project.batch)||f.project.batch<1))errors.push('project reference');}
+ for(const p of w.people){if(typeof p.name!=='string'||!integer(p.wage)||!integer(p.workMinutes)||!integer(p.unpaidDays)||(p.notice!==null&&!w.offers.some(o=>o.id===p.notice&&o.personId===p.id&&o.status==='notice')))errors.push('invalid person');if(H.validateProfile(p.profile).length||p.profile.id!==p.id)errors.push('invalid profile');if(p.employerId!==null&&(!ids.has(p.employerId)||!firm(w,p.employerId).people.includes(p.id)))errors.push('employment reference');if(SUBJECTS.some(s=>!Number.isFinite(p.subjects[s])||p.subjects[s]<0||p.subjects[s]>100))errors.push('invalid subjects');if(Object.keys(H.STATE_DEFAULTS).some(k=>!Number.isFinite(p.state[k])||p.state[k]<0||p.state[k]>100))errors.push('invalid human state');}
+ for(const s of w.shipments)if(!ids.has(s.to)||!(ids.has(s.from)||s.from==='upstream')||!integer(s.quantity)||s.quantity===0||!integer(s.eta)||!(s.key==='raw'||/^(chip|ram|storage|display|camera|battery|enclosure):[0-3]$/.test(s.key)))errors.push('invalid shipment');
+ for(const o of w.offers)if(!pids.has(o.personId)||!ids.has(o.to)||!(o.from===null||ids.has(o.from))||!integer(o.wage)||!integer(o.eta)||!['notice','joined'].includes(o.status))errors.push('invalid offer');for(const b of w.WIP)if(!ids.has(b.firmId)||!Number.isFinite(b.work)||b.work<0||!integer(b.quantity)||b.quantity===0||!Number.isFinite(b.required)||b.required<=0||!['manufacture','pilot'].includes(b.stage)||(b.kind==='phone'&&!dids.has(b.designId)))errors.push('invalid WIP');for(const d of w.designs)if(!ids.has(d.firmId)||!d.chip||!Number.isFinite(d.chip.clockGhz)||!d.parts||!KINDS.slice(1).every(k=>d.parts[k]&&typeof d.parts[k]==='object')||!d.evaluation||typeof d.evaluation.compatible!=='boolean'||!Number.isFinite(d.evaluation.batteryHours)||!integer(d.price)||d.price===0||!integer(d.level)||d.level>3||typeof d.released!=='boolean'||![0,1].includes(d.prototypeConsumed)||!integer(d.inventory)||!integer(d.produced)||!integer(d.sold)||d.inventory+d.sold!==d.produced)errors.push('invalid product');
+ }catch(e){errors.push('malformed world');}return {ok:!errors.length,errors};}
+function serialize(w){const a=audit(w);if(!a.ok)throw new Error(a.errors.join(', '));return JSON.stringify(w);}
+function deserialize(text){if(typeof text!=='string'||text.length>20000000)throw new Error('เซฟไม่ถูกต้อง');const w=JSON.parse(text),a=audit(w);if(!a.ok)throw new Error('เซฟไม่ถูกต้อง: '+a.errors.join(', '));for(const p of w.people)p.profile=H.freezeProfile(p.profile);return w;}
+return Object.freeze({create,advance,snapshot,command,serialize,deserialize,audit,SUBJECTS,KINDS});
+});
+
+</script><script>
+(function(){'use strict';const G=SiliconSim,$=id=>document.getElementById(id),el=(tag,text,cls)=>{const x=document.createElement(tag);if(text!==undefined)x.textContent=text;if(cls)x.className=cls;return x;},cash=n=>'฿'+Math.round((Number(n)||0)/100).toLocaleString('th-TH'),roles={brand:'แบรนด์โทรศัพท์',chip:'ชิปประมวลผล',memory:'หน่วยความจำ',camera:'กล้องและออปติก',display:'หน้าจอ',battery:'แบตเตอรี่',ems:'รับจ้างประกอบ'},subjects={software:'ซอฟต์แวร์',electronics:'อิเล็กทรอนิกส์',quality:'ตรวจคุณภาพ',semiconductor:'สารกึ่งตัวนำ',optics:'ออปติก',manufacturing:'กระบวนการผลิต',sales:'การค้า'},traits={riskTaking:'การยอมรับความเสี่ยง',prudence:'ความรอบคอบ',ambition:'ความทะเยอทะยาน',openness:'การเปิดรับสิ่งใหม่',conscientiousness:'ความรับผิดชอบ'};let world,speed=0,tab='campus',selected='player',carry=0,last=performance.now(),saveClock=0,editState={personId:null,subjectId:null,traitKey:'riskTaking'};
+function fresh(seed,role='brand'){world=G.create(seed,{role});selected=world.playerFirmId;speed=0;carry=0;render();}function load(text){const next=G.deserialize(text);world=next;selected=world.playerFirmId;speed=0;carry=0;render();}try{const s=localStorage.getItem('silicon-handset-v010');s?load(s):fresh('แสงแรก');}catch(_){fresh('แสงแรก');}
+function stat(card,label,value){const r=el('div',undefined,'stat');r.append(el('span',label),el('b',String(value??'—')));card.append(r);}function card(grid,title,tag){const c=el('article',undefined,'card');if(tag)c.append(el('span',tag,'tag'));c.append(el('h3',title));grid.append(c);return c;}function message(s){$('message').textContent=s;}function act(c){try{const r=G.command(world,c);message((r===true||r?.ok)?'บันทึกการทดลองแล้ว — เฝ้าดูการตัดสินใจของ NPC ต่อได้':r?.reason||r?.reasonTh||'เงื่อนไขไม่ถูกต้อง');render();}catch(e){message(e.message);}}
+function render(){const v=G.snapshot(world),f=v.firms.find(x=>x.id===selected)||v.firms[0];selected=f.id;$('time').textContent=`วันที่ ${Math.floor(v.minute/1440)+1} · ${String(Math.floor(v.minute%1440/60)).padStart(2,'0')}:${String(v.minute%60).padStart(2,'0')} น.`;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',Number(b.dataset.speed)===speed));const ours=v.firms.find(x=>x.id===v.playerFirmId);$('kpis').replaceChildren();for(const[label,val]of[['เงินสดบริษัทเรา',cash(ours.cash)],['บริษัทในอุตสาหกรรม',v.firms.length+' แห่ง'],['แบบโทรศัพท์ในโลก',v.designs.length+' รุ่น'],['ผู้คนที่มีตัวตน',v.people.length+' คน']]){const k=el('div',undefined,'kpi');k.append(el('span',label),el('strong',val));$('kpis').append(k);}$('firm').replaceChildren();for(const firm of v.firms){const o=el('option',(firm.id===v.playerFirmId?'★ ':'')+firm.name+' · '+(roles[firm.role]||firm.role));o.value=firm.id;$('firm').append(o);}$('firm').value=selected;$('firmReason').textContent=({research:'กำลังวิจัย',prototype:'สร้างต้นแบบ',validation:'ทดสอบต้นแบบ',procurement:'รอชิ้นส่วนเข้าคลัง',pilot:'ผลิตนำร่อง',manufacture:'ประกอบและตรวจคุณภาพ',release:'เตรียมวางจำหน่าย'})[f.decision]||f.decision||'กำลังประเมินทุน ความรู้ และความพร้อม';$('tabs').replaceChildren();for(const[id,name]of[['campus','🏢 ผู้คนและบริษัท'],['market','🌍 ตลาดและคู่แข่ง'],['products','📱 รุ่นและสเปก'],['supply','📦 คลังและคิวผลิต'],['chronicle','📜 เหตุการณ์'],['edit','🧪 Edit Hub']]){const b=el('button',name,id===tab?'active':'');b.onclick=()=>{tab=id;if(id==='edit')speed=0;render();};$('tabs').append(b);}const body=$('content');body.replaceChildren();const grid=el('div',undefined,'grid');
+if(tab==='campus'){const canvas=el('canvas',undefined,'campus');canvas.width=1000;canvas.height=400;body.append(canvas);drawCampus(canvas,v,f);body.append(grid);let c=card(grid,f.name,roles[f.role]||f.role);stat(c,'เงินสด',cash(f.cash));stat(c,f.role==='brand'?'แบบโทรศัพท์':'ขอบเขตเทคโนโลยี',f.role==='brand'?(f.products||[]).length:f.capability);stat(c,'แผนปัจจุบัน',f.decision||'รักษากิจการ');if(f.project){stat(c,'โครงการ',({research:'วิจัยออกแบบ',prototype:'สร้างต้นแบบ',validation:'ทดสอบต้นแบบ',procurement:'รอชิ้นส่วน',pilot:'ผลิตนำร่อง',manufacture:'ประกอบและตรวจคุณภาพ',release:'เตรียมเปิดตัว',failed:'ต้นแบบไม่ผ่าน'})[f.project.stage]||'วิจัยและทดสอบ');stat(c,'งานที่ทำแล้ว',Math.round(f.project.work||0)+' / '+Math.round(f.project.required||0)+' นาทีวิศวกรรม');}for(const p of v.people.filter(x=>x.employerId===f.id)){c=card(grid,p.name,p.role||'ทีมงาน');stat(c,'กำลังทำ',({sleep:'นอน',travel:'เดินทาง',meal:'รับประทานอาหาร',work:'ทำงาน',rest:'พักผ่อน'})[p.activity]||'พัก');stat(c,'พลังงาน',Math.round(p.state?.energy??0));stat(c,'ความเครียด',Math.round(p.state?.stress??0));stat(c,'นิสัยเสี่ยง / รอบคอบ',`${Math.round(p.profile?.personality?.riskTaking||0)} / ${Math.round(p.profile?.personality?.prudence||0)}`);for(const[k,n]of Object.entries(p.subjects||{}))stat(c,subjects[k]||k,Math.round(typeof n==='number'?n:n.level||0)+'/100');}}
+if(tab==='market'){body.append(el('p','คู่แข่งพัฒนาตามบุคลากร เงิน และทรัพยากรของตัวเอง อาจนำหรือแพ้เราได้ไกล ไม่มีการปรับความเก่งตามเรา','notice'),grid);for(const x of v.firms){const c=card(grid,x.name,roles[x.role]||x.role);stat(c,'เงินสด',cash(x.cash));stat(c,'ทีมงาน',v.people.filter(p=>p.employerId===x.id).length+' คน');stat(c,'แบบสินค้า',(x.products||[]).length);c.append(el('p',x.decision||'กำลังดำเนินงาน'));const b=el('button','ติดตามบริษัทนี้');b.onclick=()=>{selected=x.id;tab='campus';render();};c.append(b);}}
+if(tab==='products'){body.append(grid);for(const d of v.designs){const c=card(grid,d.name||d.nameTh||'แบบโทรศัพท์',v.firms.find(x=>x.id===d.firmId)?.name||'');const e=d.evaluation||{},p=d.parts||{},chip=d.chip||{};stat(c,'สถานะ',d.released?'วางจำหน่าย':'พัฒนาและทดสอบ');stat(c,'ราคา',cash(d.price||d.priceSatang));stat(c,'ผลิต / ขาย',`${d.produced||0} / ${d.sold||0}`);stat(c,'CPU',`${chip.cores||1} คอร์ · ${chip.clockGhz||0} GHz`);stat(c,'RAM / พื้นที่',`${p.ram?.capacityMB||0} / ${p.storage?.capacityMB||0} MB`);stat(c,'กล้อง',`${p.camera?.megapixels||0} MP`);stat(c,'แบตเตอรี่',`${Number(e.batteryHours||0).toFixed(1)} ชั่วโมง / ${p.battery?.wh||0} Wh`);stat(c,'โทร / เว็บ / เกม',`${e.taskScores?.call||0} / ${e.taskScores?.web||0} / ${e.taskScores?.game||0}`);stat(c,'ผิวเครื่องขณะโหลด',`${Number(e.surfaceC||0).toFixed(1)} °C`);c.append(el('small','ผลประมาณจากแบบจำลองภายใต้ภาระงานเดียวกัน รุ่นใหม่อาจไม่ได้ดีกว่าทุกด้าน'));}if(!v.designs.length)body.append(el('div','ยังไม่มีรุ่นสำเร็จ — ทีมต้องวิจัย จัดซื้อ และทดสอบก่อน','empty'));}
+if(tab==='supply'){body.append(grid);const rawCard=card(grid,'วัตถุดิบและกำลังพัฒนา');stat(rawCard,'วัตถุดิบที่มี',f.raw||0);stat(rawCard,'ขอบเขตเทคโนโลยีที่ทีมวิจัยได้',f.capability||0);stat(rawCard,'ยอดผลิตสะสม',f.production||0);stat(rawCard,f.role==='brand'?'เครื่องที่ขายแล้ว':'รายรับจากชิ้นส่วน',f.role==='brand'?(f.sales||0):cash(f.revenue));const c=card(grid,'คลังของ '+f.name);for(const[k,n]of Object.entries(f.stock||{})){const name={chip:'CPU',ram:'RAM',storage:'หน่วยเก็บข้อมูล',camera:'โมดูลกล้อง',display:'หน้าจอ',battery:'แบตเตอรี่',enclosure:'ตัวถัง',raw:'วัตถุดิบแปรรูป',phone:'โทรศัพท์สำเร็จรูป'}[k.split(':')[0]]||v.designs.find(d=>d.id===k)?.name||k;stat(c,name,typeof n==='number'?n:JSON.stringify(n));}for(const x of [...(v.shipments||[]),...(v.wip||v.WIP||v.wipBatches||[])].filter(x=>x.firmId===f.id||x.buyerId===f.id||x.ownerId===f.id||x.to===f.id)){const box=card(grid,x.kind||x.type||'งานระหว่างทำ');for(const[k,n]of Object.entries(x))if(['stage','quantity','dueMinute','dueDay','eta','work','remaining','progress','required','status'].includes(k))stat(box,({eta:'กำหนดรับ (นาทีโลก)',work:'ทำแล้ว (นาทีวิศวกรรม)',stage:'ขั้นตอน',quantity:'จำนวน',dueMinute:'กำหนดเวลา (นาทีโลก)',dueDay:'วันที่รับ',remaining:'งานคงเหลือ',progress:'ทำแล้ว',required:'งานที่ต้องใช้',status:'สถานะ'})[k],n);}}
+if(tab==='chronicle'){for(const e of [...v.events].reverse().slice(0,100)){const row=el('div',undefined,'event');row.append(el('small','วันที่ '+(e.day!=null?e.day+1:Math.floor((e.minute||0)/1440)+1)),el('div',e.text||e.reasonTh||e.message||''));body.append(row);}if(!v.events.length)body.append(el('div','โลกเพิ่งเริ่มต้น เรื่องราวจะเกิดจากการกระทำจริง','empty'));}
+if(tab==='edit'){body.append(el('p','การทดลองเปลี่ยนเงื่อนไข ไม่ใช่คำสั่งบริหาร NPC ยังคงตัดสินใจเอง เงินที่เพิ่มบันทึกเป็นทุนทดลอง','notice'),grid);const c=card(grid,'เพิ่มทุนให้ '+f.name,'การทดลอง');c.classList.add('edit');stat(c,'เงินสดปัจจุบัน',cash(f.cash));const l=el('label','จำนวนเงินบาท');const inp=el('input');inp.type='number';inp.min=1;inp.max=100000000;inp.value='100000';l.append(inp);c.append(l);const b=el('button','เพิ่มเงินทุน (ทดลอง)');b.onclick=()=>act({type:'grantCash',firmId:f.id,amount:Math.round(Number(inp.value)*100)});c.append(b);const pc=card(grid,'ความรู้และนิสัยรายบุคคล');pc.classList.add('edit');const sel=el('select');sel.setAttribute('aria-label','บุคคลที่ทดลอง');for(const p of v.people){const o=el('option',p.name+' · '+(v.firms.find(x=>x.id===p.employerId)?.name||'รอย้ายงาน'));o.value=p.id;sel.append(o);}if(v.people.some(p=>p.id===editState.personId))sel.value=editState.personId;else editState.personId=sel.value;const currentTarget=el('p',undefined,'notice');pc.append(currentTarget,sel);const sub=el('select');sub.setAttribute('aria-label','วิชาที่ทดลอง');for(const k of new Set(v.people.flatMap(p=>Object.keys(p.subjects||{})))){const o=el('option',subjects[k]||k);o.value=k;sub.append(o);}if([...sub.options].some(o=>o.value===editState.subjectId))sub.value=editState.subjectId;else editState.subjectId=sub.value;const subjectCurrent=el('p',undefined,'edit-current');pc.append(subjectCurrent);const lv=el('input');lv.step='any';lv.type='number';lv.min=0;lv.max=100;lv.value=60;lv.setAttribute('aria-label','ระดับความรู้');pc.append(sub,lv);const sb=el('button','ปรับความรู้ (ทดลอง)');sb.onclick=()=>act({type:'setSubject',personId:sel.value,subjectId:sub.value,level:Number(lv.value)});pc.append(sb);const tr=el('select');tr.setAttribute('aria-label','นิสัยที่ทดลอง');for(const[k,n]of Object.entries(traits)){const o=el('option',n);o.value=k;tr.append(o);}tr.value=editState.traitKey;const traitCurrent=el('p',undefined,'edit-current');pc.append(traitCurrent);const tv=el('input');tv.step='any';tv.type='number';tv.min=0;tv.max=100;tv.value=60;tv.setAttribute('aria-label','ค่านิสัย');const tb=el('button','ปรับนิสัย (ทดลอง)');tb.onclick=()=>act({type:'setTrait',personId:sel.value,key:tr.value,level:Number(tv.value)});pc.append(tr,tv,tb);const sync=()=>{const p=v.people.find(p=>p.id===sel.value);if(!p)return;editState.personId=p.id;editState.subjectId=sub.value;editState.traitKey=tr.value;currentTarget.textContent='เป้าหมาย: '+p.name+' · '+(v.firms.find(f=>f.id===p.employerId)?.name||'วิศวกรอิสระ');const a=p.subjects[sub.value]||0,b=p.profile.personality[tr.value]||0;subjectCurrent.textContent='ความรู้ปัจจุบัน: '+(subjects[sub.value]||sub.value)+' '+Number(a).toFixed(2)+'/100 → ค่าใหม่ด้านล่าง';traitCurrent.textContent='นิสัยปัจจุบัน: '+traits[tr.value]+' '+Number(b).toFixed(2)+'/100 → ค่าใหม่ด้านล่าง';lv.value=a;tv.value=b;};sel.onchange=sync;sub.onchange=sync;tr.onchange=sync;sync();}}
+function drawCampus(canvas,v,f){const c=canvas.getContext('2d');c.fillStyle='#203a35';c.fillRect(0,0,1000,400);const areas=[['สำนักงาน',30,35],['ห้องวิจัย',350,35],['โรงงานและคลัง',670,35],['พื้นที่พักผ่อน',350,245]];c.font='18px system-ui';for(const[label,x,y]of areas){c.fillStyle='#2f5050';c.fillRect(x,y,270,110);c.fillStyle='#a8c9bf';c.fillRect(x+8,y+8,254,25);c.fillStyle='#152b2b';c.fillText(label,x+22,y+28);}c.fillStyle='#46604f';c.fillRect(0,190,1000,28);const people=v.people.filter(p=>p.employerId===f.id);people.forEach((p,i)=>{const state=({sleep:'นอน',travel:'เดินทาง',meal:'รับประทานอาหาร',work:'ทำงาน',rest:'พักผ่อน'})[p.activity]||'พัก',working=/work|research|assembl|test|ทำ|วิจัย|ผลิต/.test(state),rest=/rest|sleep|off|พัก/.test(state),a=rest?areas[3]:working?areas[1]:areas[0],x=a[1]+25+(i%6)*40,y=(p.position?.y===230?195:a[2]+60)+Math.floor(i/6)*26;c.fillStyle=rest?'#8ab9af':'#e9c67a';c.beginPath();c.arc(x,y,7,0,7);c.fill();c.font='12px system-ui';c.fillStyle='#edf1dc';c.fillText(p.name.slice(0,9),x-15,y+23);});c.fillStyle='#d1dfca';c.font='15px system-ui';c.fillText('ผังการทำกิจกรรม • '+f.name+' • ดูรายละเอียดบุคลากรด้านล่าง',30,385);}
+$('firm').onchange=()=>{selected=$('firm').value;render();};document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>{speed=Number(b.dataset.speed);render();});$('nextDay').onclick=()=>{speed=0;G.advance(world,1440);render();};const randomSeed=()=>{const n=new Uint32Array(2);crypto.getRandomValues(n);$('seed').value=Array.from(n,x=>x.toString(36)).join('-');};$('randomSeed').onclick=randomSeed;$('newWorld').onclick=()=>{speed=0;randomSeed();$('welcome').showModal();};$('resume').onclick=()=>$('welcome').close();$('createWorld').onsubmit=e=>{e.preventDefault();fresh($('seed').value,$('startRole').value);$('welcome').close();message('เริ่มโลกใหม่แล้ว — แต่ละบริษัทมีทีม ทุน และโอกาสของตัวเอง');};$('export').onclick=()=>{const blob=new Blob([G.serialize(world)],{type:'application/json'}),a=el('a');a.href=URL.createObjectURL(blob);a.download='Silicon-Handset-save.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};$('import').onchange=async()=>{try{const file=$('import').files[0];if(file){load(await file.text());message('โหลดโลกแล้ว');}}catch(e){message('โหลดไม่ได้: '+e.message+' — โลกเดิมยังอยู่');}$('import').value='';};$('help').onclick=()=>{alert('คุณเป็นผู้สังเกตการณ์\n\nเริ่มจากหยุดเวลา เลือกบริษัทและดูคน ความรู้ คลังและแผน จากนั้นเดินเวลาและตามเหตุการณ์\n\nทุกบริษัทมีบุคลากรและทรัพยากรของตนเอง ไม่มีระบบช่วยให้คู่แข่งตามทันเรา\n\nEdit Hub ใช้ทดลองเปลี่ยนทุน ความรู้ และนิสัย แล้วดูผล เซฟของเกมนี้แยกจาก Company');};
+function frame(t){const dt=Math.min(1,(t-last)/1000);last=t;carry+=dt*2*speed;if(carry>=5){const n=Math.floor(carry/5)*5;carry-=n;G.advance(world,n);render();}saveClock+=dt;if(saveClock>=10){saveClock=0;try{localStorage.setItem('silicon-handset-v010',G.serialize(world));}catch(e){message('บันทึกอัตโนมัติไม่ได้: '+e.message);}}requestAnimationFrame(frame);}window.SiliconGame={get world(){return world;},snapshot:()=>G.snapshot(world),advance:n=>{G.advance(world,n);render();},load,render};render();requestAnimationFrame(frame);if(!localStorage.getItem('silicon-handset-v010')){randomSeed();$('welcome').showModal();}})();
+
+</script></body></html>

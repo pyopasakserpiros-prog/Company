@@ -78,3 +78,7 @@ Timed Material Processing (`w.plant.refineryBatches`) for all 40 recipes; 42 pro
 - **v2.6.0:** Plant module (20 equipment types, 42 product routes) & commercial sales contracts (`World.commercialEscrows`).
 - **v2.4.0 – v2.5.0:** External World (`js/world.js`, 12 nations, 28+ firms, 66 bilateral relations), 1× time (2 game min/real sec), 8 cells/tick walk, `stockBatch`.
 - **v2.2.0 – v2.3.0:** 170 learned subjects outside the locked Human Core, 6-stage SME ladder, utilities/brownout, workplace culture, 64 materials, 40 recipes, 42 products, 10 B2B services, and Permanently Locked Human Core 1.0.0 (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
+
+## Sibling spin-off v0.1.0 (separate runtime)
+
+SPINOFF_SOURCE is the owner-authorised Silicon & Handset game, reusing unchanged HumanCore/pure phone engineering. Read spinoff_phone/PROJECT_STATUS.md and silicon-handset-dev skill for its distinct hourly loop, generated rivals, finite WIP/ledger, recruiting and audit {ok,errors}. Parent Company remains3.1.0; do not interpret spin-off results as new Company features. Build/test/save namespaces and standalone files are separate. App skills were not accessed by this sibling release.

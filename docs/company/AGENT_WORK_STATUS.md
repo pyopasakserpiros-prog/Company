@@ -1,3 +1,7 @@
+## Silicon & Handset first playable — owner-authorised new assignment
+
+Task spinoff-v010, base9f6e2b8. Owner/integrator Codex; simulation implemented by delegated agent, parent UI/build/docs/browser integration, independent reviewer confirmed malformed-save/WIP blockers fixed. Separate SPINOFF_SOURCE release0.1.0; Company3.1 gameplay/AGENTS/core unchanged. Features/evidence/limits: spinoff_phone/PROJECT_STATUS.md and PATCH_REPORT_V0.1.0.md at root. Status: implementation verified and integrated by commit containing this entry; archive acceptance separately recorded. Gemini app skill access not claimed.
+
 # สถานะงานร่วมระหว่างเอเจนต์
 
 อัปเดต: 12 พฤศจิกายน 2026 (runtime **v3.1.0**; พัฒนาระบบนิเวศซัพพลายเชนมือถือ 12 บทบาท การเข้าทำธุรกิจ/บูรณาการแนวดิ่งของบริษัทเรา และการแก้คอขวดวัตถุดิบต้นน้ำเสร็จสมบูรณ์) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า

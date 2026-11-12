@@ -89,3 +89,7 @@ Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This 
 ## Current v3.1.0 integration reference
 
 Reference key: `phone-engineering.js`, `phone-industry.js`, `phone-talent.js`, `world.js`, `sim.js`, `debug.js`. Models 12 executable phone supply-chain roles (`E.ROLE_CONTRACTS`: `fabless_soc`, `wafer_foundry`, `osat_packaging`, `dram_memory`, `nand_storage`, `camera_module`, `display_panel`, `battery_pack`, `pcb_rf`, `enclosure`, `os_platform`, `brand`) and 8 qualified material grades (`E.MATERIAL_GRADES`). Supports own-company entry and vertical integration (`I.enterCampusRole`), Fabless SoC -> Wafer Foundry -> OSAT orders (`foundryOrders`), persistent WIP batches (`wipBatches`), `declined_prudent` strategic refusal, and resolved normal-opening upstream supply starvation (`world.js`). Verified by `test/phone-supplier-ecosystem-v310.test.cjs` (**236/236** total tests) and `tools/phone-industry-soak.cjs`.
+
+## Silicon & Handset sibling boundary
+
+For the new SPINOFF_SOURCE runtime, use silicon-handset-dev and spinoff_phone/PROJECT_STATUS.md; this domain's Company APIs above remain unchanged. Spin-off reuses HumanCore/phone engineering but has its own finance/people/work/stock/save/UI contracts and audit {ok,errors}. Check actual consumers in SPINOFF_SOURCE/js/sim.js and ui.js before applying Company-specific hooks. Runtime/campus/physics depth differs; do not certify inherited full Company features from shared imports.

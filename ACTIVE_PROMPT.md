@@ -1,3 +1,7 @@
+# Latest owner assignment — Silicon & Handset first playable
+
+Owner authorised implementation after the spin-off design review, with independent seeded rival firms/people/resources and no player-relative catchup. Delivered scope/limits are in [spin-off status](spinoff_phone/PROJECT_STATUS.md) and [report](spinoff_phone/PATCH_REPORT_V0.1.0.md). Source SPINOFF_SOURCE, runtime0.1.0, independent save; parent Company stays3.1.0. Previous Company supplier assignment below is historical context, not an instruction to overwrite the spin-off or start another patch automatically.
+
 # ACTIVE IMPLEMENTATION PROMPT — Gemini: Build the Phone Manufacturing Ecosystem (COMPLETED IN v3.1.0)
 
 > **Status: IMPLEMENTED & VERIFIED IN RUNTIME v3.1.0 (2026-11-12)**

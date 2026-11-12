@@ -1,0 +1,301 @@
+{
+  "scope": "5 seeds, full spin-off hourly life/business loop, 365days each, daily cash/material audit and monthly current-save validation",
+  "results": [
+    {
+      "seed": "dawn",
+      "days": 365,
+      "firms": 14,
+      "people": 62,
+      "designs": 31,
+      "sold": 3252,
+      "playerProduced": 228,
+      "launches": [
+        {
+          "id": "player",
+          "launches": 4,
+          "capability": 3,
+          "cash": 9116803
+        },
+        {
+          "id": "rival-0",
+          "launches": 4,
+          "capability": 3,
+          "cash": 22388442
+        },
+        {
+          "id": "rival-1",
+          "launches": 3,
+          "capability": 3,
+          "cash": 59774531
+        },
+        {
+          "id": "rival-2",
+          "launches": 4,
+          "capability": 3,
+          "cash": 129459078
+        },
+        {
+          "id": "rival-3",
+          "launches": 3,
+          "capability": 2,
+          "cash": 83422833
+        },
+        {
+          "id": "rival-4",
+          "launches": 4,
+          "capability": 3,
+          "cash": 104973648
+        },
+        {
+          "id": "rival-5",
+          "launches": 4,
+          "capability": 3,
+          "cash": 34063986
+        },
+        {
+          "id": "rival-6",
+          "launches": 4,
+          "capability": 3,
+          "cash": 62336629
+        }
+      ],
+      "joinedOffers": 12,
+      "audit": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "seed": "river",
+      "days": 365,
+      "firms": 14,
+      "people": 65,
+      "designs": 31,
+      "sold": 3227,
+      "playerProduced": 936,
+      "launches": [
+        {
+          "id": "player",
+          "launches": 4,
+          "capability": 3,
+          "cash": 131191149
+        },
+        {
+          "id": "rival-0",
+          "launches": 4,
+          "capability": 3,
+          "cash": 32369159
+        },
+        {
+          "id": "rival-1",
+          "launches": 4,
+          "capability": 3,
+          "cash": 4340236
+        },
+        {
+          "id": "rival-2",
+          "launches": 4,
+          "capability": 3,
+          "cash": 120550766
+        },
+        {
+          "id": "rival-3",
+          "launches": 4,
+          "capability": 3,
+          "cash": 34371835
+        },
+        {
+          "id": "rival-4",
+          "launches": 4,
+          "capability": 3,
+          "cash": 66566410
+        },
+        {
+          "id": "rival-5",
+          "launches": 3,
+          "capability": 2,
+          "cash": 68243267
+        },
+        {
+          "id": "rival-6",
+          "launches": 4,
+          "capability": 3,
+          "cash": 37396760
+        }
+      ],
+      "joinedOffers": 10,
+      "audit": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "seed": "silicon",
+      "days": 365,
+      "firms": 12,
+      "people": 53,
+      "designs": 23,
+      "sold": 3191,
+      "playerProduced": 492,
+      "launches": [
+        {
+          "id": "player",
+          "launches": 3,
+          "capability": 3,
+          "cash": 87595858
+        },
+        {
+          "id": "rival-0",
+          "launches": 4,
+          "capability": 3,
+          "cash": 102310300
+        },
+        {
+          "id": "rival-1",
+          "launches": 4,
+          "capability": 3,
+          "cash": 126301535
+        },
+        {
+          "id": "rival-2",
+          "launches": 4,
+          "capability": 3,
+          "cash": 22600333
+        },
+        {
+          "id": "rival-3",
+          "launches": 4,
+          "capability": 3,
+          "cash": 40845941
+        },
+        {
+          "id": "rival-4",
+          "launches": 3,
+          "capability": 2,
+          "cash": 104038686
+        }
+      ],
+      "joinedOffers": 77,
+      "audit": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "seed": "island",
+      "days": 365,
+      "firms": 15,
+      "people": 68,
+      "designs": 30,
+      "sold": 3145,
+      "playerProduced": 972,
+      "launches": [
+        {
+          "id": "player",
+          "launches": 4,
+          "capability": 3,
+          "cash": 153029791
+        },
+        {
+          "id": "rival-0",
+          "launches": 4,
+          "capability": 3,
+          "cash": 35242336
+        },
+        {
+          "id": "rival-1",
+          "launches": 3,
+          "capability": 2,
+          "cash": 153664066
+        },
+        {
+          "id": "rival-2",
+          "launches": 4,
+          "capability": 3,
+          "cash": 96516018
+        },
+        {
+          "id": "rival-3",
+          "launches": 3,
+          "capability": 3,
+          "cash": 13508899
+        },
+        {
+          "id": "rival-4",
+          "launches": 3,
+          "capability": 3,
+          "cash": 24499598
+        },
+        {
+          "id": "rival-5",
+          "launches": 3,
+          "capability": 2,
+          "cash": 40029089
+        },
+        {
+          "id": "rival-6",
+          "launches": 3,
+          "capability": 3,
+          "cash": 12027
+        },
+        {
+          "id": "rival-7",
+          "launches": 3,
+          "capability": 3,
+          "cash": 21360927
+        }
+      ],
+      "joinedOffers": 21,
+      "audit": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "seed": "horizon",
+      "days": 365,
+      "firms": 11,
+      "people": 53,
+      "designs": 20,
+      "sold": 3260,
+      "playerProduced": 420,
+      "launches": [
+        {
+          "id": "player",
+          "launches": 4,
+          "capability": 3,
+          "cash": 42001944
+        },
+        {
+          "id": "rival-0",
+          "launches": 4,
+          "capability": 3,
+          "cash": 221141351
+        },
+        {
+          "id": "rival-1",
+          "launches": 4,
+          "capability": 3,
+          "cash": 113807565
+        },
+        {
+          "id": "rival-2",
+          "launches": 4,
+          "capability": 3,
+          "cash": 121647304
+        },
+        {
+          "id": "rival-3",
+          "launches": 4,
+          "capability": 3,
+          "cash": 21273004
+        }
+      ],
+      "joinedOffers": 14,
+      "audit": {
+        "ok": true,
+        "errors": []
+      }
+    }
+  ]
+}

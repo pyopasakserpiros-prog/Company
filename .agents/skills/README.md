@@ -44,3 +44,7 @@ Both master references and all14affected domain references now include phone con
 ## Current v3.1.0 source references
 
 Both master skills (`company-evolution-dev` and `company-for-every-patch`), their root copies (`SKILL.md`, `SKILL_COMPANY_EVOLUTION_DEV.md`, `SKILL_COMPANY_FOR_EVERY_PATCH.md`), and all 14 domain skills now include the v3.1.0 12-role phone supplier ecosystem, 8 qualified material grades, own-company supplier entry and vertical integration, Fabless SoC -> Foundry -> OSAT orders, and normal-opening upstream supply calibration (`236/236` unit/integration tests). The two installed Gemini app skills (`user:company-evolution-dev` and `user:company-for-every-patch`) were also updated via `skills:update_skill` during the v3.1.0 implementation session.
+
+## Silicon & Handset spin-off
+
+[Dedicated source-backed reference](silicon-handset-dev/SKILL.md) covers SPINOFF_SOURCE0.1.0, separate from Company3.1.0. Read [spin-off status](../../spinoff_phone/PROJECT_STATUS.md) for implemented scope and explicit limits.

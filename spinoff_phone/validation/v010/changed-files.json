@@ -1,0 +1,231 @@
+{
+  "base": "9f6e2b85bc0e03714382c6ea04155bd0d1b0c9cd",
+  "release": "Silicon-Handset0.1.0",
+  "parent_release": "Company3.1.0 unchanged",
+  "files": [
+    {
+      "status": "M",
+      "path": ".agents/skills/README.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-campus-and-logistics/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-data-integrity/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-economy-and-accounting/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-edit-hub-and-observability/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-evolution-dev/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-executive-business-decisions/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-for-every-patch/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-gameplay-architecture/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-npc-life-and-behavior/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-production-and-services/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-qa-and-delivery/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-rendering-and-performance/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-save-system/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-supply-chain-and-resources/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-workforce-and-careers/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": ".agents/skills/company-world-and-markets/SKILL.md"
+    },
+    {
+      "status": "A",
+      "path": ".agents/skills/silicon-handset-dev/SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": "ACTIVE_PROMPT.md"
+    },
+    {
+      "status": "M",
+      "path": "COMPANY_SOURCE/project_status_and_ai_onboarding.md"
+    },
+    {
+      "status": "M",
+      "path": "README.md"
+    },
+    {
+      "status": "M",
+      "path": "SKILL.md"
+    },
+    {
+      "status": "M",
+      "path": "SKILL_COMPANY_EVOLUTION_DEV.md"
+    },
+    {
+      "status": "M",
+      "path": "SKILL_COMPANY_FOR_EVERY_PATCH.md"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/README.md"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/Silicon_Handset_single.html"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/css/game.css"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/index.html"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/js/sim.js"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/js/ui.js"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/package-lock.json"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/package.json"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/test/browser.test.cjs"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/test/simulation.test.cjs"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/tools/build.cjs"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/tools/check.cjs"
+    },
+    {
+      "status": "A",
+      "path": "SPINOFF_SOURCE/tools/soak.cjs"
+    },
+    {
+      "status": "M",
+      "path": "START_HERE_FOR_AI.md"
+    },
+    {
+      "status": "A",
+      "path": "Silicon_Handset_single.html"
+    },
+    {
+      "status": "M",
+      "path": "docs/company/AGENT_WORK_STATUS.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/superpowers/plans/2026-11-12-spinoff-v010.md"
+    },
+    {
+      "status": "M",
+      "path": "era3/project_status_and_ai_onboarding.md"
+    },
+    {
+      "status": "M",
+      "path": "project_status_and_ai_onboarding.md"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/PATCH_REPORT_V0.1.0.md"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/PROJECT_STATUS.md"
+    },
+    {
+      "status": "M",
+      "path": "spinoff_phone/README.md"
+    },
+    {
+      "status": "M",
+      "path": "spinoff_phone/SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md"
+    },
+    {
+      "status": "M",
+      "path": "spinoff_phone/SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/README.md"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/browser-tests.txt"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/parent-regression.txt"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/screen-1280.png"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/screen-390.png"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/soak.json"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/source-check.txt"
+    },
+    {
+      "status": "A",
+      "path": "spinoff_phone/validation/v010/unit-tests.txt"
+    }
+  ]
+}

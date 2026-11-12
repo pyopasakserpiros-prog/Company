@@ -1,3 +1,5 @@
+> First playable spin-off0.1.0 is now implemented separately. Consult [actual status](PROJECT_STATUS.md) and [report](PATCH_REPORT_V0.1.0.md); the complete ambitions below remain partial. Latest owner instruction requires independently generated rival companies/people/resources and no player-relative catchup.
+
 # Spin-off System & Gameplay Specification: ผังแคมปัส ชีวิต NPC ห้องแล็บวิศวกรรม หน้าจอ UI และโครงสร้างโค้ดฉบับพร้อมสร้างจริง
 
 > **Codex review (2026-11-12, Company v3.1.0):** This is a proposal, not a validated or implemented specification. Read [corrections and design refinements](CODEX_REVIEW_AND_DESIGN_REFINEMENTS.md) before using its timelines, cost examples, guarantees or reuse claims as implementation rules.

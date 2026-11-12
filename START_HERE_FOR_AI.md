@@ -1,3 +1,5 @@
+> Current new-game task: Silicon & Handset spin-off0.1.0, authorised by owner. Read [spin-off status](spinoff_phone/PROJECT_STATUS.md), [report](spinoff_phone/PATCH_REPORT_V0.1.0.md) and [dedicated skill](.agents/skills/silicon-handset-dev/SKILL.md). Parent Company remains3.1.0.
+
 # เริ่มงานกับ Company v3.1.0
 
 **สถานะล่าสุด (v3.1.0 — พัฒนาและตรวจสอบเสร็จสมบูรณ์):** ดำเนินการตามโจทย์ใน [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) เสร็จสมบูรณ์แล้วจากฐาน `786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc` (v3.0.0) สู่รุ่น **v3.1.0**:

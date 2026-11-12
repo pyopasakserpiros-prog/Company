@@ -1,0 +1,33 @@
+
+> silicon-handset-spinoff@0.1.0 test
+> node --test test/simulation.test.cjs
+
+✔ seeded independent firms, subjects, measured feature-only opening; snapshot isolated (41.048135ms)
+✔ normal 210-day world physically develops, manufactures, sells and conserves money and materials (558.224512ms)
+✔ pending shipment, WIP and notice save/load deterministic continuation; profiles refrozen (184.37589ms)
+✔ no cash cannot buy work or progress; no staff cannot research or manufacture (97.498507ms)
+✔ no components stops prototype; intermediate WIP holds consumed parts before any phones appear (88.18237ms)
+✔ player cash does not change rival research under fixed no-trade/no-hiring fixture (404.282327ms)
+✔ Edit Hub isolates person, validates commands and accounts capital source (5.631528ms)
+✔ autonomous recruitment preserves person identity and requires notice before transfer (14.183741ms)
+✔ invalid saves reject without replacing live world (19.098153ms)
+✔ hour boundaries are chunk-invariant, travel and rest are actual human-core updates (26.68134ms)
+✔ seed varies opening finance, resources and teams; specialist SME origin trades actual output (464.954243ms)
+✔ healthy employed engineers can autonomously transfer after notice without cloning knowledge (92.416473ms)
+✔ time smaller than one hour cannot grant advance work (20.213687ms)
+✔ reject corrupt project requirements, owner/level links, duplicate WIP and forged reservations (61.133432ms)
+✔ failed validation pays for timed redesign, consumes a fresh prototype and recovers (93.289554ms)
+✔ slow duplicate player supplier cannot cap qualified independent suppliers or rival designs (6.465223ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2300.621478
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

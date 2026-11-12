@@ -1,3 +1,5 @@
+> **เกมภาคใหม่ Silicon & Handset0.1.0:** [เปิดไฟล์เล่นเดี่ยว](Silicon_Handset_single.html) · [สถานะและวิธีเล่น](spinoff_phone/PROJECT_STATUS.md) · [รายงาน](spinoff_phone/PATCH_REPORT_V0.1.0.md) — Company เดิมยังเป็น3.1.0
+
 > **พรอมต์รับช่วงล่าสุดสำหรับ Gemini:** [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) — ระบบนิเวศการผลิตโทรศัพท์และบริษัทชิ้นส่วนที่บริษัทเราเข้าไปดำเนินธุรกิจได้จริง ส่งพร้อม ZIP สาขา main
 
 > **ล่าสุด v3.1.0 — Era 3 โทรศัพท์ & ข้อเสนอโปรเจกต์ใหม่ Spin-off สมาร์ตโฟน:** มีธุรกิจโทรศัพท์และซัพพลายเออร์ 12 บทบาทใน [รายงาน v3.1.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md) และมี **พิมพ์เขียวเกม Spin-off ธุรกิจเทคโนโลยีและสมาร์ตโฟนฉบับสมบูรณ์สำหรับ Codex/AI Team** อยู่ในโฟลเดอร์ **[`spinoff_phone/`](spinoff_phone/README.md)** ([Master Blueprint](spinoff_phone/SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md) · [Gameplay, Labs & UI Specs](spinoff_phone/SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md))
