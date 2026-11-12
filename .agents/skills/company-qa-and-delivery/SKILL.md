@@ -43,3 +43,9 @@ webapp-testing; systematic-debugging; Playwright best practices; skill-creator �
 New tests: knowledge-and-company.test.cjs and added mobile browser cases cover real qualification, licensing, personal learning, aptitude differences, legacy saves and full-map zoom. Build regenerates all three HTML aliases; inspect final ZIP/CRC and extracted checks.
 
 หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ
+
+## v2.4.0 — Verified living-world integration
+
+v2.4.0 adds test/living-world-v240.test.cjs (14 cases) and two World browser tests. Run check/test/build/browser and simulation benchmark. World tests cover conservation, no capital/input, crop propagation, finite reserves, policies/terms, bilateral scenarios, real purchasing, multi-seed days and save continuation. npm test baseline166, browser11 at delivery; verify actual output, don't copy counts. Package world.js as source plus rebuilt three HTML aliases and documents/skills; CRC/hash-check final ZIP and run extracted source checks. See patch report and LIVING_WORLD_SYSTEM.md.
+
+Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.

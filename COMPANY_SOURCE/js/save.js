@@ -214,6 +214,9 @@
         "invalid logistics state",
       );
     }
+    if (w.externalWorld?.living) {
+      try { for (const err of S.worldAudit(w)) add(false,err); } catch (_) { add(false,"invalid living world data"); }
+    }
     if (w.externalWorld !== undefined) {
       add(
         record(w.externalWorld) &&

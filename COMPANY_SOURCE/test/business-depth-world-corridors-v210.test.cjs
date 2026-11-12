@@ -9,9 +9,9 @@ const API = require("../js/api.js");
 
 test("v2.1.0 Executive Board Bug Fixes: Daytime CEO Authority, Leased Fleet Deposit (No NaN), Committed Budget Reservation Lifecycle (No Double Deduction), and Topic Cooldowns", () => {
   const w = S.create("v210-board-fixes", { autonomous: true });
-  assert.strictEqual(D.VERSION, "2.3.0");
-  assert.strictEqual(D.RELEASE_VERSION, "2.3.0");
-  assert.strictEqual(S.RELEASE_VERSION, "2.3.0");
+  assert.strictEqual(D.VERSION, "2.4.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.4.0");
+  assert.strictEqual(S.RELEASE_VERSION, "2.4.0");
 
   // 1. Verify FLEET_VEHICLES all have integer leaseDepositSatang = dailyLeaseCost * 5
   for (const [vid, spec] of Object.entries(D.FLEET_VEHICLES)) {
@@ -125,7 +125,7 @@ test("v2.1.0 Living External World Expansion: 12 Nations (ID, AU, IN, SG), 16 Ge
 
   assert.strictEqual(Object.keys(w.externalWorld.geopolitics.nations).length, 12);
   assert.strictEqual(Object.keys(w.externalWorld.geopolitics.tradeCorridors).length, 4);
-  assert.strictEqual(Object.keys(w.externalWorld.corporations).length, 22);
+  assert.strictEqual(Object.keys(w.externalWorld.corporations).length, 28);
 
   // Trigger Indonesia Nickel & Bauxite Ban -> corridor_indo_australia_mineral becomes restricted and bauxite/nickel prices surge
   const idBan = S.command(w, { type: "triggerGeopoliticalEvent", eventId: "indonesia_nickel_bauxite_ban" });
@@ -150,7 +150,7 @@ test("v2.1.0 Living External World Expansion: 12 Nations (ID, AU, IN, SG), 16 Ge
 
   const app = API.create("v210-api-corridors", { autonomous: true });
   const snap = app.snapshot();
-  assert.strictEqual(snap.releaseVersion, "2.3.0");
+  assert.strictEqual(snap.releaseVersion, "2.4.0");
   assert.strictEqual(snap.catalog.tradeCorridors.length, 4);
   assert.strictEqual(snap.catalog.globalNations.length, 12);
   assert.strictEqual(snap.catalog.geopoliticalEvents.length, 16);

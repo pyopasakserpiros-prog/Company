@@ -43,3 +43,9 @@ systematic-debugging; แหล่งและสเปกทรัพยาก�
 Prototype inputs join normal purchase demand; material qualifications are per process and learned subjects. Farmland ownership does not teach baking; planting/harvesting/livestock need their own knowledge.
 
 หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ
+
+## v2.4.0 — Verified living-world integration
+
+External firms consume D.MATERIAL_RECIPES inputs and produce all catalog outputs/byproducts; natural extraction draws finite reserves, environmental flows are capacity-limited. Supported crop cycles consume real planting stock, water, fertilizer and wait at least two daily steps; save seed from gross harvest. Unsupported biological upstream processes do not auto-produce. Wholesale opening500/material is finite and buys replenishment from real producers. PO reserves seller stock immediately; buyer physical inventory arrives through existing pipeline. External interfirm goods remain living.shipments until delivery.
+
+Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.

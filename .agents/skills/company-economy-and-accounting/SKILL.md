@@ -43,3 +43,9 @@ systematic-debugging; economy.js และ accounting tests ของ Company �
 Research tuition/experiments and technology license costs post equipment expenses; personal after-work learning reduces wallet and increases outsideSpending, preserving payroll identities. Never recognize prototypes as sales.
 
 หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ
+
+## v2.4.0 — Verified living-world integration
+
+World module uses integer satang in firm/nation accounts and exact cash conservation. Player materials PO cost equals seller receipt + import tax to TH; B2B sale debits buyer cash and adds buyer stock. `playerNetSatang` reconciles these explicit player boundary flows. External daily levy is simplified 15% of positive cash surplus, not jurisdiction accounting profit. Main product/service contract finance remains existing system. Never describe world accounts as covering every main contract.
+
+Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.

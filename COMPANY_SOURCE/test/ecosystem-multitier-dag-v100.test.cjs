@@ -16,7 +16,7 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
   assert.equal(mats.length, 64, "Catalog must contain 51 materials across True T0, Bio Seeds, Cultivated Crops, and Tiers 1-3");
   assert.equal(prods.length, 42, "Catalog must contain 28 finished products (Tier 4)");
   assert.equal(Object.keys(D.MATERIAL_RECIPES).length, 40, "All 32 craftable Tier 1-3 materials must have multi-stage recipes");
-  assert.equal(D.RELEASE_VERSION, "2.3.0");
+  assert.equal(D.RELEASE_VERSION, "2.4.0");
 
   const tier0 = mats.filter((m) => m.tier === 0);
   const tier1 = mats.filter((m) => m.tier === 1);
@@ -84,7 +84,7 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
   prepare(w,{products:["artisan_bakery"],materials:["bakery_dough_butter"],subjects:["food_fermentation","agriculture"]});
 
   const corps = Object.values(w.externalWorld.corporations || {});
-  assert.equal(corps.length, 22, "External world must feature 18 living corporations");
+  assert.equal(corps.length, 28, "Catalog corporations plus five regional producers and finite wholesale exchange");
   assert.ok(corps.some((c) => c.roles.includes("client") && c.roles.includes("supplier")));
   assert.ok(corps.some((c) => c.roles.includes("competitor") && c.roles.includes("client")));
 
@@ -119,11 +119,12 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
 
   S.advance(w, 1440 * 5);
   assert.ok(w.externalWorld.ecosystemFeed.length >= 8);
-  assert.equal(w.externalWorld.b2bMaterialDemands.length, 6);
+  assert.ok(w.externalWorld.b2bMaterialDemands.length > 0);
+  for(const d of w.externalWorld.b2bMaterialDemands)assert.ok(w.externalWorld.living.firms[d.buyerCorpId].cash >= d.unitPriceSatang);
 
   const app = API.create("v100-api-snap", { autonomous: true });
   const snap = app.snapshot();
-  assert.equal(snap.releaseVersion, "2.3.0");
+  assert.equal(snap.releaseVersion, "2.4.0");
   assert.equal(snap.catalog.materialTiers.length, 5);
   assert.equal(snap.catalog.materialRecipes.length, 40);
   assert.equal(snap.catalog.materials.length, 64);

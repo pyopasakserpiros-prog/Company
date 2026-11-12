@@ -6,15 +6,16 @@
     node ? require("./data.js") : root.CompanyData,
     node ? require("./layout.js") : root.CompanyLayout,
     node ? require("./economy.js") : root.CompanyEconomy,
+    node ? require("./world.js") : root.CompanyWorld,
   );
   if (node) module.exports = value;
   else root.CompanySim = value;
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
-  function (H, D, L, E) {
+  function (H, D, L, E, W) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.3.0",
+      RELEASE_VERSION = "2.4.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -2429,6 +2430,9 @@
         return { ok: false, code: "financialLimit", message: "วงเงินเกินขีดจำกัด" };
       }
 
+      W.ensure(w);
+      if (!buyer || !W.receivePlayerSale(w,buyer.id,materialId,qty,revenueSatang))
+        return {ok:false,code:"buyerCannotPay",message:"บริษัทผู้ซื้อมีเงินไม่พอชำระค่าวัตถุดิบ"};
       // Deduct safely so opening >= 0 and audit(w) stock === opening + purchased - consumed remains 100% invariant
       safeDeductMaterial(w, materialId, qty);
 
@@ -2695,6 +2699,7 @@
           summaryTh: cSpec.descTh,
         };
       }
+      W.apply(w);
       return geo;
     }
 
@@ -2782,6 +2787,7 @@
       }
 
       const curDay = day(w);
+      W.scenario(w,evSpec.id,curDay,evSpec.durationDays || 5);
       geo.activeEvent = {
         ...clone(evSpec),
         startedDay: curDay,
@@ -2870,24 +2876,8 @@
 
     function simulateGlobalGeopoliticsDaily(w, completedDay) {
       const geo = ensureGeopolitics(w);
-      // 1. Every 5 days, trigger or rotate a global geopolitical event (War, Treaty, Trade Shock, or Climate Event)
-      if (!geo.activeEvent || completedDay >= (geo.activeEvent.expiresDay || 6) || completedDay % 5 === 0) {
-        const allEvents = Object.values(D.GEOPOLITICAL_EVENTS || {});
-        if (allEvents.length > 0) {
-          const h = seedHash(`${w.seed}:dailyGeoEv:${completedDay}`);
-          const picked = allEvents[h % allEvents.length];
-          triggerGeopoliticalEvent(w, picked.id, { silent: completedDay < 15 });
-        }
-      }
-      // 2. Every 6 days, simulate a foreign election or cabinet policy shift in one of the 8 sovereign nations
-      if (completedDay % 6 === 0) {
-        const nationIds = Object.keys(D.GLOBAL_NATIONS || {});
-        if (nationIds.length > 0) {
-          const h = seedHash(`${w.seed}:dailyRegime:${completedDay}`);
-          const nid = nationIds[h % nationIds.length];
-          changeForeignRegime(w, nid, null, { silent: completedDay < 15 });
-        }
-      }
+      if (geo.activeEvent && completedDay >= geo.activeEvent.expiresDay) geo.activeEvent = null;
+      W.step(w, completedDay);
       recomputeGeopoliticalMultipliers(w);
     }
 
@@ -2900,145 +2890,8 @@
       if (!Array.isArray(ext.ecosystemFeed)) ext.ecosystemFeed = [];
       if (!Array.isArray(ext.b2bMaterialDemands)) ext.b2bMaterialDemands = [];
 
-      const corps = Object.values(ext.corporations);
-      if (corps.length < 2) return;
-
-      // 1. Simulate 2 Inter-Company Off-Site Events per day (External corporations trading, allying, and competing with EACH OTHER)
-      const eventTypes = ["INTER_CORP_SUPPLY", "PRICE_WAR", "STRATEGIC_JV", "SUPPLY_SHOCK", "CORP_RIVALRY"];
-      for (let slot = 0; slot < 2; slot++) {
-        const h = seedHash(`${w.seed}:offsite:${completedDay}:${slot}`);
-        const actor = corps[h % corps.length];
-        const etype = eventTypes[(h >>> 4) % eventTypes.length];
-        let targetPool = corps.filter((c) => c.id !== actor.id);
-        if (etype === "PRICE_WAR" || etype === "CORP_RIVALRY") {
-          const rivals = targetPool.filter((c) => (actor.rivalsWith || []).includes(c.id) || c.sector === actor.sector);
-          if (rivals.length) targetPool = rivals;
-        } else if (etype === "INTER_CORP_SUPPLY" || etype === "STRATEGIC_JV") {
-          const allies = targetPool.filter((c) => (actor.alliesWith || []).includes(c.id));
-          if (allies.length) targetPool = allies;
-        }
-        const target = targetPool[(h >>> 8) % targetPool.length] || corps[(h + 1) % corps.length];
-        const sampleMatId =
-          (actor.sellsMaterials && actor.sellsMaterials[h % actor.sellsMaterials.length]) ||
-          (target.buysMaterials && target.buysMaterials[h % target.buysMaterials.length]) ||
-          "silicon_wafer";
-        const matNameTh = w.catalog.materials?.[sampleMatId]?.nameTh || sampleMatId;
-
-        let badgeTh = "🌐 ความเคลื่อนไหวบริษัทภายนอก";
-        let headlineTh = "";
-        let impactTh = "";
-
-        if (etype === "PRICE_WAR") {
-          badgeTh = "⚔️ สงครามราคาคู่แข่งนอกนิคม";
-          const shift = 0.3 + ((h % 6) * 0.1);
-          actor.marketSharePct = Math.round(clamp((actor.marketSharePct || 8) + shift, 2, 30) * 10) / 10;
-          target.marketSharePct = Math.round(clamp((target.marketSharePct || 8) - shift * 0.8, 2, 30) * 10) / 10;
-          headlineTh = `${actor.nameTh} เปิดศึกหั่นราคาประมูลดีลแข่งกับ ${target.nameTh} แย่งชิงส่วนแบ่งตลาดหมวด${actor.sectorTh}`;
-          impactTh = `ส่วนแบ่งตลาดของ ${actor.symbol} ขยับเป็น ${actor.marketSharePct}% ขณะที่ ${target.symbol} เร่งหาซัพพลายเออร์ ${matNameTh} ราคาคุ้มค่า`;
-        } else if (etype === "INTER_CORP_SUPPLY") {
-          badgeTh = "🚛 ดีลซัพพลายเชนระหว่างบริษัท";
-          actor.interCompanyDealsCount = (actor.interCompanyDealsCount || 0) + 1;
-          target.interCompanyDealsCount = (target.interCompanyDealsCount || 0) + 1;
-          actor.cashMillionBaht = Math.round(((actor.cashMillionBaht || 300) + 12) * 10) / 10;
-          headlineTh = `${actor.nameTh} จัดส่งขบวนรถวัตถุดิบ ${matNameTh} ล็อตใหญ่ป้อนโรงงานของ ${target.nameTh}`;
-          impactTh = `การค้าวัตถุดิบกลางน้ำคึกคัก ดัชนีราคารับซื้อ ${matNameTh} ในตลาด B2B ปรับตัวดีขึ้น`;
-          if (ext.assetPortfolio?.marketPriceIndex?.[sampleMatId]) {
-            ext.assetPortfolio.marketPriceIndex[sampleMatId] =
-              Math.round(clamp(ext.assetPortfolio.marketPriceIndex[sampleMatId] + 0.06, 0.85, 1.38) * 100) / 100;
-          }
-        } else if (etype === "STRATEGIC_JV") {
-          badgeTh = "🤝 พันธมิตรร่วมทุนนอกนิคม";
-          actor.strength = clamp((actor.strength || 60) + 1, 40, 95);
-          target.strength = clamp((target.strength || 60) + 1, 40, 95);
-          headlineTh = `${actor.nameTh} ลงนามบันทึกข้อตกลงร่วมวิจัยและแลกเปลี่ยนชิ้นส่วนกับ ${target.nameTh}`;
-          impactTh = `ยกระดับมาตรฐานอุตสาหกรรม${actor.sectorTh} และเปิดรับซื้อชิ้นส่วนกลางน้ำจากโรงงานพันธมิตรเพิ่ม`;
-        } else if (etype === "SUPPLY_SHOCK") {
-          badgeTh = "📈 ตลาดขาดแคลนวัตถุดิบกลางน้ำ";
-          headlineTh = `${target.nameTh} ประกาศรับซื้อ "${matNameTh}" ด่วนพิเศษ เนื่องจากซัพพลายเออร์เดิมส่งมอบล่าช้า`;
-          impactTh = `ราคารับซื้อ B2B ของ ${matNameTh} พุ่งสูงขึ้น +15% เป็นโอกาสทองของโรงงานที่ผลิตวัตถุดิบนี้เองได้!`;
-          if (ext.assetPortfolio?.marketPriceIndex?.[sampleMatId]) {
-            ext.assetPortfolio.marketPriceIndex[sampleMatId] =
-              Math.round(clamp(ext.assetPortfolio.marketPriceIndex[sampleMatId] + 0.14, 0.9, 1.42) * 100) / 100;
-          }
-        } else {
-          badgeTh = "🏭 การแข่งขันขยายกำลังผลิต";
-          headlineTh = `${actor.nameTh} ทุ่มงบขยายไลน์ผลิตแข่งกับ ${target.nameTh} ในนิคมภาคตะวันออก`;
-          impactTh = `ทั้งสองบริษัทต้องการวัตถุดิบแปรรูป (Tier 1–3) และสินค้าสำเร็จรูปป้อนเครือข่ายคู่ค้าเพิ่มขึ้น`;
-        }
-
-        actor.lastActionDay = completedDay;
-        actor.lastActionTh = headlineTh;
-        ext.ecosystemFeed.unshift({
-          id: `eco-d${completedDay}-${slot}`,
-          day: completedDay,
-          type: etype,
-          badgeTh,
-          actorCorpId: actor.id,
-          targetCorpId: target.id,
-          headlineTh,
-          impactTh,
-        });
-        if (slot === 0) {
-          appendWorldChronicle(w, {
-            id: `wchron-corp-d${completedDay}`,
-            day: completedDay,
-            category: "CORP_ECOSYSTEM",
-            badgeTh,
-            regionTh: actor.originTh || "ตลาดอุตสาหกรรม",
-            headlineTh,
-            meaningTh: impactTh,
-            priceImpactSummaryTh: `กระทบอุปสงค์/อุปทานของ ${matNameTh}`,
-            isMajor: etype === "SUPPLY_SHOCK" || etype === "PRICE_WAR",
-          });
-        }
-      }
-      if (ext.ecosystemFeed.length > 40) {
-        ext.ecosystemFeed.length = 40;
-      }
-
-      // Sync competitor market shares from corporations table
-      if (ext.competitors) {
-        for (const [cid, compObj] of Object.entries(ext.competitors)) {
-          if (ext.corporations[cid]) {
-            compObj.marketSharePct = ext.corporations[cid].marketSharePct;
-            compObj.strength = ext.corporations[cid].strength;
-          }
-        }
-      }
-
-      // 2. Refresh Daily B2B Intermediate Material Purchase Demands (6 active offers from external corporations)
-      const craftableMatIds = Object.keys(D.MATERIAL_RECIPES || {});
-      const nextDemands = [];
-      for (let i = 0; i < 6 && i < craftableMatIds.length; i++) {
-        const h = seedHash(`${w.seed}:b2bDem:${completedDay}:${i}`);
-        const matId = craftableMatIds[h % craftableMatIds.length];
-        const matSpec = w.catalog.materials?.[matId];
-        const recipe = D.MATERIAL_RECIPES?.[matId];
-        if (!matSpec || !recipe) continue;
-        const interestedCorps = corps.filter(
-          (c) => Array.isArray(c.buysMaterials) && c.buysMaterials.includes(matId),
-        );
-        const buyer = (interestedCorps.length ? interestedCorps : corps)[(h >>> 5) % (interestedCorps.length || corps.length)];
-        const govDemandMult = w.externalWorld?.government?.demandMultiplier || 1.0;
-        const premiumMult = (1.06 + ((h % 18) / 100)) * clamp(govDemandMult, 0.95, 1.2);
-        const unitPriceSatang = Math.round((recipe.b2bSellPrice || Math.round(matSpec.unitCost * 1.3)) * premiumMult);
-        const recommendedQty = 2 + (h % 4);
-        nextDemands.push({
-          id: `b2b-dem-d${completedDay}-${i}`,
-          day: completedDay,
-          buyerCorpId: buyer.id,
-          buyerNameTh: buyer.nameTh,
-          buyerRelationMode: buyer.relationshipMode || "neutral",
-          materialId: matId,
-          materialNameTh: matSpec.nameTh,
-          tier: recipe.tier,
-          unitPriceSatang,
-          recommendedQty,
-          reasonTh: `รับซื้อไปใช้ในสายพาน${buyer.sectorTh} (ให้ราคาพรีเมียม +${Math.round((premiumMult - 1) * 100)}%)`,
-        });
-      }
-      ext.b2bMaterialDemands = nextDemands;
-
+      // Corporate activity and real unmet purchase demands are produced by World.step.
+      // This legacy entry point retains only the player's autonomous surplus selling.
       // 3. Autonomous B2B Surplus Material Selling (when company owns external assets and has large surplus >= 36 in opening stock)
       if (
         w.policies.autoAccept &&
@@ -3046,7 +2899,7 @@
         Object.keys(ext.assetPortfolio?.ownedAssets || {}).length > 0
       ) {
         const minSurplusThreshold = w.externalWorld?.ceoDirective?.id === "cash_shield" ? 20 : 36;
-        for (const dem of nextDemands) {
+        for (const dem of ext.b2bMaterialDemands) {
           const openStock = w.inventory.opening[dem.materialId] || 0;
           const freeStock = safeAvailableToDeduct(w, dem.materialId);
           if (openStock >= minSurplusThreshold && freeStock >= minSurplusThreshold) {
@@ -5788,7 +5641,7 @@
         ((annexBuilt || isPartnerCorp) && neg ? Math.max(0, (neg.priceMarkupPct || 0) / 100) : 0);
       const geo = w.externalWorld?.geopolitics;
       const geoSectorMult =
-        geo && (geo.customEventTriggered || day(w) >= 15)
+        geo
           ? clamp(geo.sectorDemandMultipliers?.[p.industry] || 1.0, 0.85, 1.45)
           : 1.0;
       const baseWithMarkup = activeMarkupPct > 0 ? Math.round(price * (1 + activeMarkupPct)) : price;
@@ -5940,6 +5793,8 @@
         const s = catalog.starters[i];
         w.people.push(createPerson(w, "employee-" + (i + 1), s.name, s.role, s.dailyWage));
       }
+      W.ensure(w);
+      recomputeGeopoliticalMultipliers(w);
       ensureKnowledge(w);
       const first = w.research.unlocked[0];
       makeOffer(w, first, 8, 6);
@@ -6261,22 +6116,25 @@
       }
     }
     function placePurchase(w, materialId, quantity, actor = null) {
+      const quote=W.quote(w,materialId,quantity);
+      if(!quote || w.finance.cash < quote.unitPrice*quantity) return null;
       const mat = w.catalog.materials[materialId],
         buyer = actor ||
           w.people.find(
             (p) => p.employed && ["admin", "logistics"].includes(p.role),
           ) || w.people.find((p) => p.employed),
         pid = id(w, "purchase"),
-        supplier = pickSupplierForMaterial(w, materialId, pid),
+        supplier = w.externalWorld.corporations[quote.supplierId],
         geoMult = w.externalWorld?.geopolitics?.materialPriceMultipliers?.[materialId] || 1.0,
         spotUnitCost = w.externalWorld?.geopolitics?.materialSpotPrices?.[materialId] || Math.round(mat.unitCost * geoMult),
-        effectiveUnitCost = w.externalWorld?.geopolitics?.applySpotPriceToPO ? spotUnitCost : mat.unitCost,
+        effectiveUnitCost = quote.unitPrice,
         p = {
           id: pid,
           materialId,
           quantity,
           cost: quantity * effectiveUnitCost,
           spotUnitCost,
+          worldLeadDays: quote.days,
           geopoliticalMultiplier: geoMult,
           status: "paperwork",
           orderedAt: now(w),
@@ -6286,6 +6144,7 @@
           buyerId: buyer ? buyer.id : null,
           buyerName: buyer ? buyer.name : "ฝ่ายจัดซื้อ",
         };
+      if(!W.sellToPlayer(w,quote.supplierId,materialId,quantity,p.cost)) return null;
       post(w, "materials", -p.cost, p.id);
       w.purchases[p.id] = p;
       job(w, "purchase", { purchaseId: p.id, required: 15 });
@@ -7101,7 +6960,7 @@
         const supCorp = purchase.supplierId && w.externalWorld?.corporations?.[purchase.supplierId];
         const partnerLeadDisc = supCorp && supCorp.relationshipMode === "partner" ? 0.15 : 0;
         const totalLeadReduction = Math.min(0.55, (assetBonuses.leadTimeReductionPct || 0) + partnerLeadDisc);
-        const rawLead = w.catalog.materials[purchase.materialId].leadMinutes;
+        const rawLead = Math.max(w.catalog.materials[purchase.materialId].leadMinutes,(purchase.worldLeadDays || 0)*1440) * (w.externalWorld.geopolitics.globalLeadTimeMultiplier || 1);
         const reducedLead = Math.max(60, Math.round((rawLead * (1 - totalLeadReduction)) / 5) * 5);
         purchase.status = "transit";
         purchase.dueAt = now(w) + reducedLead;
@@ -8321,8 +8180,10 @@
       // 1. Update Stock Market Indices deterministically
       if (ext.stockMarket && ext.stockMarket.indices) {
         for (const [idxId, idxObj] of Object.entries(ext.stockMarket.indices)) {
-          const h = seedHash(`${w.seed}:stock:${idxId}:${completedDay}`);
-          const rawDeltaPct = ((h % 520) - 245) / 100; // -2.45% to +2.75%
+          const firms = Object.values(W.ensure(w).firms);
+          const earnings = firms.reduce((a,f)=>a+f.profit,0);
+          const capital = Math.max(1,firms.reduce((a,f)=>a+f.cash,0));
+          const rawDeltaPct = clamp(earnings/capital*100, -2.5, 2.5);
           const nextVal = Math.max(100, Math.round(idxObj.value * (1 + rawDeltaPct / 100) * 10) / 10);
           idxObj.changePct = Math.round(((nextVal - idxObj.value) / idxObj.value) * 1000) / 10;
           idxObj.value = nextVal;
@@ -8393,19 +8254,6 @@
 
       // 3. Weekly Government Macro Policy & CEO Strategic Directive (Every 7 days)
       if (completedDay % 7 === 0) {
-        const policies = defaults.governmentPolicies || [];
-        if (policies.length) {
-          const pickedPol = policies[seedHash(`${w.seed}:gov:${completedDay}`) % policies.length];
-          ext.government = {
-            activePolicyId: pickedPol.id,
-            nameTh: pickedPol.nameTh,
-            summaryTh: pickedPol.summaryTh,
-            corporateTaxPct: pickedPol.corporateTaxPct,
-            demandMultiplier: pickedPol.demandMultiplier,
-            greenBonus: pickedPol.greenBonus,
-            lastUpdatedDay: completedDay,
-          };
-        }
         const ceo = w.people.find((p) => p.employed && p.role === "coordinator");
         const directives = defaults.ceoDirectives || [];
         if (ceo && directives.length) {
@@ -9475,10 +9323,8 @@
             return failure("invalidPurchase", "วัตถุดิบหรือจำนวนไม่ถูกต้อง");
           if (w.finance.cash < m.unitCost * c.quantity)
             return failure("insufficientCash", "เงินสดไม่พอซื้อวัตถุดิบ");
-          return {
-            ok: true,
-            purchaseId: placePurchase(w, c.materialId, c.quantity).id,
-          };
+          const purchased=placePurchase(w,c.materialId,c.quantity);
+          return purchased ? {ok:true,purchaseId:purchased.id} : failure("worldSupplyUnavailable","ซัพพลายเออร์ไม่มีสต็อกพอ เส้นทางปิด หรือเงินไม่พอราคาตลาด");
         }
         case "acceptOffer": {
           const o = own(w.offers, c.offerId);
@@ -10394,6 +10240,7 @@
     }
     function audit(w) {
       const errors = [
+        ...W.validate(w),
         ...E.auditFinance(w.finance),
         ...D.validateCatalog(w.catalog),
         ...L.validateLayout(w.layout),
@@ -10602,6 +10449,7 @@
       getActiveExternalAssetBonuses,
       scaleCompany,
       updateExternalWorld,
+      worldAudit: W.validate,
       getDepartmentHeadroom,
       findSupervisorForRole,
       addSkill,

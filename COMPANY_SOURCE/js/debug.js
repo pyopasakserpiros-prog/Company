@@ -1657,11 +1657,75 @@
     }
   }
 
+  function renderWorldSheet(v,body) {
+    byId("shTitle").textContent="🌍 โลก — ประเทศ รัฐบาล บริษัท และการค้า";
+    setSheetTabs([{id:"world_overview",label:"ภาพรวม"},{id:"world_nations",label:"ประเทศ / รัฐบาล"},{id:"world_firms",label:"บริษัทภายนอก"},{id:"world_markets",label:"ตลาด / วัตถุดิบ"},{id:"world_diplomacy",label:"การทูต / เส้นทาง"},{id:"world_chronicle",label:"พงศาวดารโลก"}]);
+    const e=v.externalWorld,m=e?.living,geo=e?.geopolitics;
+    body.replaceChildren();
+    const row=(title,text)=>{const card=el("div","card world-card");card.append(el("h3","",title),el("div","muted",text));body.append(card);return card;};
+    const policy={balanced:"รักษาเสถียรภาพ",stimulus:"กระตุ้นเศรษฐกิจ",tightening:"ควบคุมเงินเฟ้อ",austerity:"รักษาฐานะการคลัง"};
+    const status={peace:"สัมพันธ์ปกติ",treaty:"ข้อตกลงการค้า",sanctions:"จำกัดการค้า",war:"ความขัดแย้งติดอาวุธ"};
+    if(!m){row("กำลังเตรียมข้อมูลโลก","โลกจากเซฟเก่าจะเริ่มจำลองเมื่อผ่านวันถัดไป");return;}
+    const nations=Object.values(m.nations),firms=Object.values(m.firms),materialName=k=>v.catalog.materials.find(x=>x.id===k)?.nameTh||k;
+    const nationName=k=>geo.nations[k]?.shortNameTh||k,firmName=k=>e.corporations[k]?.nameTh||k;
+    const entityPicker=(key,items,label)=>{
+      if(!items.some(x=>x.id===uiState[key]))uiState[key]=items[0]?.id;
+      const select=el("select","world-select");select.setAttribute("aria-label",label);
+      for(const x of items){const o=el("option","",x.nameTh||x.id);o.value=x.id;select.append(o);}select.value=uiState[key];
+      select.onchange=()=>{uiState[key]=select.value;renderWorldSheet(v,body);};body.append(select);return uiState[key];
+    };
+    const history=(records)=>records.slice(-10).map(x=>`วันที่ ${x.day}: ผลิต ${x.output ?? x.traded} • ${x.profit!==undefined?'เงินสดสุทธิ '+moneyFull(x.profit):'บริษัททำงาน '+x.activeFirms}`).join("\n");
+    if(uiState.subTab==="world_overview"){
+      row("โลกที่กำลังดำเนินไป",`${nations.length} ประเทศ/กลุ่มเศรษฐกิจ • ${firms.length} บริษัท • สินค้าระหว่างทาง ${m.shipments.length} ล็อต • จำลองถึงวันที่ ${m.lastDay}`);
+      row("สถานการณ์การทูต",`ข้อตกลง ${m.relations.filter(r=>r.status==='treaty').length} คู่ • จำกัดการค้า ${m.relations.filter(r=>r.status==='sanctions').length} คู่ • ความขัดแย้ง ${m.relations.filter(r=>r.status==='war').length} คู่`);
+      row("ผลต่อบริษัทของเรา",`บาท/USD ${geo.fxRateBahtPerUsd} • ค่าระวาง ×${geo.globalFreightRateMultiplier} • วัตถุดิบราคาเปลี่ยนตามสต็อกจริงและนโยบายรัฐ • ข้อเสนอรับซื้อวัตถุดิบ ${e.b2bMaterialDemands.length} รายการ`);
+      row("ติดตามให้ลึกขึ้น","เลือกประเทศเพื่อดูเหตุผลนโยบาย เลือกบริษัทเพื่อดูเงินและข้อจำกัดการผลิต และดูตลาดเพื่อหาต้นเหตุราคาที่เปลี่ยน ทุกข่าวอ้างอิงการตัดสินใจหรือธุรกรรมในโลกจำลอง");
+      row("เศรษฐกิจ 10 วันล่าสุด",history(m.history));
+      for(const j of m.journal.slice(0,6))row(`วันที่ ${j.day} • ${j.headlineTh}`,j.meaningTh);
+    }else if(uiState.subTab==="world_nations"){
+      const id=entityPicker("worldNation",nations.map(n=>({id:n.id,nameTh:`${geo.nations[n.id].flag} ${geo.nations[n.id].nameTh}`})),"เลือกประเทศ"),n=m.nations[id],g=geo.nations[id];
+      row(`${g.flag} ${g.nameTh}`,n.descriptionTh);
+      row("รัฐบาลและนโยบาย",`${g.activeRegimeNameTh} • ${policy[n.policy]}\nเหตุผล: ${n.policyReasonTh}\nรอบทบทวนถัดไปวันที่ ${n.lastReviewDay+14} • ทบทวนผู้นำวันที่ ${n.nextElectionDay}`);
+      row("เศรษฐกิจและความเป็นอยู่",`เงินเฟ้อ ${n.inflation}% • ว่างงาน ${n.unemployment}% • ดอกเบี้ยนโยบาย ${n.interestRate}% • ดัชนีเศรษฐกิจ ${n.gdpIndex}\nความนิยม ${n.approval}% • เสถียรภาพ ${n.stability}% • โครงสร้างพื้นฐาน ${n.infrastructure}/100`);
+      row("คลังและกำลังซื้อ",`เงินคลัง ${moneyFull(n.treasury)} • ภาษีสะสม ${moneyFull(n.taxes)} • รายจ่ายรัฐ ${moneyFull(n.spending)}\nเงินภาคครัวเรือน/อุตสาหกรรมปลายทาง ${moneyFull(n.householdCash)} • ใช้จ่ายสะสม ${moneyFull(n.consumption)}`);
+      for(const f of firms.filter(f=>f.nationId===id)){const card=row(firmName(f.id),`${moneyFull(f.cash)} • ${f.decisionTh}`);const b=el("button","btn","ดูบริษัทนี้");b.onclick=()=>{uiState.worldFirm=f.id;uiState.subTab='world_firms';renderWorldSheet(v,body);};card.append(b);}
+      for(const r of m.relations.filter(r=>r.a===id||r.b===id).sort((a,b)=>b.tension-a.tension).slice(0,5))row(`สัมพันธ์กับ ${nationName(r.a===id?r.b:r.a)}`,`${status[r.status]} • ความตึงเครียด ${r.tension}/100 • ${r.reasonTh}`);
+    }else if(uiState.subTab==="world_firms"){
+      const id=entityPicker("worldFirm",firms.map(f=>({id:f.id,nameTh:firmName(f.id)})),"เลือกบริษัทภายนอก"),f=m.firms[id],c=e.corporations[id];
+      row(c.nameTh,`${nationName(f.nationId)} • ${c.sectorTh} • ${f.status==='suspended'?'พักกิจการเพราะขาดทุนหมุนเวียน':'ดำเนินกิจการ'}`);
+      row("ฐานะและผลประกอบการ",`เงินสด ${moneyFull(f.cash)} • รายรับวันนี้ ${moneyFull(f.dailyRevenue)} • รายจ่ายวันนี้ ${moneyFull(f.dailyCost)} • กระแสเงินสดสุทธิหลังภาษีวันนี้ ${moneyFull(f.profit)}\nลงทุนสะสม ${moneyFull(f.investment)} • ขาดทุนต่อเนื่อง ${f.consecutiveLossDays} วัน`);
+      row("ผู้บริหารกำลังตัดสินใจอะไร",`${f.decisionTh}\nรับความเสี่ยง ${f.risk}/100 • ระมัดระวัง ${f.prudence}/100 • ทบทวนทุก 7 วัน`);
+      row("กำลังผลิตและความรู้",`กำลังผลิต ${f.capacity} หน่วย/สาย/วัน • ใช้งาน ${Math.round(f.utilization*100)}% • เทคโนโลยี ${f.technology}/100\nข้อจำกัด: ${f.missing.join(' • ')||'ยังไม่พบข้อจำกัดวันนี้'}`);
+      row("สต็อกและทรัพยากร",Object.entries(f.stock).map(([k,q])=>`${materialName(k)}: ${q}`).join('\n')||'ไม่มีสต็อก');
+      row("ปริมาณสำรองธรรมชาติ",Object.entries(f.reserves).filter(([k])=>v.catalog.materials.find(x=>x.id===k)?.isTrueNaturalResource).map(([k,q])=>`${materialName(k)}: ${q}`).join('\n')||'ไม่มีแหล่งขุดในกิจการนี้');
+      row("ผลประกอบการย้อนหลัง",history(f.history));
+      for(const j of m.journal.filter(j=>j.actorCorpId===id||j.targetCorpId===id).slice(0,8))row(`วันที่ ${j.day} • ${j.headlineTh}`,j.meaningTh);
+    }else if(uiState.subTab==="world_markets"){
+      const id=entityPicker("worldMaterial",Object.values(m.markets).map(k=>({id:k.id,nameTh:materialName(k.id)})),"เลือกวัตถุดิบโลก"),k=m.markets[id];
+      row(materialName(id),`ราคาฐานตลาด ${moneyFull(k.price)}/หน่วย • ราคาซื้อรวมผลนโยบาย ${moneyFull(geo.materialSpotPrices[id])}/หน่วย\n${k.reasonTh} • ซื้อขายวันนี้ ${k.traded} หน่วย`);
+      for(const f of firms.filter(f=>(e.corporations[f.id].sellsMaterials||[]).includes(id)))row(`ผู้ขาย: ${firmName(f.id)}`,`สต็อก ${f.stock[id]||0} หน่วย • ${nationName(f.nationId)} • ${f.decisionTh}`);
+      for(const d of e.b2bMaterialDemands.filter(d=>d.materialId===id))row(`ผู้ต้องการ: ${d.buyerNameTh}`,`${d.recommendedQty} หน่วย • ราคา ${moneyFull(d.unitPriceSatang)} • ${d.reasonTh}`);
+      row("อ่านตัวเลขอย่างไร","สต็อกเสนอขายและคำขอซื้อเป็นค่ารวมของรอบวัน ราคาเคลื่อนทีละขั้น การสั่งซื้อจริงยังขึ้นกับสต็อกล่าสุด เงิน และเส้นทางที่เปิด");
+    }else if(uiState.subTab==="world_diplomacy"){
+      const id=entityPicker("worldRelation",m.relations.map(r=>({id:r.id,nameTh:`${nationName(r.a)} ↔ ${nationName(r.b)}`})),"เลือกความสัมพันธ์ระหว่างประเทศ"),r=m.relations.find(r=>r.id===id);
+      row(`${nationName(r.a)} ↔ ${nationName(r.b)}`,`${status[r.status]} • ความตึงเครียด ${r.tension}/100 • ความเชื่อมั่น ${r.trust}/100\n${r.reasonTh} • มีผลตั้งแต่วันที่ ${r.sinceDay}`);
+      for(const c of Object.values(geo.tradeCorridors))row(c.nameTh,`ภาษี ${c.tariffPct}% • เวลาขนส่ง ×${c.leadTimeMod} • อุปสงค์ ×${c.demandMod} • ${status[c.livingStatus]||c.status}`);
+      row("สินค้าระหว่างทาง",`${m.shipments.length} ล็อต ชำระเงินแล้ว สินค้าจะเข้าคลังผู้ซื้อเมื่อถึงกำหนด`);
+      for(const s of m.shipments.slice(0,20))row(`${materialName(s.materialId)} ×${s.quantity}`,`${firmName(s.sellerId)} → ${firmName(s.buyerId)}\nออกวันที่ ${s.departedDay} • ถึงวันที่ ${s.dueDay}${s.delayed?' • ล่าช้าจากความขัดแย้ง':''} • ภาษี ${moneyFull(s.tariff)}`);
+    }else{
+      row("พงศาวดารโลก","เหตุการณ์จากรัฐบาล การทูต การตัดสินใจบริษัท และธุรกรรมจริง เก็บประวัติล่าสุดแบบจำกัดขนาด");
+      for(const j of m.journal.slice(0,60))row(`วันที่ ${j.day} • ${j.headlineTh}`,j.meaningTh);
+      if(!m.journal.length)row("ยังไม่มีเหตุการณ์","เริ่มเดินเวลาเพื่อให้โลกตัดสินใจและค้าขาย");
+    }
+  }
+
   function renderActiveSheet(v) {
     if (!uiState.sheetOpen) return;
+    if(uiState.sheetMode === "world" && document.activeElement?.classList.contains("world-select")) return;
     const body = byId("shBody");
     if (!body) return;
 
+    if (uiState.sheetMode === "world") { renderWorldSheet(v,body); return; }
     if (uiState.sheetMode === "company") { renderCompanySheet(v,body); return; }
 
     if (uiState.sheetMode === "person") {
@@ -2422,7 +2486,7 @@
           const tierIcon = m.tier === 0 ? "🌾" : m.tier === 1 ? "⚗️" : m.tier === 2 ? "⚙️" : "🧠";
           cell.append(
             el("span", "inv-b-tl", `${m.tierBadgeTh || ("T" + (m.tier ?? 0))} · ${money(m.unitCost)}`),
-            el("span", "inv-b-tr", m.craftable ? (m.canCraftInHouse ? "✅ ผลิตเองได้" : "🔒 ต้องรับรองกระบวนการ") : "⛏️ ต้นน้ำแท้"),
+            el("span", "inv-b-tr", m.craftable ? (m.canCraftInHouse ? "✅ ผลิตเองได้" : "🔒 ต้องรับรองกระบวนการ") : m.isTrueNaturalResource ? "⛏️ ทรัพยากรธรรมชาติ" : "🌱 ผลผลิต / พันธุ์ / ผลพลอยได้"),
             el("div", "ic", tierIcon),
             el("div", "nm", m.nameTh),
             el("span", "inv-b-br", `×${qty} (จอง ${res})`),
@@ -2474,11 +2538,10 @@
     }
 
     if (uiState.sheetMode === "policy") {
-      byId("shTitle").textContent = "⚖️ กลยุทธ์ผู้บริหาร โลกภายนอก ตลาดหุ้น และนโยบายรัฐ";
+      byId("shTitle").textContent = "⚖️ กลยุทธ์ผู้บริหารและนโยบายบริษัท";
       setSheetTabs([
         { id: "directives", label: "สถานะบริษัทและ CEO" },
         { id: "sme_culture", label: "🌱 การเติบโต SME 6 ระยะ & วัฒนธรรม/ค่าไฟน้ำ (v2.2)" },
-        { id: "geopolitics", label: "🌍 ภูมิรัฐศาสตร์โลก 12 ประเทศ & ระเบียงการค้า (v2.1)" },
         { id: "board_ledger", label: "🏛️ สมุดมติบอร์ดบริหาร & โดเมนความรู้ (บท 29/32)" },
         { id: "assets", label: "🌾 สินทรัพย์ภายนอก & ห่วงโซ่ลูกโซ่" },
         { id: "external", label: "🌐 คู่ค้า & คู่แข่ง" },
@@ -2535,89 +2598,6 @@
         }
 
         body.replaceChildren(stageCard, msCard, utilCard, cultCard);
-        return;
-      }
-      if (uiState.subTab === "geopolitics") {
-        const geo = v.externalWorld?.geopolitics || { nations: {}, activeEvent: null, fxRateBahtPerUsd: 34.5, globalOilIndex: 1.0, materialPriceMultipliers: {}, sectorDemandMultipliers: {} };
-        const wChron = v.externalWorld?.worldChronicle || [];
-        const ev = geo.activeEvent;
-
-        const activeEvCard = el("div", "card");
-        activeEvCard.append(
-          el("h3", "", "🌍 สถานการณ์ภูมิรัฐศาสตร์โลก الساخن สงคราม สนธิสัญญา และตัวคูณเศรษฐกิจมหภาค (Era 2.0.0)"),
-          el(
-            "div",
-            "muted",
-            "โลกภายนอกขับเคลื่อนแบบมีชีวิต: สงครามการค้า การปิดล้อมช่องแคบทางทะเล สนธิสัญญาการค้าเสรี และการเปลี่ยนขั้วรัฐบาลของ 8 ประเทศมหาอำนาจ/คู่ค้า ส่งผลต่อราคาวัตถุดิบทั้ง 58 ชนิด ค่าเงินบาท/USD ต้นทุนน้ำมันขนส่ง และดีมานด์สินค้าแต่ละอุตสาหกรรมโดยตรง",
-          ),
-          el(
-            "div",
-            "logrow",
-            `💱 อัตราแลกเปลี่ยน: ฿${(geo.fxRateBahtPerUsd || 34.5).toFixed(2)} / USD • 🛢️ ดัชนีราคาน้ำมันดิบโลก: ×${(geo.globalOilIndex || 1.0).toFixed(2)} • 🚢 ตัวคูณค่าระวางขนส่งโลก: ×${(geo.globalFreightRateMultiplier || 1.0).toFixed(2)} • ⏱️ ตัวคูณเวลานำเข้าซัพพลายเชน: ×${(geo.globalLeadTimeMultiplier || 1.0).toFixed(2)}`,
-          ),
-        );
-        if (ev) {
-          activeEvCard.append(
-            el("div", "logrow", `🔥 [เหตุการณ์โลกปัจจุบัน • วันที่ ${ev.startedDay}–${ev.expiresDay}] ${ev.badgeTh}: ${ev.titleTh} (${ev.regionTh})`),
-            el("div", "", `↳ รายละเอียด: ${ev.chronicleTh}`),
-            el("div", "muted", `💡 ข้อเสนอแนะเชิงกลยุทธ์: ${ev.strategicAdviceTh}`),
-          );
-        }
-
-        const secMultTxt = Object.entries(geo.sectorDemandMultipliers || {})
-          .map(([k, val]) => `${k}: ×${Number(val).toFixed(2)}`)
-          .join("  |  ");
-        activeEvCard.append(el("div", "logrow", `📊 ตัวคูณอุปสงค์และราคาส่งออกรายอุตสาหกรรม: ${secMultTxt}`));
-
-        const nationsCard = el("div", "card");
-        const corridorsCard = el("div", "card");
-        corridorsCard.append(
-          el("h3", "", "🚢 ระเบียงการค้าและห่วงโซ่อุปทานภูมิภาคทั้ง 4 สาย (Regional Trade Corridors — v2.1.0)"),
-          el("div", "muted", "เชื่อมโยงการเปลี่ยนขั้วรัฐบาลและเหตุการณ์โลกเข้ากับภาษีศุลกากร เวลานำเข้าวัตถุดิบ และตัวคูณอุปสงค์รายอุตสาหกรรม")
-        );
-        for (const tc of Object.values(geo.tradeCorridors || {})) {
-          const stChip = tc.status === "restricted" ? "🔴 ตึงตัว/จำกัดโควตา" : tc.status === "booming" ? "🟢 คึกคักพิเศษ" : tc.status === "congested" ? "🟡 คับคั่ง" : "🟢 เปิดปกติ";
-          corridorsCard.append(
-            el("div", "logrow", `${tc.icon || "🚢"} ${tc.nameTh} [${stChip}] • ภาษีเฉลี่ย ${tc.tariffPct >= 0 ? "+" : ""}${tc.tariffPct}% • เวลานำเข้า ×${tc.leadTimeMod} • ตัวคูณอุปสงค์ ×${tc.demandMod} — ${tc.summaryTh}`)
-          );
-        }
-
-        nationsCard.append(
-          el("h3", "", "🏛️ รัฐบาลและขั้วนโยบายของ 12 ประเทศมหาอำนาจและกลุ่มเศรษฐกิจคู่ค้า (Foreign Governments & Regimes)"),
-          el("div", "muted", "เมื่อประเทศมหาอำนาจหรือคู่ค้าเปลี่ยนรัฐบาล (จากการเลือกตั้งหรือการปรับขั้วนโยบาย) จะเปลี่ยนกำแพงภาษีและราคาวัตถุดิบเฉพาะกลุ่มทันที"),
-        );
-        for (const nat of Object.values(geo.nations || {})) {
-          const matEffects = Object.entries(nat.materialMods || {})
-            .map(([mId, mVal]) => {
-              const mName = v.catalog?.materials?.find((x) => x.id === mId)?.nameTh || mId;
-              return `${mName} ×${mVal}`;
-            })
-            .join(", ");
-          nationsCard.append(
-            el(
-              "div",
-              "logrow",
-              `${nat.flag} ${nat.nameTh} — รัฐบาลปัจจุบัน: "${nat.activeRegimeNameTh}" (${nat.leaderStyleTh}) • ภาษีการค้า ${nat.tariffModPct >= 0 ? "+" : ""}${nat.tariffModPct}% • ผลกระทบราคาวัตถุดิบ: ${matEffects || "สมดุลปกติ"} — ${nat.summaryTh}`,
-            ),
-          );
-        }
-
-        const worldChronCard = el("div", "card");
-        worldChronCard.append(
-          el("h3", "", `📜 พงศาวดารโลกภายนอกและเหตุการณ์ระหว่างประเทศ (${wChron.length} บันทึก)`),
-          el("div", "muted", "บันทึกเหตุการณ์สงคราม การเปลี่ยนรัฐบาล สนธิสัญญาความร่วมมือ และการแข่งขันของ 18 บริษัทนอกนิคมเรียงตามลำดับเวลา"),
-        );
-        for (const wc of wChron.slice(0, 18)) {
-          worldChronCard.append(
-            el(
-              "div",
-              "logrow",
-              `[วันที่ ${wc.day}] ${wc.badgeTh} (${wc.regionTh}): ${wc.headlineTh} — 📈 ผลกระทบราคา: ${wc.priceImpactSummaryTh} • ↳ ${wc.meaningTh}`,
-            ),
-          );
-        }
-
-        body.replaceChildren(activeEvCard, corridorsCard, nationsCard, worldChronCard);
         return;
       }
       if (uiState.subTab === "board_ledger") {

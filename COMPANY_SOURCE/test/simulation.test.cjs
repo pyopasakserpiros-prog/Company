@@ -50,7 +50,7 @@ check(
       cash = w.finance.cash,
       r = send(w, "buyMaterials", { materialId: "pcb", quantity: 5 });
     assert(r.ok);
-    assert.equal(w.finance.cash, cash - 5 * w.catalog.materials.pcb.unitCost);
+    assert.equal(w.finance.cash, cash - w.purchases[r.purchaseId].cost);
     assert.equal(w.inventory.materials.pcb, before);
     run(w, 3);
     assert.equal(w.inventory.materials.pcb, before + 5);

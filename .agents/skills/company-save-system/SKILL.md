@@ -43,3 +43,9 @@ systematic-debugging; save tests ของ Company — ดู [รายกา�
 ensureKnowledge migration archives old point unlocks and retains finances/contracts. save.js validates education subjects and project evidence; current-save round trips preserve discipline work and personal study.
 
 หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ
+
+## v2.4.0 — Verified living-world integration
+
+Save.validate delegates current `externalWorld.living` to S.worldAudit and rejects malformed balances/stock/market/references. Current saves preserve in-transit shipments, opening accounts, policy terms, finite reserves, temporary scenarios and histories. Missing legacy living state initializes on next daily world step; no daily reset. Test 180-day world save roundtrip and deterministic continuation to day200. Do not replace a valid living state during loading.
+
+Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.

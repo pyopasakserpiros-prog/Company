@@ -1,11 +1,11 @@
 # เริ่มงานกับ Company Simulation
 
-สถานะ source ของ branch `main` ล่าสุดคือ **รุ่นเกม v2.3.0** อ่าน [project status](project_status_and_ai_onboarding.md) เพื่อดูระบบที่ตรวจแล้ว ผลทดสอบ (152/152 tests) และรายงานทุกแพตช์
+สถานะ source ของ branch `main` ล่าสุดคือ **รุ่นเกม v2.4.0** อ่าน [project status](project_status_and_ai_onboarding.md) เพื่อดูระบบที่ตรวจแล้ว ผลทดสอบ (166/166 tests) และรายงานทุกแพตช์
 
 ## อ่านก่อนเริ่มทุกครั้ง
 
 1. [AGENTS.md](AGENTS.md) — กฎเหล็ก; ห้ามแก้โดยไม่ได้รับอนุญาตจากผู้ใช้โดยตรง
-2. [สถานะโครงการ](project_status_and_ai_onboarding.md) — ความสามารถที่มีจริง รุ่นเกม v2.3.0 และผลตรวจล่าสุด
+2. [สถานะโครงการ](project_status_and_ai_onboarding.md) — ความสามารถที่มีจริง รุ่นเกม v2.4.0 และผลตรวจล่าสุด
 3. [Workflow ทำงานร่วมกัน](docs/company/AGENT_COLLABORATION_WORKFLOW.md) และ [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md)
 4. [Master Skills และดัชนีสกิล](.agents/skills/README.md) พร้อม `SKILL.md` ที่เกี่ยวข้องกับงาน
 5. อ่าน source/test จริงใน `COMPANY_SOURCE/` ก่อนยืนยันพฤติกรรม
@@ -32,6 +32,8 @@ npm run test:browser
 Gemini/ChatGPT ที่ทำงานผ่านแอปแชตรับ ZIP ผ่านผู้ใช้และต้องส่ง ZIP โครงการกลับ; ตรวจ ZIP ฉบับสุดท้ายและเทียบกับ repo ล่าสุดก่อนรวมเสมอ การอัปเดต repo ไม่ได้ซิงก์แอป Gemini ที่ทำงานจาก ZIP เก่าโดยอัตโนมัติ ดู [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md)
 
 ## รายงานและงานล่าสุด
+
+- [รายงาน v2.4.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md), [คู่มือโลก](docs/company/LIVING_WORLD_SYSTEM.md) และ [รับช่วง](docs/company/WORLD_V240_HANDOFF.md) — งานโลกภายนอกเสร็จและตรวจแล้ว ข้อเสนอขั้นถัดไปยังไม่ใช่คำสั่งเริ่มงาน
 
 - [รายงาน v2.3.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md) และ [รับช่วงจากแพตช์นี้](docs/company/GEMINI_NEXT_PATCH_HANDOFF_V230.md) — วิชา NPC ความรู้บริษัท เทคโนโลยี และซูมมือถือ
 

@@ -32,3 +32,5 @@
 - [จัดเก็บและสังเคราะห์ข้อเสนอ PDF 9 ฉบับ](UPDATE_REPORT_2026-11-11_NINE_PDF_IDEA_SYNTHESIS.md)
 
 ทะเบียนงานและ workflow: [AGENT_WORK_STATUS.md](../AGENT_WORK_STATUS.md) · [AGENT_COLLABORATION_WORKFLOW.md](../AGENT_COLLABORATION_WORKFLOW.md)
+
+- [v2.4.0 — โลกเศรษฐกิจและ UI โลก](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md)

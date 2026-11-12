@@ -240,3 +240,35 @@ test("character knowledge tab shows personal subjects at Lv4 and Lv5",async()=>{
   assert.deepEqual(errors,[]);
  } finally {await page.close();}
 });
+
+test("World UI opens six categories and drills into governments, firms, materials and diplomacy on mobile",async()=>{
+ const {page,errors}=await openGame();
+ try{
+  await page.evaluate(()=>{CompanyDebug.app.advance(1440*2);CompanyDebug.app.setSpeed(0);});
+  await page.locator('[data-nav="world"]').click();
+  await page.getByRole('button',{name:'ประเทศ / รัฐบาล',exact:true}).click();
+  await page.getByLabel('เลือกประเทศ',{exact:true}).selectOption('US');
+  await page.getByLabel('เลือกประเทศ',{exact:true}).blur();
+  assert.ok((await page.locator('#shBody').innerText()).includes('เงินเฟ้อ'));
+  await page.getByRole('button',{name:'บริษัทภายนอก',exact:true}).click();
+  await page.getByLabel('เลือกบริษัทภายนอก').selectOption('siam_metal');
+  await page.getByLabel('เลือกบริษัทภายนอก').blur();
+  assert.ok((await page.locator('#shBody').innerText()).includes('กำลังผลิต'));
+  if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'world-company.png')});
+  await page.getByRole('button',{name:'ตลาด / วัตถุดิบ',exact:true}).click();
+  await page.getByLabel('เลือกวัตถุดิบโลก').selectOption('microchip');await page.getByLabel('เลือกวัตถุดิบโลก').blur();
+  assert.ok((await page.locator('#shBody').innerText()).includes('ผู้ขาย'));
+  await page.getByRole('button',{name:'การทูต / เส้นทาง',exact:true}).click();assert.ok(await page.getByLabel('เลือกความสัมพันธ์ระหว่างประเทศ').count());
+  await page.getByRole('button',{name:'พงศาวดารโลก',exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).includes('ส่ง'));
+  assert.deepEqual(errors,[]);
+ }finally{await page.close();}
+});
+test("standalone World screen renders actual world without mutating save state",async()=>{
+ const {page,errors}=await openGame({width:1280,height:800},'Company_single.html');
+ try{
+  await page.evaluate(()=>CompanyDebug.app.setSpeed(0));const before=await page.evaluate(()=>CompanyDebug.app.save());
+  await page.locator('[data-nav="world"]').click();assert.ok((await page.locator('#shTitle').innerText()).includes('โลก'));
+  await page.getByRole('button',{name:'ภาพรวม',exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).includes('28 บริษัท'));
+  assert.equal(await page.evaluate(()=>CompanyDebug.app.save()),before);assert.deepEqual(errors,[]);
+ }finally{await page.close();}
+});

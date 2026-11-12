@@ -43,3 +43,9 @@ webapp-testing; Playwright best practices; วิสัยทัศน์ผู�
 companyKnowledge snapshot powers the company sheet and character ความรู้ tab with Lv1–Lv5. directorEdit/setSubject changes one selected NPC. Display subject names, team holders and missing requirements rather than pooled research thresholds.
 
 หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ
+
+## v2.4.0 — Verified living-world integration
+
+`debug.js:renderWorldSheet` exposes six World categories; entity selectors hold UI-only IDs and stop live replacement while a native select is focused. A nation card can open its firm's details. Display real cash, input shortages, utilization, policy reasons, shipments and journal records. Do not generate news or mutate RNG during render. Browser tests include mobile entity selection and standalone save equality. `profit` in the external model is daily after-tax cash surplus: label it กระแสเงินสดสุทธิ, not statutory accounting profit.
+
+Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.

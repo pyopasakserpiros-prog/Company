@@ -2,12 +2,18 @@
 
 เปิดจากหน้านี้เพื่อหาเอกสารตามงาน ไม่ต้องไล่หาไฟล์จากรายชื่อปะปน
 
-## งานถัดไปที่กำลังเตรียม
+## สถานะงานและคำสั่ง
 
-- [ACTIVE_PROMPT.md](../../ACTIVE_PROMPT.md) — พรอมต์ปัจจุบันสำหรับ Gemini; อยู่ที่ราก repo เพื่อให้เห็นและเปิดได้ทันที
+- [ACTIVE_PROMPT.md](../../ACTIVE_PROMPT.md) — สถานะคำสั่งล่าสุดและพรอมต์ประวัติ อยู่ที่ราก repo
 - [ทะเบียนงาน](AGENT_WORK_STATUS.md) — ใครทำอะไรและสถานะล่าสุด
 - [สถานะเกม](../../project_status_and_ai_onboarding.md) — ระบบที่ยืนยันใน source และงานที่ยังค้าง
 - [วิสัยทัศน์ผู้เล่น](PLAYER_VISION_AND_DESIGN_PRINCIPLES.md) — เป้าหมายเกมและหลักการออกแบบ
+
+## โลกภายนอกล่าสุด
+
+- [คู่มือโลก v2.4.0](LIVING_WORLD_SYSTEM.md)
+- [รายงานแพตช์ v2.4.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md)
+- [รับช่วงและข้อเสนอขั้นต่อไป](WORLD_V240_HANDOFF.md)
 
 ## ระบบความรู้และเทมเพลต
 

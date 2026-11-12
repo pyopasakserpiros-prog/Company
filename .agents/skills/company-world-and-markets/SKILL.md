@@ -43,3 +43,9 @@ Update Method; systematic-debugging; ecosystem tests ของ Company — ด�
 reviewKnowledge reads actual geopolitics.sectorDemandMultipliers and government.demandMultiplier when ranking research candidates; do not invent a productDemandMultipliers field that the world never writes.
 
 อ่าน `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และกรณีตรวจ `test/knowledge-and-company.test.cjs`; สถานะร่างเดิมไม่เปลี่ยน maturity อัตโนมัติ
+
+## v2.4.0 — Verified living-world integration
+
+`js/world.js` now owns `externalWorld.living`: ensure/step/apply/validate/scenario/quote/sellToPlayer/receivePlayerSale. 12 nations/blocs, 28 opening firms (22 catalog + 5 regional + finite wholesale exchange), 66 relations. Daily government/corporate decisions use actual indicators and account balances. Stocks and paid goods in transit are separate. Existing scripted manual scenarios remain; periodic random event/regime/corporate-news rotation is removed. Read LIVING_WORLD_SYSTEM.md before changing supply or policies. Never regenerate opening stocks on daily steps. Company-wide cash conservation includes explicit playerNetSatang for material trades only; legacy product/service/software/freight contracts are not all linked to firm wallets. Do not claim agent-level households, real military or jurisdiction tax laws.
+
+Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.

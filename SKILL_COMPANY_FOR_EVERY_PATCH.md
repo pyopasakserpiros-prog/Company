@@ -1,7 +1,15 @@
 ---
 name: company-for-every-patch
-description: Evergreen pre-patch and post-patch workflow, architectural invariants, Zero Code-Zero verification, 8 Business Process Models, NPC Business-Entry Audit invariants & Era 2.2.0 Geopolitics/Trade Corridors audit, and MANDATORY Master Skill update checklist for every patch of Siam Enterprise / Company Simulation (COMPANY_SOURCE/) up to v2.2.0. Use on every Company patch alongside company-evolution-dev.
+description: Evergreen pre-patch and post-patch workflow, architectural invariants, Zero Code-Zero verification, 8 Business Process Models, NPC Business-Entry Audit invariants & Era 2.2.0 Geopolitics/Trade Corridors audit, and MANDATORY Master Skill update checklist for every patch of Siam Enterprise / Company Simulation (COMPANY_SOURCE/) through v2.4.0. Use on every Company patch alongside company-evolution-dev.
 ---
+## Current release contract — v2.4.0 (supersedes historical summaries below)
+
+External World uses `COMPANY_SOURCE/js/world.js`, daily aggregate nation and firm accounts, finite material stocks, real interfirm transactions/in-transit shipments and indicator-based government/corporate choices. UI World has six inspection categories with nested entity details. 12 nations/blocs, 28 opening firms plus later spin-offs, 66 bilateral relations. Main material purchases and B2B sales connect to outside cash/stock; other main product/service contracts retain legacy finance. No scheduled random government/corporate headlines.
+
+Read `docs/company/LIVING_WORLD_SYSTEM.md` for API, cash/stock equations, policy/term thresholds, production/crop rules and limitations. Current evidence is 166 unit tests and 11 browser cases plus check/build; do not treat older 140/152 counts below as current. `test/living-world-v240.test.cjs` verifies economic failures and 180-day/save continuation. World is aggregate economics, not human-agent households, real armies or legal tax modeling. External `profit` is after-tax cash surplus.
+
+Every patch updates repo skills, project status, impacted docs and a patch report. Final ZIP must include world.js and all source/tools/tests/skills, pass CRC/hash comparisons and relevant extracted checks. App-local Gemini skills still need explicit synchronization in that app; repo updates alone do not sync it.
+
 # Company Simulation — Evergreen Patch Workflow & Master Skill Checklist (`company-for-every-patch` — Era 2.2.0)
 
 Use this skill on **every patch** of `Siam Enterprise: Autonomous Multi-Industry Company Simulation (COMPANY_SOURCE/)` alongside the Master Skill `company-evolution-dev`.

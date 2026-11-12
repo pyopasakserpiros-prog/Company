@@ -1,6 +1,6 @@
 # สถานะงานร่วมระหว่างเอเจนต์
 
-อัปเดต: 11 พฤศจิกายน 2026 (หลังส่งมอบแพตช์ v2.2.0) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
+อัปเดต: 12 พฤศจิกายน 2026 (หลังตรวจแพตช์ v2.4.0) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
 
 ## งานแพตช์ที่ดำเนินการเสร็จในรอบนี้ (พร้อมรวมเข้า main)
 
@@ -35,3 +35,7 @@
 | Task ID | เจ้าของ / ฐาน | ขอบเขต | สถานะและหลักฐาน |
 |---|---|---|---|
 | `npc-knowledge-company-and-zoom-v230` | Codex / main `359bace` | ซูมมือถือ, หน้าบริษัท/ความรู้ตัวละคร, 170 วิชาและแกนมนุษย์, R&D/ซื้อเทคโนโลยี, เซฟเดิม, แหล่งหลักและเทมเพลตวิชา | ตรวจแล้วและส่งขึ้น main ใน changeset v2.3.0; [รายงาน](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md), [รับช่วง](GEMINI_NEXT_PATCH_HANDOFF_V230.md) — ไม่อ้างว่าซิงก์สกิลส่วนตัวในแอป Gemini แล้ว |
+
+## งานปัจจุบัน 12 พฤศจิกายน 2026
+
+- Codex: `living-world-v240` ฐาน `a511b3e` — ผู้ใช้มอบหมายยกเครื่องรัฐบาล/ประเทศ/บริษัทภายนอกและ UI โลก พัฒนาและตรวจแล้ว:166/166 tests,11/11 browser; รายงานใน PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md และคู่มือ LIVING_WORLD_SYSTEM.md ไม่แก้ AGENTS.md หรือ Human Core

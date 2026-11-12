@@ -4,7 +4,7 @@
 
 เปิดเล่น COMPANY_SOURCE/CompanyFoundation_single.html ได้แบบออฟไลน์ หรือเปิด COMPANY_SOURCE/index.html ผ่าน local server ดูวิธีรันและทดสอบใน COMPANY_SOURCE/README.md
 
-พรอมต์งานถัดไปอยู่ที่ [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) ส่วนเอกสาร Company จัดหมวดไว้ใน [ดัชนีเอกสาร](docs/company/README.md)
+สถานะคำสั่งล่าสุดและพรอมต์ประวัติอยู่ที่ [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) ส่วนเอกสาร Company จัดหมวดไว้ใน [ดัชนีเอกสาร](docs/company/README.md)
 
 ทุกครั้งที่เริ่มงาน ต้องเปิดอ่าน AGENTS.md ฉบับปัจจุบันก่อน จากนั้นอ่าน START_HERE_FOR_AI.md และ project_status_and_ai_onboarding.md สำหรับข้อกำหนดและสถานะปัจจุบัน
 
@@ -23,3 +23,9 @@ Human Core 1.0.0 ถูกล็อกถาวร ห้ามแก้ไฟ�
 Gemini มีอิสระคิดไอเดีย ออกแบบเพิ่มเติม และตัดสินใจภายใต้กฎเหล็ก เมื่อส่ง ZIP กลับให้ตรวจเทียบกับ repo ล่าสุดก่อนรวม และย้ายเฉพาะ ideas ที่ตรวจแล้วว่าทำเสร็จไปบันทึกในสถานะโครงการ
 
 รุ่น v2.3.0 เพิ่มหน้าบริษัท ความรู้รายตัวละคร 170 วิชา และโครงการวิจัย/รับถ่ายทอดเทคโนโลยี ดู [คู่มือระบบ](docs/company/LEARNED_KNOWLEDGE_SYSTEM.md) และ [เทมเพลตวิชา](docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md)
+
+## โลกภายนอก v2.4.0
+
+ปุ่ม **โลก** มี6หมวด: ภาพรวม ประเทศ/รัฐบาล บริษัท ตลาด การทูต/เส้นทาง และพงศาวดาร รัฐมีคลังและนโยบายจากเศรษฐกิจ บริษัทภายนอกใช้เงินและสต็อกจริง ตรวจเหตุผลการตัดสินใจและของระหว่างทางได้
+
+อ่าน [คู่มือและข้อจำกัด](docs/company/LIVING_WORLD_SYSTEM.md) และ [รายงานแพตช์](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md)

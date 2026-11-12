@@ -31,3 +31,7 @@
 ทุกแพตช์ให้ตรวจ Master Skill และสกิลเฉพาะด้านที่ได้รับผลกระทบกับ source/test จริง อัปเดตดัชนีและไฟล์ที่เกี่ยวข้อง พร้อมระบุผลในรายงาน สกิลใน repo ไม่ได้ซิงก์แอป Gemini โดยอัตโนมัติ
 
 การเพิ่มวิชา/แก้ความรู้: อ่าน [เทมเพลตวิชา](../../docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md), [คู่มือระบบ](../../docs/company/LEARNED_KNOWLEDGE_SYSTEM.md) และทะเบียนวิชาที่สร้างจาก source ทุกครั้ง
+
+## World update v2.4.0
+
+Read [world contract](../../docs/company/LIVING_WORLD_SYSTEM.md) and [patch report](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md). World, observability, architecture, save, accounting, supply-chain and delivery skills have verified integration notes. Repo masters/root copies are synchronized; Gemini app-local synchronization is still unconfirmed.

@@ -43,3 +43,9 @@ Agent Skills specification; Update Method; Fix Your Timestep! — ดู [รา
 sim.js owns subject learning, team matrices, R&D projects, licensing and sample consumption; api.js reads companyKnowledge. Template: docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md. No Human Core changes.
 
 หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ
+
+## v2.4.0 — Verified living-world integration
+
+Load world.js after economy.js, before sim.js in index.html. sim UMD receives World dependency. updateExternalWorld calls World.step once per completedDay via simulateGlobalGeopoliticsDaily; recomputeGeopoliticalMultipliers resets base then World.apply. Repeat apply without the reset is unsupported. No wall time/RNG in UI. sim.audit includes world account audit. Historical simulateOffsiteEcosystemDaily only retains player surplus selling; world owns external company activity.
+
+Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
