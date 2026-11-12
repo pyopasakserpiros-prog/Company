@@ -1,0 +1,36 @@
+
+> company-campus-simulation@0.1.0 test:browser
+> npm run build && node --test test/campus-browser.cjs
+
+
+> company-campus-simulation@0.1.0 build
+> node tools/build.cjs
+
+Built CompanyFoundation_single.html: 1814490 UTF-8 bytes; autonomous campus simulation
+✔ mobile selection card can be closed and remains closed as the simulation updates (1882.266932ms)
+✔ zoom buttons and two-finger pinch change the actual canvas camera (827.849116ms)
+✔ company management is observational while Edit Hub can grant an item to stock (1427.661554ms)
+✔ CEO upgrade is reflected in the building sheet and visibly changes the building (1095.125615ms)
+✔ a new company runs and fulfills orders without player management commands (1135.71432ms)
+✔ desktop and standalone build boot without uncaught errors (1700.835224ms)
+✔ portrait camera fits the entire campus and can zoom out beyond the old clamp (888.031328ms)
+✔ company tabs expose team coverage, learned subjects and assets on a phone (1081.254645ms)
+✔ character knowledge tab shows personal subjects at Lv4 and Lv5 (878.001488ms)
+✔ World UI opens six categories and drills into governments, firms, materials and diplomacy on mobile (1309.593904ms)
+✔ standalone World screen renders actual world without mutating save state (918.091696ms)
+✔ mobile machinery and commercial contract tabs expose actual equipment state without management duties (962.27355ms)
+✔ SME chooser pauses initial time, starts chosen business and exposes paid capital on mobile (2883.807544ms)
+✔ country ministry and NPC news are observable and opening panels does not change simulation (1410.732169ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18911.112204
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

@@ -62,3 +62,9 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 
 - **Operational Crisis & Bottleneck Resolution (`S.evaluateOperationalCrisesAndBottlenecks`, `S.contractOemMaintenance`, `S.unreservePartForRepair`)**: At `11:20` (`tod === 680`), executives and coordinators evaluate broken machines, missing specialist knowledge, late contracts, and unsold stock. `P.maintain` iterates all maintenance tasks without head-of-line blocking, `unreservePartForRepair` frees parts locked by unstarted units, `contractOemMaintenance` hires external OEM repair when internal repair is blocked, `evaluateAutonomousHiring` recruits specialists for missing subjects, and `evaluateCommercialSales` renegotiates late contracts (`renegotiateCommercialContract`) or discounts stagnant finished stock (`clearanceDiscountPct`).
 - **Counterfactual Comparison (`S.runCounterfactualComparison`)**: Compares identical world seeds across CEO personality, technician knowledge, or capital changes. Verified with **190/190** tests (`test/living-scenarios-human-depth-v280.test.cjs`).
+
+## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+
+evaluateSmallBusinessDaily checks wage buffers, actual software clients (one active, >=2400dev/480QA minutes, weekly review), focused service readiness and seven-day supplier partnerships (>=3deliveries, >=THB50000spend, trust65, reserve). Known news risk changes W.quote; sectorSignals adjust R&D scores. Selection remains conditional, not guaranteed diversification.
+
+Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.

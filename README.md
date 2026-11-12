@@ -1,3 +1,5 @@
+> รุ่นล่าสุด v2.9.0: เริ่ม SME 6 แบบ รัฐบาล/กระทรวง/ข้อตกลงรายสินค้า และ NPC ที่รับข่าว/เรียนรู้ตามบริบท ดู [รายงาน](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md) / [คู่มือ](docs/company/SME_AND_CIVICS_SYSTEM.md)
+
 # Company Simulation — Autonomous Campus
 
 เกมจำลองบริษัทที่ผู้เล่นเฝ้ามอง NPC และ CEO ตัดสินใจเอง ฉากหลักเป็นที่ดินภายนอกที่มีอาคารสำนักงาน โรงงาน คลัง โรงอาหาร สวน และศูนย์ฝึก

@@ -8,7 +8,7 @@
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
     />
     <meta name="theme-color" content="#10221e" />
-    <title>Siam Enterprise: Autonomous Multi-Industry Company Sim v1.0.0</title>
+    <title>Siam Enterprise: Autonomous Multi-Industry Company Sim v2.9.0</title>
     <style>
 :root {
   --bg: #102420;
@@ -977,6 +977,7 @@ canvas.pt {
 /* World inspection: long Thai labels and entity lists on phones. */
 .world-card .muted { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.7; }
 .world-select { width:100%; min-height:44px; margin:8px 0 16px; background:#173c32; color:#eaf5e8; border:1px solid #537666; border-radius:10px; padding:10px; }
+.business-chooser{width:min(620px,94vw);max-height:90dvh;overflow:auto;box-sizing:border-box;background:#16352e;color:#eef9f0;border:1px solid #679681;border-radius:18px;padding:20px;z-index:10000}.business-chooser::backdrop{background:#051811d9}.business-chooser select,.business-chooser input{display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:12px;background:#10271f;color:#fff;border:1px solid #678578;border-radius:8px;font-size:16px}.business-chooser button{margin:8px 5px 0 0;min-height:44px}
 
 </style>
   </head>
@@ -9298,8 +9299,8 @@ canvas.pt {
     return e;
   }
   return Object.freeze({
-    VERSION: "2.8.0",
-    RELEASE_VERSION: "2.8.0",
+    VERSION: "2.9.0",
+    RELEASE_VERSION: "2.9.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -9735,11 +9736,109 @@ canvas.pt {
 
 </script>
     <script>
+/* js/civics.js */
+(function(root,factory){const v=factory(typeof module==='object'&&module.exports?require('./data.js'):root.CompanyData);if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyCivics=v;})(typeof globalThis!=='undefined'?globalThis:this,function(D){
+'use strict';
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),round=v=>Math.round(v*100)/100;
+function hash(s){let h=2166136261;for(const x of String(s)){h^=x.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+const names={TH:['อรุณ วัฒนกิจ','มาลินี ธรรมวาณิช'],US:['Alex Morgan','Jordan Reed'],CN:['หลิน เหว่ย','เฉิน หยาง'],JP:['ยูอิ ซาโตะ','ทาคุมิ โมริ'],EU:['Elena Fischer','Marc Dubois'],ME:['Samir Rahman','Layla Haddad'],RU_EE:['Irina Sokolova','Viktor Orlov'],ASEAN:['ปกรณ์ วีระ','Anisa Putri'],ID:['Dewi Santoso','Rafi Pratama'],AU:['Taylor Brooks','Casey Hart'],IN:['Anika Rao','Arjun Mehta'],SG:['Mei Tan','Daniel Lim']};
+const GROUPS=['food','energy','metals','electronics','chemicals','biological','industrial'];
+function category(w,id){const m=w.catalog.materials[id]||{};if(/chip|wafer|pcb|sensor|led|inverter|wire|casing|lens|driver/.test(id))return 'electronics';if(/oil|diesel|petro|solar|battery|cathode/.test(id))return 'energy';if(/ore|metal|alumin|steel|copper|iron|nickel|silicon/.test(id))return 'metals';if(/resin|fertilizer|ammonia|pharma|electrolyte/.test(id))return 'chemicals';if(/seed|grain|crop|paddy|milk|latex|timber/.test(id)||m.canPlantCrop)return 'biological';if(/flour|rice|sugar|palm|dough|extract|culture/.test(id))return 'food';return 'industrial';}
+function leader(w,id,party,term){const h=hash(`${w.seed}:leader:${id}:${party}:${term}`);return {id:`leader-${id}-${term}-${party}`,name:(names[id]||names.TH)[((party+term)%2+(((names[id]||names.TH)[(party+term)%2]===w.externalWorld.living.nations[id]?.government?.leader?.name)?1:0))%2],fictional:true,partyIndex:party,protectionism:20+h%61,pragmatism:25+(h>>>6)%61,assertiveness:20+(h>>>12)%61,startedDay:Math.floor(w.clock.absoluteMinute/1440)+1};}
+function ensure(w){const m=w.externalWorld.living;if(m.civics)return m.civics;const c=m.civics={version:1,lastPoliticalDay:0,lastDiplomacyDay:0,treaties:[],conflicts:[],history:[],tradeHistory:[],policies:[],sequence:0};
+ for(const [id,n]of Object.entries(m.nations)){const spec=D.GLOBAL_NATIONS[id],g=w.externalWorld.geopolitics.nations[id],party=Math.max(0,spec.regimes.findIndex(r=>r.id===g.activeRegimeId));n.government={leader:leader(w,id,party,n.term||0),regimeId:g.activeRegimeId,governanceType:['ASEAN','EU','ME','RU_EE'].includes(id)?'bloc_council':'national_executive',termDays:id==='US'?1460:id==='TH'||id==='JP'?1080:1440,successions:0,electionHistory:[],approvalAtEntry:n.approval};
+ n.commerceMinistry={nameTh:id==='TH'?'กระทรวงพาณิชย์ (ไทย)':'หน่วยงานนโยบายการค้า '+g.shortNameTh,lastReviewDay:0,customsRevenue:0,importsSatang:0,exportsSatang:0,measures:[],bulletins:[],reasonTh:'ติดตามอุปทานในประเทศและภาระผู้ประกอบการ'};
+ n.security={damageIndex:0,defenceSpentSatang:0,conflictDays:0};}
+ return c;
+}
+function emit(w,day,type,headline,reason,extra={}){const m=w.externalWorld.living,c=ensure(w),e={id:'civics-'+(++c.sequence),day,at:Math.max(0,(day-1)*1440),category:type,badgeTh:'🌐 การเมืองและการค้า',headlineTh:headline,meaningTh:reason,priceImpactSummaryTh:extra.impactTh||reason,isMajor:true,...extra};c.history.unshift(e);if(c.history.length>120)c.history.pop();m.journal.unshift(e);if(m.journal.length>160)m.journal.pop();w.externalWorld.worldChronicle.unshift(e);if(w.externalWorld.worldChronicle.length>120)w.externalWorld.worldChronicle.pop();return e;}
+function issueMeasure(w,nationId,group,type,rate,day,duration=45){const m=w.externalWorld.living,c=ensure(w),n=m.nations[nationId];if(!n||!GROUPS.includes(group)||!['tariff','waiver','export_quota'].includes(type)||!Number.isFinite(rate)||rate<0||rate>35)return false;
+ const existing=n.commerceMinistry.measures.find(x=>x.group===group&&x.type===type&&!['expired','cancelled'].includes(x.status));if(existing)return existing;
+ const measure={id:'measure-'+(++c.sequence),nationId,group,type,rate:round(rate),announcedDay:day,effectiveDay:day+3,expiresDay:day+duration,status:'announced',reasonTh:type==='waiver'?'ลดต้นทุนวัตถุดิบที่ขาดแคลน':type==='tariff'?'คุ้มครองอุตสาหกรรมและทบทวนการพึ่งพานำเข้า':'กันปริมาณวัตถุดิบเพื่อผู้ใช้ในประเทศ'};n.commerceMinistry.measures.push(measure);if(n.commerceMinistry.measures.length>100)n.commerceMinistry.measures=n.commerceMinistry.measures.filter(x=>!['expired','cancelled'].includes(x.status)).concat(n.commerceMinistry.measures.filter(x=>['expired','cancelled'].includes(x.status)).slice(-50));c.policies.push(measure.id);if(c.policies.length>100)c.policies.shift();
+ emit(w,day,'TRADE_POLICY',`${w.externalWorld.geopolitics.nations[nationId].shortNameTh}: ประกาศ${type==='waiver'?'ยกเว้นภาษีนำเข้า':type==='tariff'?'ปรับภาษีนำเข้า':'จำกัดส่งออก'} กลุ่ม${group}`,`${measure.reasonTh} มีผลวันที่ ${measure.effectiveDay} ถึง ${measure.expiresDay}`,{nationId,measureId:measure.id,group,rate:measure.rate});return measure;
+}
+function treaty(w,a,b,day,groups=GROUPS){const m=w.externalWorld.living,c=ensure(w);if(a===b||!m.nations[a]||!m.nations[b])return null;const existing=c.treaties.find(t=>t.parties.includes(a)&&t.parties.includes(b)&&!['expired','rejected'].includes(t.status));if(existing)return existing;
+ const t={id:'agreement-'+(++c.sequence),parties:[a,b],groups:[...groups],status:'proposed',proposedDay:day,negotiationUntil:day+7,effectiveDay:null,expiresDay:null,waiverPct:100,reasonTh:'เสนอความร่วมมือจากความเชื่อมั่นและการค้าจริง',signatories:[]};c.treaties.push(t);emit(w,day,'TREATY_NEGOTIATION',`เปิดเจรจาการค้า ${a} ↔ ${b}`,t.reasonTh,{treatyId:t.id});return t;
+}
+function applyRegime(w,id,party){const n=w.externalWorld.living.nations[id],g=w.externalWorld.geopolitics.nations[id],r=D.GLOBAL_NATIONS[id].regimes[party];if(!r)return;Object.assign(g,{activeRegimeId:r.id,activeRegimeNameTh:r.nameTh,leaderStyleTh:r.leaderStyleTh,materialMods:{...(r.materialMods||{})},sectorDemandMods:{...(r.sectorDemandMods||{})},tariffModPct:r.tariffModPct||0,fxModPct:r.fxModPct||0,lastChangedDay:w.externalWorld.living.lastDay,regimeChangeCount:(g.regimeChangeCount||0)+1});n.government.regimeId=r.id;}
+function governmentStep(w,day){const m=w.externalWorld.living,c=ensure(w);if(day<=c.lastPoliticalDay)return;c.lastPoliticalDay=day;
+ for(const [id,n]of Object.entries(m.nations)){
+  const g=n.government,geo=w.externalWorld.geopolitics.nations[id],spec=D.GLOBAL_NATIONS[id],min=n.commerceMinistry;
+  if(g.regimeId!==geo.activeRegimeId){g.regimeId=geo.activeRegimeId;g.successions++;g.leader=leader(w,id,Math.max(0,spec.regimes.findIndex(r=>r.id===g.regimeId)),g.successions);emit(w,day,'LEADERSHIP',`${geo.shortNameTh}: ผู้นำใหม่ ${g.leader.name}`,'ปรับคณะบริหารและทิศทางการค้าตามขั้วนโยบายใหม่',{nationId:id,leaderId:g.leader.id});}
+  if(day>=n.nextElectionDay){const incumbent=g.leader.partyIndex,performance=n.approval-.5*Math.max(0,n.inflation-3)-.3*Math.max(0,n.unemployment-6),votes=spec.regimes.map((r,i)=>({partyId:r.id,index:i,score:i===incumbent?performance:clamp((100-performance)/Math.max(1,spec.regimes.length-1)+(hash(w.seed+':vote:'+id+':'+n.term+':'+i)%9)-4,1,99)}));
+   const total=votes.reduce((a,x)=>a+x.score,0);for(const v of votes)v.sharePct=round(v.score/total*100);votes.sort((a,b)=>b.score-a.score||a.index-b.index);const winner=votes[0];n.term++;n.nextElectionDay=day+g.termDays;
+   const turnover=winner.index!==incumbent;if(turnover){applyRegime(w,id,winner.index);g.successions++;g.leader=leader(w,id,winner.index,g.successions);g.leader.startedDay=day;n.approval=52;}
+   const result={day,votes,winnerPartyId:winner.partyId,leaderId:g.leader.id,leaderName:g.leader.name,turnover,performance};g.electionHistory.unshift(result);if(g.electionHistory.length>12)g.electionHistory.pop();
+   emit(w,day,'GOVERNMENT',`${geo.shortNameTh}: ${turnover?'เปลี่ยนคณะบริหาร':'คงคณะบริหาร'} ผู้นำ ${g.leader.name}`,`ความนิยม/เศรษฐกิจมีผลต่อคะแนน ${winner.sharePct}% • ทบทวนครั้งถัดไปวันที่ ${n.nextElectionDay}`,{nationId:id,leaderId:g.leader.id,turnover});
+  }
+  for(const x of min.measures){if(x.status==='announced'&&day>=x.effectiveDay){x.status='effective';emit(w,day,'TRADE_POLICY_EFFECTIVE',`${geo.shortNameTh}: มาตรการกลุ่ม${x.group}เริ่มมีผล`,x.reasonTh,{nationId:id,measureId:x.id});}if(['announced','effective'].includes(x.status)&&day>=x.expiresDay){x.status='expired';emit(w,day,'TRADE_POLICY_EXPIRED',`${geo.shortNameTh}: สิ้นสุดมาตรการกลุ่ม${x.group}`,'กลับไปใช้อัตราการค้าพื้นฐาน',{nationId:id,measureId:x.id});}}
+  if(day-min.lastReviewDay>=7){min.lastReviewDay=day;const recent=c.tradeHistory.filter(t=>day-t.day<=30&&(t.from===id||t.to===id)),imports=recent.filter(t=>t.to===id&&t.from!==id).reduce((a,t)=>a+t.value,0),exports=recent.filter(t=>t.from===id&&t.to!==id).reduce((a,t)=>a+t.value,0);
+   min.importsSatang=imports;min.exportsSatang=exports;const required=new Set(Object.values(m.firms).filter(f=>f.nationId===id).flatMap(f=>w.externalWorld.corporations[f.id].buysMaterials||[]));const shortages=Object.values(m.markets).filter(x=>x.shortage>10&&required.has(x.id)).sort((a,b)=>b.shortage-a.shortage),critical=shortages[0];
+   if(critical&&(n.inflation>3||imports>exports*1.2)){min.reasonTh='พบการขาดวัตถุดิบ/ต้นทุนสูง จึงพิจารณาผ่อนภาษี';issueMeasure(w,id,category(w,critical.id),'waiver',0,day,35);}
+   else if(imports>exports*1.3&&g.leader.protectionism>=60){min.reasonTh='นำเข้าเกินส่งออกและผู้นำเน้นคุ้มครองการผลิต';issueMeasure(w,id,n.specialty==='food'?'food':n.specialty==='electronics'?'electronics':'industrial','tariff',3+Math.floor(g.leader.protectionism/20),day,49);}
+   min.bulletins.unshift({day,reasonTh:min.reasonTh,importsSatang:imports,exportsSatang:exports});if(min.bulletins.length>12)min.bulletins.pop();
+  }
+ }
+}
+function transferPublic(w,n,amount){amount=Math.min(n.treasury,Math.max(0,Math.round(amount)));n.treasury-=amount;n.spending+=amount;n.householdCash+=amount;n.transfers+=amount;return amount;}
+function diplomacyStep(w,day){const m=w.externalWorld.living,c=ensure(w);if(day<=c.lastDiplomacyDay)return;c.lastDiplomacyDay=day;
+ for(const r of m.relations){
+  if(r.scenarioUntil&&day>=r.scenarioUntil){r.status=r.priorStatus;r.tension=r.priorTension;r.scenarioUntil=0;emit(w,day,'DIPLOMACY',`สิ้นสุดมาตรการชั่วคราว ${r.id}`,'ประเมินความสัมพันธ์เดิมหลังจบสถานการณ์',{relationId:r.id});}
+  if(day>=r.reviewDay){r.reviewDay=day+14;const a=m.nations[r.a],b=m.nations[r.b],old=r.status,instability=Math.max(0,50-a.stability)+Math.max(0,50-b.stability),scarcity=Object.values(m.markets).filter(x=>x.shortage>30).length/Math.max(1,Object.keys(m.markets).length),stress=Math.max(0,a.inflation-5)+Math.max(0,b.inflation-5)+scarcity*8;
+   const assertiveness=(a.government.leader.assertiveness+b.government.leader.assertiveness)/2,pragmatism=(a.government.leader.pragmatism+b.government.leader.pragmatism)/2;
+   r.tension=round(clamp(r.tension+stress*.3+instability*.06+(assertiveness-50)*.015-(pragmatism-50)*.015-(r.trust-45)*.12-(r.status==='war'?8:1),0,100));
+   if(r.tension>=85){r.status='war';r.trust=Math.max(0,r.trust-10);r.reasonTh='ข้อพิพาทรุนแรงสะสมและไม่สามารถรักษาความร่วมมือ';}
+   else if(r.status==='war'&&r.tension<65){r.status='sanctions';r.reasonTh='หยุดยิงชั่วคราว แต่ยังมีข้อจำกัดการค้า';}
+   else if(r.tension>=65){r.status='sanctions';r.reasonTh='ใช้มาตรการกดดันแทนการค้าตามปกติ';}
+   else if(r.status==='sanctions'&&r.tension<45){r.status='peace';r.reasonTh='ลดระดับข้อพิพาทและเปิดการค้า';}
+   else if(r.status!=='treaty'&&r.trust>=65&&r.tension<30)treaty(w,r.a,r.b,day);
+   if(old!==r.status){r.sinceDay=day;emit(w,day,'DIPLOMACY',`${r.a} ↔ ${r.b}: ${r.status==='war'?'ความขัดแย้ง':r.status==='sanctions'?'จำกัดการค้า':'สัมพันธ์ปกติ'}`,r.reasonTh,{relationId:r.id});}
+  }
+  let conflict=c.conflicts.find(x=>x.relationId===r.id&&['active','ceasefire'].includes(x.status));
+  if(r.status==='war'){
+   if(!conflict){conflict={id:'conflict-'+(++c.sequence),relationId:r.id,parties:[r.a,r.b],status:'active',startedDay:day,spentSatang:0,ceasefireDay:null,lastDay:0};c.conflicts.push(conflict);emit(w,day,'CONFLICT',`เกิดความขัดแย้ง ${r.a} ↔ ${r.b}`,'งบความมั่นคง ความเสียหายต่อโครงสร้างพื้นฐาน และการขนส่งเริ่มมีผล',{conflictId:conflict.id});}
+   conflict.status='active';conflict.ceasefireDay=null;
+   if(conflict.lastDay<day){for(const id of conflict.parties){const n=m.nations[id],spent=transferPublic(w,n,Math.min(3000000,n.openingTreasury*.0001));n.security.defenceSpentSatang+=spent;n.security.conflictDays++;n.security.damageIndex=round(clamp(n.security.damageIndex+.08,0,35));conflict.spentSatang+=spent;}conflict.lastDay=day;}
+  }else if(conflict?.status==='active'){conflict.status='ceasefire';conflict.ceasefireDay=day;emit(w,day,'CEASEFIRE',`หยุดยิง ${r.a} ↔ ${r.b}`,'ยังไม่ฟื้นอุปทานทันที ต้องใช้งบและเวลาฟื้นฟู',{conflictId:conflict.id});}
+  else if(conflict?.status==='ceasefire'&&day-conflict.ceasefireDay>=14){conflict.status='resolved';emit(w,day,'RECOVERY',`เริ่มฟื้นฟูการค้า ${r.a} ↔ ${r.b}`,'ฟื้นโครงสร้างพื้นฐานจากงบและกำลังผลิตที่มี',{conflictId:conflict.id});}
+ }
+ for(const t of c.treaties){const r=m.relations.find(r=>t.parties.includes(r.a)&&t.parties.includes(r.b));if(!r)continue;
+  if(t.status==='proposed'&&day>=t.negotiationUntil){if(r.tension>=65||r.trust<55){t.status='rejected';t.reasonTh='ความเสี่ยง/ความเชื่อมั่นไม่ผ่านการเจรจา';}else{t.status='signed';t.effectiveDay=day+3;t.expiresDay=day+183;t.signatories=t.parties.map(id=>({nationId:id,leaderId:m.nations[id].government.leader.id,name:m.nations[id].government.leader.name}));emit(w,day,'TREATY_SIGNED',`ลงนามข้อตกลง ${t.parties.join(' ↔ ')}`,`มีผลวันที่ ${t.effectiveDay} ยกเว้นภาษีเฉพาะกลุ่มที่ตกลง`,{treatyId:t.id});}}
+  if(t.status==='signed'&&day>=t.effectiveDay){t.status='effective';r.status='treaty';r.treatyUntil=t.expiresDay;emit(w,day,'TREATY_EFFECTIVE',`ข้อตกลง ${t.parties.join(' ↔ ')} เริ่มใช้`,'การนำเข้าที่เข้าเงื่อนไขได้รับยกเว้นภาษี',{treatyId:t.id});}
+  if(t.status==='effective'&&r.tension>=65){t.status='suspended';if(r.status==='treaty')r.status='sanctions';emit(w,day,'TREATY_SUSPENDED',`ระงับข้อตกลง ${t.parties.join(' ↔ ')}`,'ความขัดแย้งทำให้สิทธิยกเว้นภาษีหยุดใช้',{treatyId:t.id});}
+  if(['effective','suspended','signed'].includes(t.status)&&day>=t.expiresDay){t.status='expired';if(r.status==='treaty')r.status='peace';emit(w,day,'TREATY_EXPIRED',`ข้อตกลง ${t.parties.join(' ↔ ')} หมดอายุ`,'ต้องเจรจาใหม่ ไม่ต่ออายุให้เองทุกครั้งที่คำนวณ',{treatyId:t.id});}
+ }
+ for(const n of Object.values(m.nations)){if(n.security.damageIndex>0&&!c.conflicts.some(x=>x.parties.includes(n.id)&&x.status==='active')){const paid=transferPublic(w,n,100000);if(paid)n.security.damageIndex=round(Math.max(0,n.security.damageIndex-.04));}}
+ // Bounded archives, never discard active obligations.
+ if(c.treaties.length>120)c.treaties=c.treaties.filter(t=>!['expired','rejected'].includes(t.status)).concat(c.treaties.filter(t=>['expired','rejected'].includes(t.status)).slice(-60));
+ if(c.conflicts.length>80)c.conflicts=c.conflicts.filter(t=>t.status!=='resolved').concat(c.conflicts.filter(t=>t.status==='resolved').slice(-40));
+}
+function quote(w,from,to,materialId,base){const m=w.externalWorld.living;if(from===to)return {tariff:0,days:base.days,blocked:false,quota:Infinity,reasonTh:'ซื้อภายในประเทศ',policyIds:[]};
+ const c=m.civics;if(!c)return {tariff:base.tariff,days:base.days,blocked:base.status==='war'&&base.risk>=90,quota:Infinity,reasonTh:'อัตราการค้าพื้นฐาน',policyIds:[]};
+ const group=category(w,materialId),day=m.lastDay||1,min=m.nations[to].commerceMinistry,source=m.nations[from].commerceMinistry,measures=min.measures.filter(x=>x.group===group&&x.status==='effective'&&day>=x.effectiveDay&&day<x.expiresDay),restriction=source.measures.find(x=>x.group===group&&x.type==='export_quota'&&x.status==='effective'&&day<x.expiresDay),agreement=c.treaties.find(t=>t.status==='effective'&&day<t.expiresDay&&t.parties.includes(from)&&t.parties.includes(to)&&t.groups.includes(group));
+ let tariff=base.tariff;for(const x of measures){if(x.type==='tariff')tariff+=x.rate;if(x.type==='waiver')tariff=0;}if(agreement)tariff=0;
+ const used=c.tradeHistory.filter(t=>t.day===day&&t.from===from&&t.group===group).reduce((a,t)=>a+t.quantity,0),quota=restriction?Math.max(0,Math.floor(restriction.rate)-used):Infinity;
+ return {tariff:round(clamp(tariff,0,60)),days:base.days,blocked:base.status==='war'&&base.risk>=90||quota===0,quota,reasonTh:agreement?'ยกเว้นภาษีตามข้อตกลง '+agreement.id:measures.map(x=>x.reasonTh).join(' • ')||'ใช้อัตราการค้าพื้นฐาน',policyIds:[...measures.map(x=>x.id),...(agreement?[agreement.id]:[])]};
+}
+function recordTrade(w,from,to,k,quantity,value,tax){const m=w.externalWorld.living,c=ensure(w),day=m.lastDay||1;const item={day,from,to,materialId:k,group:category(w,k),quantity,value,tax};const existing=c.tradeHistory.find(t=>t.day===day&&t.from===from&&t.to===to&&t.materialId===k);if(existing){existing.quantity+=quantity;existing.value+=value;existing.tax+=tax;}else c.tradeHistory.push(item);if(c.tradeHistory.length>1500)c.tradeHistory.shift();m.nations[to].commerceMinistry.customsRevenue+=tax;}
+function validate(w){const m=w.externalWorld?.living,c=m?.civics;if(!c)return [];const errors=[],money=n=>Number.isSafeInteger(n)&&n>=0;
+ if(c.version!==1||!Array.isArray(c.treaties)||!Array.isArray(c.history)||!Array.isArray(c.tradeHistory)||!Array.isArray(c.conflicts))return ['invalid civics structure'];
+ for(const n of Object.values(m.nations)){const g=n.government,min=n.commerceMinistry;if(!g?.leader?.id||typeof g.leader.name!=='string'||!money(g.termDays)||g.termDays<1||!Array.isArray(g.electionHistory)||!min||!money(min.customsRevenue)||!Array.isArray(min.measures)||!Number.isFinite(n.security?.damageIndex)||n.security.damageIndex<0||n.security.damageIndex>35)errors.push('invalid government '+n.id);
+  for(const p of min?.measures||[])if(!GROUPS.includes(p.group)||!['tariff','waiver','export_quota'].includes(p.type)||!['announced','effective','expired','cancelled'].includes(p.status)||!money(p.effectiveDay)||!money(p.expiresDay)||p.expiresDay<p.effectiveDay||!Number.isFinite(p.rate)||p.rate<0||p.rate>35)errors.push('invalid trade policy '+p.id);
+ }
+ for(const t of c.treaties)if(t.parties?.length!==2||t.parties[0]===t.parties[1]||t.parties.some(id=>!m.nations[id])||!['proposed','signed','effective','suspended','expired','rejected'].includes(t.status)||!Array.isArray(t.groups)||t.groups.some(g=>!GROUPS.includes(g))||!money(t.proposedDay)||!money(t.negotiationUntil)||t.negotiationUntil<t.proposedDay||(['signed','effective','suspended','expired'].includes(t.status)&&(!money(t.effectiveDay)||!money(t.expiresDay)||t.expiresDay<t.effectiveDay)))errors.push('invalid treaty '+t.id);
+ for(const t of c.tradeHistory)if(!m.nations[t.from]||!m.nations[t.to]||!money(t.value)||!money(t.tax)||!money(t.quantity))errors.push('invalid trade ledger');return errors;
+}
+return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordTrade,issueMeasure,treaty,validate,emit});
+});
+
+</script>
+    <script>
 /* js/world.js */
 (function(root,factory){
-  const value=factory(typeof module==="object"&&module.exports?require('./data.js'):root.CompanyData);
+  const value=factory(typeof module==="object"&&module.exports?require('./data.js'):root.CompanyData,typeof module==="object"&&module.exports?require('./civics.js'):root.CompanyCivics);
   if(typeof module==="object"&&module.exports) module.exports=value; else root.CompanyWorld=value;
-})(typeof globalThis!=="undefined"?globalThis:this,function(D){
+})(typeof globalThis!=="undefined"?globalThis:this,function(D,C){
   'use strict';
   const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)), round=x=>Math.round(x*100)/100;
   function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
@@ -9791,6 +9890,7 @@ canvas.pt {
       m.relations.push({id:ids[i]+'-'+ids[j],a:ids[i],b:ids[j],tension:10+h%36,trust:45+h%36,status:'peace',sinceDay:1,reviewDay:14+h%15,treatyUntil:0,reasonTh:'ค้าขายตามปกติ ยังไม่มีข้อพิพาทรุนแรง'});
     }
     for(const [id,mat] of Object.entries(w.catalog.materials))m.markets[id]={id,price:mat.unitCost,multiplier:1,supply:0,demand:0,traded:0,shortage:0,reasonTh:'ราคาเริ่มต้น รอข้อมูลการซื้อขาย'};
+    C.ensure(w);
     if(e.geopolitics.activeEvent)scenario(w,e.geopolitics.activeEvent.id,1,e.geopolitics.activeEvent.durationDays||5);
     return m;
   }
@@ -9817,15 +9917,16 @@ canvas.pt {
   function route(m,a,b){
     const r=m.relations.find(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));
     const na=m.nations[a],nb=m.nations[b];
-    return {status:r?.status||'peace',tariff:a===b?0:(r?.status==='war'?22:r?.status==='sanctions'?14:r?.status==='treaty'?0:3)+Math.max(0,nb.tariffModPct||0),days:a===b?1:Math.ceil(2+(100-(na.infrastructure+nb.infrastructure)/2)/25+(r?.tension||0)/20+(r?.status==='war'?7:0)),risk:r?.tension||0};
+    return {status:r?.status||'peace',tariff:a===b?0:(r?.status==='war'?22:r?.status==='sanctions'?14:r?.status==='treaty'&&r.scenarioUntil?0:3)+Math.max(0,nb.tariffModPct||0),days:a===b?1:Math.ceil(2+(100-(na.infrastructure+nb.infrastructure)/2)/25+(r?.tension||0)/20+(r?.status==='war'?7:0)),risk:r?.tension||0};
   }
   function trade(w,seller,buyer,k,qty,day){
-    const m=ensure(w),r=route(m,seller.nationId,buyer.nationId),unit=Math.round(m.markets[k].price*seller.priceFactor),tariff=Math.round(unit*r.tariff/100);
-    qty=Math.min(qty,seller.stock[k]||0,Math.floor(buyer.cash/(unit+tariff)));
-    if(qty<=0||r.status==='war'&&r.risk>=90)return 0;
+    const m=ensure(w),baseRoute=route(m,seller.nationId,buyer.nationId),policy=C.quote(w,seller.nationId,buyer.nationId,k,baseRoute),r={...baseRoute,...policy},unit=Math.round(m.markets[k].price*seller.priceFactor),tariff=Math.round(unit*r.tariff/100);
+    qty=Math.min(qty,seller.stock[k]||0,policy.quota,Math.floor(buyer.cash/(unit+tariff)));
+    if(qty<=0||policy.blocked)return 0;
     const cost=qty*unit,tax=qty*tariff;
     payment(buyer,cost+tax);receipt(seller,cost);m.nations[buyer.nationId].treasury+=tax;m.nations[buyer.nationId].taxes+=tax;
     seller.cogsSatang=(seller.cogsSatang||0)+qty*Math.round((w.catalog.materials[k]?.unitCost||unit)*.65);
+    C.recordTrade(w,seller.nationId,buyer.nationId,k,qty,cost,tax);
     addStock(seller,k,-qty,'sold');
     m.shipments.push({id:'shipment-'+(++m.sequence),sellerId:seller.id,buyerId:buyer.id,materialId:k,quantity:qty,cost,tariff:tax,departedDay:day,dueDay:day+r.days,originalDueDay:day+r.days,delayed:false,routeStatus:r.status});
     const relation=m.relations.find(x=>x.a===seller.nationId&&x.b===buyer.nationId||x.b===seller.nationId&&x.a===buyer.nationId);
@@ -9888,7 +9989,7 @@ canvas.pt {
       if(current>=f.capacity*6)continue;
       const knowledgeNeed=recipe?40+(w.catalog.materials[k].tier||1)*10:30;
       if(f.technology<knowledgeNeed){f.missing.push('เทคโนโลยี '+w.catalog.materials[k].nameTh);continue;}
-      let qty=Math.max(0,Math.floor(f.capacity*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
+      let qty=Math.max(0,Math.floor(f.capacity*(1-(n.security?.damageIndex||0)/100)*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
       for(const [ik,q]of Object.entries(inputs))qty=Math.min(qty,Math.floor((f.stock[ik]||0)/q));
       if(!recipe)qty=Math.min(qty,mat.resourceClass==='environmental_flow'?Math.max(0,Math.floor(f.capacity*n.infrastructure/100)):f.reserves[k]||0);
       qty=Math.min(qty,Math.floor(Math.max(0,f.cash-reserve)/(Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18)))));
@@ -9971,30 +10072,7 @@ canvas.pt {
       }
       const spending=Math.min(n.treasury,Math.round(n.openingTreasury*(n.policy==='stimulus'?.00025:n.policy==='austerity'?.00004:.0001)));
       n.treasury-=spending;n.spending+=spending;n.householdCash+=spending;n.transfers+=spending;
-      if(day>=n.nextElectionDay){
-        const nat=w.externalWorld.geopolitics.nations[n.id],spec=D.GLOBAL_NATIONS[n.id],regimes=spec.regimes||[];
-        const replace=n.approval<45;n.term++;n.nextElectionDay=day+180;
-        if(replace&&regimes.length>1){const idx=regimes.findIndex(r=>r.id===nat.activeRegimeId),r=regimes[(idx+1)%regimes.length];Object.assign(nat,{activeRegimeId:r.id,activeRegimeNameTh:r.nameTh,leaderStyleTh:r.leaderStyleTh,materialMods:{...r.materialMods},sectorDemandMods:{...r.sectorDemandMods},tariffModPct:r.tariffModPct||0,fxModPct:r.fxModPct||0,lastChangedDay:day,regimeChangeCount:(nat.regimeChangeCount||0)+1});n.approval=52;}
-        record(w,day,'GOVERNMENT',`${nat.nameTh}: ทบทวนผู้นำตามวาระ`,replace?'ความนิยมต่ำ เกิดการเปลี่ยนขั้วนโยบาย':'คงแนวนโยบายเดิมจากผลการบริหาร',{nationId:n.id,major:true});
-      }
-    }
-  }
-  function diplomacy(w,day){
-    const m=ensure(w);
-    for(const r of m.relations){
-      if(r.scenarioUntil && day>=r.scenarioUntil){r.status=r.priorStatus;r.tension=r.priorTension;r.scenarioUntil=0;record(w,day,'DIPLOMACY',`สิ้นสุดมาตรการชั่วคราว ${r.id}`,'กลับสู่เงื่อนไขความสัมพันธ์ก่อนมาตรการ',{relationId:r.id});}
-      if(day<r.reviewDay)continue;r.reviewDay=day+14;
-      const a=m.nations[r.a],b=m.nations[r.b],old=r.status;
-      const instability=Math.max(0,50-a.stability)+Math.max(0,50-b.stability);
-      const scarcity=Object.values(m.markets).filter(k=>k.shortage>30).length/Math.max(1,Object.keys(m.markets).length);
-      const stress=Math.max(0,a.inflation-5)+Math.max(0,b.inflation-5)+scarcity*8;
-      r.tension=round(clamp(r.tension+stress*.3+instability*.06-(r.trust-45)*.12-(r.status==='war'?8:1),0,100));
-      if(r.tension>=85){r.status='war';r.trust=Math.max(0,r.trust-10);r.reasonTh='ข้อพิพาทรุนแรงสะสม ทรัพยากรตึงตัวและเสถียรภาพต่ำ';}
-      else if(r.status==='war'&&r.tension<65){r.status='sanctions';r.reasonTh='ลดระดับการสู้รบ แต่ยังจำกัดการค้า';}
-      else if(r.tension>=65){r.status='sanctions';r.reasonTh='ความตึงเครียดสูง ใช้มาตรการจำกัดการค้า';}
-      else if(r.trust>=65&&r.tension<30){r.status='treaty';r.treatyUntil=day+90;r.reasonTh='ความเชื่อมั่นสูงและผลประโยชน์การค้าร่วมกัน';}
-      else if(r.status==='treaty'&&day>=r.treatyUntil||r.status==='sanctions'&&r.tension<45){r.status='peace';r.reasonTh='ประเมินเงื่อนไขใหม่ กลับมาค้าตามปกติ';}
-      if(old!==r.status){r.sinceDay=day;record(w,day,'DIPLOMACY',`${w.externalWorld.geopolitics.nations[r.a].shortNameTh} ↔ ${w.externalWorld.geopolitics.nations[r.b].shortNameTh}: ${statusName(r.status)}`,r.reasonTh,{relationId:r.id,major:true});}
+
     }
   }
   function statusName(s){return {peace:'สัมพันธ์ปกติ',treaty:'ข้อตกลงการค้า',sanctions:'จำกัดการค้า',war:'ความขัดแย้งติดอาวุธ'}[s]||s;}
@@ -10037,7 +10115,7 @@ canvas.pt {
       if(total>0)c.marketSharePct=round(f.dailyRevenue/total*100);
       const comp=w.externalWorld.competitors?.[f.id];if(comp)comp.marketSharePct=c.marketSharePct;
     }
-    nationalReview(w,day);diplomacy(w,day);
+    nationalReview(w,day);C.governmentStep(w,day);C.diplomacyStep(w,day);
     const e=w.externalWorld;
     e.ecosystemFeed=m.journal.filter(j=>['INTER_CORP_SUPPLY','CORP_DECISION'].includes(j.category)).slice(0,40).map(j=>({...j,type:j.category,impactTh:j.meaningTh}));
     e.b2bMaterialDemands=[];
@@ -10141,15 +10219,25 @@ canvas.pt {
   }
   function recordProductDelivery(w,id,productId,qty){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e)return false;const buyer=e.buyerType==='government'?m.nations[e.buyerId]:m.firms[e.buyerId];buyer.finishedGoods=buyer.finishedGoods||{};buyer.finishedGoods[productId]=(buyer.finishedGoods[productId]||0)+qty;return true;}
   function quote(w,k,qty,preferredId){
-    const m=ensure(w),candidate=Object.values(m.firms).filter(f=>(w.externalWorld.corporations[f.id].sellsMaterials||[]).includes(k)&&(f.stock[k]||0)>=qty);
-    candidate.sort((a,b)=>(a.id===preferredId?-100:0)+(a.id==='world_exchange'?30:0)+route(m,a.nationId,'TH').days-((b.id===preferredId?-100:0)+(b.id==='world_exchange'?30:0)+route(m,b.nationId,'TH').days)||a.id.localeCompare(b.id));
-    const f=candidate.find(f=>route(m,f.nationId,'TH').status!=='war');if(!f)return null;
-    const r=route(m,f.nationId,'TH');return {supplierId:f.id,days:f.id==='world_exchange'?1:r.days,unitPrice:Math.round((w.externalWorld.geopolitics.materialSpotPrices[k]||m.markets[k].price)*f.priceFactor*(1+(f.id==='world_exchange'?0:r.tariff)/100))};
+    const m=ensure(w),candidates=[];
+    for(const f of Object.values(m.firms)){
+      const corp=w.externalWorld.corporations[f.id];if(!(corp.sellsMaterials||[]).includes(k)||(f.stock[k]||0)<qty)continue;
+      const origin=f.id==='world_exchange'?'TH':f.nationId,base=route(m,origin,'TH'),policy=C.quote(w,origin,'TH',k,base);
+      if(policy.blocked||policy.quota<qty)continue;
+      const partner=corp.relationshipMode==='partner'?.97:corp.relationshipMode==='rival'?1.03:1;
+      const basePrice=Math.max(1,Math.round((w.externalWorld.geopolitics.materialSpotPrices[k]||m.markets[k].price)*f.priceFactor*partner));
+      const unitTax=Math.round(basePrice*policy.tariff/100),unitPrice=basePrice+unitTax,knownRisk=w.intelligence?.countryRisk?.[origin]||0;
+      const score=unitPrice*(1+base.days*.015+knownRisk*.002)+(f.id===preferredId?-unitPrice*.1:0);
+      candidates.push({supplierId:f.id,originNationId:origin,days:base.days,unitPrice,unitTax,baseUnitPrice:basePrice,tariffPct:policy.tariff,policyIds:policy.policyIds,reasonTh:policy.reasonTh,score});
+    }
+    candidates.sort((a,b)=>a.score-b.score||a.supplierId.localeCompare(b.supplierId));return candidates[0]||null;
   }
-  function sellToPlayer(w,sellerId,k,qty,cost){
+  function sellToPlayer(w,sellerId,k,qty,cost,bookedQuote=null){
     const m=ensure(w),f=m.firms[sellerId];if(!f||(f.stock[k]||0)<qty)return false;
-    const r=route(m,f.nationId,'TH'),tax=f.id==='world_exchange'?0:Math.round(cost*r.tariff/(100+r.tariff));
-    addStock(f,k,-qty,'sold');receipt(f,cost-tax);m.nations.TH.treasury+=tax;m.nations.TH.taxes+=tax;m.playerNetSatang+=cost;return true;
+    const origin=f.id==='world_exchange'?'TH':f.nationId,policy=C.quote(w,origin,'TH',k,route(m,origin,'TH'));
+    if(policy.blocked||policy.quota<qty)return false;
+    const tax=bookedQuote?.unitTax!==undefined?qty*bookedQuote.unitTax:Math.round(cost*policy.tariff/(100+policy.tariff));
+    addStock(f,k,-qty,'sold');receipt(f,cost-tax);m.nations.TH.treasury+=tax;m.nations.TH.taxes+=tax;m.playerNetSatang+=cost;C.recordTrade(w,origin,'TH',k,qty,cost-tax,tax);return true;
   }
   function receivePlayerSale(w,buyerId,k,qty,cost){
     const m=ensure(w),f=m.firms[buyerId];if(!f||f.cash<cost)return false;
@@ -10174,6 +10262,7 @@ canvas.pt {
     const actual=Object.values(m.commercialEscrows||{}).reduce((a,e)=>a+e.balance,0)+Object.values(m.firms).reduce((a,f)=>a+f.cash,0)+Object.values(m.nations).reduce((a,n)=>a+n.treasury+n.householdCash,0);
     const opening=Object.values(m.firms).reduce((a,f)=>a+f.openingCash,0)+Object.values(m.nations).reduce((a,n)=>a+n.openingTreasury+n.openingHouseholdCash,0);
     if(actual!==opening+m.playerNetSatang)errors.push('world total cash conservation');
+    errors.push(...C.validate(w));
     return errors;
   }
   return Object.freeze({
@@ -10289,7 +10378,12 @@ function route(p){
       stage(isMeal?'ลดอุณหภูมิรวดเร็วและซีลถาดบรรจุ':'พักเย็นและเตรียมบรรจุ','hand_tools',.3,10,null,{opCode:'cooling_pack_prep',subject:'food_safety',minSubjectLevel:20,qualityCheckpoint:true,intermediateOut:'food_ready_lot'})
     ];
   }
-  if(/rail|tray|suspension|motor|agv|Actuator|drone|switchgear/i.test(id)){
+  if(/rail|tray|suspension/i.test(id))return [
+    stage('ตัดและขึ้นรูปวัสดุตามแบบ','press',.4,0,null,{opCode:'mechanical_cut_form',subject:'metal_machining',minSubjectLevel:30,intermediateOut:'cut_profile'}),
+    stage('เจาะ ลบคม และประกอบฐานยึด','hand_tools',.4,0,null,{opCode:'mechanical_fixture',subject:'metal_machining',minSubjectLevel:30,intermediateOut:'mechanical_assembly'}),
+    stage('ตรวจมิติและแรงยึดก่อนปล่อยงาน','diagnostic_kit',.2,10,null,{opCode:'dimensional_release',subject:'metrology',minSubjectLevel:30,qualityCheckpoint:true,intermediateOut:'inspected_structure'})
+  ];
+  if(/motor|agv|Actuator|drone|switchgear/i.test(id)){
     return [
       stage('ตัดกลึงและขึ้นรูปโครงสร้างโลหะ','press',.3,0,null,{opCode:'cnc_press_forming',subject:'metal_machining',minSubjectLevel:30,intermediateOut:'formed_chassis'}),
       stage('เชื่อมประกอบโครงและตั้งจิ๊กแม่นยำ','welder',.3,0,null,{opCode:'structural_welding',subject:'metal_machining',minSubjectLevel:30,safetyCritical:true,intermediateOut:'welded_frame'}),
@@ -11105,6 +11199,60 @@ return Object.freeze({
 
 </script>
     <script>
+/* js/startup.js */
+(function(root,factory){const v=factory(typeof module==='object'&&module.exports?require('./plant.js'):root.CompanyPlant);if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyStartup=v;})(typeof globalThis!=='undefined'?globalThis:this,function(P){
+'use strict';
+const base={safety:30,mathematics:25};
+const office={accounting:40,procurement:35,office_admin:35,inventory_control:30,sales_negotiation:35,business_law:25};
+const owner={accounting:40,financial_planning:35,people_management:35,project_management:30,sales_negotiation:35,business_law:30};
+const quality={quality:40,metrology:35,quality_documentation:35,warehouse_operations:35,logistics:30};
+const crew=(role,subjects,wage=35000)=>({role,subjects:{...base,...subjects},dailyWage:wage});
+const PROFILES={
+ food_kitchen:{id:'food_kitchen',nameTh:'ครัวน้ำพริกและอาหารบรรจุ',icon:'🌶️',sector:'food',productId:'artisan_chili_paste_jar',capital:10000000,rent:30000,areaM2:45,equipment:['hand_tools','mixer','cooker','warehouse_tools'],crew:[crew('coordinator',owner,40000),crew('assembler',{food_formulation:45,food_safety:45,shelf_life:30,maintenance:20},38000),crew('inspector',{...quality,food_safety:40},35000),crew('admin',office,33000)],learning:{food_preservation:35,cost_accounting:35,market_analysis:35},descriptionTh:'เช่าครัวขนาดเล็ก ซื้อวัตถุดิบแปรรูปจากผู้ขาย มีสูตรพื้นฐานและทีม4คน ไม่ได้ปลูก/สกัดวัตถุดิบเอง'},
+ bakery:{id:'bakery',nameTh:'เบเกอรี่ขนาดเล็ก',icon:'🥖',sector:'food',productId:'artisan_bakery',capital:14000000,rent:45000,areaM2:65,equipment:['hand_tools','mixer','oven','warehouse_tools'],crew:[crew('coordinator',owner,42000),crew('assembler',{bakery:45,baking_process:45,food_safety:40,shelf_life:35},38000),crew('assembler',{bakery:35,baking_process:35,food_safety:35},33000),crew('inspector',{...quality,food_safety:40},35000),crew('admin',office,33000)],learning:{bakery:55,food_preservation:35,cost_accounting:35},descriptionTh:'ซื้อแป้ง น้ำมันและบรรจุภัณฑ์ ใช้เตาอบจริง ทีม5คน มีเวลาหมัก/อบและอายุสินค้า ไม่ได้มีโรงสีตั้งต้น'},
+ cable_workshop:{id:'cable_workshop',nameTh:'เวิร์กช็อปประกอบชุดสายชาร์จ',icon:'🔌',sector:'electronics',productId:'braided_fast_charge_kit',capital:15000000,rent:45000,areaM2:65,equipment:['hand_tools','electronics_bench','test_rig','warehouse_tools'],crew:[crew('coordinator',owner,42000),crew('engineer',{electrical_basics:45,smt_process:40,electrical_safety:40,circuit_design:35,maintenance:30,research_methods:35},45000),crew('assembler',{electrical_basics:40,smt_process:35,electrical_safety:35,quality:30},35000),crew('inspector',quality,36000),crew('admin',office,33000)],learning:{circuit_design:45,quality:45,cost_accounting:35},descriptionTh:'ประกอบจากบอร์ดสำเร็จและชุดสายไฟที่ซื้อมา ทีม5คน มีเครื่องบัดกรี/ทดสอบ ไม่มีโรงงานชิปหรือความรู้ทุกอุตสาหกรรม'},
+ metal_workshop:{id:'metal_workshop',nameTh:'งานประกอบรางและฐานยึดโลหะ',icon:'🔩',sector:'automotive',productId:'solar_mounting_rail_kit',capital:28000000,rent:70000,areaM2:100,equipment:['hand_tools','press','diagnostic_kit','warehouse_tools'],crew:[crew('coordinator',owner,45000),crew('engineer',{metal_machining:45,machining:40,metallurgy:35,mechanical_design:35,maintenance:35,safety:40},48000),crew('assembler',{metal_machining:40,machining:35,safety:35},38000),crew('inspector',{...quality,metrology:40},38000),crew('admin',office,34000)],learning:{tooling:40,mechanical_design:45,cost_accounting:40},descriptionTh:'ซื้อโปรไฟล์และเหล็กสำเร็จมาตัด เจาะ ประกอบและตรวจมิติ ทีม5คน ไม่ได้มีเหมือง/เตาถลุง และรางโลหะไม่ต้องเขียนเฟิร์มแวร์'},
+ software_agency:{id:'software_agency',nameTh:'ทีมรับพัฒนาซอฟต์แวร์',icon:'💻',sector:'software',capital:12000000,rent:30000,areaM2:40,equipment:['hand_tools','developer_pc'],crew:[crew('coordinator',{...owner,requirements_analysis:35},42000),crew('engineer',{software:45,programming:45,requirements_analysis:40,software_testing:40,version_control:40,algorithms:35,data_structures:35,research_methods:35},50000),crew('admin',{...office,software_testing:35,requirements_analysis:35},35000)],learning:{software_testing:45,api_design:35,contract_management:30},descriptionTh:'ทีม3คนเช่าออฟฟิศ รับงานจริงเป็นโครงการ เริ่มจากคอมพิวเตอร์และความรู้ของนักพัฒนา ไม่มีSaaSที่เสร็จแล้วหรือลูกค้าฟรี'},
+ repair_service:{id:'repair_service',nameTh:'ทีมช่างบำรุงรักษาภาคสนาม',icon:'🧰',sector:'service',serviceType:'field_maintenance',capital:15000000,rent:35000,areaM2:45,equipment:['hand_tools','diagnostic_kit','warehouse_tools'],crew:[crew('coordinator',owner,42000),crew('engineer',{maintenance:45,metal_machining:40,electrical_safety:40,safety:40,metrology:35},48000),crew('inspector',{...quality,maintenance:30,electrical_safety:35},36000),crew('admin',office,33000)],learning:{maintenance:55,metrology:45,contract_management:35},descriptionTh:'ทีม4คนรับตรวจและซ่อมหน้างาน มีเครื่องมือและอะไหล่เบื้องต้น ไม่มีโรงงานหนักหรือใบรับรองแล็บสากลที่ได้มาฟรี'}
+};
+const REQUIREMENTS={
+ artisan_chili_paste_jar:{food_formulation:35,food_safety:35,shelf_life:25,quality:25},
+ braided_fast_charge_kit:{electrical_basics:30,smt_process:30,electrical_safety:25,quality:25},
+ solar_mounting_rail_kit:{metal_machining:35,metallurgy:25,metrology:30,quality:30,safety:25},
+ ev_suspension_kit:{metal_machining:40,mechanical_design:35,metrology:35,quality:35,safety:30},
+ ev_battery_tray_assembly:{metal_machining:40,mechanical_design:35,metallurgy:30,metrology:35,quality:35,safety:30}
+};
+function configure(catalog,id){const p=PROFILES[id];if(!p)throw new TypeError('unknown starting business');
+ catalog.starters=p.crew.map((m,i)=>({name:['อรุณ ผู้ก่อตั้ง','มินตรา ชำนาญงาน','ธนา ตั้งใจ','วารี ตรวจดี','ศศิ จัดการ'][i],role:m.role,dailyWage:m.dailyWage}));
+ for(const k of Object.keys(catalog.initialStock))catalog.initialStock[k]=0;
+ if(p.productId)for(const [k,q]of Object.entries(catalog.products[p.productId].bom))catalog.initialStock[k]=q*16;
+ if(p.serviceType)for(const k of ['metal_sheet','wire_harness','polymer_resin','sensor'])catalog.initialStock[k]=4;
+ const stockValue=Object.entries(catalog.initialStock).reduce((a,[id,q])=>a+q*catalog.materials[id].unitCost,0),equipmentValue=p.equipment.reduce((a,k)=>a+P.SPECS[k].cost,0),deposit=p.rent*30,license=200000;
+ const cash=p.capital-stockValue-equipmentValue-deposit-license;if(cash<=0)throw Error('startup capital insufficient');
+ Object.assign(catalog.rules,{initialCash:cash,initialDebt:0,rentDaily:p.rent,creditLimit:Math.min(p.capital,10000000)});
+ return {profileId:p.id,nameTh:p.nameTh,sector:p.sector,productId:p.productId||null,serviceType:p.serviceType||null,paidInCapital:p.capital,openingCash:cash,openingStockValue:stockValue,openingEquipmentValue:equipmentValue,leaseDeposit:deposit,registrationValue:license,rentDaily:p.rent,areaM2:p.areaM2,workspace:'leased_shared_campus',learningGoals:{...p.learning},lastLearningDay:0,learningHistory:[],decisionTh:'เริ่มจากงานที่ทีมมีประสบการณ์และเครื่องมือจริง',createdDay:1};
+}
+function apply(w,startup){const p=PROFILES[startup.profileId];w.startup=startup;w.research.unlocked=p.productId?[p.productId]:[];w.knowledge.projects={};w.knowledge.historicalBlueprints=[...w.research.unlocked];
+ w.plant.machines={};for(const k of p.equipment)P.install(w,k,true);
+ for(let i=0;i<w.people.length;i++){const person=w.people[i],ed=person.education,hobby=ed.interests?.[0],hobbyLevel=ed.subjects[hobby]||0;ed.subjects={...p.crew[i].subjects};if(hobby&&hobbyLevel>0)ed.subjects[hobby]=Math.max(ed.subjects[hobby]||0,hobbyLevel);ed.course=null;}
+ // No opening industrial portfolio, fleet contracts, pre-built software or complimentary paying SaaS users.
+ w.softwareBusiness.projects={};for(const a of Object.values(w.softwareBusiness.saasProducts)){a.status='concept';a.version='0.1.0';a.mvpProgressMinutes=0;a.leadCount=0;a.activeSubscribers=0;}
+ w.softwareBusiness.workstations.totalStations=p.id==='software_agency'?1:0;
+ if(p.productId){w.knowledge.projects['product:'+p.productId]={id:'product:'+p.productId,targetId:p.productId,kind:'product',subject:({artisan_chili_paste_jar:'food_formulation',braided_fast_charge_kit:'electrical_basics',solar_mounting_rail_kit:'metal_machining'})[p.productId]||'bakery',requirements:{...(REQUIREMENTS[p.productId]||{bakery:40,baking_process:35,food_safety:40,shelf_life:30,quality:30})},nameTh:w.catalog.products[p.productId].nameTh,status:'qualified',requiredLevel:35,startedDay:-365,minDays:21,qualifiedDay:0,requiredMinutes:6000,workMinutes:6000,spentSatang:0,qaMinutes:240,prototypeConsumed:true,contributors:{priorProfessionalExperience:6000},reviewerId:'priorWorkshop',lastReasonTh:'สูตร/กระบวนการตั้งต้นจากประสบการณ์ก่อนก่อตั้ง มีค่าเตรียมกิจการในทุนเริ่มต้น',openingKnowHow:true};}
+ w.externalWorld.assetPortfolio.supplyChainStrategy='asset_light';
+ return startup;
+}
+function validate(w){const s=w.startup;if(!s)return [];const errors=[];
+ if(!PROFILES[s.profileId]||!Number.isSafeInteger(s.paidInCapital)||s.paidInCapital<=0||s.paidInCapital!==s.openingCash+s.openingStockValue+s.openingEquipmentValue+s.leaseDeposit+s.registrationValue)errors.push('startup opening capital reconciliation');
+ for(const k of ['openingCash','openingStockValue','openingEquipmentValue','leaseDeposit','registrationValue','rentDaily','areaM2'])if(!Number.isSafeInteger(s[k])||s[k]<0)errors.push('invalid startup '+k);
+ if(s.workspace!=='leased_shared_campus'||!Array.isArray(s.learningHistory)||!s.learningGoals||typeof s.learningGoals!=='object'||Array.isArray(s.learningGoals)||Object.values(s.learningGoals).some(v=>!Number.isFinite(v)||v<0||v>100))errors.push('invalid startup state');return errors;
+}
+function list(){return Object.values(PROFILES).map(p=>({id:p.id,nameTh:p.nameTh,icon:p.icon,descriptionTh:p.descriptionTh,capital:p.capital,people:p.crew.length,sector:p.sector}));}
+return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
+});
+
+</script>
+    <script>
 /* js/sim.js */
 (function (root, factory) {
   "use strict";
@@ -11116,15 +11264,16 @@ return Object.freeze({
     node ? require("./economy.js") : root.CompanyEconomy,
     node ? require("./world.js") : root.CompanyWorld,
     node ? require("./plant.js") : root.CompanyPlant,
+    node ? require("./startup.js") : root.CompanyStartup,
   );
   if (node) module.exports = value;
   else root.CompanySim = value;
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
-  function (H, D, L, E, W, P) {
+  function (H, D, L, E, W, P, B) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.8.0",
+      RELEASE_VERSION = "2.9.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -11657,6 +11806,7 @@ return Object.freeze({
       toll_smelting_extrusion:{metal_machining:45,metallurgy:45,machining:35,waste_management:40,quality:40}
     });
     function productRequirements(w,id) {
+      if(B.REQUIREMENTS[id])return {...B.REQUIREMENTS[id]};
       const p=w.catalog.products[id];
       const family=Object.values(D.PRODUCT_FAMILIES || {}).find(f=>f.products.includes(id));
       const req={...(FAMILY_SUBJECTS[family?.id] || {[productSubject(w,id)]:40,research_methods:30,quality:30})};
@@ -11784,6 +11934,7 @@ return Object.freeze({
       return w.knowledge;
     }
     function productSubject(w, id) {
+      const specific={artisan_chili_paste_jar:"food_formulation",braided_fast_charge_kit:"electrical_basics",solar_mounting_rail_kit:"metal_machining",ev_suspension_kit:"metal_machining",ev_battery_tray_assembly:"metal_machining"};if(specific[id])return specific[id];
       const p = w.catalog.products[id];
       const family = Object.values(D.PRODUCT_FAMILIES || {}).find((f) => f.products.includes(id));
       if (family?.id === "bakery_grain") return "bakery";
@@ -11865,6 +12016,68 @@ return Object.freeze({
     }
 
     const poolsForTechnology=w=>computeFinancialPools(w).survivalReserveSatang;
+    function ensureIntelligence(w){return w.intelligence||(w.intelligence={version:1,countryRisk:{},sectorSignals:{},history:[],lastReviewDay:0,negotiations:[],decisionTh:'ยังไม่มีข้อสรุปจากข่าวที่ทีมอ่าน'});}
+    function readNewsTick(w,p){
+      const time=tod(w);if(time<480||time>=525||p.state.energy<30)return false;
+      const h=seedHash(`${w.seed}:news:${p.id}:${day(w)}`),interest=(p.profile.personality.openness??50)+(subjectLevel(p,'market_analysis')*.5),professional=['coordinator','sales','admin','engineer'].includes(p.role);
+      if(!professional&&h%100>interest*.6)return false;if(time!==480+(h%8)*5)return false;
+      const previous=p.news?.lastReadDay;if(previous===day(w))return false;
+      if(!p.news)p.news={lastReadDay:0,known:[],readingMinutes:0};p.news.lastReadDay=day(w);
+      const known=new Set(p.news.known.map(n=>n.id)),sources=[...(w.externalWorld.living.civics?.history||[]),...(w.externalWorld.worldChronicle||[])];
+      const item=sources.filter(n=>!known.has(n.id)).sort((a,b)=>((b.nationId==='TH'?20:0)+(b.isMajor?10:0)+b.day)-((a.nationId==='TH'?20:0)+(a.isMajor?10:0)+a.day))[0];
+      if(!item)return false;
+      const comprehension=clamp(subjectLevel(p,'market_analysis')*.35+(p.profile.aptitudes.analytical??50)*.35+(p.profile.aptitudes.verbal??50)*.3,0,100);
+      const implications=/CONFLICT|WAR|SANCTION|SUSPENDED/.test(item.category)?'ประเมินความเสี่ยงการส่งมอบและหาผู้ขายสำรอง':/TRADE|TREATY|GOVERNMENT|LEADER/.test(item.category)?'ตรวจผลต่อราคาและเงื่อนไขการค้า ก่อนตัดสินใจ': 'ติดตามตลาดและความสามารถของคู่ค้า';
+      p.news.known.unshift({id:item.id,headlineTh:item.headlineTh,category:item.category,nationId:item.nationId||null,readAt:now(w),comprehension,interpretationTh:implications});if(p.news.known.length>16)p.news.known.pop();p.news.readingMinutes+=TICK;
+      p.activity='learning';p.intent={code:'readingNews',reasons:[item.headlineTh]};p.state=H.tickState(p.profile,p.state,{activity:'learn',minutes:TICK,workload:.25});learnSubject(p,'market_analysis',TICK,true);
+      if(p.role==='coordinator'){
+        const info=ensureIntelligence(w),conflict=w.externalWorld.living.civics?.conflicts.find(c=>c.id===item.conflictId),countries=conflict?.parties||[item.nationId].filter(Boolean);
+        for(const id of countries)info.countryRisk[id]=clamp((info.countryRisk[id]||0)+(/CONFLICT|WAR|SANCTION|SUSPENDED/.test(item.category)?15:/CEASEFIRE|RECOVERY|TREATY_EFFECTIVE/.test(item.category)?-10:0),0,70);
+        const group=item.group||w.externalWorld.living.nations[item.nationId]?.specialty,sector=({biological:'food',metals:'automotive',chemicals:'biomed'})[group]||group;
+        if(sector){if(!info.sectorSignals)info.sectorSignals={};const change=/CONFLICT|WAR|SUSPENDED/.test(item.category)?-.1:/TREATY_EFFECTIVE|RECOVERY/.test(item.category)?.08:0;info.sectorSignals[sector]=clamp((info.sectorSignals[sector]||1)+change*comprehension/100,.6,1.4);}
+        info.decisionTh=`${p.name} อ่านข่าวแล้ว: ${implications} (ความเข้าใจ ${Math.round(comprehension)}%)`;
+        info.history.unshift({at:now(w),personId:p.id,newsId:item.id,headlineTh:item.headlineTh,reasonTh:info.decisionTh});if(info.history.length>40)info.history.pop();
+      }
+      return true;
+    }
+    function reviewSmallBusinessLearning(w){
+      if(!w.startup||!w.policies.autoAccept||w.startup.lastLearningDay===day(w)||day(w)%3!==0)return;
+      w.startup.lastLearningDay=day(w);const ceo=w.people.find(p=>p.employed&&p.atWork&&p.role==='coordinator');if(!ceo)return;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);if(w.finance.cash<wages*7){w.startup.decisionTh='รักษาเงินเดือนและทำงานเดิมก่อนเพิ่มค่าเรียน';return;}
+      const goals=Object.entries(w.startup.learningGoals).filter(([id,level])=>SUBJECTS[id]&&!subjectReady(w,id,level));
+      if(!goals.length)return;const openness=ceo.profile.personality.openness??50,pressure=Object.values(w.units).some(u=>u.attempts>0)||w.people.some(p=>p.news?.known.some(n=>/TRADE|TREATY|CONFLICT/.test(n.category)));
+      if(openness<35&&!pressure&&day(w)%9!==0){w.startup.decisionTh='ผู้บริหารยังเลือกงานประจำแทนการเรียนเพิ่มในรอบนี้';return;}
+      const [id,level]=goals[0],candidates=w.people.filter(p=>p.employed&&!p.education.course).sort((a,b)=>subjectLevel(b,id)-subjectLevel(a,id));
+      const p=candidates.find(p=>['engineer','assembler','inspector'].includes(p.role))||candidates[0];if(!p)return;
+      plantHooks(w).train(p,id,level);const reason=`${ceo.name} วางแผนให้ ${p.name} เรียน ${SUBJECTS[p.education.course]} เพื่อพัฒนางาน ${w.startup.nameTh}${pressure?' หลังพบปัญหางาน/ข่าวที่เกี่ยวข้อง':''}`;
+      w.startup.decisionTh=reason;w.startup.learningHistory.unshift({day:day(w),personId:p.id,subjectId:p.education.course,targetLevel:p.education.courseLevel,reasonTh:reason});if(w.startup.learningHistory.length>30)w.startup.learningHistory.pop();event(w,'smeLearningPlanned',reason,{personId:p.id,subjectId:p.education.course});
+    }
+    function evaluateSmallBusinessDaily(w){
+      if(!w.startup||!w.policies.autoAccept||day(w)<2||!w.people.some(p=>p.employed&&p.atWork&&p.role==='coordinator'))return;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);if(w.finance.cash<wages*14+500000)return;
+      if(w.startup.profileId==='software_agency'&&day(w)>=(w.startup.nextClientReviewDay||2)&&Object.values(w.softwareBusiness.projects).every(p=>['closed','cancelled','supporting'].includes(p.status))){
+        const buyer=Object.values(w.externalWorld.corporations).find(c=>(c.id==='metro_retail'||c.sector==='food')&&w.externalWorld.living.firms[c.id]?.status==='operating'&&!Object.values(w.softwareBusiness.projects).some(p=>p.appId==='pos_retail'&&p.clientCorpId===c.id));
+        const res=buyer?startSoftwareProject(w,'pos_retail',buyer.id):{ok:false};w.startup.nextClientReviewDay=day(w)+7;if(res.ok){const project=w.softwareBusiness.projects[res.projectId];project.requiredDevMinutes=Math.max(project.requiredDevMinutes,2400);project.estimatedDevMinutes=project.requiredDevMinutes;project.requiredQaMinutes=Math.max(project.requiredQaMinutes,480);w.startup.decisionTh='รับพัฒนาPOSให้ลูกค้าจริง เริ่มเก็บความต้องการและคิดชั่วโมงนักพัฒนา ไม่ได้มีSaaSสำเร็จรูป';event(w,'smeProjectAccepted',w.startup.decisionTh,{projectId:res.projectId});}
+      }
+      if(w.startup.serviceType&&Object.values(w.serviceBusiness.orders).every(o=>['paid','cancelled'].includes(o.status))){
+        const res=startServiceOrder(w,w.startup.serviceType);if(res.ok){w.startup.decisionTh='รับงานช่างตามความรู้ เครื่องมือและเงินหมุนเวียนที่มี';event(w,'smeServiceAccepted',w.startup.decisionTh,{orderId:res.orderId});}
+      }
+      const info=ensureIntelligence(w),today=day(w);if(info.lastReviewDay===today)return;info.lastReviewDay=today;
+      for(const n of info.negotiations){if(n.status!=='negotiating'||today<n.reviewDay)continue;const corp=w.externalWorld.corporations[n.corpId],sup=w.externalWorld.suppliers[n.corpId];if(corp&&(sup?.trustScore||corp.trustScore)>=65&&w.finance.cash>wages*18+500000){const res=setCorporationRelation(w,n.corpId,'partner');n.status=res.ok?'signed':'deferred';n.reasonTh=res.ok?'ประวัติส่งมอบและเงินสำรองผ่าน จึงตกลงคู่ค้าระยะยาว':'ชะลอข้อตกลงหลังตรวจเงื่อนไข';}else n.status='deferred';}
+      const ceo=w.people.find(p=>p.employed&&p.role==='coordinator');if(!ceo?.news?.known.length)return;
+      const candidate=Object.values(w.externalWorld.suppliers).find(s=>s.totalDeliveries>=3&&s.totalSpendSatang>=5000000&&s.trustScore>=65&&w.externalWorld.corporations[s.id]?.relationshipMode!=='partner'&&!info.negotiations.some(n=>n.corpId===s.id));
+      if(candidate&&w.finance.cash>wages*18+500000){info.negotiations.push({corpId:candidate.id,status:'negotiating',startedDay:today,reviewDay:today+7,reasonTh:'มีการส่งมอบจริงอย่างน้อย3ครั้งและปริมาณซื้อพอคุ้มข้อตกลง ลดการพึ่งตลาดซื้อครั้งเดียว'});info.negotiations=info.negotiations.slice(-20);}
+    }
+    function intelligenceAudit(w){
+      const errors=[],record=v=>v&&typeof v==='object'&&!Array.isArray(v);
+      if(w.intelligence){const x=w.intelligence;if(x.version!==1||!record(x.countryRisk)||!record(x.sectorSignals)||!Array.isArray(x.history)||!Array.isArray(x.negotiations)||!int(x.lastReviewDay))return ['invalid intelligence'];
+        for(const [id,v]of Object.entries(x.countryRisk))if(!w.externalWorld.living.nations[id]||!Number.isFinite(v)||v<0||v>70)errors.push('invalid known country risk');
+        for(const v of Object.values(x.sectorSignals))if(!Number.isFinite(v)||v<.6||v>1.4)errors.push('invalid sector signal');
+        for(const n of x.negotiations)if(!w.externalWorld.corporations[n.corpId]||!['negotiating','signed','deferred'].includes(n.status)||!int(n.startedDay)||!int(n.reviewDay)||n.reviewDay<n.startedDay)errors.push('invalid supplier negotiation');
+      }
+      for(const p of w.people)if(p.news){const n=p.news;if(!Array.isArray(n.known)||n.known.length>16||!int(n.lastReadDay)||!int(n.readingMinutes))errors.push('invalid NPC news '+p.id);else for(const e of n.known)if(typeof e.id!=='string'||typeof e.headlineTh!=='string'||!int(e.readAt)||e.readAt>now(w)||!Number.isFinite(e.comprehension)||e.comprehension<0||e.comprehension>100)errors.push('invalid NPC news record '+p.id);}
+      return errors;
+    }
     function reviewKnowledge(w) {
       const k = ensureKnowledge(w);
       if (k.lastReviewDay === day(w)) return;
@@ -11894,14 +12107,20 @@ return Object.freeze({
       }
       const risk = ceo.profile.personality.riskTaking ?? 50;
       if (day(w) % (risk > 65 ? 3 : 5) !== 0) return;
-      const targets = Object.values(w.catalog.products).filter((p) => p.researchRequired > 0 && !k.projects[`product:${p.id}`]);
+      const targets = Object.values(w.catalog.products).filter((p) => p.researchRequired > 0 && !k.projects[`product:${p.id}`]).filter(p=>{
+        if(!w.startup||w.research.unlocked.length)return true;
+        const rows=teamCoverage(w,productRequirements(w,p.id)),fit=rows.filter(r=>r.ready).length/rows.length;
+        return fit>=.5&&risk>65&&w.finance.cash>w.startup.paidInCapital*2.5;
+      });
       const score=(p)=>{
         const req=productRequirements(w,p.id), rows=teamCoverage(w,req);
         const fit=rows.filter(r=>r.ready).length/rows.length;
         const market=(w.externalWorld?.geopolitics?.sectorDemandMultipliers?.[({tech:"electronics",aerospace_robotics:"automotive"})[p.industry] || p.industry] || 1)*(w.externalWorld?.government?.demandMultiplier || 1);
         const bomCost=Object.entries(p.bom).reduce((sum,[id,q])=>sum+w.catalog.materials[id].unitCost*q,0);
         const margin=((p.priceMin || 0)-bomCost)/Math.max(1,p.priceMin || 1);
-        return fit*(risk>65 ? 35 : 65)+market*15+margin*15-(p.researchRequired || 0)/40;
+        const localFit=w.startup&&((p.industry==="tech"?"electronics":p.industry)===w.startup.sector)?20:0;
+        const informed=((w.intelligence?.sectorSignals?.[p.industry==="tech"?"electronics":p.industry]||1)-1)*25;
+        return fit*(risk>65 ? 35 : 65)+market*15+margin*15+localFit+informed-(p.researchRequired || 0)/40;
       };
       targets.sort((a,b)=>score(b)-score(a)||a.id.localeCompare(b.id));
       let target=targets[0], kind="product";
@@ -15455,6 +15674,7 @@ return Object.freeze({
       const depositAmt = Math.round(price * 0.3);
       const corp = w.externalWorld?.corporations?.[clientCorpId];
 
+      if(!W.payFromCounterparty(w,`swDeposit:${pid}`,"firm",clientCorpId,depositAmt))return {ok:false,code:"clientFundsUnavailable",message:"ลูกค้าไม่มีเงินมัดจำจริง จึงยังลงนามรับงานไม่ได้"};
       // Collect 30% deposit into cash, but record it as unearnedDepositSatang (NOT recognized profit until milestones are accepted!)
       post(w, "sales", depositAmt, `swDeposit:${pid}`);
       sb.metrics.totalUnearnedDepositSatang = (sb.metrics.totalUnearnedDepositSatang || 0) + depositAmt;
@@ -15532,7 +15752,7 @@ return Object.freeze({
       if (proj.status === "discovery") {
         const depositAmt = Math.round(proj.contractPriceSatang * 0.3);
         if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
-          W.payFromCounterparty(w, `swDeposit:${proj.id}`, "firm", proj.clientCorpId, depositAmt);
+          if(!W.payFromCounterparty(w, `swDeposit:${proj.id}`, "firm", proj.clientCorpId, depositAmt))return {ok:false,code:"clientFundsUnavailable"};
         }
         post(w, "sales", depositAmt, `swDeposit:${proj.id}`);
         proj.depositCollectedSatang = depositAmt;
@@ -15566,7 +15786,9 @@ return Object.freeze({
         proj.assignedDeveloperId = dev.id;
         proj.assignedDeveloperName = dev.name;
 
+        if(!Number.isFinite(options.minutes)||options.minutes<=0)return {ok:false,code:"noRecordedDeveloperTime",message:"ต้องมีชั่วโมงทำงานนักพัฒนาจริงก่อนเพิ่มความคืบหน้า"};
         const cloudFee = spec.computeCostSatang || 500000;
+        if (proj.computeCostSatang === 0 && w.finance.cash < cloudFee)return {ok:false,code:"computeFundsUnavailable",message:"เงินไม่พอค่าเครื่องมือ/ระบบพัฒนา โครงการหยุดรอทุน"};
         if (proj.computeCostSatang === 0 && w.finance.cash >= cloudFee) {
           post(w, "equipment", -cloudFee, `swCompute:${proj.id}`);
           proj.computeCostSatang = cloudFee;
@@ -15579,7 +15801,7 @@ return Object.freeze({
         const conscientiousness = dev.profile?.personality?.conscientiousness ?? 50;
         const productivity = clamp((0.65 + progSkill * 0.0045 + analytical * 0.002) * Math.max(0.45, 1 - fatigue / 135), 0.4, 1.65);
 
-        const rawMinutes = typeof options.minutes === "number" ? Math.max(0, options.minutes) : 45;
+        const rawMinutes = typeof options.minutes === "number" ? Math.max(0, options.minutes) : 0;
         const effectiveMinutes = Math.round(rawMinutes * productivity * 10) / 10;
         proj.actualPersonMinutes = (proj.actualPersonMinutes || 0) + rawMinutes;
         proj.progressMinutes = Math.min(proj.requiredDevMinutes, (proj.progressMinutes || 0) + effectiveMinutes);
@@ -15597,7 +15819,7 @@ return Object.freeze({
           }
         }
 
-        if (proj.progressMinutes < proj.requiredDevMinutes && options.minutes !== undefined) {
+        if (proj.progressMinutes < proj.requiredDevMinutes) {
           proj.lastReasonTh = `${dev.name} กำลังพัฒนาโค้ด (${Math.round(proj.progressMinutes)}/${proj.requiredDevMinutes} นาที • ประสิทธิภาพ ×${productivity.toFixed(2)})`;
           return {
             ok: true,
@@ -15607,7 +15829,7 @@ return Object.freeze({
             productivity,
           };
         }
-        // Complete implementation when requiredDevMinutes is reached (or when options.minutes was omitted in step-by-step test with qualified dev)
+        // Implementation completes only from recorded developer labor; omitted minutes never complete it.
         proj.progressMinutes = proj.requiredDevMinutes;
         proj.status = "testing";
         if (options.injectDefects !== undefined) {
@@ -15632,8 +15854,10 @@ return Object.freeze({
 
       // Step 3: testing (QA & Defect resolution)
       if (proj.status === "testing") {
+        if((proj.qaProgressMinutes||0)<proj.requiredQaMinutes)return {ok:false,code:"qaTimeRequired",message:"ต้องใช้เวลาผู้ทดสอบจริงก่อนรับรอง QA"};
         if (proj.externalQaCostSatang === 0) {
           const qaCost = 1000000; // ฿10,000 QA test lab / device farm cost
+          if(w.finance.cash<qaCost)return {ok:false,code:"qaFundsUnavailable",message:"เงินไม่พอค่าห้องทดสอบ ยังออกใบรับรองไม่ได้"};
           if (w.finance.cash >= qaCost) {
             post(w, "equipment", -qaCost, `swQaTest:${proj.id}`);
             proj.externalQaCostSatang = qaCost;
@@ -15677,7 +15901,7 @@ return Object.freeze({
         if (!proj.uatCollected) {
           const uatAmount = Math.round(proj.contractPriceSatang * proj.uatMilestonePct); // 40%
           if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
-            W.payFromCounterparty(w, `swUat:${proj.id}`, "firm", proj.clientCorpId, uatAmount);
+            if(!W.payFromCounterparty(w, `swUat:${proj.id}`, "firm", proj.clientCorpId, uatAmount))return {ok:false,code:"clientFundsUnavailable"};
           }
           post(w, "sales", uatAmount, `swUatMilestone:${proj.id}`);
           proj.uatCollected = true;
@@ -15697,7 +15921,7 @@ return Object.freeze({
         const finalAmount = proj.contractPriceSatang - proj.cashCollectedSatang;
         if (finalAmount > 0 && !proj.deployCollected) {
           if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
-            W.payFromCounterparty(w, `swDeploy:${proj.id}`, "firm", proj.clientCorpId, finalAmount);
+            if(!W.payFromCounterparty(w, `swDeploy:${proj.id}`, "firm", proj.clientCorpId, finalAmount))return {ok:false,code:"clientFundsUnavailable"};
           }
           post(w, "sales", finalAmount, `swDeployMilestone:${proj.id}`);
           proj.deployCollected = true;
@@ -17018,7 +17242,8 @@ return Object.freeze({
                 const slagBonus = s.id === "industrial_recycling" && safeAvailableToDeduct(w, "mineral_slag_mud") >= 1 ? 180000 : 0;
                 const netMargin = Math.round((s.serviceFeeSatang || 380000) * srvMult) - (s.labConsumableCostSatang || 45000) + recVal + slagBonus;
                 const onCd = isTopicOnCooldown(w, "service_entry", s.id, completedDay, options);
-                const score = (onCd ? -500000 : 0) + (partsReady ? 600000 : 0) + netMargin;
+                const knowledgeFit=teamReady(w,SERVICE_SUBJECTS[s.id]||{}),focus=w.startup?.serviceType===s.id;
+                const score = (onCd ? -500000 : 0) + (partsReady ? 600000 : 0) + netMargin+(knowledgeFit?600000:-1000000)+(focus?250000:0);
                 return { spec: s, partsReady, netMargin, score };
               })
               .sort((a, b) => b.score - a.score);
@@ -17346,11 +17571,7 @@ return Object.freeze({
       }
 
       // 2. Autonomous Software & SaaS Operations
-      for (const proj of Object.values(sb.projects)) {
-        if (!["supporting", "closed", "cancelled", "blocked"].includes(proj.status) && w.finance.cash > 5000000) {
-          advanceSoftwareProject(w, proj.id, { completeAllSteps: false });
-        }
-      }
+      // Project stages advance exclusively in stepSoftwareBusinessTick with actual labor.
       for (const app of Object.values(sb.saasProducts || {})) {
         if (app.status === "live") {
           if (completedDay >= 3 && app.leadCount > 0 && app.activeSubscribers === 0) {
@@ -17506,9 +17727,10 @@ return Object.freeze({
         ? clone(options.catalog)
         : D.createCatalog();
       if (!catalog.taskKinds) catalog.taskKinds = {};
-      if (options.startupMode === "lean" || options.starterCount === 5) {
+      const startupState=options.startingBusiness?B.configure(catalog,options.startingBusiness):null;
+      if (!startupState && (options.startupMode === "lean" || options.starterCount === 5)) {
         catalog.starters = clone(D.LEAN_STARTERS || catalog.starters.slice(0, 5));
-      } else if (int(options.starterCount, 4, 30)) {
+      } else if (!startupState && int(options.starterCount, 4, 30)) {
         catalog.starters = catalog.starters.slice(0, options.starterCount);
       }
       const errors = D.validateCatalog(catalog);
@@ -17606,9 +17828,9 @@ return Object.freeze({
       ensureWarehouse(w);
       recomputeGeopoliticalMultipliers(w);
       ensureKnowledge(w);
+      if(startupState)B.apply(w,startupState);
       const first = w.research.unlocked[0];
-      makeOffer(w, first, 8, 6);
-      makeOffer(w, first, 10, 8);
+      if(first){makeOffer(w, first, startupState?4:8, 6);makeOffer(w, first, startupState?6:10, 8);}
       event(
         w,
         "companyStarted",
@@ -18109,6 +18331,10 @@ return Object.freeze({
           cost: quantity * effectiveUnitCost,
           spotUnitCost,
           worldLeadDays: quote.days,
+          customsTaxSatang:quote.unitTax*quantity,
+          originNationId:quote.originNationId,
+          tradePolicyIds:quote.policyIds,
+          tradeReasonTh:quote.reasonTh,
           geopoliticalMultiplier: geoMult,
           status: "paperwork",
           orderedAt: now(w),
@@ -18118,7 +18344,7 @@ return Object.freeze({
           buyerId: buyer ? buyer.id : null,
           buyerName: buyer ? buyer.name : "ฝ่ายจัดซื้อ",
         };
-      if(!W.sellToPlayer(w,quote.supplierId,materialId,quantity,p.cost)) return null;
+      if(!W.sellToPlayer(w,quote.supplierId,materialId,quantity,p.cost,quote)) return null;
       post(w, "materials", -p.cost, p.id);
       w.purchases[p.id] = p;
       job(w, "purchase", { purchaseId: p.id, required: 15 });
@@ -18148,6 +18374,7 @@ return Object.freeze({
         });
         if (w.logistics.inboundShipments.length > 50) w.logistics.inboundShipments.pop();
       }
+      if(supplier&&!w.externalWorld.suppliers[supplier.id])w.externalWorld.suppliers[supplier.id]={id:supplier.id,nameTh:supplier.nameTh,trustScore:supplier.trustScore||50,totalOrders:0,totalDeliveries:0,totalSpendSatang:0,tierTh:"คู่ค้ามาตรฐาน (Regular)"};
       if (supplier && w.externalWorld?.suppliers?.[supplier.id]) {
         w.externalWorld.suppliers[supplier.id].totalOrders =
           (w.externalWorld.suppliers[supplier.id].totalOrders || 0) + 1;
@@ -19218,7 +19445,7 @@ return Object.freeze({
       } else if (j.kind === "sales") {
         const products = w.research.unlocked,
           productId = products[Math.floor(random(w) * products.length)];
-        makeOffer(
+        if(productId)makeOffer(
           w,
           productId,
           8 + Math.floor(random(w) * 7),
@@ -19586,6 +19813,7 @@ return Object.freeze({
       if (!active) {
         release(w, p, stationLoadMap);
         p.atWork = false;
+        if(readNewsTick(w,p)){p.position={...w.layout.entrance};p.previousPosition={...p.position};return;}
         if(personalStudyTick(w,p)) {p.position={...w.layout.entrance};p.previousPosition={...p.position};return;}
         p.activity = time >= 1320 || time < 360 ? "sleeping" : "offDuty";
         p.position = { ...w.layout.entrance };
@@ -21652,6 +21880,7 @@ return Object.freeze({
     function step(w) {
       if (w.status !== "running") return false;
       ensureKnowledge(w);
+      if(tod(w)===635)reviewSmallBusinessLearning(w);
       if (tod(w) === 640) reviewKnowledge(w);
       if (w.people.length > 10) syncStationCapacitiesForScale(w);
       if (tod(w) === 570) evaluateDebtRepayment(w);
@@ -21662,7 +21891,7 @@ return Object.freeze({
       if (tod(w) === 660 && day(w) >= 5 && w.policies.autoAccept &&
           w.people.some((p) => p.employed && p.atWork && p.role === "coordinator"))
         evaluateAutonomousHiring(w);
-      if(tod(w)===690)evaluateCommercialSales(w);
+      if(tod(w)===690){evaluateSmallBusinessDaily(w);evaluateCommercialSales(w);}
       P.tick(w,TICK,plantHooks(w));
       if(tod(w)===675&&w.policies.autoAccept&&w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))P.review(w,plantHooks(w));
       if(tod(w)===680&&w.policies.autoAccept)evaluateOperationalCrisesAndBottlenecks(w);
@@ -23110,6 +23339,8 @@ return Object.freeze({
     function audit(w) {
       const errors = [
         ...W.validate(w),
+        ...B.validate(w),
+        ...intelligenceAudit(w),
         ...P.validate(w),
         ...commercialAudit(w),
         ...E.auditFinance(w.finance),
@@ -23346,6 +23577,12 @@ return Object.freeze({
       commercialAudit,
       warehouseCapacity,
       warehouseUsed,
+      readNewsTick,
+      reviewSmallBusinessLearning,
+      evaluateSmallBusinessDaily,
+      intelligenceAudit,
+      startupOptions:B.list,
+      startupAudit:B.validate,
       plantView: P.view,
       plantAudit: P.validate,
       productionView,
@@ -23585,6 +23822,8 @@ return Object.freeze({
       );
     }
     if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
+    try{for(const err of S.intelligenceAudit(w))add(false,err);}catch(_){add(false,"invalid market intelligence");}
+    if(w.startup){try{for(const err of S.startupAudit(w))add(false,err);}catch(_){add(false,"invalid SME startup");}}
     if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
     if(w.warehouse){try{for(const err of S.warehouseAudit(w))add(false,err);}catch(_){add(false,"invalid warehouse");}}
     if (w.externalWorld?.living) {
@@ -23927,6 +24166,8 @@ return Object.freeze({
               "socialising",
               "helping",
               "offDuty",
+              "learning",
+              "selfStudy",
               "sleeping",
               "blocked",
             ].includes(p.activity),
@@ -24496,6 +24737,7 @@ return Object.freeze({
       if (p.activity === "resting") return "กำลังพักสูดอากาศลดความเครียดที่สวนหย่อม";
       if (p.activity === "helping") return "กำลังช่วยเพื่อนร่วมงานเร่งงานด่วน";
       if (code === "selfStudy") return "กำลังศึกษาพัฒนาทักษะในสายงานตัวเอง";
+      if(code === "readingNews")return "กำลังอ่านข่าว: "+(p.intent.reasons||[]).join(" • ");
       if(code === "equipmentMaintenance")return "กำลังติดตั้ง/ซ่อมบำรุงเครื่องมือ: "+(p.intent.reasons||[]).join(" • ");
       if(code === "freightDispatch")return "กำลังขับรถขนส่งสินค้าตามสัญญา: "+(p.intent.reasons||[]).join(" • ");
       if(code === "softwareDevelopment")return "กำลังพัฒนาและทดสอบซอฟต์แวร์: "+(p.intent.reasons||[]).join(" • ");
@@ -25084,6 +25326,7 @@ return Object.freeze({
           starred: Boolean(w.watchlist?.people?.includes(p.id)),
           skills: p.skills,
           education: p.education || null,
+          news:p.news||null,
           experience: p.experience,
           relationships: p.relationships,
           concern: p.concern,
@@ -25389,6 +25632,9 @@ return Object.freeze({
           serviceBusiness: w.serviceBusiness || null,
           capabilities: w.capabilities || null,
           companyKnowledge: S.companyKnowledgeView(w),
+          startup:w.startup||null,
+          intelligence:w.intelligence||null,
+          startupOptions:S.startupOptions(),
           manufacturing: S.productionView(w),
           plant: S.plantView(w),
           commerce: S.commerceView(w),
@@ -27823,6 +28069,7 @@ return Object.freeze({
   }
 
   function openSheet(mode, defaultTab = "") {
+    current=app.snapshot();pending=current;
     uiState.sheetOpen = true;
     uiState.sheetMode = mode;
     if (defaultTab) uiState.subTab = defaultTab;
@@ -27852,6 +28099,7 @@ return Object.freeze({
         "aptitudes",
         "skills",
         "knowledge",
+        "news",
         "relations",
         "wallet",
         "chronicle",
@@ -27969,6 +28217,7 @@ return Object.freeze({
       { id: "aptitudes", label: "ความถนัด 30 ด้าน" },
       { id: "skills", label: "ทักษะ/สายงาน" },
       { id: "knowledge", label: "ความรู้" },
+      { id: "news", label: "ข่าวที่รับรู้" },
       { id: "relations", label: "ความสัมพันธ์" },
       { id: "wallet", label: "กระเป๋า/เป้าหมาย" },
       { id: "chronicle", label: "บันทึกชีวิต" },
@@ -28222,6 +28471,10 @@ return Object.freeze({
         skCard.append(item);
       }
       nodes.push(skCard);
+    } else if (uiState.subTab === "news") {
+      const card=el("div","card");card.append(el("h3","","ข่าวที่ตัวละครรับรู้"),el("p","muted","แต่ละคนมีเวลาอ่านและความเข้าใจต่างกัน ข่าวที่ยังไม่ได้อ่านจะไม่เข้าความรู้ของเขา"));
+      for(const n of (p.news?.known||[]).slice())card.append(el("div","logrow",`วันที่ ${Math.floor((n.readAt||0)/1440)+1} • ${n.headlineTh||n.id} — ${n.interpretationTh||'กำลังประเมินข้อมูล'}`));
+      if(!p.news?.known?.length)card.append(el("p","muted","ยังไม่มีข่าวที่อ่านในบันทึก"));nodes.push(card);
     } else if (uiState.subTab === "knowledge") {
       const ed=p.education || {subjects:{},practiceMinutes:{}},k=v.companyKnowledge;
       const heading=el("div","card");
@@ -29061,6 +29314,10 @@ return Object.freeze({
     const coverage=(rows)=>(rows || []).map(r=>`${r.ready ? "✓" : "ขาด"} ${r.nameTh} ${r.level} — ${r.holders.map(h=>h.name).join(", ") || "ยังไม่มีผู้รู้"}`).join(" • ");
     const stages={literature:"ศึกษาความเป็นไปได้",prototype:"ทำต้นแบบ",validation:"ตรวจสอบกระบวนการ",qualified:"ผ่านการรับรอง"};
     if(uiState.subTab==="company_overview") {
+      if(v.startup){const s=v.startup;row("จุดเริ่มต้น SME — "+s.nameTh,`ทุนผู้ก่อตั้ง ${moneyFull(s.paidInCapital)} = เงินสดเริ่มต้น ${moneyFull(s.openingCash)} + เครื่องมือ ${moneyFull(s.openingEquipmentValue)} + สต็อก ${moneyFull(s.openingStockValue)} + มัดจำ ${moneyFull(s.leaseDeposit)} + เตรียมกิจการ ${moneyFull(s.registrationValue)}
+เช่าพื้นที่ใช้สอย ${s.areaM2} ตร.ม. ในแคมปัสร่วม ค่าเช่า ${moneyFull(s.rentDaily)}/วัน ไม่ได้เป็นเจ้าของอาคารทั้งหมด`);row("การเรียนรู้และการขยายกิจการ",s.decisionTh);for(const h of s.learningHistory.slice(0,5))row("การพัฒนาทีม",h.reasonTh||h.messageTh||JSON.stringify(h));}
+      if(v.intelligence){row("ข่าวและการตัดสินใจของผู้บริหาร",v.intelligence.decisionTh);for(const n of v.intelligence.negotiations||[])row("เจรจาพาร์ทเนอร์",`${v.externalWorld.corporations[n.corpId]?.nameTh||n.corpId} • ${({negotiating:'กำลังเจรจา',signed:'ตกลงแล้ว',deferred:'ชะลอไว้ก่อน'})[n.status]} • ${n.reasonTh||''}`);}
+
       row("ฐานะบริษัท",`เงินสด ${money(v.company.cash)} • หนี้ ${money(v.company.debt)} • ลูกหนี้ ${money(v.company.receivable)} • เงินสำรองพอประมาณ ${v.company.runwayDays} วัน`);
       row("กิจการขณะนี้",`${v.companyProgression?.currentStageNameTh || "บริษัทเริ่มต้น"} • ทีม ${k.people.length} คน • ออเดอร์ที่จ่ายแล้ว ${v.company.metrics.ordersPaid} • งานที่ยังเปิด ${v.orders.filter(o=>!["paid","cancelled"].includes(o.status)).length}`);
       row("ความพร้อมเทคโนโลยี",`พร้อมดำเนินการ ${k.products.filter(p=>p.ready).length}/${k.products.length} สินค้า • โครงการเฉพาะทาง ${k.projects.filter(p=>p.status!=="qualified").length} โครงการ`);
@@ -29191,6 +29448,9 @@ ${b.waitingReasonTh||''}`);
     const e=v.externalWorld,m=e?.living,geo=e?.geopolitics;
     body.replaceChildren();
     const row=(title,text)=>{const card=el("div","card world-card");card.append(el("h3","",title),el("div","muted",text));body.append(card);return card;};
+    const groupName={food:"อาหาร",energy:"พลังงาน",metals:"โลหะ",electronics:"อิเล็กทรอนิกส์",chemicals:"เคมีภัณฑ์",biological:"ชีวภาพและเกษตร",industrial:"อุตสาหกรรมทั่วไป"};
+    const treatyState={proposed:"กำลังเจรจา",signed:"ลงนามแล้ว",effective:"มีผลบังคับใช้",suspended:"ระงับใช้",expired:"หมดอายุ",rejected:"เจรจาไม่สำเร็จ"};
+    const measureName={tariff:"ภาษีนำเข้า",waiver:"ยกเว้นภาษีนำเข้า",export_quota:"โควตาส่งออก"};
     const policy={balanced:"รักษาเสถียรภาพ",stimulus:"กระตุ้นเศรษฐกิจ",tightening:"ควบคุมเงินเฟ้อ",austerity:"รักษาฐานะการคลัง"};
     const status={peace:"สัมพันธ์ปกติ",treaty:"ข้อตกลงการค้า",sanctions:"จำกัดการค้า",war:"ความขัดแย้งติดอาวุธ"};
     if(!m){row("กำลังเตรียมข้อมูลโลก","โลกจากเซฟเก่าจะเริ่มจำลองเมื่อผ่านวันถัดไป");return;}
@@ -29214,6 +29474,9 @@ ${b.waitingReasonTh||''}`);
       const id=entityPicker("worldNation",nations.map(n=>({id:n.id,nameTh:`${geo.nations[n.id].flag} ${geo.nations[n.id].nameTh}`})),"เลือกประเทศ"),n=m.nations[id],g=geo.nations[id];
       row(`${g.flag} ${g.nameTh}`,n.descriptionTh);
       row("รัฐบาลและนโยบาย",`${g.activeRegimeNameTh} • ${policy[n.policy]}\nเหตุผล: ${n.policyReasonTh}\nรอบทบทวนถัดไปวันที่ ${n.lastReviewDay+14} • ทบทวนผู้นำวันที่ ${n.nextElectionDay}`);
+      if(n.government){const h=n.government;row("ผู้นำและวาระ",`${h.leader.name} (ตัวละครสมมติ) • ${g.activeRegimeNameTh} • วาระ ${h.termDays} วัน • รอบเปลี่ยน/คงผู้นำวันที่ ${n.nextElectionDay}`);for(const x of (h.electionHistory||[]).slice(0,3))row("ผลทบทวนผู้นำ",`วันที่ ${x.day}: ${x.turnover?'เปลี่ยน':'คง'}คณะบริหาร • ${x.leaderName} • ผลประเมินเศรษฐกิจ/ความนิยม ${Math.round(x.performance)}/100`);}
+      if(n.commerceMinistry){const c=n.commerceMinistry;row(c.nameTh,`${c.reasonTh||'ทบทวนต้นทุนและอุปทานในประเทศ'}\nภาษีศุลกากรรับจริง ${moneyFull(c.customsRevenue)} • ทบทวนล่าสุดวันที่ ${c.lastReviewDay}`);for(const x of c.measures.slice(-8))row(x.nameTh||measureName[x.type],`${groupName[x.group]} • อัตรา ${x.rate}% • ประกาศวันที่ ${x.announcedDay} • มีผลวันที่ ${x.effectiveDay} • สิ้นสุดวันที่ ${x.expiresDay}\n${x.reasonTh}`);}
+      if(n.security)row("ต้นทุนความขัดแย้ง",`ใช้จ่ายสะสม ${moneyFull(n.security.defenceSpentSatang)} • ความเสียหายโครงสร้างพื้นฐาน ${n.security.damageIndex.toFixed(2)}% • อยู่ในความขัดแย้ง ${n.security.conflictDays} วัน`);
       row("เศรษฐกิจและความเป็นอยู่",`เงินเฟ้อ ${n.inflation}% • ว่างงาน ${n.unemployment}% • ดอกเบี้ยนโยบาย ${n.interestRate}% • ดัชนีเศรษฐกิจ ${n.gdpIndex}\nความนิยม ${n.approval}% • เสถียรภาพ ${n.stability}% • โครงสร้างพื้นฐาน ${n.infrastructure}/100`);
       row("คลังและกำลังซื้อ",`เงินคลัง ${moneyFull(n.treasury)} • ภาษีสะสม ${moneyFull(n.taxes)} • รายจ่ายรัฐ ${moneyFull(n.spending)}\nเงินภาคครัวเรือน/อุตสาหกรรมปลายทาง ${moneyFull(n.householdCash)} • ใช้จ่ายสะสม ${moneyFull(n.consumption)}`);
       for(const f of firms.filter(f=>f.nationId===id)){const card=row(firmName(f.id),`${moneyFull(f.cash)} • ${f.decisionTh}`);const b=el("button","btn","ดูบริษัทนี้");b.onclick=()=>{uiState.worldFirm=f.id;uiState.subTab='world_firms';renderWorldSheet(v,body);};card.append(b);}
@@ -29238,6 +29501,7 @@ ${b.waitingReasonTh||''}`);
     }else if(uiState.subTab==="world_diplomacy"){
       const id=entityPicker("worldRelation",m.relations.map(r=>({id:r.id,nameTh:`${nationName(r.a)} ↔ ${nationName(r.b)}`})),"เลือกความสัมพันธ์ระหว่างประเทศ"),r=m.relations.find(r=>r.id===id);
       row(`${nationName(r.a)} ↔ ${nationName(r.b)}`,`${status[r.status]} • ความตึงเครียด ${r.tension}/100 • ความเชื่อมั่น ${r.trust}/100\n${r.reasonTh} • มีผลตั้งแต่วันที่ ${r.sinceDay}`);
+      for(const t of (m.civics?.treaties||[]).filter(t=>t.parties.includes(r.a)&&t.parties.includes(r.b)))row("ข้อตกลงรายสินค้า",`${t.groups.map(g=>groupName[g]).join(', ')} • ${treatyState[t.status]} • ยกเว้น ${t.waiverPct}% • มีผลวันที่ ${t.effectiveDay||'รอเจรจา'} • สิ้นสุดวันที่ ${t.expiresDay||'ยังไม่กำหนด'}\n${t.reasonTh||''} • ผู้ลงนาม ${(t.signatories||[]).map(x=>x.name).join(' / ')}`);
       for(const c of Object.values(geo.tradeCorridors))row(c.nameTh,`ภาษี ${c.tariffPct}% • เวลาขนส่ง ×${c.leadTimeMod} • อุปสงค์ ×${c.demandMod} • ${status[c.livingStatus]||c.status}`);
       row("สินค้าระหว่างทาง",`${m.shipments.length} ล็อต ชำระเงินแล้ว สินค้าจะเข้าคลังผู้ซื้อเมื่อถึงกำหนด`);
       for(const s of m.shipments.slice(0,20))row(`${materialName(s.materialId)} ×${s.quantity}`,`${firmName(s.sellerId)} → ${firmName(s.buyerId)}\nออกวันที่ ${s.departedDay} • ถึงวันที่ ${s.dueDay}${s.delayed?' • ล่าช้าจากความขัดแย้ง':''} • ภาษี ${moneyFull(s.tariff)}`);
@@ -30702,22 +30966,7 @@ ${b.waitingReasonTh||''}`);
       const seedInp = el("input");
       seedInp.value = v.seed || "company-demo";
       seedInp.style.marginTop = "4px";
-      const bLean = el("button", "btn pri", "🌱 เริ่มบริษัทใหม่ (โหมดก่อตั้ง 5 คน)");
-      bLean.style.marginTop = "6px";
-      bLean.onclick = () => {
-        app.newGame(seedInp.value || "company-demo", { autonomous: true, startupMode: "lean", starterCount: 5 });
-        app.dispatch({ type: "setPolicy", key: "autoAccept", value: true });
-        app.setSpeed(1);
-        paint(app.snapshot());
-        showToast("🌱 เริ่มบริษัทใหม่ในโหมดก่อตั้ง 5 คน (CEO + ออฟฟิศ + โรงงาน) แล้ว");
-      };
-      const bNew = el("button", "btn dan", "🔄 เริ่มบริษัทใหม่ (โหมดมาตรฐาน 8 คน)");
-      bNew.style.marginTop = "6px";
-      bNew.onclick = () => {
-        if (byId("seed")) byId("seed").value = seedInp.value || "company-demo";
-        byId("new-game").click();
-      };
-      row3.append(seedInp, bLean, bNew);
+      const bNew=el("button","btn pri","🌱 เลือกธุรกิจเริ่มต้นใหม่");bNew.onclick=()=>showBusinessChooser(seedInp.value);row3.append(seedInp,bNew);
 
       c.append(row1, row2, row3);
       body.replaceChildren(c);
@@ -30813,14 +31062,9 @@ ${b.waitingReasonTh||''}`);
   }
 
   if (byId("new-game")) {
-    byId("new-game").onclick = () => {
-      app.newGame(byId("seed")?.value || "company-demo", { autonomous: true });
-      app.dispatch({ type: "setPolicy", key: "autoAccept", value: true });
-      app.setSpeed(1);
-      paint(app.snapshot());
-      showToast("เริ่มบริษัทใหม่ในโหมด NPC บริหารอัตโนมัติแล้ว");
-    };
+    byId("new-game").onclick = () => showBusinessChooser(byId("seed")?.value);
   }
+
   if (byId("speed")) {
     byId("speed").onchange = () => {
       app.setSpeed(Number(byId("speed").value));
@@ -30910,7 +31154,7 @@ ${b.waitingReasonTh||''}`);
 
   const bootTime = performance.now();
   function frame(t) {
-    if (!autoStarted && t - bootTime > 1400) {
+    if (!autoStarted && !document.getElementById("business-chooser")?.open && t - bootTime > 1400) {
       autoStarted = true;
       if (!current.policies.autoAccept && current.orders.length === 0) {
         app.dispatch({ type: "setPolicy", key: "autoAccept", value: true });
@@ -30935,8 +31179,21 @@ ${b.waitingReasonTh||''}`);
   }
   requestAnimationFrame(frame);
 
+  function showBusinessChooser(seed="company-demo") {
+    app.setSpeed(0);autoStarted=false;
+    let dialog=byId("business-chooser");if(!dialog){dialog=el("dialog","business-chooser");dialog.id="business-chooser";document.body.append(dialog);}
+    dialog.replaceChildren();dialog.addEventListener("cancel",e=>e.preventDefault(),{once:true});
+    dialog.append(el("h2","","เริ่มบริษัท SME ของคุณ"),el("p","muted","เลือกจุดเริ่มต้น ทีมจะบริหาร รับงาน และเรียนรู้ต่อเองตามนิสัย ความพร้อม และสถานการณ์ ธุรกิจเริ่มต้นไม่ล็อกความรู้ตลอดชีวิต"));
+    const seedInput=el("input");seedInput.id="startup-seed";seedInput.value=seed;seedInput.setAttribute("aria-label","Seed ของโลก");dialog.append(seedInput);
+    const select=el("select");select.id="startup-business";select.setAttribute("aria-label","ประเภทธุรกิจเริ่มต้น");
+    const profiles=CompanyStartup.list();for(const p of profiles){const o=el("option","",p.icon+" "+p.nameTh);o.value=p.id;select.append(o);}dialog.append(select);
+    const detail=el("div","card");const update=()=>{const p=profiles.find(p=>p.id===select.value);detail.replaceChildren(el("h3","",p.nameTh),el("p","",p.descriptionTh),el("p","",`ทุนผู้ก่อตั้ง ${moneyFull(p.capital)} • ทีม ${p.people} คน • จ่ายเครื่องมือ สต็อก และมัดจำก่อนเริ่ม เงินสดที่เหลือดูในภาพรวมบริษัท`));};select.onchange=update;update();dialog.append(detail);
+    const start=el("button","btn pri","เริ่มชีวิตบริษัท");start.id="startup-confirm";start.onclick=()=>{app.newGame(seedInput.value||"company-demo",{autonomous:true,startingBusiness:select.value});app.dispatch({type:"setPolicy",key:"autoAccept",value:true});dialog.close();autoStarted=true;app.setSpeed(1);paint(app.snapshot());};dialog.append(start);
+    const load=el("button","btn","โหลดเซฟเดิมแทน");load.onclick=()=>{dialog.close();autoStarted=true;byId("load")?.click();};dialog.append(load);if(!dialog.open)dialog.showModal();
+  }
   window.CompanyDebug = Object.freeze({
     app,
+    showBusinessChooser,
     getCamera: () => renderer?.getCamera(),
     refresh: () => paint(app.snapshot()),
     openPersonSheet,
@@ -30944,6 +31201,7 @@ ${b.waitingReasonTh||''}`);
     toggleTrackedPerson,
   });
   window.CompanyGame = window.CompanyDebug;
+  showBusinessChooser();
 })();
 
 </script>

@@ -1,0 +1,224 @@
+[
+  {
+    "profile": "food_kitchen",
+    "seed": "sme-long-a",
+    "days": 30,
+    "cash": 9651789,
+    "debt": 0,
+    "ordersPaid": 6,
+    "staff": 7,
+    "newsReaders": 7,
+    "learningPlans": 2,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "food_kitchen",
+    "seed": "sme-long-b",
+    "days": 30,
+    "cash": 10372057,
+    "debt": 0,
+    "ordersPaid": 6,
+    "staff": 8,
+    "newsReaders": 7,
+    "learningPlans": 4,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "bakery",
+    "seed": "sme-long-a",
+    "days": 30,
+    "cash": 11974991,
+    "debt": 0,
+    "ordersPaid": 7,
+    "staff": 10,
+    "newsReaders": 8,
+    "learningPlans": 3,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "bakery",
+    "seed": "sme-long-b",
+    "days": 30,
+    "cash": 12813968,
+    "debt": 0,
+    "ordersPaid": 6,
+    "staff": 9,
+    "newsReaders": 6,
+    "learningPlans": 3,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "cable_workshop",
+    "seed": "sme-long-a",
+    "days": 30,
+    "cash": 6922019,
+    "debt": 0,
+    "ordersPaid": 6,
+    "staff": 6,
+    "newsReaders": 5,
+    "learningPlans": 2,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "cable_workshop",
+    "seed": "sme-long-b",
+    "days": 30,
+    "cash": 7087689,
+    "debt": 0,
+    "ordersPaid": 6,
+    "staff": 5,
+    "newsReaders": 5,
+    "learningPlans": 3,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "metal_workshop",
+    "seed": "sme-long-a",
+    "days": 30,
+    "cash": 15203291,
+    "debt": 0,
+    "ordersPaid": 6,
+    "staff": 9,
+    "newsReaders": 7,
+    "learningPlans": 3,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "metal_workshop",
+    "seed": "sme-long-b",
+    "days": 30,
+    "cash": 13317360,
+    "debt": 0,
+    "ordersPaid": 7,
+    "staff": 11,
+    "newsReaders": 9,
+    "learningPlans": 3,
+    "qualified": 1,
+    "software": [],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "software_agency",
+    "seed": "sme-long-a",
+    "days": 30,
+    "cash": 39335580,
+    "debt": 0,
+    "ordersPaid": 0,
+    "staff": 3,
+    "newsReaders": 3,
+    "learningPlans": 2,
+    "qualified": 0,
+    "software": [
+      {
+        "status": "supporting",
+        "laborMinutes": 2670
+      },
+      {
+        "status": "supporting",
+        "laborMinutes": 2660
+      },
+      {
+        "status": "supporting",
+        "laborMinutes": 2610
+      },
+      {
+        "status": "supporting",
+        "laborMinutes": 2610
+      },
+      {
+        "status": "implementing",
+        "laborMinutes": 395
+      }
+    ],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "software_agency",
+    "seed": "sme-long-b",
+    "days": 30,
+    "cash": 40017980,
+    "debt": 0,
+    "ordersPaid": 0,
+    "staff": 3,
+    "newsReaders": 3,
+    "learningPlans": 3,
+    "qualified": 0,
+    "software": [
+      {
+        "status": "supporting",
+        "laborMinutes": 2815
+      },
+      {
+        "status": "supporting",
+        "laborMinutes": 2795
+      },
+      {
+        "status": "supporting",
+        "laborMinutes": 2795
+      },
+      {
+        "status": "supporting",
+        "laborMinutes": 2795
+      },
+      {
+        "status": "implementing",
+        "laborMinutes": 395
+      }
+    ],
+    "services": 0,
+    "validation": "passed"
+  },
+  {
+    "profile": "repair_service",
+    "seed": "sme-long-a",
+    "days": 30,
+    "cash": 12744800,
+    "debt": 0,
+    "ordersPaid": 0,
+    "staff": 9,
+    "newsReaders": 9,
+    "learningPlans": 6,
+    "qualified": 0,
+    "software": [],
+    "services": 5,
+    "validation": "passed"
+  },
+  {
+    "profile": "repair_service",
+    "seed": "sme-long-b",
+    "days": 30,
+    "cash": 11133610,
+    "debt": 0,
+    "ordersPaid": 0,
+    "staff": 9,
+    "newsReaders": 8,
+    "learningPlans": 8,
+    "qualified": 0,
+    "software": [],
+    "services": 5,
+    "validation": "passed"
+  }
+]

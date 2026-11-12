@@ -16,7 +16,7 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
   assert.equal(mats.length, 64, "Catalog must contain 51 materials across True T0, Bio Seeds, Cultivated Crops, and Tiers 1-3");
   assert.equal(prods.length, 42, "Catalog must contain 28 finished products (Tier 4)");
   assert.equal(Object.keys(D.MATERIAL_RECIPES).length, 40, "All 32 craftable Tier 1-3 materials must have multi-stage recipes");
-  assert.equal(D.RELEASE_VERSION, "2.8.0");
+  assert.equal(D.RELEASE_VERSION, "2.9.0");
 
   const tier0 = mats.filter((m) => m.tier === 0);
   const tier1 = mats.filter((m) => m.tier === 1);
@@ -133,7 +133,7 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
 
   const app = API.create("v100-api-snap", { autonomous: true });
   const snap = app.snapshot();
-  assert.equal(snap.releaseVersion, "2.8.0");
+  assert.equal(snap.releaseVersion, "2.9.0");
   assert.equal(snap.catalog.materialTiers.length, 5);
   assert.equal(snap.catalog.materialRecipes.length, 40);
   assert.equal(snap.catalog.materials.length, 64);

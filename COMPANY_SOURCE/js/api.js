@@ -267,6 +267,7 @@
       if (p.activity === "resting") return "กำลังพักสูดอากาศลดความเครียดที่สวนหย่อม";
       if (p.activity === "helping") return "กำลังช่วยเพื่อนร่วมงานเร่งงานด่วน";
       if (code === "selfStudy") return "กำลังศึกษาพัฒนาทักษะในสายงานตัวเอง";
+      if(code === "readingNews")return "กำลังอ่านข่าว: "+(p.intent.reasons||[]).join(" • ");
       if(code === "equipmentMaintenance")return "กำลังติดตั้ง/ซ่อมบำรุงเครื่องมือ: "+(p.intent.reasons||[]).join(" • ");
       if(code === "freightDispatch")return "กำลังขับรถขนส่งสินค้าตามสัญญา: "+(p.intent.reasons||[]).join(" • ");
       if(code === "softwareDevelopment")return "กำลังพัฒนาและทดสอบซอฟต์แวร์: "+(p.intent.reasons||[]).join(" • ");
@@ -855,6 +856,7 @@
           starred: Boolean(w.watchlist?.people?.includes(p.id)),
           skills: p.skills,
           education: p.education || null,
+          news:p.news||null,
           experience: p.experience,
           relationships: p.relationships,
           concern: p.concern,
@@ -1160,6 +1162,9 @@
           serviceBusiness: w.serviceBusiness || null,
           capabilities: w.capabilities || null,
           companyKnowledge: S.companyKnowledgeView(w),
+          startup:w.startup||null,
+          intelligence:w.intelligence||null,
+          startupOptions:S.startupOptions(),
           manufacturing: S.productionView(w),
           plant: S.plantView(w),
           commerce: S.commerceView(w),

@@ -215,6 +215,8 @@
       );
     }
     if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
+    try{for(const err of S.intelligenceAudit(w))add(false,err);}catch(_){add(false,"invalid market intelligence");}
+    if(w.startup){try{for(const err of S.startupAudit(w))add(false,err);}catch(_){add(false,"invalid SME startup");}}
     if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
     if(w.warehouse){try{for(const err of S.warehouseAudit(w))add(false,err);}catch(_){add(false,"invalid warehouse");}}
     if (w.externalWorld?.living) {
@@ -557,6 +559,8 @@
               "socialising",
               "helping",
               "offDuty",
+              "learning",
+              "selfStudy",
               "sleeping",
               "blocked",
             ].includes(p.activity),

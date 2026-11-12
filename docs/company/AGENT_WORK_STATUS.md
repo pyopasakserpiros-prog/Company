@@ -27,3 +27,7 @@
 | งาน | สิ่งที่จัดทำ | สถานะ/ขอบเขต |
 |---|---|---|
 | `business-expansion-nine-pdf-synthesis-2026-11` | จัดเก็บ PDF 9 ฉบับ (190 หน้า) และสังเคราะห์เป็น [ideas/company บท 35](../../ideas/company/35_business_expansion_nine_pdfs_synthesis.md) | **เอกสารเสร็จแล้ว**; ส่วนที่ทำจริงใน v2.7.0–v2.8.0 ย้ายเข้า status แล้ว |
+
+## งานล่าสุด — SME origins / civics / informed decisions
+
+Codex ฐาน `f7167e2` / Agy v2.8.0 → **v2.9.0 implemented/verified**: 6SME origins, political leaders/ministries/commodity agreements, NPCnews/learning, actual supplier risk/partnerships, software bypass/payment fixes. คงAgyเดิม ไม่แก้AGENTS/HumanCore. Unit/integration203, browser14, 12โลก×30วันaudit/saveผ่าน. ดู [รายงาน](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md), [handoff](SME_CIVICS_V290_HANDOFF.md). ข้อจำกัดด้านรายสินค้า/การเมืองเต็มรูปแบบแยกไว้ ไม่อ้างทำทุกอย่างครบ

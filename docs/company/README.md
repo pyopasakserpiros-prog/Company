@@ -2,7 +2,13 @@
 
 เปิดจากหน้านี้เพื่อหาเอกสารตามงาน ไม่ต้องไล่หาไฟล์จากรายชื่อปะปน
 
-## ระบบล่าสุดv2.6.0
+## ระบบล่าสุด v2.9.0
+
+- [SME รัฐบาล การค้าและข่าว](SME_AND_CIVICS_SYSTEM.md)
+- [รายงาน v2.9.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md)
+- [รับช่วง v2.9.0](SME_CIVICS_V290_HANDOFF.md)
+
+## ระบบพื้นฐาน v2.6.0
 
 - [โรงงาน เครื่องมือและสัญญา](PLANT_AND_COMMERCIAL_SYSTEM.md)
 - [รายงานv2.6.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md)

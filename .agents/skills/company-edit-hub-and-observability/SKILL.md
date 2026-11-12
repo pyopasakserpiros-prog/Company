@@ -73,3 +73,9 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 - **Live Bottleneck & Causal Tracker (`S.buildObservabilityView(w)`)**: Exposed on `API.view(w).observability` and rendered in the `🔍 ติดตามสด / คอขวด` (`company_tracker`) sub-tab of `debug.js`. Shows active company bottlenecks (`whatIsStuckTh`, `whyStuckTh`, `howSolvingTh`), per-employee live status (`doingTh`, `stuckTh`, `solvingTh`, `aspiration`, `latestMemoryTh`), and cause-and-effect chains (`causalChains`) without mutating simulation state.
 - **Persistent Watchlist (`w.watchlist`, `S.toggleWatchlist`)**: Saves starred people, events, threads, and bottlenecks in `w.watchlist` (validated by `Save.validate(w)`) and syncs with `uiState.trackedIds` and `⭐` star buttons in `debug.js`.
 - **Character Sheet & Edit Hub Extensions**: Displays `p.aspiration` and `p.memories` in the Character Sheet (`chronicle` tab) and adds Sandbox triggers for OEM repair, internal career switches, and retention counter-offers. Verified with **190/190** tests (`test/living-scenarios-human-depth-v280.test.cjs`).
+
+## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+
+debug.showBusinessChooser pauses time and starts six origins through API.newGame. Company overview shows reconciled opening assets/learning/intelligence. World countries show named fictional leaders/terms/ministry measures/customs/security, diplomacy staged agreements. Character News shows only read reports. openSheet refreshes the latest snapshot; test panels do not change saved simulation.
+
+Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.

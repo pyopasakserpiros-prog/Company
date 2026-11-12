@@ -43,6 +43,9 @@ async function openGame(viewport = { width: 390, height: 844 }, file = "index.ht
   const response = await page.goto(address + "/" + file);
   assert.equal(response.status(), 200);
   await page.waitForFunction(() => window.CompanyDebug && window.__mapZoom);
+  await page.locator('#startup-business').selectOption('cable_workshop');
+  await page.locator('#startup-confirm').click();
+  await page.evaluate(()=>CompanyDebug.app.setSpeed(0));
   return { page, errors };
 }
 
@@ -281,5 +284,27 @@ test('mobile machinery and commercial contract tabs expose actual equipment stat
   if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'plant-machinery.png')});
   await page.getByRole('button',{name:'ฝ่ายขาย / สัญญา',exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).includes('กันเงิน'));
   assert.equal(await page.evaluate(()=>CompanyDebug.app.save()),saved);assert.deepEqual(errors,[]);
+ }finally{await page.close();}
+});
+
+test('SME chooser pauses initial time, starts chosen business and exposes paid capital on mobile',async()=>{
+ const {page,errors}=await openGame();try{
+  await page.evaluate(()=>CompanyDebug.showBusinessChooser('chooser-v290'));
+  const before=await page.evaluate(()=>CompanyDebug.app.snapshot().time.absoluteMinute);await page.waitForTimeout(1700);assert.equal(await page.evaluate(()=>CompanyDebug.app.snapshot().time.absoluteMinute),before);
+  assert.equal(await page.locator('#startup-business option').count(),6);
+  await page.locator('#startup-business').selectOption('food_kitchen');assert.ok((await page.locator('#business-chooser').innerText()).includes('ครัวน้ำพริก'));
+  if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'sme-chooser.png')});
+  await page.locator('#startup-confirm').click();await page.evaluate(()=>CompanyDebug.app.setSpeed(0));const snap=await page.evaluate(()=>CompanyDebug.app.snapshot());assert.equal(snap.startup.profileId,'food_kitchen');assert.equal(snap.people.length,4);
+  await page.locator('[data-nav="company"]').click();assert.ok((await page.locator('#shBody').innerText()).includes('ทุนผู้ก่อตั้ง'));assert.ok((await page.locator('#shBody').innerText()).includes('เช่าพื้นที่'));
+  assert.deepEqual(errors,[]);
+ }finally{await page.close();}
+});
+test('country ministry and NPC news are observable and opening panels does not change simulation',async()=>{
+ const {page,errors}=await openGame();try{
+  await page.evaluate(()=>{CompanyDebug.app.advance(1440*4);CompanyDebug.app.setSpeed(0);CompanyDebug.refresh();});
+  const before=await page.evaluate(()=>CompanyDebug.app.save());await page.locator('[data-nav="world"]').click();await page.getByRole('button',{name:'ประเทศ / รัฐบาล',exact:true}).click();await page.getByLabel('เลือกประเทศ',{exact:true}).selectOption('TH');await page.getByLabel('เลือกประเทศ',{exact:true}).blur();
+  const text=await page.locator('#shBody').innerText();assert.ok(text.includes('ผู้นำและวาระ'));assert.ok(text.includes('กระทรวงพาณิชย์'));assert.ok(!text.includes('undefined'));assert.ok(!text.includes('NaN'));
+  if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'government-ministry.png')});
+  await page.evaluate(()=>CompanyDebug.openPersonSheet(CompanyDebug.app.snapshot().people[0].id));await page.getByRole('button',{name:'ข่าวที่รับรู้',exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).includes('ข่าวที่ตัวละครรับรู้'));assert.equal(await page.evaluate(()=>CompanyDebug.app.save()),before);assert.deepEqual(errors,[]);
  }finally{await page.close();}
 });

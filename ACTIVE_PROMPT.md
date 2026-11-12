@@ -1,3 +1,13 @@
+# คำสั่งปัจจุบัน — Company
+
+**สถานะ: งาน SME / civics ที่ผู้ใช้มอบหมายดำเนินการใน v2.9.0 แล้ว** ฐาน `f7167e2`/Agy v2.8.0 อ่าน [รายงาน](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md) และ [บันทึกรับช่วง](docs/company/SME_CIVICS_V290_HANDOFF.md) ก่อนเริ่มงานใหม่
+
+ผู้ใช้ให้ตรวจ Agy และพัฒนาความสมจริง รัฐบาล/การค้า/ธุรกิจ/NPC รวมการเลือกประเภทธุรกิจ SME และการเรียนรู้อย่างเป็นธรรมชาติ ผลที่ทำจริงและส่วนที่ยังไม่ครบแยกไว้ใน project status ไม่ถือว่าทุกรายสินค้า/ทุกระบบเสร็จแล้ว
+
+ข้อเสนอขั้นถัดไปยังไม่ใช่คำสั่งเริ่มแพตช์ใหม่อัตโนมัติ ต้องช่วยคิดสร้างสรรค์ตามเป้าหมายผู้เล่นและกฎเดิม อัปเดต Master Skills/เอกสาร/รายงาน ตรวจ ZIP หลังแตกจริงทุกครั้ง
+
+## พรอมต์เก่าและหลักฐานการส่งต่อ (ทำแล้ว ไม่รันซ้ำ)
+
 > **STATUS UPDATE (2026-11-12 — COMPLETED IN v2.7.0):** All 8 workstreams and 12 acceptance criteria in this implementation brief have been implemented and verified in **Company Simulation v2.7.0 (`process-driven-realism-overhaul-v270`)** on top of baseline `bbc22e4ce61c002b49c2346841af3c4f3e9d0919` (`186/186` unit & integration tests passing, including `COMPANY_SOURCE/test/process-realism-v270.test.cjs`). See [PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) and [PROCESS_REALISM_V270_HANDOFF.md](docs/company/PROCESS_REALISM_V270_HANDOFF.md).
 
 # GEMINI ACTIVE DEVELOPMENT BRIEF — Process-Driven Realism Overhaul

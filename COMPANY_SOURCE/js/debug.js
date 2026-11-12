@@ -408,6 +408,7 @@
   }
 
   function openSheet(mode, defaultTab = "") {
+    current=app.snapshot();pending=current;
     uiState.sheetOpen = true;
     uiState.sheetMode = mode;
     if (defaultTab) uiState.subTab = defaultTab;
@@ -437,6 +438,7 @@
         "aptitudes",
         "skills",
         "knowledge",
+        "news",
         "relations",
         "wallet",
         "chronicle",
@@ -554,6 +556,7 @@
       { id: "aptitudes", label: "ความถนัด 30 ด้าน" },
       { id: "skills", label: "ทักษะ/สายงาน" },
       { id: "knowledge", label: "ความรู้" },
+      { id: "news", label: "ข่าวที่รับรู้" },
       { id: "relations", label: "ความสัมพันธ์" },
       { id: "wallet", label: "กระเป๋า/เป้าหมาย" },
       { id: "chronicle", label: "บันทึกชีวิต" },
@@ -807,6 +810,10 @@
         skCard.append(item);
       }
       nodes.push(skCard);
+    } else if (uiState.subTab === "news") {
+      const card=el("div","card");card.append(el("h3","","ข่าวที่ตัวละครรับรู้"),el("p","muted","แต่ละคนมีเวลาอ่านและความเข้าใจต่างกัน ข่าวที่ยังไม่ได้อ่านจะไม่เข้าความรู้ของเขา"));
+      for(const n of (p.news?.known||[]).slice())card.append(el("div","logrow",`วันที่ ${Math.floor((n.readAt||0)/1440)+1} • ${n.headlineTh||n.id} — ${n.interpretationTh||'กำลังประเมินข้อมูล'}`));
+      if(!p.news?.known?.length)card.append(el("p","muted","ยังไม่มีข่าวที่อ่านในบันทึก"));nodes.push(card);
     } else if (uiState.subTab === "knowledge") {
       const ed=p.education || {subjects:{},practiceMinutes:{}},k=v.companyKnowledge;
       const heading=el("div","card");
@@ -1646,6 +1653,10 @@
     const coverage=(rows)=>(rows || []).map(r=>`${r.ready ? "✓" : "ขาด"} ${r.nameTh} ${r.level} — ${r.holders.map(h=>h.name).join(", ") || "ยังไม่มีผู้รู้"}`).join(" • ");
     const stages={literature:"ศึกษาความเป็นไปได้",prototype:"ทำต้นแบบ",validation:"ตรวจสอบกระบวนการ",qualified:"ผ่านการรับรอง"};
     if(uiState.subTab==="company_overview") {
+      if(v.startup){const s=v.startup;row("จุดเริ่มต้น SME — "+s.nameTh,`ทุนผู้ก่อตั้ง ${moneyFull(s.paidInCapital)} = เงินสดเริ่มต้น ${moneyFull(s.openingCash)} + เครื่องมือ ${moneyFull(s.openingEquipmentValue)} + สต็อก ${moneyFull(s.openingStockValue)} + มัดจำ ${moneyFull(s.leaseDeposit)} + เตรียมกิจการ ${moneyFull(s.registrationValue)}
+เช่าพื้นที่ใช้สอย ${s.areaM2} ตร.ม. ในแคมปัสร่วม ค่าเช่า ${moneyFull(s.rentDaily)}/วัน ไม่ได้เป็นเจ้าของอาคารทั้งหมด`);row("การเรียนรู้และการขยายกิจการ",s.decisionTh);for(const h of s.learningHistory.slice(0,5))row("การพัฒนาทีม",h.reasonTh||h.messageTh||JSON.stringify(h));}
+      if(v.intelligence){row("ข่าวและการตัดสินใจของผู้บริหาร",v.intelligence.decisionTh);for(const n of v.intelligence.negotiations||[])row("เจรจาพาร์ทเนอร์",`${v.externalWorld.corporations[n.corpId]?.nameTh||n.corpId} • ${({negotiating:'กำลังเจรจา',signed:'ตกลงแล้ว',deferred:'ชะลอไว้ก่อน'})[n.status]} • ${n.reasonTh||''}`);}
+
       row("ฐานะบริษัท",`เงินสด ${money(v.company.cash)} • หนี้ ${money(v.company.debt)} • ลูกหนี้ ${money(v.company.receivable)} • เงินสำรองพอประมาณ ${v.company.runwayDays} วัน`);
       row("กิจการขณะนี้",`${v.companyProgression?.currentStageNameTh || "บริษัทเริ่มต้น"} • ทีม ${k.people.length} คน • ออเดอร์ที่จ่ายแล้ว ${v.company.metrics.ordersPaid} • งานที่ยังเปิด ${v.orders.filter(o=>!["paid","cancelled"].includes(o.status)).length}`);
       row("ความพร้อมเทคโนโลยี",`พร้อมดำเนินการ ${k.products.filter(p=>p.ready).length}/${k.products.length} สินค้า • โครงการเฉพาะทาง ${k.projects.filter(p=>p.status!=="qualified").length} โครงการ`);
@@ -1776,6 +1787,9 @@ ${b.waitingReasonTh||''}`);
     const e=v.externalWorld,m=e?.living,geo=e?.geopolitics;
     body.replaceChildren();
     const row=(title,text)=>{const card=el("div","card world-card");card.append(el("h3","",title),el("div","muted",text));body.append(card);return card;};
+    const groupName={food:"อาหาร",energy:"พลังงาน",metals:"โลหะ",electronics:"อิเล็กทรอนิกส์",chemicals:"เคมีภัณฑ์",biological:"ชีวภาพและเกษตร",industrial:"อุตสาหกรรมทั่วไป"};
+    const treatyState={proposed:"กำลังเจรจา",signed:"ลงนามแล้ว",effective:"มีผลบังคับใช้",suspended:"ระงับใช้",expired:"หมดอายุ",rejected:"เจรจาไม่สำเร็จ"};
+    const measureName={tariff:"ภาษีนำเข้า",waiver:"ยกเว้นภาษีนำเข้า",export_quota:"โควตาส่งออก"};
     const policy={balanced:"รักษาเสถียรภาพ",stimulus:"กระตุ้นเศรษฐกิจ",tightening:"ควบคุมเงินเฟ้อ",austerity:"รักษาฐานะการคลัง"};
     const status={peace:"สัมพันธ์ปกติ",treaty:"ข้อตกลงการค้า",sanctions:"จำกัดการค้า",war:"ความขัดแย้งติดอาวุธ"};
     if(!m){row("กำลังเตรียมข้อมูลโลก","โลกจากเซฟเก่าจะเริ่มจำลองเมื่อผ่านวันถัดไป");return;}
@@ -1799,6 +1813,9 @@ ${b.waitingReasonTh||''}`);
       const id=entityPicker("worldNation",nations.map(n=>({id:n.id,nameTh:`${geo.nations[n.id].flag} ${geo.nations[n.id].nameTh}`})),"เลือกประเทศ"),n=m.nations[id],g=geo.nations[id];
       row(`${g.flag} ${g.nameTh}`,n.descriptionTh);
       row("รัฐบาลและนโยบาย",`${g.activeRegimeNameTh} • ${policy[n.policy]}\nเหตุผล: ${n.policyReasonTh}\nรอบทบทวนถัดไปวันที่ ${n.lastReviewDay+14} • ทบทวนผู้นำวันที่ ${n.nextElectionDay}`);
+      if(n.government){const h=n.government;row("ผู้นำและวาระ",`${h.leader.name} (ตัวละครสมมติ) • ${g.activeRegimeNameTh} • วาระ ${h.termDays} วัน • รอบเปลี่ยน/คงผู้นำวันที่ ${n.nextElectionDay}`);for(const x of (h.electionHistory||[]).slice(0,3))row("ผลทบทวนผู้นำ",`วันที่ ${x.day}: ${x.turnover?'เปลี่ยน':'คง'}คณะบริหาร • ${x.leaderName} • ผลประเมินเศรษฐกิจ/ความนิยม ${Math.round(x.performance)}/100`);}
+      if(n.commerceMinistry){const c=n.commerceMinistry;row(c.nameTh,`${c.reasonTh||'ทบทวนต้นทุนและอุปทานในประเทศ'}\nภาษีศุลกากรรับจริง ${moneyFull(c.customsRevenue)} • ทบทวนล่าสุดวันที่ ${c.lastReviewDay}`);for(const x of c.measures.slice(-8))row(x.nameTh||measureName[x.type],`${groupName[x.group]} • อัตรา ${x.rate}% • ประกาศวันที่ ${x.announcedDay} • มีผลวันที่ ${x.effectiveDay} • สิ้นสุดวันที่ ${x.expiresDay}\n${x.reasonTh}`);}
+      if(n.security)row("ต้นทุนความขัดแย้ง",`ใช้จ่ายสะสม ${moneyFull(n.security.defenceSpentSatang)} • ความเสียหายโครงสร้างพื้นฐาน ${n.security.damageIndex.toFixed(2)}% • อยู่ในความขัดแย้ง ${n.security.conflictDays} วัน`);
       row("เศรษฐกิจและความเป็นอยู่",`เงินเฟ้อ ${n.inflation}% • ว่างงาน ${n.unemployment}% • ดอกเบี้ยนโยบาย ${n.interestRate}% • ดัชนีเศรษฐกิจ ${n.gdpIndex}\nความนิยม ${n.approval}% • เสถียรภาพ ${n.stability}% • โครงสร้างพื้นฐาน ${n.infrastructure}/100`);
       row("คลังและกำลังซื้อ",`เงินคลัง ${moneyFull(n.treasury)} • ภาษีสะสม ${moneyFull(n.taxes)} • รายจ่ายรัฐ ${moneyFull(n.spending)}\nเงินภาคครัวเรือน/อุตสาหกรรมปลายทาง ${moneyFull(n.householdCash)} • ใช้จ่ายสะสม ${moneyFull(n.consumption)}`);
       for(const f of firms.filter(f=>f.nationId===id)){const card=row(firmName(f.id),`${moneyFull(f.cash)} • ${f.decisionTh}`);const b=el("button","btn","ดูบริษัทนี้");b.onclick=()=>{uiState.worldFirm=f.id;uiState.subTab='world_firms';renderWorldSheet(v,body);};card.append(b);}
@@ -1823,6 +1840,7 @@ ${b.waitingReasonTh||''}`);
     }else if(uiState.subTab==="world_diplomacy"){
       const id=entityPicker("worldRelation",m.relations.map(r=>({id:r.id,nameTh:`${nationName(r.a)} ↔ ${nationName(r.b)}`})),"เลือกความสัมพันธ์ระหว่างประเทศ"),r=m.relations.find(r=>r.id===id);
       row(`${nationName(r.a)} ↔ ${nationName(r.b)}`,`${status[r.status]} • ความตึงเครียด ${r.tension}/100 • ความเชื่อมั่น ${r.trust}/100\n${r.reasonTh} • มีผลตั้งแต่วันที่ ${r.sinceDay}`);
+      for(const t of (m.civics?.treaties||[]).filter(t=>t.parties.includes(r.a)&&t.parties.includes(r.b)))row("ข้อตกลงรายสินค้า",`${t.groups.map(g=>groupName[g]).join(', ')} • ${treatyState[t.status]} • ยกเว้น ${t.waiverPct}% • มีผลวันที่ ${t.effectiveDay||'รอเจรจา'} • สิ้นสุดวันที่ ${t.expiresDay||'ยังไม่กำหนด'}\n${t.reasonTh||''} • ผู้ลงนาม ${(t.signatories||[]).map(x=>x.name).join(' / ')}`);
       for(const c of Object.values(geo.tradeCorridors))row(c.nameTh,`ภาษี ${c.tariffPct}% • เวลาขนส่ง ×${c.leadTimeMod} • อุปสงค์ ×${c.demandMod} • ${status[c.livingStatus]||c.status}`);
       row("สินค้าระหว่างทาง",`${m.shipments.length} ล็อต ชำระเงินแล้ว สินค้าจะเข้าคลังผู้ซื้อเมื่อถึงกำหนด`);
       for(const s of m.shipments.slice(0,20))row(`${materialName(s.materialId)} ×${s.quantity}`,`${firmName(s.sellerId)} → ${firmName(s.buyerId)}\nออกวันที่ ${s.departedDay} • ถึงวันที่ ${s.dueDay}${s.delayed?' • ล่าช้าจากความขัดแย้ง':''} • ภาษี ${moneyFull(s.tariff)}`);
@@ -3287,22 +3305,7 @@ ${b.waitingReasonTh||''}`);
       const seedInp = el("input");
       seedInp.value = v.seed || "company-demo";
       seedInp.style.marginTop = "4px";
-      const bLean = el("button", "btn pri", "🌱 เริ่มบริษัทใหม่ (โหมดก่อตั้ง 5 คน)");
-      bLean.style.marginTop = "6px";
-      bLean.onclick = () => {
-        app.newGame(seedInp.value || "company-demo", { autonomous: true, startupMode: "lean", starterCount: 5 });
-        app.dispatch({ type: "setPolicy", key: "autoAccept", value: true });
-        app.setSpeed(1);
-        paint(app.snapshot());
-        showToast("🌱 เริ่มบริษัทใหม่ในโหมดก่อตั้ง 5 คน (CEO + ออฟฟิศ + โรงงาน) แล้ว");
-      };
-      const bNew = el("button", "btn dan", "🔄 เริ่มบริษัทใหม่ (โหมดมาตรฐาน 8 คน)");
-      bNew.style.marginTop = "6px";
-      bNew.onclick = () => {
-        if (byId("seed")) byId("seed").value = seedInp.value || "company-demo";
-        byId("new-game").click();
-      };
-      row3.append(seedInp, bLean, bNew);
+      const bNew=el("button","btn pri","🌱 เลือกธุรกิจเริ่มต้นใหม่");bNew.onclick=()=>showBusinessChooser(seedInp.value);row3.append(seedInp,bNew);
 
       c.append(row1, row2, row3);
       body.replaceChildren(c);
@@ -3398,14 +3401,9 @@ ${b.waitingReasonTh||''}`);
   }
 
   if (byId("new-game")) {
-    byId("new-game").onclick = () => {
-      app.newGame(byId("seed")?.value || "company-demo", { autonomous: true });
-      app.dispatch({ type: "setPolicy", key: "autoAccept", value: true });
-      app.setSpeed(1);
-      paint(app.snapshot());
-      showToast("เริ่มบริษัทใหม่ในโหมด NPC บริหารอัตโนมัติแล้ว");
-    };
+    byId("new-game").onclick = () => showBusinessChooser(byId("seed")?.value);
   }
+
   if (byId("speed")) {
     byId("speed").onchange = () => {
       app.setSpeed(Number(byId("speed").value));
@@ -3495,7 +3493,7 @@ ${b.waitingReasonTh||''}`);
 
   const bootTime = performance.now();
   function frame(t) {
-    if (!autoStarted && t - bootTime > 1400) {
+    if (!autoStarted && !document.getElementById("business-chooser")?.open && t - bootTime > 1400) {
       autoStarted = true;
       if (!current.policies.autoAccept && current.orders.length === 0) {
         app.dispatch({ type: "setPolicy", key: "autoAccept", value: true });
@@ -3520,8 +3518,21 @@ ${b.waitingReasonTh||''}`);
   }
   requestAnimationFrame(frame);
 
+  function showBusinessChooser(seed="company-demo") {
+    app.setSpeed(0);autoStarted=false;
+    let dialog=byId("business-chooser");if(!dialog){dialog=el("dialog","business-chooser");dialog.id="business-chooser";document.body.append(dialog);}
+    dialog.replaceChildren();dialog.addEventListener("cancel",e=>e.preventDefault(),{once:true});
+    dialog.append(el("h2","","เริ่มบริษัท SME ของคุณ"),el("p","muted","เลือกจุดเริ่มต้น ทีมจะบริหาร รับงาน และเรียนรู้ต่อเองตามนิสัย ความพร้อม และสถานการณ์ ธุรกิจเริ่มต้นไม่ล็อกความรู้ตลอดชีวิต"));
+    const seedInput=el("input");seedInput.id="startup-seed";seedInput.value=seed;seedInput.setAttribute("aria-label","Seed ของโลก");dialog.append(seedInput);
+    const select=el("select");select.id="startup-business";select.setAttribute("aria-label","ประเภทธุรกิจเริ่มต้น");
+    const profiles=CompanyStartup.list();for(const p of profiles){const o=el("option","",p.icon+" "+p.nameTh);o.value=p.id;select.append(o);}dialog.append(select);
+    const detail=el("div","card");const update=()=>{const p=profiles.find(p=>p.id===select.value);detail.replaceChildren(el("h3","",p.nameTh),el("p","",p.descriptionTh),el("p","",`ทุนผู้ก่อตั้ง ${moneyFull(p.capital)} • ทีม ${p.people} คน • จ่ายเครื่องมือ สต็อก และมัดจำก่อนเริ่ม เงินสดที่เหลือดูในภาพรวมบริษัท`));};select.onchange=update;update();dialog.append(detail);
+    const start=el("button","btn pri","เริ่มชีวิตบริษัท");start.id="startup-confirm";start.onclick=()=>{app.newGame(seedInput.value||"company-demo",{autonomous:true,startingBusiness:select.value});app.dispatch({type:"setPolicy",key:"autoAccept",value:true});dialog.close();autoStarted=true;app.setSpeed(1);paint(app.snapshot());};dialog.append(start);
+    const load=el("button","btn","โหลดเซฟเดิมแทน");load.onclick=()=>{dialog.close();autoStarted=true;byId("load")?.click();};dialog.append(load);if(!dialog.open)dialog.showModal();
+  }
   window.CompanyDebug = Object.freeze({
     app,
+    showBusinessChooser,
     getCamera: () => renderer?.getCamera(),
     refresh: () => paint(app.snapshot()),
     openPersonSheet,
@@ -3529,4 +3540,5 @@ ${b.waitingReasonTh||''}`);
     toggleTrackedPerson,
   });
   window.CompanyGame = window.CompanyDebug;
+  showBusinessChooser();
 })();

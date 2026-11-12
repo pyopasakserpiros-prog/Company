@@ -1,7 +1,7 @@
 (function(root,factory){
-  const value=factory(typeof module==="object"&&module.exports?require('./data.js'):root.CompanyData);
+  const value=factory(typeof module==="object"&&module.exports?require('./data.js'):root.CompanyData,typeof module==="object"&&module.exports?require('./civics.js'):root.CompanyCivics);
   if(typeof module==="object"&&module.exports) module.exports=value; else root.CompanyWorld=value;
-})(typeof globalThis!=="undefined"?globalThis:this,function(D){
+})(typeof globalThis!=="undefined"?globalThis:this,function(D,C){
   'use strict';
   const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)), round=x=>Math.round(x*100)/100;
   function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
@@ -53,6 +53,7 @@
       m.relations.push({id:ids[i]+'-'+ids[j],a:ids[i],b:ids[j],tension:10+h%36,trust:45+h%36,status:'peace',sinceDay:1,reviewDay:14+h%15,treatyUntil:0,reasonTh:'ค้าขายตามปกติ ยังไม่มีข้อพิพาทรุนแรง'});
     }
     for(const [id,mat] of Object.entries(w.catalog.materials))m.markets[id]={id,price:mat.unitCost,multiplier:1,supply:0,demand:0,traded:0,shortage:0,reasonTh:'ราคาเริ่มต้น รอข้อมูลการซื้อขาย'};
+    C.ensure(w);
     if(e.geopolitics.activeEvent)scenario(w,e.geopolitics.activeEvent.id,1,e.geopolitics.activeEvent.durationDays||5);
     return m;
   }
@@ -79,15 +80,16 @@
   function route(m,a,b){
     const r=m.relations.find(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));
     const na=m.nations[a],nb=m.nations[b];
-    return {status:r?.status||'peace',tariff:a===b?0:(r?.status==='war'?22:r?.status==='sanctions'?14:r?.status==='treaty'?0:3)+Math.max(0,nb.tariffModPct||0),days:a===b?1:Math.ceil(2+(100-(na.infrastructure+nb.infrastructure)/2)/25+(r?.tension||0)/20+(r?.status==='war'?7:0)),risk:r?.tension||0};
+    return {status:r?.status||'peace',tariff:a===b?0:(r?.status==='war'?22:r?.status==='sanctions'?14:r?.status==='treaty'&&r.scenarioUntil?0:3)+Math.max(0,nb.tariffModPct||0),days:a===b?1:Math.ceil(2+(100-(na.infrastructure+nb.infrastructure)/2)/25+(r?.tension||0)/20+(r?.status==='war'?7:0)),risk:r?.tension||0};
   }
   function trade(w,seller,buyer,k,qty,day){
-    const m=ensure(w),r=route(m,seller.nationId,buyer.nationId),unit=Math.round(m.markets[k].price*seller.priceFactor),tariff=Math.round(unit*r.tariff/100);
-    qty=Math.min(qty,seller.stock[k]||0,Math.floor(buyer.cash/(unit+tariff)));
-    if(qty<=0||r.status==='war'&&r.risk>=90)return 0;
+    const m=ensure(w),baseRoute=route(m,seller.nationId,buyer.nationId),policy=C.quote(w,seller.nationId,buyer.nationId,k,baseRoute),r={...baseRoute,...policy},unit=Math.round(m.markets[k].price*seller.priceFactor),tariff=Math.round(unit*r.tariff/100);
+    qty=Math.min(qty,seller.stock[k]||0,policy.quota,Math.floor(buyer.cash/(unit+tariff)));
+    if(qty<=0||policy.blocked)return 0;
     const cost=qty*unit,tax=qty*tariff;
     payment(buyer,cost+tax);receipt(seller,cost);m.nations[buyer.nationId].treasury+=tax;m.nations[buyer.nationId].taxes+=tax;
     seller.cogsSatang=(seller.cogsSatang||0)+qty*Math.round((w.catalog.materials[k]?.unitCost||unit)*.65);
+    C.recordTrade(w,seller.nationId,buyer.nationId,k,qty,cost,tax);
     addStock(seller,k,-qty,'sold');
     m.shipments.push({id:'shipment-'+(++m.sequence),sellerId:seller.id,buyerId:buyer.id,materialId:k,quantity:qty,cost,tariff:tax,departedDay:day,dueDay:day+r.days,originalDueDay:day+r.days,delayed:false,routeStatus:r.status});
     const relation=m.relations.find(x=>x.a===seller.nationId&&x.b===buyer.nationId||x.b===seller.nationId&&x.a===buyer.nationId);
@@ -150,7 +152,7 @@
       if(current>=f.capacity*6)continue;
       const knowledgeNeed=recipe?40+(w.catalog.materials[k].tier||1)*10:30;
       if(f.technology<knowledgeNeed){f.missing.push('เทคโนโลยี '+w.catalog.materials[k].nameTh);continue;}
-      let qty=Math.max(0,Math.floor(f.capacity*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
+      let qty=Math.max(0,Math.floor(f.capacity*(1-(n.security?.damageIndex||0)/100)*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
       for(const [ik,q]of Object.entries(inputs))qty=Math.min(qty,Math.floor((f.stock[ik]||0)/q));
       if(!recipe)qty=Math.min(qty,mat.resourceClass==='environmental_flow'?Math.max(0,Math.floor(f.capacity*n.infrastructure/100)):f.reserves[k]||0);
       qty=Math.min(qty,Math.floor(Math.max(0,f.cash-reserve)/(Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18)))));
@@ -233,30 +235,7 @@
       }
       const spending=Math.min(n.treasury,Math.round(n.openingTreasury*(n.policy==='stimulus'?.00025:n.policy==='austerity'?.00004:.0001)));
       n.treasury-=spending;n.spending+=spending;n.householdCash+=spending;n.transfers+=spending;
-      if(day>=n.nextElectionDay){
-        const nat=w.externalWorld.geopolitics.nations[n.id],spec=D.GLOBAL_NATIONS[n.id],regimes=spec.regimes||[];
-        const replace=n.approval<45;n.term++;n.nextElectionDay=day+180;
-        if(replace&&regimes.length>1){const idx=regimes.findIndex(r=>r.id===nat.activeRegimeId),r=regimes[(idx+1)%regimes.length];Object.assign(nat,{activeRegimeId:r.id,activeRegimeNameTh:r.nameTh,leaderStyleTh:r.leaderStyleTh,materialMods:{...r.materialMods},sectorDemandMods:{...r.sectorDemandMods},tariffModPct:r.tariffModPct||0,fxModPct:r.fxModPct||0,lastChangedDay:day,regimeChangeCount:(nat.regimeChangeCount||0)+1});n.approval=52;}
-        record(w,day,'GOVERNMENT',`${nat.nameTh}: ทบทวนผู้นำตามวาระ`,replace?'ความนิยมต่ำ เกิดการเปลี่ยนขั้วนโยบาย':'คงแนวนโยบายเดิมจากผลการบริหาร',{nationId:n.id,major:true});
-      }
-    }
-  }
-  function diplomacy(w,day){
-    const m=ensure(w);
-    for(const r of m.relations){
-      if(r.scenarioUntil && day>=r.scenarioUntil){r.status=r.priorStatus;r.tension=r.priorTension;r.scenarioUntil=0;record(w,day,'DIPLOMACY',`สิ้นสุดมาตรการชั่วคราว ${r.id}`,'กลับสู่เงื่อนไขความสัมพันธ์ก่อนมาตรการ',{relationId:r.id});}
-      if(day<r.reviewDay)continue;r.reviewDay=day+14;
-      const a=m.nations[r.a],b=m.nations[r.b],old=r.status;
-      const instability=Math.max(0,50-a.stability)+Math.max(0,50-b.stability);
-      const scarcity=Object.values(m.markets).filter(k=>k.shortage>30).length/Math.max(1,Object.keys(m.markets).length);
-      const stress=Math.max(0,a.inflation-5)+Math.max(0,b.inflation-5)+scarcity*8;
-      r.tension=round(clamp(r.tension+stress*.3+instability*.06-(r.trust-45)*.12-(r.status==='war'?8:1),0,100));
-      if(r.tension>=85){r.status='war';r.trust=Math.max(0,r.trust-10);r.reasonTh='ข้อพิพาทรุนแรงสะสม ทรัพยากรตึงตัวและเสถียรภาพต่ำ';}
-      else if(r.status==='war'&&r.tension<65){r.status='sanctions';r.reasonTh='ลดระดับการสู้รบ แต่ยังจำกัดการค้า';}
-      else if(r.tension>=65){r.status='sanctions';r.reasonTh='ความตึงเครียดสูง ใช้มาตรการจำกัดการค้า';}
-      else if(r.trust>=65&&r.tension<30){r.status='treaty';r.treatyUntil=day+90;r.reasonTh='ความเชื่อมั่นสูงและผลประโยชน์การค้าร่วมกัน';}
-      else if(r.status==='treaty'&&day>=r.treatyUntil||r.status==='sanctions'&&r.tension<45){r.status='peace';r.reasonTh='ประเมินเงื่อนไขใหม่ กลับมาค้าตามปกติ';}
-      if(old!==r.status){r.sinceDay=day;record(w,day,'DIPLOMACY',`${w.externalWorld.geopolitics.nations[r.a].shortNameTh} ↔ ${w.externalWorld.geopolitics.nations[r.b].shortNameTh}: ${statusName(r.status)}`,r.reasonTh,{relationId:r.id,major:true});}
+
     }
   }
   function statusName(s){return {peace:'สัมพันธ์ปกติ',treaty:'ข้อตกลงการค้า',sanctions:'จำกัดการค้า',war:'ความขัดแย้งติดอาวุธ'}[s]||s;}
@@ -299,7 +278,7 @@
       if(total>0)c.marketSharePct=round(f.dailyRevenue/total*100);
       const comp=w.externalWorld.competitors?.[f.id];if(comp)comp.marketSharePct=c.marketSharePct;
     }
-    nationalReview(w,day);diplomacy(w,day);
+    nationalReview(w,day);C.governmentStep(w,day);C.diplomacyStep(w,day);
     const e=w.externalWorld;
     e.ecosystemFeed=m.journal.filter(j=>['INTER_CORP_SUPPLY','CORP_DECISION'].includes(j.category)).slice(0,40).map(j=>({...j,type:j.category,impactTh:j.meaningTh}));
     e.b2bMaterialDemands=[];
@@ -403,15 +382,25 @@
   }
   function recordProductDelivery(w,id,productId,qty){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e)return false;const buyer=e.buyerType==='government'?m.nations[e.buyerId]:m.firms[e.buyerId];buyer.finishedGoods=buyer.finishedGoods||{};buyer.finishedGoods[productId]=(buyer.finishedGoods[productId]||0)+qty;return true;}
   function quote(w,k,qty,preferredId){
-    const m=ensure(w),candidate=Object.values(m.firms).filter(f=>(w.externalWorld.corporations[f.id].sellsMaterials||[]).includes(k)&&(f.stock[k]||0)>=qty);
-    candidate.sort((a,b)=>(a.id===preferredId?-100:0)+(a.id==='world_exchange'?30:0)+route(m,a.nationId,'TH').days-((b.id===preferredId?-100:0)+(b.id==='world_exchange'?30:0)+route(m,b.nationId,'TH').days)||a.id.localeCompare(b.id));
-    const f=candidate.find(f=>route(m,f.nationId,'TH').status!=='war');if(!f)return null;
-    const r=route(m,f.nationId,'TH');return {supplierId:f.id,days:f.id==='world_exchange'?1:r.days,unitPrice:Math.round((w.externalWorld.geopolitics.materialSpotPrices[k]||m.markets[k].price)*f.priceFactor*(1+(f.id==='world_exchange'?0:r.tariff)/100))};
+    const m=ensure(w),candidates=[];
+    for(const f of Object.values(m.firms)){
+      const corp=w.externalWorld.corporations[f.id];if(!(corp.sellsMaterials||[]).includes(k)||(f.stock[k]||0)<qty)continue;
+      const origin=f.id==='world_exchange'?'TH':f.nationId,base=route(m,origin,'TH'),policy=C.quote(w,origin,'TH',k,base);
+      if(policy.blocked||policy.quota<qty)continue;
+      const partner=corp.relationshipMode==='partner'?.97:corp.relationshipMode==='rival'?1.03:1;
+      const basePrice=Math.max(1,Math.round((w.externalWorld.geopolitics.materialSpotPrices[k]||m.markets[k].price)*f.priceFactor*partner));
+      const unitTax=Math.round(basePrice*policy.tariff/100),unitPrice=basePrice+unitTax,knownRisk=w.intelligence?.countryRisk?.[origin]||0;
+      const score=unitPrice*(1+base.days*.015+knownRisk*.002)+(f.id===preferredId?-unitPrice*.1:0);
+      candidates.push({supplierId:f.id,originNationId:origin,days:base.days,unitPrice,unitTax,baseUnitPrice:basePrice,tariffPct:policy.tariff,policyIds:policy.policyIds,reasonTh:policy.reasonTh,score});
+    }
+    candidates.sort((a,b)=>a.score-b.score||a.supplierId.localeCompare(b.supplierId));return candidates[0]||null;
   }
-  function sellToPlayer(w,sellerId,k,qty,cost){
+  function sellToPlayer(w,sellerId,k,qty,cost,bookedQuote=null){
     const m=ensure(w),f=m.firms[sellerId];if(!f||(f.stock[k]||0)<qty)return false;
-    const r=route(m,f.nationId,'TH'),tax=f.id==='world_exchange'?0:Math.round(cost*r.tariff/(100+r.tariff));
-    addStock(f,k,-qty,'sold');receipt(f,cost-tax);m.nations.TH.treasury+=tax;m.nations.TH.taxes+=tax;m.playerNetSatang+=cost;return true;
+    const origin=f.id==='world_exchange'?'TH':f.nationId,policy=C.quote(w,origin,'TH',k,route(m,origin,'TH'));
+    if(policy.blocked||policy.quota<qty)return false;
+    const tax=bookedQuote?.unitTax!==undefined?qty*bookedQuote.unitTax:Math.round(cost*policy.tariff/(100+policy.tariff));
+    addStock(f,k,-qty,'sold');receipt(f,cost-tax);m.nations.TH.treasury+=tax;m.nations.TH.taxes+=tax;m.playerNetSatang+=cost;C.recordTrade(w,origin,'TH',k,qty,cost-tax,tax);return true;
   }
   function receivePlayerSale(w,buyerId,k,qty,cost){
     const m=ensure(w),f=m.firms[buyerId];if(!f||f.cash<cost)return false;
@@ -436,6 +425,7 @@
     const actual=Object.values(m.commercialEscrows||{}).reduce((a,e)=>a+e.balance,0)+Object.values(m.firms).reduce((a,f)=>a+f.cash,0)+Object.values(m.nations).reduce((a,n)=>a+n.treasury+n.householdCash,0);
     const opening=Object.values(m.firms).reduce((a,f)=>a+f.openingCash,0)+Object.values(m.nations).reduce((a,n)=>a+n.openingTreasury+n.openingHouseholdCash,0);
     if(actual!==opening+m.playerNetSatang)errors.push('world total cash conservation');
+    errors.push(...C.validate(w));
     return errors;
   }
   return Object.freeze({

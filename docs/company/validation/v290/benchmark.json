@@ -1,0 +1,46 @@
+{
+  "node": "v24.22.1",
+  "scope": "Simulation-only Node benchmark (8, 30, 100, 300, 500 NPCs), verifying high-scale performance",
+  "samples": [
+    {
+      "people": 8,
+      "ticks": 288,
+      "averageMs": 0.583,
+      "p95Ms": 1.861,
+      "maxMs": 31.672,
+      "saveBytes": 654021
+    },
+    {
+      "people": 30,
+      "ticks": 288,
+      "averageMs": 0.619,
+      "p95Ms": 1.917,
+      "maxMs": 8.654,
+      "saveBytes": 914755
+    },
+    {
+      "people": 100,
+      "ticks": 288,
+      "averageMs": 1.347,
+      "p95Ms": 4.289,
+      "maxMs": 6.999,
+      "saveBytes": 1688273
+    },
+    {
+      "people": 300,
+      "ticks": 144,
+      "averageMs": 0.528,
+      "p95Ms": 0.862,
+      "maxMs": 7.876,
+      "saveBytes": 3562461
+    },
+    {
+      "people": 500,
+      "ticks": 144,
+      "averageMs": 1.382,
+      "p95Ms": 2.51,
+      "maxMs": 17.492,
+      "saveBytes": 5518048
+    }
+  ]
+}

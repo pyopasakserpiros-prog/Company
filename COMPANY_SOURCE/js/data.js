@@ -6566,8 +6566,8 @@
     return e;
   }
   return Object.freeze({
-    VERSION: "2.8.0",
-    RELEASE_VERSION: "2.8.0",
+    VERSION: "2.9.0",
+    RELEASE_VERSION: "2.9.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,

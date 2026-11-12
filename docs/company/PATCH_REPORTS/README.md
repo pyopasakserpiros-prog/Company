@@ -28,6 +28,10 @@
 
 ไม่พบรายงานแยกสำหรับ v0.7–v0.9, v1.1.0 หรือ v1.2.1 ในคลังปัจจุบัน; อ่าน [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) ก่อนสรุปรุ่นเหล่านั้น
 
+## แพตช์ล่าสุด
+
+- [v2.9.0 — SME origins, political institutions and informed decisions](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md) ฐาน Agy f7167e2/v2.8.0; 203 unit/integration + 14 browser tests
+
 ## รายงานอัปเดตเอกสาร
 
 - [ปรับ AGENTS.md ให้เข้ากับบริบท Company](UPDATE_REPORT_2026-11-11_AGENTS_COMPANY_ADAPTATION.md)

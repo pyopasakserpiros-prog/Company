@@ -2,14 +2,14 @@
 
 สกิลเหล่านี้ใช้กับ `COMPANY_SOURCE/` ของเกม Siam Enterprise / Company Simulation โดยเฉพาะ ตรวจ source และ [project status](../../project_status_and_ai_onboarding.md) ทุกครั้งก่อนอ้างพฤติกรรมหรือเวอร์ชัน
 
-## สกิลหลัก (ซิงก์ถึงรุ่น v2.8.0)
+## สกิลหลัก (ซิงก์ถึงรุ่น v2.9.0)
 
-- [`company-evolution-dev/SKILL.md`](company-evolution-dev/SKILL.md) — Master Skill ภาพรวมสถาปัตยกรรมและระบบที่ตรวจถึง **v2.8.0 (`living-scenarios-observability-and-human-depth-v280`)**; สำเนาระดับ root คือ [`SKILL.md`](../../SKILL.md), [`SKILL_COMPANY_EVOLUTION_DEV.md`](../../SKILL_COMPANY_EVOLUTION_DEV.md), และ [`SKILL_COMPANY_FOR_EVERY_PATCH.md`](../../SKILL_COMPANY_FOR_EVERY_PATCH.md) สำหรับการส่งต่อไฟล์
-- [`company-for-every-patch/SKILL.md`](company-for-every-patch/SKILL.md) — Evergreen workflow ก่อน/หลังแพตช์และรายการตรวจความสมจริงเชิงกระบวนการ สถานการณ์วิกฤต การติดตามผล และความลึกชีวิต NPC ถึง **v2.8.0**
+- [`company-evolution-dev/SKILL.md`](company-evolution-dev/SKILL.md) — Master Skill ภาพรวมสถาปัตยกรรมและระบบที่ตรวจถึง **v2.9.0 (`sme-origins-civics-informed-decisions-v290`)**; สำเนาระดับ root คือ [`SKILL.md`](../../SKILL.md), [`SKILL_COMPANY_EVOLUTION_DEV.md`](../../SKILL_COMPANY_EVOLUTION_DEV.md), และ [`SKILL_COMPANY_FOR_EVERY_PATCH.md`](../../SKILL_COMPANY_FOR_EVERY_PATCH.md) สำหรับการส่งต่อไฟล์
+- [`company-for-every-patch/SKILL.md`](company-for-every-patch/SKILL.md) — Evergreen workflow ก่อน/หลังแพตช์และรายการตรวจความสมจริงเชิงกระบวนการ สถานการณ์วิกฤต การติดตามผล และความลึกชีวิต NPC ถึง **v2.9.0**
 
 ## สกิลเฉพาะด้าน
 
-สกิล 14 รายการด้านล่างมี metadata `maturity: starter-draft` พร้อมบันทึกการเชื่อมระบบจริงถึง **v2.8.0**:
+สกิล 14 รายการด้านล่างมี metadata `maturity: starter-draft` พร้อมบันทึกการเชื่อมระบบจริงถึง **v2.9.0**:
 
 - `company-npc-life-and-behavior` — ชีวิตและพฤติกรรม NPC (`p.aspiration`, `p.memories`, ความเชื่อใจ/ความขัดแย้ง `w.culture.conflicts`, การย้ายสายงานภายใน, ข้อเสนอรั้่งตัวก่อนลาออก, Spin-off ที่มีชีวิตใน `w.externalWorld.living.firms`)
 - `company-workforce-and-careers` — กำลังคน อาชีพ และการเติบโต (`evaluateAutonomousHiring` คัดผู้เชี่ยวชาญรายวิชา, `evaluateInternalCareerSwitch`, `evaluateEmployeeRetention`)
@@ -30,6 +30,8 @@
 
 ทุกแพตช์ให้ตรวจ Master Skill และสกิลเฉพาะด้านที่ได้รับผลกระทบกับ source/test จริง อัปเดตดัชนีและไฟล์ที่เกี่ยวข้อง พร้อมระบุผลในรายงาน
 
-## v2.8.0 Living Scenarios, Observability & Human Depth
+## v2.9.0 Living Scenarios, Observability & Human Depth
 
-อ่าน [คู่มือโรงงาน/คลัง/สัญญา](../../docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md), [คู่มือโลกภายนอก](../../docs/company/LIVING_WORLD_SYSTEM.md), [รายงาน v2.8.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.8.0.md) และ [รายงาน v2.7.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md).
+อ่าน [คู่มือโรงงาน/คลัง/สัญญา](../../docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md), [คู่มือโลกภายนอก](../../docs/company/LIVING_WORLD_SYSTEM.md), [รายงาน v2.9.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.8.0.md) และ [รายงาน v2.7.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md).
+
+ล่าสุด v2.9.0 เพิ่มสัญญา startup.js/civics.js และ news/learning/software fixes ใน Master ทั้งสองและ14domain references; root copiesตรงcanonical รายงานและข้อจำกัดดู `docs/company/SME_AND_CIVICS_SYSTEM.md` จำนวน203เทสต์/14browser เป็นหลักฐานรุ่นนี้ ไม่ใช่เกณฑ์จำนวนตายตัว สถานะdraftของสกิลเฉพาะด้านยังไม่เปลี่ยน และยังไม่ยืนยันอัปเดต2สกิลภายในแอปGemini

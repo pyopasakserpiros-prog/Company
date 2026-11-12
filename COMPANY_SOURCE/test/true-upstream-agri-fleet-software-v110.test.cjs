@@ -253,11 +253,12 @@ test("v1.1.0 Chapter 20 Software & SaaS App Business: 30/40/30 milestone account
   assert.equal(blockedAttempt.code, "projectBlocked");
 
   // Unblock and advance to testing with 2 injected defects
-  const stepDev = S.command(w, { type: "advanceSoftwareProject", projectId: "swproj-1", unblock: true, injectDefects: 2 });
+  const stepDev = S.command(w, { type: "advanceSoftwareProject", projectId: "swproj-1", unblock: true, injectDefects: 2, minutes: 1000 });
   assert.equal(stepDev.ok, true);
   assert.equal(proj.status, "testing");
   assert.equal(proj.defectsFound, 2);
 
+  proj.qaProgressMinutes = proj.requiredQaMinutes; // completed tester labor fixture
   // 4. QA Defect Gate: attempting acceptance without fixing defects must be rejected!
   const unfixedAttempt = S.command(w, { type: "advanceSoftwareProject", projectId: "swproj-1", fixDefects: false });
   assert.equal(unfixedAttempt.ok, false, "Cannot pass QA or UAT while defects remain unresolved");
@@ -313,7 +314,7 @@ test("v1.1.0 Chapter 20 Software & SaaS App Business: 30/40/30 milestone account
 
 test("8. Factory Sector Process Models (Food Spoilage -> Compost, Electronics RMA, Automotive Tooling Changeover, Biomed Sterile COA) & Industrial B2B Services (Calibration, Field SLA, Eco Recycling) preserve 100% audit invariants", () => {
   const w = S.create("sector-and-service-v120", { autonomous: true });
-  assert.strictEqual(D.RELEASE_VERSION, "2.8.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.9.0");
   assert.strictEqual(D.BUSINESS_PROCESS_MODELS.length, 8);
   assert.strictEqual(Object.keys(D.SECTOR_PROCESS_MODELS).length, 4);
   assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 10);

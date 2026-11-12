@@ -8,15 +8,16 @@
     node ? require("./economy.js") : root.CompanyEconomy,
     node ? require("./world.js") : root.CompanyWorld,
     node ? require("./plant.js") : root.CompanyPlant,
+    node ? require("./startup.js") : root.CompanyStartup,
   );
   if (node) module.exports = value;
   else root.CompanySim = value;
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
-  function (H, D, L, E, W, P) {
+  function (H, D, L, E, W, P, B) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.8.0",
+      RELEASE_VERSION = "2.9.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -549,6 +550,7 @@
       toll_smelting_extrusion:{metal_machining:45,metallurgy:45,machining:35,waste_management:40,quality:40}
     });
     function productRequirements(w,id) {
+      if(B.REQUIREMENTS[id])return {...B.REQUIREMENTS[id]};
       const p=w.catalog.products[id];
       const family=Object.values(D.PRODUCT_FAMILIES || {}).find(f=>f.products.includes(id));
       const req={...(FAMILY_SUBJECTS[family?.id] || {[productSubject(w,id)]:40,research_methods:30,quality:30})};
@@ -676,6 +678,7 @@
       return w.knowledge;
     }
     function productSubject(w, id) {
+      const specific={artisan_chili_paste_jar:"food_formulation",braided_fast_charge_kit:"electrical_basics",solar_mounting_rail_kit:"metal_machining",ev_suspension_kit:"metal_machining",ev_battery_tray_assembly:"metal_machining"};if(specific[id])return specific[id];
       const p = w.catalog.products[id];
       const family = Object.values(D.PRODUCT_FAMILIES || {}).find((f) => f.products.includes(id));
       if (family?.id === "bakery_grain") return "bakery";
@@ -757,6 +760,68 @@
     }
 
     const poolsForTechnology=w=>computeFinancialPools(w).survivalReserveSatang;
+    function ensureIntelligence(w){return w.intelligence||(w.intelligence={version:1,countryRisk:{},sectorSignals:{},history:[],lastReviewDay:0,negotiations:[],decisionTh:'ยังไม่มีข้อสรุปจากข่าวที่ทีมอ่าน'});}
+    function readNewsTick(w,p){
+      const time=tod(w);if(time<480||time>=525||p.state.energy<30)return false;
+      const h=seedHash(`${w.seed}:news:${p.id}:${day(w)}`),interest=(p.profile.personality.openness??50)+(subjectLevel(p,'market_analysis')*.5),professional=['coordinator','sales','admin','engineer'].includes(p.role);
+      if(!professional&&h%100>interest*.6)return false;if(time!==480+(h%8)*5)return false;
+      const previous=p.news?.lastReadDay;if(previous===day(w))return false;
+      if(!p.news)p.news={lastReadDay:0,known:[],readingMinutes:0};p.news.lastReadDay=day(w);
+      const known=new Set(p.news.known.map(n=>n.id)),sources=[...(w.externalWorld.living.civics?.history||[]),...(w.externalWorld.worldChronicle||[])];
+      const item=sources.filter(n=>!known.has(n.id)).sort((a,b)=>((b.nationId==='TH'?20:0)+(b.isMajor?10:0)+b.day)-((a.nationId==='TH'?20:0)+(a.isMajor?10:0)+a.day))[0];
+      if(!item)return false;
+      const comprehension=clamp(subjectLevel(p,'market_analysis')*.35+(p.profile.aptitudes.analytical??50)*.35+(p.profile.aptitudes.verbal??50)*.3,0,100);
+      const implications=/CONFLICT|WAR|SANCTION|SUSPENDED/.test(item.category)?'ประเมินความเสี่ยงการส่งมอบและหาผู้ขายสำรอง':/TRADE|TREATY|GOVERNMENT|LEADER/.test(item.category)?'ตรวจผลต่อราคาและเงื่อนไขการค้า ก่อนตัดสินใจ': 'ติดตามตลาดและความสามารถของคู่ค้า';
+      p.news.known.unshift({id:item.id,headlineTh:item.headlineTh,category:item.category,nationId:item.nationId||null,readAt:now(w),comprehension,interpretationTh:implications});if(p.news.known.length>16)p.news.known.pop();p.news.readingMinutes+=TICK;
+      p.activity='learning';p.intent={code:'readingNews',reasons:[item.headlineTh]};p.state=H.tickState(p.profile,p.state,{activity:'learn',minutes:TICK,workload:.25});learnSubject(p,'market_analysis',TICK,true);
+      if(p.role==='coordinator'){
+        const info=ensureIntelligence(w),conflict=w.externalWorld.living.civics?.conflicts.find(c=>c.id===item.conflictId),countries=conflict?.parties||[item.nationId].filter(Boolean);
+        for(const id of countries)info.countryRisk[id]=clamp((info.countryRisk[id]||0)+(/CONFLICT|WAR|SANCTION|SUSPENDED/.test(item.category)?15:/CEASEFIRE|RECOVERY|TREATY_EFFECTIVE/.test(item.category)?-10:0),0,70);
+        const group=item.group||w.externalWorld.living.nations[item.nationId]?.specialty,sector=({biological:'food',metals:'automotive',chemicals:'biomed'})[group]||group;
+        if(sector){if(!info.sectorSignals)info.sectorSignals={};const change=/CONFLICT|WAR|SUSPENDED/.test(item.category)?-.1:/TREATY_EFFECTIVE|RECOVERY/.test(item.category)?.08:0;info.sectorSignals[sector]=clamp((info.sectorSignals[sector]||1)+change*comprehension/100,.6,1.4);}
+        info.decisionTh=`${p.name} อ่านข่าวแล้ว: ${implications} (ความเข้าใจ ${Math.round(comprehension)}%)`;
+        info.history.unshift({at:now(w),personId:p.id,newsId:item.id,headlineTh:item.headlineTh,reasonTh:info.decisionTh});if(info.history.length>40)info.history.pop();
+      }
+      return true;
+    }
+    function reviewSmallBusinessLearning(w){
+      if(!w.startup||!w.policies.autoAccept||w.startup.lastLearningDay===day(w)||day(w)%3!==0)return;
+      w.startup.lastLearningDay=day(w);const ceo=w.people.find(p=>p.employed&&p.atWork&&p.role==='coordinator');if(!ceo)return;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);if(w.finance.cash<wages*7){w.startup.decisionTh='รักษาเงินเดือนและทำงานเดิมก่อนเพิ่มค่าเรียน';return;}
+      const goals=Object.entries(w.startup.learningGoals).filter(([id,level])=>SUBJECTS[id]&&!subjectReady(w,id,level));
+      if(!goals.length)return;const openness=ceo.profile.personality.openness??50,pressure=Object.values(w.units).some(u=>u.attempts>0)||w.people.some(p=>p.news?.known.some(n=>/TRADE|TREATY|CONFLICT/.test(n.category)));
+      if(openness<35&&!pressure&&day(w)%9!==0){w.startup.decisionTh='ผู้บริหารยังเลือกงานประจำแทนการเรียนเพิ่มในรอบนี้';return;}
+      const [id,level]=goals[0],candidates=w.people.filter(p=>p.employed&&!p.education.course).sort((a,b)=>subjectLevel(b,id)-subjectLevel(a,id));
+      const p=candidates.find(p=>['engineer','assembler','inspector'].includes(p.role))||candidates[0];if(!p)return;
+      plantHooks(w).train(p,id,level);const reason=`${ceo.name} วางแผนให้ ${p.name} เรียน ${SUBJECTS[p.education.course]} เพื่อพัฒนางาน ${w.startup.nameTh}${pressure?' หลังพบปัญหางาน/ข่าวที่เกี่ยวข้อง':''}`;
+      w.startup.decisionTh=reason;w.startup.learningHistory.unshift({day:day(w),personId:p.id,subjectId:p.education.course,targetLevel:p.education.courseLevel,reasonTh:reason});if(w.startup.learningHistory.length>30)w.startup.learningHistory.pop();event(w,'smeLearningPlanned',reason,{personId:p.id,subjectId:p.education.course});
+    }
+    function evaluateSmallBusinessDaily(w){
+      if(!w.startup||!w.policies.autoAccept||day(w)<2||!w.people.some(p=>p.employed&&p.atWork&&p.role==='coordinator'))return;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);if(w.finance.cash<wages*14+500000)return;
+      if(w.startup.profileId==='software_agency'&&day(w)>=(w.startup.nextClientReviewDay||2)&&Object.values(w.softwareBusiness.projects).every(p=>['closed','cancelled','supporting'].includes(p.status))){
+        const buyer=Object.values(w.externalWorld.corporations).find(c=>(c.id==='metro_retail'||c.sector==='food')&&w.externalWorld.living.firms[c.id]?.status==='operating'&&!Object.values(w.softwareBusiness.projects).some(p=>p.appId==='pos_retail'&&p.clientCorpId===c.id));
+        const res=buyer?startSoftwareProject(w,'pos_retail',buyer.id):{ok:false};w.startup.nextClientReviewDay=day(w)+7;if(res.ok){const project=w.softwareBusiness.projects[res.projectId];project.requiredDevMinutes=Math.max(project.requiredDevMinutes,2400);project.estimatedDevMinutes=project.requiredDevMinutes;project.requiredQaMinutes=Math.max(project.requiredQaMinutes,480);w.startup.decisionTh='รับพัฒนาPOSให้ลูกค้าจริง เริ่มเก็บความต้องการและคิดชั่วโมงนักพัฒนา ไม่ได้มีSaaSสำเร็จรูป';event(w,'smeProjectAccepted',w.startup.decisionTh,{projectId:res.projectId});}
+      }
+      if(w.startup.serviceType&&Object.values(w.serviceBusiness.orders).every(o=>['paid','cancelled'].includes(o.status))){
+        const res=startServiceOrder(w,w.startup.serviceType);if(res.ok){w.startup.decisionTh='รับงานช่างตามความรู้ เครื่องมือและเงินหมุนเวียนที่มี';event(w,'smeServiceAccepted',w.startup.decisionTh,{orderId:res.orderId});}
+      }
+      const info=ensureIntelligence(w),today=day(w);if(info.lastReviewDay===today)return;info.lastReviewDay=today;
+      for(const n of info.negotiations){if(n.status!=='negotiating'||today<n.reviewDay)continue;const corp=w.externalWorld.corporations[n.corpId],sup=w.externalWorld.suppliers[n.corpId];if(corp&&(sup?.trustScore||corp.trustScore)>=65&&w.finance.cash>wages*18+500000){const res=setCorporationRelation(w,n.corpId,'partner');n.status=res.ok?'signed':'deferred';n.reasonTh=res.ok?'ประวัติส่งมอบและเงินสำรองผ่าน จึงตกลงคู่ค้าระยะยาว':'ชะลอข้อตกลงหลังตรวจเงื่อนไข';}else n.status='deferred';}
+      const ceo=w.people.find(p=>p.employed&&p.role==='coordinator');if(!ceo?.news?.known.length)return;
+      const candidate=Object.values(w.externalWorld.suppliers).find(s=>s.totalDeliveries>=3&&s.totalSpendSatang>=5000000&&s.trustScore>=65&&w.externalWorld.corporations[s.id]?.relationshipMode!=='partner'&&!info.negotiations.some(n=>n.corpId===s.id));
+      if(candidate&&w.finance.cash>wages*18+500000){info.negotiations.push({corpId:candidate.id,status:'negotiating',startedDay:today,reviewDay:today+7,reasonTh:'มีการส่งมอบจริงอย่างน้อย3ครั้งและปริมาณซื้อพอคุ้มข้อตกลง ลดการพึ่งตลาดซื้อครั้งเดียว'});info.negotiations=info.negotiations.slice(-20);}
+    }
+    function intelligenceAudit(w){
+      const errors=[],record=v=>v&&typeof v==='object'&&!Array.isArray(v);
+      if(w.intelligence){const x=w.intelligence;if(x.version!==1||!record(x.countryRisk)||!record(x.sectorSignals)||!Array.isArray(x.history)||!Array.isArray(x.negotiations)||!int(x.lastReviewDay))return ['invalid intelligence'];
+        for(const [id,v]of Object.entries(x.countryRisk))if(!w.externalWorld.living.nations[id]||!Number.isFinite(v)||v<0||v>70)errors.push('invalid known country risk');
+        for(const v of Object.values(x.sectorSignals))if(!Number.isFinite(v)||v<.6||v>1.4)errors.push('invalid sector signal');
+        for(const n of x.negotiations)if(!w.externalWorld.corporations[n.corpId]||!['negotiating','signed','deferred'].includes(n.status)||!int(n.startedDay)||!int(n.reviewDay)||n.reviewDay<n.startedDay)errors.push('invalid supplier negotiation');
+      }
+      for(const p of w.people)if(p.news){const n=p.news;if(!Array.isArray(n.known)||n.known.length>16||!int(n.lastReadDay)||!int(n.readingMinutes))errors.push('invalid NPC news '+p.id);else for(const e of n.known)if(typeof e.id!=='string'||typeof e.headlineTh!=='string'||!int(e.readAt)||e.readAt>now(w)||!Number.isFinite(e.comprehension)||e.comprehension<0||e.comprehension>100)errors.push('invalid NPC news record '+p.id);}
+      return errors;
+    }
     function reviewKnowledge(w) {
       const k = ensureKnowledge(w);
       if (k.lastReviewDay === day(w)) return;
@@ -786,14 +851,20 @@
       }
       const risk = ceo.profile.personality.riskTaking ?? 50;
       if (day(w) % (risk > 65 ? 3 : 5) !== 0) return;
-      const targets = Object.values(w.catalog.products).filter((p) => p.researchRequired > 0 && !k.projects[`product:${p.id}`]);
+      const targets = Object.values(w.catalog.products).filter((p) => p.researchRequired > 0 && !k.projects[`product:${p.id}`]).filter(p=>{
+        if(!w.startup||w.research.unlocked.length)return true;
+        const rows=teamCoverage(w,productRequirements(w,p.id)),fit=rows.filter(r=>r.ready).length/rows.length;
+        return fit>=.5&&risk>65&&w.finance.cash>w.startup.paidInCapital*2.5;
+      });
       const score=(p)=>{
         const req=productRequirements(w,p.id), rows=teamCoverage(w,req);
         const fit=rows.filter(r=>r.ready).length/rows.length;
         const market=(w.externalWorld?.geopolitics?.sectorDemandMultipliers?.[({tech:"electronics",aerospace_robotics:"automotive"})[p.industry] || p.industry] || 1)*(w.externalWorld?.government?.demandMultiplier || 1);
         const bomCost=Object.entries(p.bom).reduce((sum,[id,q])=>sum+w.catalog.materials[id].unitCost*q,0);
         const margin=((p.priceMin || 0)-bomCost)/Math.max(1,p.priceMin || 1);
-        return fit*(risk>65 ? 35 : 65)+market*15+margin*15-(p.researchRequired || 0)/40;
+        const localFit=w.startup&&((p.industry==="tech"?"electronics":p.industry)===w.startup.sector)?20:0;
+        const informed=((w.intelligence?.sectorSignals?.[p.industry==="tech"?"electronics":p.industry]||1)-1)*25;
+        return fit*(risk>65 ? 35 : 65)+market*15+margin*15+localFit+informed-(p.researchRequired || 0)/40;
       };
       targets.sort((a,b)=>score(b)-score(a)||a.id.localeCompare(b.id));
       let target=targets[0], kind="product";
@@ -4347,6 +4418,7 @@
       const depositAmt = Math.round(price * 0.3);
       const corp = w.externalWorld?.corporations?.[clientCorpId];
 
+      if(!W.payFromCounterparty(w,`swDeposit:${pid}`,"firm",clientCorpId,depositAmt))return {ok:false,code:"clientFundsUnavailable",message:"ลูกค้าไม่มีเงินมัดจำจริง จึงยังลงนามรับงานไม่ได้"};
       // Collect 30% deposit into cash, but record it as unearnedDepositSatang (NOT recognized profit until milestones are accepted!)
       post(w, "sales", depositAmt, `swDeposit:${pid}`);
       sb.metrics.totalUnearnedDepositSatang = (sb.metrics.totalUnearnedDepositSatang || 0) + depositAmt;
@@ -4424,7 +4496,7 @@
       if (proj.status === "discovery") {
         const depositAmt = Math.round(proj.contractPriceSatang * 0.3);
         if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
-          W.payFromCounterparty(w, `swDeposit:${proj.id}`, "firm", proj.clientCorpId, depositAmt);
+          if(!W.payFromCounterparty(w, `swDeposit:${proj.id}`, "firm", proj.clientCorpId, depositAmt))return {ok:false,code:"clientFundsUnavailable"};
         }
         post(w, "sales", depositAmt, `swDeposit:${proj.id}`);
         proj.depositCollectedSatang = depositAmt;
@@ -4458,7 +4530,9 @@
         proj.assignedDeveloperId = dev.id;
         proj.assignedDeveloperName = dev.name;
 
+        if(!Number.isFinite(options.minutes)||options.minutes<=0)return {ok:false,code:"noRecordedDeveloperTime",message:"ต้องมีชั่วโมงทำงานนักพัฒนาจริงก่อนเพิ่มความคืบหน้า"};
         const cloudFee = spec.computeCostSatang || 500000;
+        if (proj.computeCostSatang === 0 && w.finance.cash < cloudFee)return {ok:false,code:"computeFundsUnavailable",message:"เงินไม่พอค่าเครื่องมือ/ระบบพัฒนา โครงการหยุดรอทุน"};
         if (proj.computeCostSatang === 0 && w.finance.cash >= cloudFee) {
           post(w, "equipment", -cloudFee, `swCompute:${proj.id}`);
           proj.computeCostSatang = cloudFee;
@@ -4471,7 +4545,7 @@
         const conscientiousness = dev.profile?.personality?.conscientiousness ?? 50;
         const productivity = clamp((0.65 + progSkill * 0.0045 + analytical * 0.002) * Math.max(0.45, 1 - fatigue / 135), 0.4, 1.65);
 
-        const rawMinutes = typeof options.minutes === "number" ? Math.max(0, options.minutes) : 45;
+        const rawMinutes = typeof options.minutes === "number" ? Math.max(0, options.minutes) : 0;
         const effectiveMinutes = Math.round(rawMinutes * productivity * 10) / 10;
         proj.actualPersonMinutes = (proj.actualPersonMinutes || 0) + rawMinutes;
         proj.progressMinutes = Math.min(proj.requiredDevMinutes, (proj.progressMinutes || 0) + effectiveMinutes);
@@ -4489,7 +4563,7 @@
           }
         }
 
-        if (proj.progressMinutes < proj.requiredDevMinutes && options.minutes !== undefined) {
+        if (proj.progressMinutes < proj.requiredDevMinutes) {
           proj.lastReasonTh = `${dev.name} กำลังพัฒนาโค้ด (${Math.round(proj.progressMinutes)}/${proj.requiredDevMinutes} นาที • ประสิทธิภาพ ×${productivity.toFixed(2)})`;
           return {
             ok: true,
@@ -4499,7 +4573,7 @@
             productivity,
           };
         }
-        // Complete implementation when requiredDevMinutes is reached (or when options.minutes was omitted in step-by-step test with qualified dev)
+        // Implementation completes only from recorded developer labor; omitted minutes never complete it.
         proj.progressMinutes = proj.requiredDevMinutes;
         proj.status = "testing";
         if (options.injectDefects !== undefined) {
@@ -4524,8 +4598,10 @@
 
       // Step 3: testing (QA & Defect resolution)
       if (proj.status === "testing") {
+        if((proj.qaProgressMinutes||0)<proj.requiredQaMinutes)return {ok:false,code:"qaTimeRequired",message:"ต้องใช้เวลาผู้ทดสอบจริงก่อนรับรอง QA"};
         if (proj.externalQaCostSatang === 0) {
           const qaCost = 1000000; // ฿10,000 QA test lab / device farm cost
+          if(w.finance.cash<qaCost)return {ok:false,code:"qaFundsUnavailable",message:"เงินไม่พอค่าห้องทดสอบ ยังออกใบรับรองไม่ได้"};
           if (w.finance.cash >= qaCost) {
             post(w, "equipment", -qaCost, `swQaTest:${proj.id}`);
             proj.externalQaCostSatang = qaCost;
@@ -4569,7 +4645,7 @@
         if (!proj.uatCollected) {
           const uatAmount = Math.round(proj.contractPriceSatang * proj.uatMilestonePct); // 40%
           if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
-            W.payFromCounterparty(w, `swUat:${proj.id}`, "firm", proj.clientCorpId, uatAmount);
+            if(!W.payFromCounterparty(w, `swUat:${proj.id}`, "firm", proj.clientCorpId, uatAmount))return {ok:false,code:"clientFundsUnavailable"};
           }
           post(w, "sales", uatAmount, `swUatMilestone:${proj.id}`);
           proj.uatCollected = true;
@@ -4589,7 +4665,7 @@
         const finalAmount = proj.contractPriceSatang - proj.cashCollectedSatang;
         if (finalAmount > 0 && !proj.deployCollected) {
           if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
-            W.payFromCounterparty(w, `swDeploy:${proj.id}`, "firm", proj.clientCorpId, finalAmount);
+            if(!W.payFromCounterparty(w, `swDeploy:${proj.id}`, "firm", proj.clientCorpId, finalAmount))return {ok:false,code:"clientFundsUnavailable"};
           }
           post(w, "sales", finalAmount, `swDeployMilestone:${proj.id}`);
           proj.deployCollected = true;
@@ -5910,7 +5986,8 @@
                 const slagBonus = s.id === "industrial_recycling" && safeAvailableToDeduct(w, "mineral_slag_mud") >= 1 ? 180000 : 0;
                 const netMargin = Math.round((s.serviceFeeSatang || 380000) * srvMult) - (s.labConsumableCostSatang || 45000) + recVal + slagBonus;
                 const onCd = isTopicOnCooldown(w, "service_entry", s.id, completedDay, options);
-                const score = (onCd ? -500000 : 0) + (partsReady ? 600000 : 0) + netMargin;
+                const knowledgeFit=teamReady(w,SERVICE_SUBJECTS[s.id]||{}),focus=w.startup?.serviceType===s.id;
+                const score = (onCd ? -500000 : 0) + (partsReady ? 600000 : 0) + netMargin+(knowledgeFit?600000:-1000000)+(focus?250000:0);
                 return { spec: s, partsReady, netMargin, score };
               })
               .sort((a, b) => b.score - a.score);
@@ -6238,11 +6315,7 @@
       }
 
       // 2. Autonomous Software & SaaS Operations
-      for (const proj of Object.values(sb.projects)) {
-        if (!["supporting", "closed", "cancelled", "blocked"].includes(proj.status) && w.finance.cash > 5000000) {
-          advanceSoftwareProject(w, proj.id, { completeAllSteps: false });
-        }
-      }
+      // Project stages advance exclusively in stepSoftwareBusinessTick with actual labor.
       for (const app of Object.values(sb.saasProducts || {})) {
         if (app.status === "live") {
           if (completedDay >= 3 && app.leadCount > 0 && app.activeSubscribers === 0) {
@@ -6398,9 +6471,10 @@
         ? clone(options.catalog)
         : D.createCatalog();
       if (!catalog.taskKinds) catalog.taskKinds = {};
-      if (options.startupMode === "lean" || options.starterCount === 5) {
+      const startupState=options.startingBusiness?B.configure(catalog,options.startingBusiness):null;
+      if (!startupState && (options.startupMode === "lean" || options.starterCount === 5)) {
         catalog.starters = clone(D.LEAN_STARTERS || catalog.starters.slice(0, 5));
-      } else if (int(options.starterCount, 4, 30)) {
+      } else if (!startupState && int(options.starterCount, 4, 30)) {
         catalog.starters = catalog.starters.slice(0, options.starterCount);
       }
       const errors = D.validateCatalog(catalog);
@@ -6498,9 +6572,9 @@
       ensureWarehouse(w);
       recomputeGeopoliticalMultipliers(w);
       ensureKnowledge(w);
+      if(startupState)B.apply(w,startupState);
       const first = w.research.unlocked[0];
-      makeOffer(w, first, 8, 6);
-      makeOffer(w, first, 10, 8);
+      if(first){makeOffer(w, first, startupState?4:8, 6);makeOffer(w, first, startupState?6:10, 8);}
       event(
         w,
         "companyStarted",
@@ -7001,6 +7075,10 @@
           cost: quantity * effectiveUnitCost,
           spotUnitCost,
           worldLeadDays: quote.days,
+          customsTaxSatang:quote.unitTax*quantity,
+          originNationId:quote.originNationId,
+          tradePolicyIds:quote.policyIds,
+          tradeReasonTh:quote.reasonTh,
           geopoliticalMultiplier: geoMult,
           status: "paperwork",
           orderedAt: now(w),
@@ -7010,7 +7088,7 @@
           buyerId: buyer ? buyer.id : null,
           buyerName: buyer ? buyer.name : "ฝ่ายจัดซื้อ",
         };
-      if(!W.sellToPlayer(w,quote.supplierId,materialId,quantity,p.cost)) return null;
+      if(!W.sellToPlayer(w,quote.supplierId,materialId,quantity,p.cost,quote)) return null;
       post(w, "materials", -p.cost, p.id);
       w.purchases[p.id] = p;
       job(w, "purchase", { purchaseId: p.id, required: 15 });
@@ -7040,6 +7118,7 @@
         });
         if (w.logistics.inboundShipments.length > 50) w.logistics.inboundShipments.pop();
       }
+      if(supplier&&!w.externalWorld.suppliers[supplier.id])w.externalWorld.suppliers[supplier.id]={id:supplier.id,nameTh:supplier.nameTh,trustScore:supplier.trustScore||50,totalOrders:0,totalDeliveries:0,totalSpendSatang:0,tierTh:"คู่ค้ามาตรฐาน (Regular)"};
       if (supplier && w.externalWorld?.suppliers?.[supplier.id]) {
         w.externalWorld.suppliers[supplier.id].totalOrders =
           (w.externalWorld.suppliers[supplier.id].totalOrders || 0) + 1;
@@ -8110,7 +8189,7 @@
       } else if (j.kind === "sales") {
         const products = w.research.unlocked,
           productId = products[Math.floor(random(w) * products.length)];
-        makeOffer(
+        if(productId)makeOffer(
           w,
           productId,
           8 + Math.floor(random(w) * 7),
@@ -8478,6 +8557,7 @@
       if (!active) {
         release(w, p, stationLoadMap);
         p.atWork = false;
+        if(readNewsTick(w,p)){p.position={...w.layout.entrance};p.previousPosition={...p.position};return;}
         if(personalStudyTick(w,p)) {p.position={...w.layout.entrance};p.previousPosition={...p.position};return;}
         p.activity = time >= 1320 || time < 360 ? "sleeping" : "offDuty";
         p.position = { ...w.layout.entrance };
@@ -10544,6 +10624,7 @@
     function step(w) {
       if (w.status !== "running") return false;
       ensureKnowledge(w);
+      if(tod(w)===635)reviewSmallBusinessLearning(w);
       if (tod(w) === 640) reviewKnowledge(w);
       if (w.people.length > 10) syncStationCapacitiesForScale(w);
       if (tod(w) === 570) evaluateDebtRepayment(w);
@@ -10554,7 +10635,7 @@
       if (tod(w) === 660 && day(w) >= 5 && w.policies.autoAccept &&
           w.people.some((p) => p.employed && p.atWork && p.role === "coordinator"))
         evaluateAutonomousHiring(w);
-      if(tod(w)===690)evaluateCommercialSales(w);
+      if(tod(w)===690){evaluateSmallBusinessDaily(w);evaluateCommercialSales(w);}
       P.tick(w,TICK,plantHooks(w));
       if(tod(w)===675&&w.policies.autoAccept&&w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))P.review(w,plantHooks(w));
       if(tod(w)===680&&w.policies.autoAccept)evaluateOperationalCrisesAndBottlenecks(w);
@@ -12002,6 +12083,8 @@
     function audit(w) {
       const errors = [
         ...W.validate(w),
+        ...B.validate(w),
+        ...intelligenceAudit(w),
         ...P.validate(w),
         ...commercialAudit(w),
         ...E.auditFinance(w.finance),
@@ -12238,6 +12321,12 @@
       commercialAudit,
       warehouseCapacity,
       warehouseUsed,
+      readNewsTick,
+      reviewSmallBusinessLearning,
+      evaluateSmallBusinessDaily,
+      intelligenceAudit,
+      startupOptions:B.list,
+      startupAudit:B.validate,
       plantView: P.view,
       plantAudit: P.validate,
       productionView,

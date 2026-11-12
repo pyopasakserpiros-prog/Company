@@ -87,7 +87,12 @@ function route(p){
       stage(isMeal?'ลดอุณหภูมิรวดเร็วและซีลถาดบรรจุ':'พักเย็นและเตรียมบรรจุ','hand_tools',.3,10,null,{opCode:'cooling_pack_prep',subject:'food_safety',minSubjectLevel:20,qualityCheckpoint:true,intermediateOut:'food_ready_lot'})
     ];
   }
-  if(/rail|tray|suspension|motor|agv|Actuator|drone|switchgear/i.test(id)){
+  if(/rail|tray|suspension/i.test(id))return [
+    stage('ตัดและขึ้นรูปวัสดุตามแบบ','press',.4,0,null,{opCode:'mechanical_cut_form',subject:'metal_machining',minSubjectLevel:30,intermediateOut:'cut_profile'}),
+    stage('เจาะ ลบคม และประกอบฐานยึด','hand_tools',.4,0,null,{opCode:'mechanical_fixture',subject:'metal_machining',minSubjectLevel:30,intermediateOut:'mechanical_assembly'}),
+    stage('ตรวจมิติและแรงยึดก่อนปล่อยงาน','diagnostic_kit',.2,10,null,{opCode:'dimensional_release',subject:'metrology',minSubjectLevel:30,qualityCheckpoint:true,intermediateOut:'inspected_structure'})
+  ];
+  if(/motor|agv|Actuator|drone|switchgear/i.test(id)){
     return [
       stage('ตัดกลึงและขึ้นรูปโครงสร้างโลหะ','press',.3,0,null,{opCode:'cnc_press_forming',subject:'metal_machining',minSubjectLevel:30,intermediateOut:'formed_chassis'}),
       stage('เชื่อมประกอบโครงและตั้งจิ๊กแม่นยำ','welder',.3,0,null,{opCode:'structural_welding',subject:'metal_machining',minSubjectLevel:30,safetyCritical:true,intermediateOut:'welded_frame'}),

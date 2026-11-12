@@ -58,3 +58,9 @@ learnSubject / personalStudyTick: individual interests, after-work study funded 
 - **Workplace Friction vs. Coaching (`w.culture.conflicts`)**: QA rework in `finishJob` and passed-over promotions in `evaluatePromotions` adjust `p.relationships[otherId].trust`, `p.career.promotionGrievance`, and `w.culture.conflicts` based on empathy/fairness (always guarding `otherId !== p.id`).
 - **Internal Career Switching (`S.evaluateInternalCareerSwitch`), Retention Counter-Offers (`S.evaluateEmployeeRetention`) & Living Spin-Offs (`S.evaluateEmployeeSpinoff`)**: Employees can switch roles internally when cross-trained (`w.culture.roleSwitches`), receive retention raises/bonuses before leaving (`w.culture.retentionOffers`), or found living spin-off firms registered in `w.externalWorld.living.firms`.
 - **Counterfactual Comparison (`S.runCounterfactualComparison`)**: Compares identical world seeds under altered CEO personality, technician knowledge, or capital. Verified with **190/190** tests (`test/living-scenarios-human-depth-v280.test.cjs`).
+
+## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+
+S.readNewsTick records a five-minute personal reading slot, role/openness participation and aptitude/market comprehension. Only read executive news enters intelligence and affects supplier/R&D scoring. Validate p.news and inspect Character → News. No origin locks learning; no information-sharing/misinformation model is claimed.
+
+Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.

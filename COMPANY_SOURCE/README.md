@@ -1,6 +1,8 @@
 # Company Simulation — วิธีเปิดและพัฒนา
 
-รุ่นเกมบน `main`: **v2.7.0** · [สถานะและรายงานแพตช์](../project_status_and_ai_onboarding.md)
+รุ่นเกมบน `main`: **v2.9.0** · [สถานะและรายงานแพตช์](../project_status_and_ai_onboarding.md)
+
+เริ่มเกมมีหน้าเลือก SME 6 ประเภทและหยุดเวลารอเลือก ทีม NPC ดำเนินงานและเรียนรู้ต่อเอง ดู [คู่มือ SME/รัฐบาล/ข่าว](../docs/company/SME_AND_CIVICS_SYSTEM.md) และ [รายงานล่าสุด](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md)
 
 ## เล่น
 

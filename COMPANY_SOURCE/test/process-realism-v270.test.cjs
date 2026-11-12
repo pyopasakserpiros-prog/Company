@@ -289,12 +289,13 @@ test("v2.7.0 AC5: Real Software Development, Qualified Developer Time, Skill/Apt
   const subProj = S.command(w, {
     type: "startSoftwareProject",
     appId: "pos_retail",
-    clientCorpId: "thai_bev_agro",
+    clientCorpId: "cp_health",
   });
   assert.equal(subProj.ok, true);
   const sp = w.softwareBusiness.projects[subProj.projectId];
-  S.command(w, { type: "advanceSoftwareProject", projectId: sp.id, injectDefects: 3 }); // contracted -> testing with 3 defects
+  S.command(w, { type: "advanceSoftwareProject", projectId: sp.id, injectDefects: 3, minutes: 1000 }); // contracted -> testing with 3 defects
   assert.equal(sp.status, "testing");
+  sp.qaProgressMinutes = sp.requiredQaMinutes; // actual QA time fixture
   S.command(w, { type: "advanceSoftwareProject", projectId: sp.id, deployWithKnownDefects: true }); // testing -> customer_acceptance with known defects
   assert.equal(sp.deployedWithDefects, true);
   assert.equal(sp.unresolvedDefectsAtDeploy, 3);
