@@ -59,3 +59,7 @@ Codex ฐาน `f7167e2` / Agy v2.8.0 → **v2.9.0 implemented/verified**: 6SME
 - Scope: documentation, navigation and handoff references only. Era 3 runtime implementation has not started. User reiterated fully autonomous NPC decisions; the player observes and edits conditions, never issues operational management orders.
 
 Files: [Era 3 proposal](../../era3/ERA_3_FEATURE_AND_SMART_PHONES.md), [portable status](../../era3/project_status_and_ai_onboarding.md), [documentation report](PATCH_REPORTS/UPDATE_REPORT_2026-11-12_ERA3_PROPOSAL_HANDOFF.md). Existing Agy/Codex runtime history above is preserved.
+
+## Spin-off design review — Codex, 2026-11-12
+
+Task `spinoff-phone-design-review`; base `bdfa62c`, parent runtime3.1.0. Status: documentation review integrated by the commit containing this entry. Reviewed both spin-off briefs, status/skills and relevant engineering/industry source. Added source-backed criticism and complementary design proposals in `spinoff_phone/CODEX_REVIEW_AND_DESIGN_REFINEMENTS.md`, with notices/links/addenda in original documents. No gameplay/AGENTS/Human Core changes; no spin-off implementation authorised or started in this task. Runtime test/app-skill results are not independently recertified. Documentation-only scope does not change existing runtime skill contracts or features listed in project status.

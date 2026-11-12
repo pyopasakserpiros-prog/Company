@@ -59,6 +59,10 @@ Building on the v3.0.0 generated physical phone industry foundation, **v3.1.0** 
 - Carrier/retail channels (`carrier_bundle`, `retail_distributor`, `direct_household` in `w.phoneIndustry.channels`) record segment and radio-generation sales, while full carrier balance-sheet financing, app-store developer ecosystems, and formal patent/IP litigation remain partial or future scope.
 - Playwright (`playwright` npm package) is not pre-installed in the offline sandbox VM container, so `npm run test:browser` must be run in an environment with Playwright/Chromium installed.
 
+## Spin-off design status (documentation only)
+
+The proposed Silicon & Handset Empire game is documented in `spinoff_phone/`. Codex reviewed its two design briefs against source base `bdfa62c` and added `spinoff_phone/CODEX_REVIEW_AND_DESIGN_REFINEMENTS.md`: progression/engineering/economic corrections, specialist entry routes, source reuse limitations and vertical-slice acceptance criteria. This review does not implement or independently certify a playable spin-off or all v3.1.0 behavior. Parent runtime/features remain unchanged.
+
 ## Verification and delivery
 
 See `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md` for exact commands, results, scenarios and limitations.
