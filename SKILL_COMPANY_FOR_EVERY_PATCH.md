@@ -2,7 +2,17 @@
 name: company-for-every-patch
 description: Use on every Company Simulation patch and when preparing its verification, documentation, skill updates or full editable delivery.
 ---
-## Current v3.0.0 — generated physical phone industry
+## Current v3.1.0 — 12-role phone-manufacturing supplier ecosystem, campus vertical integration & normal-opening supply calibration
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md` before changing phones. Runtime is `3.1.0`; package/save remain `0.1.0` (`company-foundation-1`). NPCs operate autonomously; the player observes and uses Edit Hub only.
+
+- Verify all 12 executable roles in `E.ROLE_CONTRACTS` (`fabless_soc`, `wafer_foundry`, `osat_packaging`, `dram_memory`, `nand_storage`, `camera_module`, `display_panel`, `battery_pack`, `pcb_rf`, `enclosure`, `os_platform`, `brand`) and 8 qualified grades in `E.MATERIAL_GRADES`.
+- Verify campus supplier entry and vertical integration (`I.enterCampusRole`, `S.selectFeasibleCampusPhoneRole`, `S.phoneCompanyReview`): no free physical lots on entry, real campus `phoneWorkshop` minutes, equipment readiness & utility brownout checks (`checkCampusEquipmentReady`), and `syncCampusMaterialsIfNeeded` updating both `w.inventory.consumed` and `w.knowledge.materialsConsumed` to preserve `S.audit(w)` material allocation invariants.
+- Verify objective feasibility vs. strategic refusal (`feasible: true`, `feasibleButDeclined: true`, `entry.status === "declined_prudent"` when a cautious CEO preserves cash).
+- Verify Fabless SoC -> Wafer Foundry -> OSAT Packaging orders (`w.phoneIndustry.foundryOrders`), persistent WIP batches (`w.phoneIndustry.wipBatches`), and multi-supplier compatible lot substitution (`isSubstitutableLot`, `adoptOwnedCompatibleLot`).
+- Run `node tools/verify.cjs`, `node tools/test.cjs` (**236/236 PASS**, including `test/phone-supplier-ecosystem-v310.test.cjs`), `node tools/build.cjs`, `node tools/phone-industry-soak.cjs` (both 360-day sector soaks and 45-day full-campus-life `S.advance(1440)` soak), and `node tools/benchmark.cjs`.
+
+## Retained v3.0.0 — generated physical phone industry foundation
 
 Read `docs/company/ERA3_PHONE_SYSTEM.md` and the v3 report before changing phones. Runtime is3.0.0; package/save remain0.1.0. NPCs operate; player observes/EditHub only.
 
@@ -35,7 +45,7 @@ Full ZIP delivery: one root with directories including .agents; all tracked sour
    - Run baseline checks in `COMPANY_SOURCE/`: `node tools/verify.cjs` and `node tools/test.cjs`.
 2. **Non-Negotiable Architectural & Process-Realism Invariants (Up to v2.8.0)**:
    - **Permanently Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`)**: NEVER edit `js/human-core.js`, `CORE_LOCK.json` (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`), or `AGENTS.md`.
-   - **Version Identifiers**: `D.VERSION = "3.0.0"`, `D.RELEASE_VERSION = "3.0.0"`, `S.RELEASE_VERSION = "3.0.0"`; keep `S.VERSION = "0.1.0"`, `S.SCHEMA = "company-foundation-1"`, and `package.json = "0.1.0"`.
+   - **Version Identifiers**: `D.VERSION = "3.1.0"`, `D.RELEASE_VERSION = "3.1.0"`, `S.RELEASE_VERSION = "3.1.0"`; keep `S.VERSION = "0.1.0"`, `S.SCHEMA = "company-foundation-1"`, and `package.json = "0.1.0"`.
    - **Timed Material Refinery Batches (`w.plant.refineryBatches`)**: Never revert `craftMaterialRecipe` or `runMidstreamRefining` to synchronous instant output. Inputs are reserved at enqueue (`w.inventory.reserved`), deducted after `loading_setup` (`inputsConsumed = true`), and released only after `inspection` and warehouse space verification.
    - **Multi-Scenario Crisis & Bottleneck Autonomy**: Keep `P.maintain` iterating across all pending tasks (never head-of-line blocking on `x.maintenance[0]`), `unreservePartForRepair` releasing unstarted unit reservations when a broken machine needs a part in stock, `S.contractOemMaintenance` providing paid OEM fallback repair, and `evaluateCommercialSales` autonomously renegotiating late contracts (`renegotiateCommercialContract`) and offering `warehouseSale` clearance markdowns (`clearanceDiscountPct`).
    - **Observability Purity & Relationship Integrity**: `S.buildObservabilityView(w)` must remain a pure reader (never mutating `w` or advancing RNG during `API.view(w)`). Never create self-relationships (`otherId !== p.id`) in `finishJob` or `evaluatePromotions`, as `Save.validate(w)` enforces `other !== p.id`.

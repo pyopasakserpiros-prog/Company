@@ -2,7 +2,25 @@
 name: company-evolution-dev
 description: Use when developing or reviewing Company Simulation systems, autonomous NPCs, business operations or their source integration.
 ---
-## Current v3.0.0 — generated physical phone industry
+## Current v3.1.0 — 12-role phone-manufacturing supplier ecosystem, campus vertical integration & normal-opening supply calibration
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md` before changing phones. Runtime is `3.1.0`; package/save remain `0.1.0` (`company-foundation-1`). NPCs operate autonomously; the player observes and uses Edit Hub only.
+
+- `phone-engineering.js`:
+  - `MATERIAL_GRADES` (8 qualified phone-grade inputs: `electronic_silicon_wafer_9n`, `tested_wafer_die_lot`, `packaged_tested_ic_grade`, `cmos_optical_wafer_grade`, `aluminosilicate_panel_substrate`, `high_cycle_lipo_cell_grade`, `hdi_rf_copper_laminate`, `anodized_thermal_enclosure_grade`) with purity, raw inputs, and process steps.
+  - `ROLE_CONTRACTS` (12 executable roles: `fabless_soc`, `wafer_foundry`, `osat_packaging`, `dram_memory`, `nand_storage`, `camera_module`, `display_panel`, `battery_pack`, `pcb_rf`, `enclosure`, `os_platform`, `brand`) with role-specific `subjectRequirements`, `requiredEquipment`, `utilityKw`, `entryCapitalSatang`, `nreCostSatang`, `licenseFeeSatang`, `workingCapitalDays`, `qualifiedMaterialGrade`, `bom`, and 3-stage `processStages`.
+  - Pure `synthesizeChip`, `synthesizeComponent`, `parts`, `isCompatiblePart`, `evaluate`, `wafer`, `roleContract`, `materialGrade`, and `evaluateRoleFeasibility` (separating objective `feasible` from strategic preference `feasibleButDeclined` / `declined_prudent`).
+- `phone-industry.js`:
+  - Expanded external ecosystem to 16 active firms across all 12 roles (`siam_aero_robotics` for `fabless_soc`/`camera_module`, `apex_ind` for `dram_memory`, `solartech_asia` for `nand_storage`/`pcb_rf`, `biomed_siam` for `camera_module`, `green_power` for `battery_pack`/`display_panel`, `bharat_biotech_it` for `os_platform`, alongside `shenzhen_semi`, `tokyo_elec`, `pacific_solar`, `petro_chem_siam`, `siam_metal`, `singapore_port_3pl`, and the 4 handset brands).
+  - `produceChipBatch` supports both IDM foundry production and Fabless SoC -> Wafer Foundry (`shenzhen_semi`) -> OSAT Packaging (`singapore_port_3pl`) orders recorded in `w.phoneIndustry.foundryOrders`.
+  - Persistent `w.phoneIndustry.wipBatches`, `w.phoneIndustry.channels` (`carrier_bundle`, `retail_distributor`, `direct_household`), multi-supplier compatible lot substitution (`isSubstitutableLot`, `adoptOwnedCompatibleLot`, preserving a 4-unit internal buffer when a supplier also operates `brand`), and `syncCampusMaterialsIfNeeded` (reconciling `w.inventory.consumed` and `w.knowledge.materialsConsumed`).
+  - `enterCampusRole(w, roleId, options)` and `sim.js:selectFeasibleCampusPhoneRole` / `phoneCompanyReview` enable our campus SME (`phone_campus`) to enter, operate, sell B2B, and vertically integrate across all 12 supplier/brand roles using real staff subjects, campus equipment, utilities, NRE/licensing fees, and `phoneWorkshop` jobs (with automatic job continuation while `campusFirmId` is active).
+- `world.js` (Normal-Opening Supply Starvation Fix):
+  - Sorted `operate()` outputs by ascending material tier so vertically integrated firms produce raw/refined materials before consuming them; added biological inputs (`raw_water_m3`, `npk_fertilizer`, `soybean_crop`, `rice_bran_husk`) to `World.step` procurement `needs`; scaled Tier 0 extraction and regional refining for `copper_coil`, `polymer_resin`, `silicon_wafer`, `pcb`, `nitrogen_ammonia`, and `npk_fertilizer`; and protected active phone division materials (`PHONE_CRITICAL_MATERIALS`) and B2B working stock buffers from domestic residual consumption before `Phone.step` runs.
+  - Normal 360-day sector soak (`node tools/phone-industry-soak.cjs`) advances from `24/25` phones in v3.0.0 to **`601` phones (`16` designs, `12` smart)** in `era3-independent` and **`796` phones (`17` designs, `13` smart)** in `era3-world-b`, plus a 45-day full-campus-life (`S.advance(w, 1440)`) vertical-integration soak (`52` phones produced, `47` sold, `5` designs).
+- Verification: `node tools/verify.cjs` PASS (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`), `node tools/test.cjs` **236/236 PASS** (including `test/phone-supplier-ecosystem-v310.test.cjs`), `node tools/build.cjs` PASS (`1,982,770` UTF-8 bytes), `node tools/benchmark.cjs` PASS (`500` NPCs at `1.499 ms/tick`). Both Gemini app skills (`user:company-evolution-dev` and `user:company-for-every-patch`) are synchronized in this session.
+
+## Retained v3.0.0 — generated physical phone industry foundation
 
 Read `docs/company/ERA3_PHONE_SYSTEM.md` and the v3 report before changing phones. Runtime is3.0.0; package/save remain0.1.0. NPCs operate; player observes/EditHub only.
 

@@ -1,8 +1,8 @@
-# Latest runtime report — v3.0.0
+# Latest runtime report — v3.1.0
 
-[v3.0.0 implementation report](PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md) · [current status](../../../project_status_and_ai_onboarding.md)
+[v3.1.0 implementation report](PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md) · [v3.0.0 implementation report](PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md) · [current status](../../../project_status_and_ai_onboarding.md)
 
-Runtime now v3.0.0. Read current project status, `docs/company/ERA3_PHONE_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md` at repository root for delivered scope, evidence and limitations. Original proposals/reports below are historical inputs and may describe unfinished scope.
+Runtime now v3.1.0. Read current project status, `docs/company/ERA3_PHONE_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md` at repository root for delivered scope, evidence and limitations. Original proposals/reports below are historical inputs and may describe unfinished scope.
 
 # ดัชนีรายงาน Company Simulation
 
@@ -31,6 +31,9 @@ Runtime now v3.0.0. Read current project status, `docs/company/ERA3_PHONE_SYSTEM
 | v2.6.0 | เครื่องจักร งานช่าง และสัญญาขายเป็นงวด | [รายงาน v2.6.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md) |
 | v2.7.0 | การยกเครื่องความสมจริงเชิงกระบวนการทั้ง 8 ด้าน (Process-Driven Realism Overhaul) | [รายงาน v2.7.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) |
 | v2.8.0 | การทดลองโลกหลายสถานการณ์ การเปรียบเทียบโลกคู่ขนาน ระบบติดตามคอขวดสด และความลึกชีวิต/องค์กร (Living Scenarios, Observability & Human Depth) | [รายงาน v2.8.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.8.0.md) |
+| v2.9.0 | จุดเริ่มต้นธุรกิจ SME 6 แบบ, สถาบันการเมือง/รัฐมนตรี/ข้อตกลงการค้า และการตัดสินใจตามข้อมูลจริง | [รายงาน v2.9.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md) |
+| v3.0.0 | Era 3 — อุตสาหกรรมโทรศัพท์ทางกายภาพและซัพพลายเชนอัตโนมัติ (Physical Phone Industry & Autonomous Supply Chains) | [รายงาน v3.0.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md) |
+| v3.1.0 | Era 3 — ระบบนิเวศซัพพลายเออร์ 12 บทบาท การบูรณาการแนวดิ่งของแคมปัส และการแก้คอขวดวัตถุดิบต้นน้ำ | [รายงาน v3.1.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md) |
 
 ไม่พบรายงานแยกสำหรับ v0.7–v0.9, v1.1.0 หรือ v1.2.1 ในคลังปัจจุบัน; อ่าน [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) ก่อนสรุปรุ่นเหล่านั้น
 

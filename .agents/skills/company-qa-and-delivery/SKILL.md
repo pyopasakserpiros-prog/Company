@@ -74,8 +74,12 @@ Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PAT
 
 The current runtime remains v2.9.0. `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` is the canonical **proposed** major phone-industry design, accompanied by `era3/project_status_and_ai_onboarding.md`; root and COMPANY_SOURCE status copies must match the canonical English status. Two files provide context, not source access or an implementation. NPCs make all engineering/business decisions; the observer can inspect/time-control/edit conditions, never issue normal operational orders. Keep proposed dynamic products, semiconductor operations and external professionals separate from existing capabilities. Update status/report/skills with actual evidence when implementation occurs. Gemini app synchronization is not established by these repo files.
 
-## Current v3.0.0 integration reference
+## Historical v3.0.0 integration reference
 
 Reference key: `phone-industry-soak.cjs`. Run npm test/check/build/test:browser, node tools/phone-industry-soak.cjs and benchmark. Preserve red-green regressions for price vs real BOM, outside-profile freeze, recruited education aliases and sector settlement. Verify actual campus research/enclosure manufacture. Sector soak distinguishes normal from explicitly endowed raw stocks. Update status/masters/domain references/report, inspect final ZIP CRC/path/all hashes and rerun checks/test/build after fresh extraction. Report app-skill access separately.
 
 Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.
+
+## Current v3.1.0 integration reference
+
+Reference key: `phone-engineering.js`, `phone-industry.js`, `phone-talent.js`, `world.js`, `sim.js`, `debug.js`. Models 12 executable phone supply-chain roles (`E.ROLE_CONTRACTS`: `fabless_soc`, `wafer_foundry`, `osat_packaging`, `dram_memory`, `nand_storage`, `camera_module`, `display_panel`, `battery_pack`, `pcb_rf`, `enclosure`, `os_platform`, `brand`) and 8 qualified material grades (`E.MATERIAL_GRADES`). Supports own-company entry and vertical integration (`I.enterCampusRole`), Fabless SoC -> Wafer Foundry -> OSAT orders (`foundryOrders`), persistent WIP batches (`wipBatches`), `declined_prudent` strategic refusal, and resolved normal-opening upstream supply starvation (`world.js`). Verified by `test/phone-supplier-ecosystem-v310.test.cjs` (**236/236** total tests) and `tools/phone-industry-soak.cjs`.

@@ -8,7 +8,7 @@
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
     />
     <meta name="theme-color" content="#10221e" />
-    <title>Siam Enterprise: Autonomous Multi-Industry Company Sim v2.9.0</title>
+    <title>Siam Enterprise: Autonomous Multi-Industry Company Sim v3.1.0</title>
     <style>
 :root {
   --bg: #102420;
@@ -9307,8 +9307,8 @@ canvas.pt {
     return e;
   }
   return Object.freeze({
-    VERSION: "3.0.0",
-    RELEASE_VERSION: "3.0.0",
+    VERSION: "3.1.0",
+    RELEASE_VERSION: "3.1.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -9865,6 +9865,7 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
     IN:[4,6,68,57,'software','ซอฟต์แวร์ ยา และตลาดภายในขนาดใหญ่'],
     SG:[2,3,90,85,'fleet','ท่าเรือ คลังสินค้าและบริการการค้าระหว่างประเทศ']
   };
+  const PHONE_CRITICAL_MATERIALS=new Set(['pcb','silicon_wafer','copper_coil','glass_bottle','battery','polymer_resin','metal_sheet','optical_lens','sensor']);
   function record(w,day,type,headlineTh,meaningTh,details={}){
     const m=w.externalWorld.living;
     const e={id:'world-'+(++m.sequence),day,at:Math.max(0,(day-1)*1440),category:type,badgeTh:'🌍 โลกภายนอก',headlineTh,meaningTh,priceImpactSummaryTh:details.impactTh||meaningTh,isMajor:!!details.major,...details};
@@ -9886,7 +9887,13 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
       m.nations[id]={id,descriptionTh:p[5],specialty:p[4],technology:p[2],infrastructure:p[3],inflation:p[0],unemployment:p[1],approval:58+(h%17),stability:72,gdpIndex:100,interestRate:3,policy:'balanced',policyReasonTh:'รักษาเสถียรภาพและเงินสำรอง',lastReviewDay:0,nextElectionDay:120+h%121,term:0,treasury:5000000000,openingTreasury:5000000000,taxes:0,spending:0,householdCash:3000000000,openingHouseholdCash:3000000000,wages:0,consumption:0,transfers:0,dailyDemand:0,dailyOutput:0};
     }
     // Opening actors and stocks are scenario endowments; subsequent operations never refill them for free.
-    const regional={US:['silica_bauxite_ore','crude_petro_feedstock'],EU:['copper_iron_ore'],ME:['crude_petro_feedstock'],RU_EE:['phosphate_potash_rock','iron_ore'],ASEAN:['raw_water_m3','ambient_air_gas']};
+    const regional={
+      US:['silica_bauxite_ore','crude_petro_feedstock','metallurgical_silicon','silicon_wafer'],
+      EU:['copper_iron_ore','copper_coil','pcb'],
+      ME:['crude_petro_feedstock','nitrogen_ammonia'],
+      RU_EE:['phosphate_potash_rock','iron_ore','npk_fertilizer'],
+      ASEAN:['raw_water_m3','ambient_air_gas','natural_latex','polymer_resin']
+    };
     for(const [nid,outputs] of Object.entries(regional)){
       const id='regional_'+nid;
       if(!e.corporations[id]) e.corporations[id]={id,nationId:nid,nameTh:'เครือข่ายอุตสาหกรรม '+e.geopolitics.nations[nid].shortNameTh,symbol:nid+'-IND',sector:profiles[nid][4],sectorTh:'อุตสาหกรรมทรัพยากร',originTh:e.geopolitics.nations[nid].nameTh,cashMillionBaht:120,roles:['supplier','client'],sellsMaterials:outputs,buysMaterials:['pack_carton'],relationshipMode:'neutral',trustScore:55};
@@ -9915,7 +9922,8 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
       if(out==='natural_latex'||out==='timber_bamboo_log'){materials.add('raw_water_m3');materials.add('npk_fertilizer');}
     }
     for(const k of materials)if(w.catalog.materials[k]){stock[k]=id==='world_exchange'?500:12+h%12;flow[k]={opening:stock[k],produced:0,bought:0,used:0,sold:0};}
-    m.firms[id]={id,nationId,cash,openingCash:cash,receipts:0,payments:0,stock,flow,capacity:4+h%6,utilization:0,technology:Math.round(m.nations[nationId].technology*.5+(48+h%45)*.5),risk:20+h%65,prudence:25+(h>>>8)%60,priceFactor:1,consecutiveLossDays:0,status:'operating',strategy:'maintain',decisionTh:'รักษากำลังผลิตและเงินสำรอง',dailyRevenue:0,dailyCost:0,cogsSatang:0,operatingExpenseSatang:0,capexSatang:0,cashFlowSurplusSatang:0,accrualProfitSatang:0,profit:0,investment:0,lastInvestmentDay:0,output:0,missing:[],reserves:{},crops:{},history:[],lastReviewDay:0};
+    const baseTech=Math.round(m.nations[nationId].technology*.5+(48+h%45)*.5);
+    m.firms[id]={id,nationId,cash,openingCash:cash,receipts:0,payments:0,stock,flow,capacity:id.startsWith('regional_')?8+h%5:4+h%6,utilization:0,technology:id.startsWith('regional_')?Math.max(72,baseTech):baseTech,risk:20+h%65,prudence:25+(h>>>8)%60,priceFactor:1,consecutiveLossDays:0,status:'operating',strategy:'maintain',decisionTh:'รักษากำลังผลิตและเงินสำรอง',dailyRevenue:0,dailyCost:0,cogsSatang:0,operatingExpenseSatang:0,capexSatang:0,cashFlowSurplusSatang:0,accrualProfitSatang:0,profit:0,investment:0,lastInvestmentDay:0,output:0,missing:[],reserves:{},crops:{},history:[],lastReviewDay:0};
     for(const out of c.sellsMaterials||[])if(!D.MATERIAL_RECIPES[out])m.firms[id].reserves[out]=5000+h%10000;
     return m.firms[id];
   }
@@ -9960,8 +9968,10 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
     if(f.cash<reserve){f.status='suspended';f.decisionTh='หยุดผลิตเพื่อรักษาเงินสด: เงินไม่พอทุนหมุนเวียน';f.utilization=0;return;}
     f.status='operating';
     const overhead=Math.min(f.cash,Math.round(600*f.capacity));payment(f,overhead);f.operatingExpenseSatang+=overhead;n.householdCash+=overhead;n.wages+=overhead;
-    const outputs=(c.sellsMaterials||[]).filter(k=>m.markets[k]);
+    const priorityOrder=k=>k==='copper_coil'||k==='polymer_resin'||k==='silicon_wafer'||k==='pcb'?0:1;
+    const outputs=(c.sellsMaterials||[]).filter(k=>m.markets[k]).slice().sort((a,b)=>(w.catalog.materials[a]?.tier||0)-(w.catalog.materials[b]?.tier||0)||priorityOrder(a)-priorityOrder(b));
     if(f.id==='world_exchange'){f.utilization=0;f.decisionTh='ค้าส่งจากสต็อกสำรองจำกัด รับซื้อเพื่อเติมคลังเมื่อมีผู้ผลิตขาย';return;}
+    const phoneActive=Boolean(w.phoneIndustry?.firms?.[f.id]&&w.phoneIndustry.lastDay>0);
     for(const k of outputs){
       const recipe=D.MATERIAL_RECIPES[k],mat=w.catalog.materials[k],crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===k),inputs=recipe?.inputs||{},current=f.stock[k]||0;
       if(!recipe&&!mat.isTrueNaturalResource){
@@ -9980,27 +9990,34 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
         }else if(k==='fresh_milk_soy'||k==='natural_latex'||k==='timber_bamboo_log'){
           const bio=f.crops[k];
           if(bio&&day>=bio.dueDay){
-            const yieldQty=bio.yieldQty||Math.max(4,f.capacity);
+            const yieldQty=bio.yieldQty||Math.max(8,f.capacity*2);
             addStock(f,k,yieldQty,'produced');
             if(k==='fresh_milk_soy'&&m.markets.organic_compost)addStock(f,'organic_compost',1,'produced');
             f.output+=yieldQty;n.dailyOutput+=yieldQty;delete f.crops[k];
           }
-          if(!f.crops[k]&&current<f.capacity*6){
+          if(!f.crops[k]&&current<f.capacity*8){
             const feedKey=k==='fresh_milk_soy'?((f.stock.rice_bran_husk||0)>=1?'rice_bran_husk':(f.stock.soybean_crop||0)>=1?'soybean_crop':null):(f.stock.npk_fertilizer||0)>=1?'npk_fertilizer':null;
             if(feedKey&&(f.stock.raw_water_m3||0)>=1){
               addStock(f,feedKey,-1,'used');addStock(f,'raw_water_m3',-1,'used');
-              f.crops[k]={dueDay:day+2,yieldQty:Math.max(4,f.capacity)};
+              f.crops[k]={dueDay:day+2,yieldQty:Math.max(8,f.capacity*2)};
             }else f.missing.push('อาหารสัตว์/ปุ๋ย หรือน้ำดิบสำหรับ '+mat.nameTh);
           }
         }else f.missing.push('ยังไม่มีวงจรผลิตต้นทาง '+mat.nameTh);
         continue;
       }
-      if(current>=f.capacity*6)continue;
+      const stockCap=!recipe?f.capacity*10:f.capacity*6;
+      if(current>=stockCap)continue;
       const knowledgeNeed=recipe?40+(w.catalog.materials[k].tier||1)*10:30;
       if(f.technology<knowledgeNeed){f.missing.push('เทคโนโลยี '+w.catalog.materials[k].nameTh);continue;}
-      let qty=Math.max(0,Math.floor(f.capacity*(1-(n.security?.damageIndex||0)/100)*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
-      for(const [ik,q]of Object.entries(inputs))qty=Math.min(qty,Math.floor((f.stock[ik]||0)/q));
-      if(!recipe)qty=Math.min(qty,mat.resourceClass==='environmental_flow'?Math.max(0,Math.floor(f.capacity*n.infrastructure/100)):f.reserves[k]||0);
+      const baseScale=!recipe?3:1;
+      let qty=Math.max(0,Math.floor(f.capacity*baseScale*(1-(n.security?.damageIndex||0)/100)*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
+      for(const [ik,q]of Object.entries(inputs)){
+        const phoneHold=phoneActive&&PHONE_CRITICAL_MATERIALS.has(ik)&&!PHONE_CRITICAL_MATERIALS.has(k)?6:0;
+        const sharedHold=outputs.length>1&&(outputs.includes(ik)||ik==='copper_iron_ore'||ik==='polymer_resin'||ik==='copper_coil')?Math.min(6,Math.floor((f.stock[ik]||0)*0.45)):0;
+        const keep=Math.max(phoneHold,sharedHold);
+        qty=Math.min(qty,Math.floor(Math.max(0,(f.stock[ik]||0)-keep)/q));
+      }
+      if(!recipe)qty=Math.min(qty,mat.resourceClass==='environmental_flow'?Math.max(0,Math.floor(f.capacity*4*n.infrastructure/100)):f.reserves[k]||0);
       qty=Math.min(qty,Math.floor(Math.max(0,f.cash-reserve)/(Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18)))));
       if(qty<=0){f.missing.push(w.catalog.materials[k].nameTh);continue;}
       const expense=qty*Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18));payment(f,expense);f.operatingExpenseSatang+=expense;n.householdCash+=expense;n.wages+=expense;
@@ -10016,7 +10033,7 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
     // Downstream aggregate production uses real purchased inputs and domestic buyers' finite cash.
     if(!outputs.length){
       const inputs=(c.buysMaterials||[]).filter(k=>m.markets[k]);
-      const usable=inputs.filter(k=>(f.stock[k]||0)>0);
+      const usable=inputs.filter(k=>(f.stock[k]||0)>(phoneActive&&PHONE_CRITICAL_MATERIALS.has(k)?6:0));
       if(usable.length>=Math.min(2,inputs.length)&&usable.length){
         const batch=usable.slice(0,Math.min(3,usable.length)),value=batch.reduce((a,k)=>a+m.markets[k].price,0);
         const revenue=Math.round(value*1.65*clamp(n.gdpIndex/100,.65,1.3)),wage=Math.round(value*.2);
@@ -10030,7 +10047,9 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
     // Domestic demand is a bounded residual sector, not an unlimited buyer.
     for(const k of outputs){
       const demand=Math.max(0,Math.round((2+n.gdpIndex/50)*(n.policy==='stimulus'?1.15:1)/(1+n.interestRate/30)));
-      const price=Math.round(m.markets[k].price*f.priceFactor),qty=Math.min(demand,f.stock[k]||0,Math.floor(n.householdCash/price));
+      const b2bBuffer=(w.catalog.materials[k]?.tier||0)>=1||k==='copper_iron_ore'||k==='natural_latex'||PHONE_CRITICAL_MATERIALS.has(k)?Math.max(10,f.capacity*2):0;
+      const sellable=Math.max(0,(f.stock[k]||0)-b2bBuffer);
+      const price=Math.round(m.markets[k].price*f.priceFactor),qty=Math.min(demand,sellable,Math.floor(n.householdCash/price));
       m.markets[k].demand+=demand;
       if(qty>0){
         n.householdCash-=qty*price;n.consumption+=qty*price;receipt(f,qty*price);
@@ -10093,24 +10112,30 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
     for(const k of Object.values(m.markets)){k.supply=0;k.demand=0;k.traded=0;}
     deliver(w,day);
     for(const f of Object.values(m.firms))operate(w,f,day);
-    // Buyers reserve capital and buy only their actual input gaps, including recipe inputs.
+    // Buyers reserve capital and buy only their actual input gaps, including recipe and biological inputs.
     for(const buyer of Object.values(m.firms)){
       const c=w.externalWorld.corporations[buyer.id],needs={};
       for(const k of c.buysMaterials||[])needs[k]=buyer.capacity*3;
       if(buyer.id==='world_exchange')for(const k of Object.keys(m.markets))needs[k]=20;
-      for(const out of c.sellsMaterials||[]){const crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===out);if(crop){needs[crop.seedMaterialId]=4;needs.raw_water_m3=6;needs.npk_fertilizer=3;}}
+      for(const out of c.sellsMaterials||[]){
+        const crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===out);
+        if(crop){needs[crop.seedMaterialId]=4;needs.raw_water_m3=6;needs.npk_fertilizer=3;}
+        if(out==='fresh_milk_soy'){needs.soybean_crop=4;needs.rice_bran_husk=4;needs.raw_water_m3=6;}
+        if(out==='natural_latex'||out==='timber_bamboo_log'){needs.raw_water_m3=6;needs.npk_fertilizer=4;}
+      }
       for(const out of c.sellsMaterials||[])for(const [k,q]of Object.entries(D.MATERIAL_RECIPES[out]?.inputs||{}))needs[k]=Math.max(needs[k]||0,buyer.capacity*q*3);
       let deals=0;
-      for(const [k,target]of Object.entries(needs)){
+      const sortedNeeds=Object.entries(needs).sort((a,b)=>(buyer.stock[a[0]]||0)-(buyer.stock[b[0]]||0));
+      for(const [k,target]of sortedNeeds){
         if(!m.markets[k])continue;
         const inbound=m.shipments.filter(s=>s.buyerId===buyer.id&&s.materialId===k).reduce((a,s)=>a+s.quantity,0),gap=Math.max(0,target-(buyer.stock[k]||0)-inbound);
-        m.markets[k].demand+=gap;m.nations[buyer.nationId].dailyDemand+=gap;if(!gap||deals>=3)continue;
+        m.markets[k].demand+=gap;m.nations[buyer.nationId].dailyDemand+=gap;if(!gap||deals>=5)continue;
         const seller=Object.values(m.firms).filter(f=>f.id!==buyer.id&&(w.externalWorld.corporations[f.id].sellsMaterials||[]).includes(k)&&(f.stock[k]||0)>0).sort((a,b)=>{
           const ar=route(m,a.nationId,buyer.nationId),br=route(m,b.nationId,buyer.nationId);
           return a.priceFactor*(1+ar.tariff/100)+ar.days*.03+(95-a.technology)*.001-(b.priceFactor*(1+br.tariff/100)+br.days*.03+(95-b.technology)*.001)||a.id.localeCompare(b.id);
         })[0];
         const available=Math.max(0,buyer.cash-15000*buyer.capacity*(15+buyer.prudence/5)),affordable=Math.floor(available/(m.markets[k].price*1.25));
-        if(seller&&trade(w,seller,buyer,k,Math.min(gap,affordable,12),day))deals++;
+        if(seller&&trade(w,seller,buyer,k,Math.min(gap,affordable,14),day))deals++;
       }
     }
     // Sector extensions post funded production/trade before profit, tax and history close.
@@ -11213,25 +11238,506 @@ return Object.freeze({
 /* js/phone-engineering.js */
 (function(root,factory){const v=factory();if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyPhoneEngineering=v;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
-// Pure deterministic engineering estimates. Power W, capacity MB/Wh, area mm², costs integer satang.
+// Pure deterministic engineering estimates & reusable business-role/process/material-grade contracts.
+// Power W, capacity MB/Wh, area mm², latency ns, brightness nits, costs integer satang.
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const num=(v,d=0,a=0,b=1e9)=>typeof v==='number'&&Number.isFinite(v)?clamp(v,a,b):d;
 const round=v=>Math.round(v*10000)/10000;
 const money=v=>Math.round(clamp(v,0,Number.MAX_SAFE_INTEGER));
 function rng(seed){let h=2166136261;for(const c of String(seed)){h=Math.imul(h^c.charCodeAt(0),16777619);}return()=>{h+=0x6D2B79F5;let t=Math.imul(h^h>>>15,1|h);t^=t+Math.imul(t^t>>>7,61|t);return((t^t>>>14)>>>0)/4294967296;};}
+
+const MATERIAL_GRADES=Object.freeze({
+  electronic_silicon_wafer_9n:{
+    id:'electronic_silicon_wafer_9n',
+    nameTh:'เวเฟอร์ซิลิคอนเกรดอิเล็กทรอนิกส์ 9N (Electronic-Grade Silicon Wafer)',
+    unit:'wafer_lot',
+    purityGrade:'9N (99.9999999%)',
+    rawInputs:{silicon_wafer:1,copper_coil:1},
+    processStepTh:'ขัดผิวเคมีกล (CMP) และตรวจสอบความหนาแน่นจุดบกพร่องก่อนเข้าห้องสะอาด',
+    usedByRoles:['wafer_foundry','fabless_soc','dram_memory','nand_storage']
+  },
+  tested_wafer_die_lot:{
+    id:'tested_wafer_die_lot',
+    nameTh:'ล็อตดายซิลิคอนผ่านการวัดผลบนเวเฟอร์ (Probed Good Die Lot)',
+    unit:'die_lot',
+    purityGrade:'Class-100 Cleanroom Wafer Probe',
+    rawInputs:{silicon_wafer:1,copper_coil:1},
+    processStepTh:'ลิโธกราฟี กัดลาย โดปปิ้ง และวัดไฟฟ้าระดับเวเฟอร์ (Wafer Sort)',
+    usedByRoles:['wafer_foundry','osat_packaging','fabless_soc']
+  },
+  packaged_tested_ic_grade:{
+    id:'packaged_tested_ic_grade',
+    nameTh:'ชิปบรรจุแพ็กเกจและคัดเกรดความถี่/ความร้อน (Binned BGA/CSP Package)',
+    unit:'chip_lot',
+    purityGrade:'JEDEC Moisture/Thermal Qualified',
+    rawInputs:{copper_coil:1,polymer_resin:1},
+    processStepTh:'ยึดดาย ต่อลวดทองแดง/ฟลิปชิป หุ้มเรซินอีพ็อกซี และคัดเกรด A-Bin/B-Bin',
+    usedByRoles:['osat_packaging','fabless_soc','dram_memory','nand_storage']
+  },
+  cmos_optical_wafer_grade:{
+    id:'cmos_optical_wafer_grade',
+    nameTh:'ชุดเซ็นเซอร์รับภาพ CMOS และชิ้นเลนส์เคลือบมัลติโค้ต (CMOS & Multi-Coat Optics)',
+    unit:'optics_lot',
+    purityGrade:'ISO-6 Optical Alignment Grade',
+    rawInputs:{optical_lens:1,sensor:1},
+    fallbackRawInputs:{glass_bottle:1,silicon_wafer:1,polymer_resin:1},
+    processStepTh:'จัดแนวแกนแสงเลนส์ ประกอบแอคชูเอเตอร์ และสอบเทียบ MTF/สีในห้องมืด',
+    usedByRoles:['camera_module']
+  },
+  aluminosilicate_panel_substrate:{
+    id:'aluminosilicate_panel_substrate',
+    nameTh:'กระจกอะลูมิโนซิลิเกตเคลือบ ITO และชั้นพิกเซลจอภาพ (Tempered ITO Display Substrate)',
+    unit:'panel_lot',
+    purityGrade:'Optical Zero-Bubble Lamination',
+    rawInputs:{glass_bottle:1,copper_coil:1},
+    processStepTh:'หลอมปรับโครงสร้างกระจกผิวเรียบ เคลือบขั้วโปร่งใส ITO ประกบชั้นแบ็กไลต์/พิกเซล และตรวจพิกเซลเสีย',
+    usedByRoles:['display_panel']
+  },
+  high_cycle_lipo_cell_grade:{
+    id:'high_cycle_lipo_cell_grade',
+    nameTh:'เซลล์ลิเธียมคัดความต้านทานภายในพร้อมวงจรป้องกัน BMS (Matched Li-Ion/Li-Po Cell Pack)',
+    unit:'cell_lot',
+    purityGrade:'UN38.3 Thermal & Overcharge Certified',
+    rawInputs:{battery:1},
+    fallbackRawInputs:{cathode_electrolyte:1,foil_pouch:1,copper_coil:1},
+    processStepTh:'คัดเกรดความจุ/ความต้านทานภายใน เชื่อมแถบนิกเกิล ประกอบวงจร BMS และทดสอบโหลดความร้อน',
+    usedByRoles:['battery_pack']
+  },
+  hdi_rf_copper_laminate:{
+    id:'hdi_rf_copper_laminate',
+    nameTh:'แผงวงจรหลายชั้น HDI และวงจรกรองคลื่นวิทยุ RF (HDI Multi-Layer & RF Front-End Board)',
+    unit:'board_lot',
+    purityGrade:'Controlled Impedance 50-Ohm RF',
+    rawInputs:{pcb:1,copper_coil:1},
+    processStepTh:'เจาะไมโครเวีย ชุบทองแดง วางวงจรกรองความถี่วิทยุ และวัดความสมบูรณ์สัญญาณ/EMI',
+    usedByRoles:['pcb_rf','brand','ems']
+  },
+  anodized_thermal_enclosure_grade:{
+    id:'anodized_thermal_enclosure_grade',
+    nameTh:'โครงตัวถังขึ้นรูปแม่นยำพร้อมแผ่นกระจายความร้อน (Precision Thermal Chassis)',
+    unit:'chassis_lot',
+    purityGrade:'CMM Dimensional Tolerance ±0.05mm',
+    rawInputs:{polymer_resin:1,metal_sheet:1},
+    processStepTh:'อัดขึ้นรูป/กัด CNC ชุบผิวอโนไดซ์ ติดแผ่นกราไฟต์นำความร้อน และวัดมิติ',
+    usedByRoles:['enclosure']
+  }
+});
+
+const ROLE_CONTRACTS=Object.freeze({
+  fabless_soc:{
+    id:'fabless_soc',
+    legacyRole:'chip',
+    nameTh:'ผู้ออกแบบชิปประมวลผล/SoC แบบไร้โรงหล่อ (Fabless CPU/SoC Design)',
+    family:'semiconductor_design',
+    outputs:['chip'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{semiconductor_physics:42,circuit_design:40,embedded_firmware:32},
+    keySpecialistSubject:'semiconductor_physics',
+    requiredEquipment:['developer_pc','test_rig'],
+    utilityKw:0.8,
+    entryCapitalSatang:180000000,
+    nreCostSatang:1500000,
+    licenseFeeSatang:1800000,
+    workingCapitalDays:45,
+    qualifiedMaterialGrade:'electronic_silicon_wafer_9n',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:25,
+    minBatchSize:10,
+    baseYield:0.82,
+    entryAlternatives:['in_house_rnd','license_core_ip','contract_foundry_osat'],
+    processStages:[
+      {code:'soc_arch_rtl',nameTh:'ออกแบบสถาปัตยกรรมชุดคำสั่งและรวมบล็อก RTL/ISP',workShare:0.4,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'จำลองชุดคำสั่งและตรวจ Timing Closure ผ่าน'},
+      {code:'physical_verification_tapeout',nameTh:'วางผังวงจร Physical Design และส่งแม่พิมพ์ Tape-Out',workShare:0.35,passiveHoldMinutes:60,cleanroomRequired:false,qualityGateTh:'ผ่านกฎ DRC/LVS ของโหนดการผลิต'},
+      {code:'foundry_osat_qualification',nameTh:'สั่งผลิตเวเฟอร์ผ่าน Foundry และคัดเกรดแพ็กเกจ OSAT',workShare:0.25,passiveHoldMinutes:180,cleanroomRequired:true,qualityGateTh:'ตรวจวัดกำลังไฟและความถี่ชิป A-Bin/B-Bin ผ่านเกณฑ์'}
+    ]
+  },
+  wafer_foundry:{
+    id:'wafer_foundry',
+    legacyRole:'chip',
+    nameTh:'โรงหล่อเวเฟอร์ซิลิคอนและห้องสะอาด (Semiconductor Wafer Foundry)',
+    family:'semiconductor_manufacturing',
+    outputs:['chip','wafer_die'],
+    actualBuyers:['fabless_soc','dram_memory','nand_storage','brand'],
+    subjectRequirements:{semiconductor_process:48,physical_chemistry:42,cleanroom_operations:38,metrology:38},
+    keySpecialistSubject:'semiconductor_process',
+    requiredEquipment:['semiconductor_fab','diagnostic_kit'],
+    utilityKw:20,
+    entryCapitalSatang:800000000,
+    nreCostSatang:5000000,
+    licenseFeeSatang:4500000,
+    workingCapitalDays:60,
+    qualifiedMaterialGrade:'tested_wafer_die_lot',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:20,
+    baseYield:0.78,
+    entryAlternatives:['build_cleanroom_fab','contract_wafer_capacity'],
+    processStages:[
+      {code:'wafer_clean_oxidation',nameTh:'ล้างเวเฟอร์ด้วยน้ำบริสุทธิ์และสร้างชั้นออกไซด์',workShare:0.25,passiveHoldMinutes:60,cleanroomRequired:true,qualityGateTh:'ควบคุมฝุ่นห้องสะอาดและความหนาออกไซด์'},
+      {code:'lithography_etch_implant',nameTh:'ฉายแสงลิโธกราฟี กัดลาย และฝังไอออน',workShare:0.45,passiveHoldMinutes:180,cleanroomRequired:true,qualityGateTh:'ความแม่นยำการซ้อนทับเลเยอร์และค่า Defect Density D0'},
+      {code:'metallization_wafer_probe',nameTh:'เดินสายโลหะเชื่อมวงจรและวัดผลไฟฟ้าบนเวเฟอร์ (Wafer Sort)',workShare:0.3,passiveHoldMinutes:60,cleanroomRequired:true,qualityGateTh:'คัดแยก Good Dies ตามสมการ Murphy Yield'}
+    ]
+  },
+  osat_packaging:{
+    id:'osat_packaging',
+    legacyRole:'ems',
+    nameTh:'โรงงานประกอบแพ็กเกจชิปและทดสอบไฟฟ้า (OSAT Packaging & Test)',
+    family:'semiconductor_packaging',
+    outputs:['packaged_chip','pcb_rf'],
+    actualBuyers:['fabless_soc','wafer_foundry','dram_memory','nand_storage','brand'],
+    subjectRequirements:{semiconductor_process:35,smt_process:35,metrology:35,quality:32},
+    keySpecialistSubject:'smt_process',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.4,
+    entryCapitalSatang:150000000,
+    nreCostSatang:800000,
+    licenseFeeSatang:1200000,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'packaged_tested_ic_grade',
+    bom:{copper_coil:1,polymer_resin:1},
+    workMinutesPerUnit:20,
+    minBatchSize:15,
+    baseYield:0.96,
+    entryAlternatives:['in_house_osat','contract_packaging'],
+    processStages:[
+      {code:'die_attach_wirebond',nameTh:'ตัดเวเฟอร์ ยึดดาย และเชื่อมสัญญาณ (Die Attach & Interconnect)',workShare:0.4,passiveHoldMinutes:20,cleanroomRequired:true,qualityGateTh:'แรงยึดลวดเชื่อมและความต้านทานจุดสัมผัส'},
+      {code:'molding_encapsulation',nameTh:'ฉีดเรซินห่อหุ้มป้องกันความชื้นและอบบ่ม',workShare:0.25,passiveHoldMinutes:45,cleanroomRequired:false,qualityGateTh:'ไร้โพรงอากาศและการโก่งตัวของแพ็กเกจ'},
+      {code:'final_electrical_binning',nameTh:'ทดสอบไฟฟ้า-ความร้อนและคัดเกรดความเร็ว (Final Test & Binning)',workShare:0.35,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'แยก A-Bin / B-Bin และตัดของเสีย'}
+    ]
+  },
+  dram_memory:{
+    id:'dram_memory',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตหน่วยความจำชั่วคราวความเร็วสูง (DRAM / Volatile Memory Supplier)',
+    family:'memory_supplier',
+    outputs:['ram'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{semiconductor_physics:38,circuit_design:38,metrology:35},
+    keySpecialistSubject:'circuit_design',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.5,
+    entryCapitalSatang:220000000,
+    nreCostSatang:1400000,
+    licenseFeeSatang:1800000,
+    workingCapitalDays:40,
+    qualifiedMaterialGrade:'electronic_silicon_wafer_9n',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.88,
+    entryAlternatives:['in_house_rnd','license_jedec_dram','contract_wafer_fab'],
+    processStages:[
+      {code:'dram_cell_controller',nameTh:'ออกแบบตัวเก็บประจุเซลล์หน่วยความจำและวงจรควบคุมจังหวะ',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ตรงตามมาตรฐานอินเทอร์เฟซ SDRAM/LPDDR ของชิป'},
+      {code:'dram_wafer_packaging',nameTh:'แปรรูปดายหน่วยความจำและประกอบแพ็กเกจความหนาแน่นสูง',workShare:0.35,passiveHoldMinutes:45,cleanroomRequired:true,qualityGateTh:'ตรวจสอบกระแสรั่วไหล أثناءรีเฟรช (Self-Refresh Power)'},
+      {code:'dram_bandwidth_timing_qa',nameTh:'ทดสอบแบนด์วิดท์และค่าความหน่วงที่ความถี่จริง',workShare:0.3,passiveHoldMinutes:20,cleanroomRequired:false,qualityGateTh:'แบนด์วิดท์และ Latency ผ่านเกณฑ์โดยไม่มีบิตเพี้ยน'}
+    ]
+  },
+  nand_storage:{
+    id:'nand_storage',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตหน่วยเก็บข้อมูลแฟลชถาวร (NAND Flash / eMMC / UFS Supplier)',
+    family:'storage_supplier',
+    outputs:['storage'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{embedded_firmware:38,circuit_design:35,semiconductor_process:32,quality:30},
+    keySpecialistSubject:'embedded_firmware',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.2,
+    entryCapitalSatang:200000000,
+    nreCostSatang:1200000,
+    licenseFeeSatang:1600000,
+    workingCapitalDays:35,
+    qualifiedMaterialGrade:'electronic_silicon_wafer_9n',
+    bom:{silicon_wafer:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.9,
+    entryAlternatives:['in_house_rnd','license_flash_controller'],
+    processStages:[
+      {code:'nand_controller_ecc',nameTh:'พัฒนาคอนโทรลเลอร์จัดการบล็อกเสียและรหัสแก้ข้อมูลผิดพลาด (ECC/Wear-Leveling)',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'เฟิร์มแวร์รองรับอินเทอร์เฟซ SPI/eMMC และป้องกันข้อมูลสูญหาย'},
+      {code:'nand_die_stack_package',nameTh:'ซ้อนดายแฟลช (Die Stacking) และเชื่อมลงบอร์ดโมดูล',workShare:0.35,passiveHoldMinutes:30,cleanroomRequired:true,qualityGateTh:'ความสมบูรณ์ของการเชื่อมสายสัญญาณทุกเลเยอร์'},
+      {code:'endurance_read_write_test',nameTh:'คัดกรองบล็อกเสียและวัดความเร็วอ่าน/เขียนต่อเนื่อง',workShare:0.3,passiveHoldMinutes:30,cleanroomRequired:false,qualityGateTh:'ความเร็วอ่านเขียนและรอบอายุการใช้งาน (P/E Cycles) ผ่านเกณฑ์'}
+    ]
+  },
+  camera_module:{
+    id:'camera_module',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตโมดูลกล้อง เซ็นเซอร์รับภาพ และชุดเลนส์ออปติคัล (Camera & Optics Supplier)',
+    family:'optics_sensor_supplier',
+    outputs:['camera'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{semiconductor_optics:35,metrology:35,electrical_basics:35,quality:30},
+    keySpecialistSubject:'semiconductor_optics',
+    requiredEquipment:['electronics_bench','diagnostic_kit'],
+    utilityKw:1.8,
+    entryCapitalSatang:180000000,
+    nreCostSatang:1200000,
+    licenseFeeSatang:1600000,
+    workingCapitalDays:35,
+    qualifiedMaterialGrade:'cmos_optical_wafer_grade',
+    bom:{polymer_resin:1,metal_sheet:1},
+    preferredBom:{optical_lens:1,sensor:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.87,
+    entryAlternatives:['in_house_rnd','license_optics_module'],
+    processStages:[
+      {code:'cmos_pixel_optics_design',nameTh:'ออกแบบพื้นที่รับแสงเซ็นเซอร์ ชุดเลนส์ และอัลกอริทึมลดสัญญาณรบกวน',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'สมดุลขนาดพิกเซล รูรับแสง และความคมชัด'},
+      {code:'active_alignment_assembly',nameTh:'ประกอบชุดเลนส์ มอเตอร์โฟกัส และเซ็นเซอร์ในห้องไร้ฝุ่น',workShare:0.35,passiveHoldMinutes:20,cleanroomRequired:true,qualityGateTh:'ไร้ฝุ่นบนหน้าเซ็นเซอร์และระนาบโฟกัสตรงศูนย์'},
+      {code:'mtf_lowlight_isp_calibration',nameTh:'สอบเทียบความคมชัด MTF สมดุลแสงสีขาว และประสิทธิภาพแสงน้อย',workShare:0.3,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ค่าความคมชัดและคุณภาพประมวลผลภาพผ่านเกณฑ์'}
+    ]
+  },
+  display_panel:{
+    id:'display_panel',
+    legacyRole:'display',
+    nameTh:'ผู้ผลิตแผงหน้าจอและโมดูลสัมผัส (Display & Touch Panel Supplier)',
+    family:'display_supplier',
+    outputs:['display'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{electrical_basics:38,circuit_design:35,metrology:32,quality:35},
+    keySpecialistSubject:'electrical_basics',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:3.0,
+    entryCapitalSatang:240000000,
+    nreCostSatang:1600000,
+    licenseFeeSatang:2000000,
+    workingCapitalDays:40,
+    qualifiedMaterialGrade:'aluminosilicate_panel_substrate',
+    bom:{glass_bottle:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.86,
+    entryAlternatives:['in_house_rnd','license_panel_module'],
+    processStages:[
+      {code:'glass_ito_backplane',nameTh:'แปรรูปซับสเตรตกระจก เคลือบวงจรทรานซิสเตอร์ และไดรเวอร์จอ',workShare:0.35,passiveHoldMinutes:30,cleanroomRequired:true,qualityGateTh:'อินเทอร์เฟซ RGB/MIPI และความละเอียดตรงขีดจำกัดชิป'},
+      {code:'backlight_touch_lamination',nameTh:'ประกบชั้นกระจายแสง แผงสัมผัส และซีลขอบกันฝุ่น',workShare:0.35,passiveHoldMinutes:25,cleanroomRequired:true,qualityGateTh:'ไร้ฟองอากาศและจุดสว่างรั่ว'},
+      {code:'pixel_power_optical_inspection',nameTh:'ตรวจสอบพิกเซลเสีย ความสว่าง และอัตราการกินไฟของหน้าจอ',workShare:0.3,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ผ่านเกณฑ์ Dead Pixel และการใช้พลังงาน'}
+    ]
+  },
+  battery_pack:{
+    id:'battery_pack',
+    legacyRole:'battery',
+    nameTh:'ผู้ผลิตเซลล์แบตเตอรี่และระบบจัดการพลังงาน (Battery & BMS Pack Supplier)',
+    family:'power_supplier',
+    outputs:['battery'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{power_electronics:35,electrical_safety:38,quality:30},
+    keySpecialistSubject:'power_electronics',
+    requiredEquipment:['test_rig','electronics_bench'],
+    utilityKw:3.5,
+    entryCapitalSatang:180000000,
+    nreCostSatang:1100000,
+    licenseFeeSatang:1500000,
+    workingCapitalDays:35,
+    qualifiedMaterialGrade:'high_cycle_lipo_cell_grade',
+    bom:{battery:1},
+    fallbackBom:{cathode_electrolyte:1,foil_pouch:1,copper_coil:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.91,
+    entryAlternatives:['in_house_rnd','license_bms_pack'],
+    processStages:[
+      {code:'cell_matching_grading',nameTh:'คัดเกรดเซลล์เคมีลิเธียมและวัดความต้านทานภายใน',workShare:0.3,passiveHoldMinutes:20,cleanroomRequired:false,qualityGateTh:'ความจุ Wh และกำลังจ่ายไฟสูงสุด (Max Discharge W) เพียงพอ'},
+      {code:'bms_protection_assembly',nameTh:'ประกอบวงจรป้องกันไฟเกิน/ความร้อน (BMS) และหุ้มฉนวนนิรภัย',workShare:0.35,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'วงจรตัดไฟลัดวงจรและควบคุมอุณหภูมิทำงานแม่นยำ'},
+      {code:'charge_aging_safety_test',nameTh:'ชาร์จกระตุ้นเซลล์ (Formation Aging) และทดสอบความปลอดภัยภายใต้โหลด',workShare:0.35,passiveHoldMinutes:45,cleanroomRequired:false,qualityGateTh:'ไม่มีอาการบวมหรือความร้อนสะสมเกินพิกัด'}
+    ]
+  },
+  pcb_rf:{
+    id:'pcb_rf',
+    legacyRole:'materials',
+    nameTh:'ผู้ผลิตแผงวงจรหลายชั้น HDI และโมดูลคลื่นวิทยุ RF (PCB / Interconnect / RF Supplier)',
+    family:'interconnect_rf_supplier',
+    outputs:['pcb_rf','enclosure'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{electrical_basics:35,smt_process:35,circuit_design:32},
+    keySpecialistSubject:'smt_process',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.0,
+    entryCapitalSatang:140000000,
+    nreCostSatang:900000,
+    licenseFeeSatang:1200000,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'hdi_rf_copper_laminate',
+    bom:{polymer_resin:1,metal_sheet:1},
+    preferredBom:{pcb:1,copper_coil:1},
+    workMinutesPerUnit:25,
+    minBatchSize:5,
+    baseYield:0.92,
+    entryAlternatives:['in_house_rnd','license_rf_board'],
+    processStages:[
+      {code:'hdi_stackup_impedance',nameTh:'ออกแบบเลเยอร์บอร์ด HDI และคำนวณอิมพีแดนซ์สายอากาศ RF',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ลดการสูญเสียสัญญาณและคลื่นรบกวนข้ามช่อง'},
+      {code:'microvia_smt_shielding',nameTh:'เดินลายทองแดง วางคอนเน็กเตอร์ และครอบเกราะป้องกันคลื่นแม่เหล็กไฟฟ้า (EMI Shield)',workShare:0.35,passiveHoldMinutes:20,cleanroomRequired:false,qualityGateTh:'จุดบัดกรีและฝาครอบกันกวนสัญญาณสมบูรณ์'},
+      {code:'rf_emi_power_integrity_test',nameTh:'ทดสอบความแรงสัญญาณวิทยุและเสถียรภาพไฟเลี้ยงบนบอร์ด',workShare:0.3,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ผ่านเกณฑ์ Signal Integrity และ EMI'}
+    ]
+  },
+  enclosure:{
+    id:'enclosure',
+    legacyRole:'enclosure',
+    nameTh:'ผู้ผลิตตัวถัง โครงสร้างระบายความร้อน และซีลกันฝุ่น (Mechanical & Thermal Enclosure Supplier)',
+    family:'mechanical_thermal_supplier',
+    outputs:['enclosure'],
+    actualBuyers:['brand','ems'],
+    subjectRequirements:{metal_machining:40,quality:30},
+    keySpecialistSubject:'metal_machining',
+    requiredEquipment:['press'],
+    utilityKw:5.0,
+    entryCapitalSatang:150000000,
+    nreCostSatang:900000,
+    licenseFeeSatang:2000000,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'anodized_thermal_enclosure_grade',
+    bom:{polymer_resin:1,metal_sheet:1},
+    workMinutesPerUnit:30,
+    minBatchSize:4,
+    baseYield:0.93,
+    entryAlternatives:['license_enclosure_design','in_house_cad_tooling'],
+    processStages:[
+      {code:'cad_mold_thermal_design',nameTh:'ออกแบบแม่พิมพ์ตัวถังและช่องทางกระจายความร้อน Rth',workShare:0.3,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ค่าความต้านทานความร้อน Rth เหมาะสมกับกำลังไฟชิป'},
+      {code:'press_cnc_forming',nameTh:'อัดขึ้นรูปพอลิเมอร์/แผ่นโลหะและกัดร่องยึดบอร์ด',workShare:0.45,passiveHoldMinutes:15,cleanroomRequired:false,qualityGateTh:'ความแม่นยำมิติและจุดยึดโมดูล'},
+      {code:'surface_finish_drop_qc',nameTh:'เคลือบผิว ติดแผ่นนำความร้อน และตรวจความทนทานการตกกระแทก',workShare:0.25,passiveHoldMinutes:10,cleanroomRequired:false,qualityGateTh:'ผ่านด่านตรวจมิติและซีลตัวเรือน'}
+    ]
+  },
+  os_platform:{
+    id:'os_platform',
+    legacyRole:'brand',
+    nameTh:'ผู้พัฒนาระบบปฏิบัติการ เฟิร์มแวร์ ไดรเวอร์ BSP และแพลตฟอร์ม (OS / Firmware / Platform Vendor)',
+    family:'software_platform',
+    outputs:['os'],
+    actualBuyers:['brand'],
+    subjectRequirements:{software:40,programming:40,embedded_firmware:35},
+    keySpecialistSubject:'software',
+    requiredEquipment:['developer_pc'],
+    utilityKw:0.4,
+    entryCapitalSatang:120000000,
+    nreCostSatang:1000000,
+    licenseFeeSatang:1200,
+    workingCapitalDays:30,
+    qualifiedMaterialGrade:'hdi_rf_copper_laminate',
+    bom:{polymer_resin:1,copper_coil:1},
+    workMinutesPerUnit:20,
+    minBatchSize:1,
+    baseYield:0.98,
+    entryAlternatives:['in_house_os_rnd','license_commercial_os'],
+    processStages:[
+      {code:'kernel_bsp_driver_port',nameTh:'พัฒนาเคอร์เนลและชุดไดรเวอร์ BSP รองรับชุดคำสั่งชิปและชิ้นส่วน',workShare:0.4,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ความครอบคลุมไดรเวอร์ >= 95% และรองรับ ISA'},
+      {code:'power_scheduler_ui_sdk',nameTh:'ปรับจูนตัวจัดการพลังงานพื้นหลังและชุดเครื่องมือนักพัฒนาแอป (SDK)',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ควบคุม OS Overhead และการใช้แรมขั้นต่ำ'},
+      {code:'hardware_in_loop_security_qa',nameTh:'ทดสอบความเสถียรบนบอร์ดจริงและแพตช์ความปลอดภัย',workShare:0.25,passiveHoldMinutes:30,cleanroomRequired:false,qualityGateTh:'ผ่านการทดสอบความเข้ากันได้และพร้อมปล่อยไลเซนส์'}
+    ]
+  },
+  brand:{
+    id:'brand',
+    legacyRole:'brand',
+    nameTh:'แบรนด์โทรศัพท์ ผู้พัฒนาเครื่องต้นแบบ และผู้ประกอบขั้นสุดท้าย (Handset Brand / ODM / EMS)',
+    family:'handset_oem_odm',
+    outputs:['phone'],
+    actualBuyers:['household','carrier','distributor'],
+    subjectRequirements:{electrical_basics:40,software:40,quality:30},
+    keySpecialistSubject:'electrical_basics',
+    requiredEquipment:['electronics_bench','test_rig'],
+    utilityKw:2.5,
+    entryCapitalSatang:500000000,
+    nreCostSatang:2000000,
+    licenseFeeSatang:1200,
+    workingCapitalDays:60,
+    qualifiedMaterialGrade:'hdi_rf_copper_laminate',
+    bom:{pcb:1,copper_coil:1},
+    workMinutesPerUnit:20,
+    minBatchSize:2,
+    baseYield:0.94,
+    entryAlternatives:['in_house_brand_rnd','contract_ems_assembly','acquire_existing_brand'],
+    processStages:[
+      {code:'system_architecture_evt',nameTh:'กำหนดสถาปัตยกรรมเครื่อง คัดเลือกชิป/ชิ้นส่วน และสร้างต้นแบบ EVT',workShare:0.35,passiveHoldMinutes:0,cleanroomRequired:false,qualityGateTh:'ตรวจความเข้ากันได้ของชิป แรม จอ แบต ตัวถัง และ OS'},
+      {code:'pcba_box_build_assembly',nameTh:'ประกอบชิ้นส่วนจริงลงแผงวงจรและตัวถัง (Box-Build Assembly)',workShare:0.35,passiveHoldMinutes:30,cleanroomRequired:false,qualityGateTh:'ใช้ชิ้นส่วนจริงครบทุกชิ้นจากคลังล็อตที่ถือครอง'},
+      {code:'pilot_validation_certification',nameTh:'ผลิตนำร่อง ทดสอบความร้อน/แบต/คลื่นวิทยุ 1,200 นาที ก่อนวางตลาด',workShare:0.3,passiveHoldMinutes:120,cleanroomRequired:false,qualityGateTh:'มีเครื่องนำร่อง >= 2 เครื่อง และผ่านเวลาทดสอบ 7 วัน'}
+    ]
+  }
+});
+
+const ROLE_ALIASES=Object.freeze({
+  chip:'fabless_soc',
+  display:'display_panel',
+  battery:'battery_pack',
+  materials:'pcb_rf',
+  ems:'osat_packaging',
+  enclosure:'enclosure',
+  brand:'brand',
+  fabless_soc:'fabless_soc',
+  wafer_foundry:'wafer_foundry',
+  osat_packaging:'osat_packaging',
+  dram_memory:'dram_memory',
+  nand_storage:'nand_storage',
+  camera_module:'camera_module',
+  display_panel:'display_panel',
+  battery_pack:'battery_pack',
+  pcb_rf:'pcb_rf',
+  os_platform:'os_platform'
+});
+
+function roleContract(roleId){
+  const canonical=ROLE_ALIASES[roleId]||roleId;
+  return ROLE_CONTRACTS[canonical]||ROLE_CONTRACTS.brand;
+}
+
 function synthesizeChip(seed,capability=40,options={}){
  options=options||{};const r=rng(seed),c=num(capability,40,0,100),level=Math.floor(num(options.level,0,0,6)),q=.85+r()*.3;
+ const focus=['balanced','performance','low_power','budget_yield','ai_isp'].includes(options.focus)?options.focus:(['balanced','performance','low_power','ai_isp'][Math.floor(r()*4)]||'balanced');
  const nodeNm=num(options.nodeNm,Math.max(22,130/Math.pow(1.35,level)),10,350),cores=level?Math.min(8,1+level+Math.floor(r()*2)):1;
  const clockGhz=round((.18+c*.005+level*.22)*q),dieAreaMm2=round((12+cores*8+level*7)*(nodeNm/130)**1.5*(1.15-c*.003)*(.9+r()*.2));
  const loadW=round((.22+cores*clockGhz*.5)*(nodeNm/130)**.65*(1.15-c*.003));
- return{id:'chip-'+String(seed).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,48)+'-'+level+'-'+Math.floor(r()*1e6),isa:'arm32',cores,clockGhz,nodeNm:round(nodeNm),dieAreaMm2,ipcIndex:round(.65+c/120),gpuGflops:level?round(cores*clockGhz*(8+c/20)):0,memoryType:level?'LPDDR':'SDRAM',maxRamMB:level?128*2**level:32,maxPixels:level?320*480*2**(level-1):240*320,radioGeneration:Math.min(5,2+Math.floor(level/2)),idleW:round(loadW*.055),loadW,peakW:round(loadW*1.35),level};
+ const ipcIndex=round(.65+c/120),gpuGflops=level?round(cores*clockGhz*(8+c/20)):0;
+ const latencyNs=round(Math.max(12,95-level*11-c*.22+(focus==='low_power'?4:focus==='performance'?-4:0)));
+ const npuTops=level>=2?round((level-1)*(.6+c/80)*(focus==='ai_isp'?1.25:1)):0;
+ const ispMpLimit=level?Math.round(4*2**Math.min(4,level)*(focus==='ai_isp'?1.25:1)):2;
+ const maskCostSatang=money(Math.round(1200000*(130/Math.max(14,nodeNm))**1.15));
+ return{id:'chip-'+String(seed).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,48)+'-'+level+'-'+Math.floor(r()*1e6),isa:'arm32',cores,clockGhz,nodeNm:round(nodeNm),dieAreaMm2,ipcIndex,gpuGflops,memoryType:level?'LPDDR':'SDRAM',maxRamMB:level?128*2**level:32,maxPixels:level?320*480*2**(level-1):240*320,radioGeneration:Math.min(5,2+Math.floor(level/2)),idleW:round(loadW*.055),loadW,peakW:round(loadW*1.35),level,focus,latencyNs,npuTops,ispMpLimit,maskCostSatang};
 }
-function parts(seed,level=0){
- const r=rng(seed),l=Math.floor(num(level,0,0,6)),width=l?240+80*l:128+Math.floor(r()*3)*16,height=l?320+160*l:160+Math.floor(r()*3)*16;
- return{camera:{megapixels:l?2*2**l:.3,sensorAreaMm2:2+l*2,processingQuality:.4+l*.1},ram:{type:l?'LPDDR':'SDRAM',capacityMB:l?64*2**l:8+Math.floor(r()*3)*8,bandwidthGBps:round((l?.6+l*.8:.08)*(.9+r()*.2))},storage:{readMBps:round((l?30+l*25:8)*(.85+r()*.3)),capacityMB:l?512*2**l:16+Math.floor(r()*4)*8,interface:l?'eMMC':'SPI'},display:{pixels:width*height,width,height,watts:round((.12+l*.25)*(.85+r()*.3)),interface:l?'MIPI':'RGB'},battery:{wh:round((3.5+l*2)*(.85+r()*.3)),maxDischargeW:round(3+l*2+r())},enclosure:{material:l?'aluminium_graphite':'polymer',rth:round((l?3.3:5)*(.9+r()*.2))},os:{id:l?'open_mobile':'embedded_rtos',isa:'arm32',minRamMB:l?64:4,installableApps:!!l,apiLevel:l,version:1+l,driverCoverage:1,overhead:l?round(.16/(1+l*.2)):.03}};
+
+function parts(seed,level=0,options={}){
+ options=options||{};const r=rng(seed),l=Math.floor(num(level,0,0,6)),cap=num(options.capability,45,0,100),capFactor=.92+cap/500;
+ const width=l?240+80*l:128+Math.floor(r()*3)*16,height=l?320+160*l:160+Math.floor(r()*3)*16;
+ const camMp=l?2*2**l:.3,sensorArea=round((2+l*2)*capFactor),fNumber=round(Math.max(1.6,2.8-l*.18-(cap-45)*.002));
+ const lowLightScore=round(clamp((sensorArea/Math.max(1,camMp))*18+(3.2-fNumber)*22+l*8,10,98));
+ const ramCap=l?64*2**l:8+Math.floor(r()*3)*8,ramBw=round((l?.6+l*.8:.08)*(.9+r()*.2));
+ const ramLatencyNs=round(Math.max(14,75-l*8-(cap-45)*.15)),ramPowerMw=round(Math.max(25,(l?85+l*30:40)*(1.08-cap*.0015)));
+ const storageRead=round((l?30+l*25:8)*(.85+r()*.3)),storageWrite=round(storageRead*.68),storageCap=l?512*2**l:16+Math.floor(r()*4)*8;
+ const enduranceCycles=Math.round((l?1500+l*600:1000)*capFactor);
+ const displayWatts=round((.12+l*.25)*(.85+r()*.3)),brightnessNits=Math.round((l?320+l*75:180)*capFactor),refreshHz=l>=3?90:60;
+ const battWh=round((3.5+l*2)*(.85+r()*.3)),maxDischargeW=round(3+l*2+r()),chargeW=round(Math.min(maxDischargeW*1.1,2.5+l*3.5)),cycleLife=Math.round((350+l*75)*capFactor);
+ const rth=round((l?3.3:5)*(.9+r()*.2)),dropResistanceScore=round(clamp((l?68:74)+(cap-45)*.2,35,96));
+ const osOverhead=l?round(.16/(1+l*.2)):.03,securityScore=round(clamp(55+l*7+(cap-45)*.25,30,98));
+ return{
+   camera:{megapixels:camMp,sensorAreaMm2:2+l*2,processingQuality:round(.4+l*.1),fNumber,lowLightScore,hasOis:l>=2?1:0},
+   ram:{type:l?'LPDDR':'SDRAM',capacityMB:ramCap,bandwidthGBps:ramBw,latencyNs:ramLatencyNs,powerMw:ramPowerMw},
+   storage:{readMBps:storageRead,writeMBps:storageWrite,capacityMB:storageCap,interface:l?'eMMC':'SPI',enduranceCycles},
+   display:{pixels:width*height,width,height,watts:displayWatts,interface:l?'MIPI':'RGB',brightnessNits,refreshHz},
+   battery:{wh:battWh,maxDischargeW,chargeW,cycleLife,protectionScore:round(clamp(65+l*5+(cap-45)*.2,40,99))},
+   enclosure:{material:l?'aluminium_graphite':'polymer',rth,dropResistanceScore,ipRatingCode:l>=2?67:l>=1?54:50},
+   pcb_rf:{layers:l?4+l*2:2,signalIntegrity:round(clamp(.78+l*.035+(cap-45)*.0015,.5,0.99)),emiShieldingScore:round(clamp(62+l*6,40,98)),radioGeneration:Math.min(5,2+Math.floor(l/2)),maxPowerDeliveryW:round(maxDischargeW*1.25+2)},
+   os:{id:l?'open_mobile':'embedded_rtos',isa:'arm32',minRamMB:l?64:4,installableApps:!!l,apiLevel:l,version:1+l,driverCoverage:1,overhead:osOverhead,securityScore,supportMonths:12+l*6}
+ };
 }
+
+function synthesizeComponent(seed,kind,capability=45,level=0,options={}){
+  const base=parts(seed+':'+kind,level,{capability,...options});
+  return base[kind]||base.enclosure;
+}
+
+function isCompatiblePart(chip,kind,spec){
+  if(!chip||!spec||typeof spec!=='object')return false;
+  const cLevel=num(chip.level,0,0,6);
+  if(kind==='ram')return spec.type===chip.memoryType&&num(spec.capacityMB)>0&&num(spec.capacityMB)<=num(chip.maxRamMB);
+  if(kind==='storage')return spec.interface===(cLevel>0?'eMMC':'SPI')&&num(spec.capacityMB)>0;
+  if(kind==='display')return spec.interface===(cLevel>0?'MIPI':'RGB')&&num(spec.pixels)>0&&num(spec.pixels)<=num(chip.maxPixels)&&spec.pixels===spec.width*spec.height;
+  if(kind==='battery')return num(spec.wh)>0&&num(spec.maxDischargeW)>=num(chip.peakW,1)*1.05;
+  if(kind==='camera')return num(spec.megapixels)>0&&num(spec.sensorAreaMm2)>0;
+  if(kind==='enclosure')return num(spec.rth)>0;
+  if(kind==='pcb_rf')return num(spec.signalIntegrity,0.8)>=0.55&&num(spec.maxPowerDeliveryW,10)>=num(chip.peakW,1);
+  if(kind==='os')return spec.isa===chip.isa&&num(spec.driverCoverage,0)>=0.95&&num(spec.minRamMB,4)<=num(chip.maxRamMB,32);
+  return true;
+}
+
 function evaluate(chip,p,options={}){
- chip=chip||{};p=p||{};options=options||{};const reasonsTh=[],bad=s=>reasonsTh.push(s),ram=p.ram||{},storage=p.storage||{},display=p.display||{},battery=p.battery||{},enclosure=p.enclosure||{},os=p.os||{};
+ chip=chip||{};p=p||{};options=options||{};const reasonsTh=[],bad=s=>reasonsTh.push(s),ram=p.ram||{},storage=p.storage||{},display=p.display||{},battery=p.battery||{},enclosure=p.enclosure||{},os=p.os||{},pcbRf=p.pcb_rf||null;
  const required=[chip.cores,chip.clockGhz,chip.nodeNm,chip.dieAreaMm2,chip.maxRamMB,chip.maxPixels,ram.capacityMB,ram.bandwidthGBps,storage.capacityMB,display.pixels,display.width,display.height,battery.wh,battery.maxDischargeW,enclosure.rth];
  if(required.some(v=>typeof v!=='number'||!Number.isFinite(v)||v<=0))bad('ข้อมูลชิ้นส่วนหรือหน่วยไม่ถูกต้อง');
  if([chip.idleW,chip.loadW,chip.peakW,display.watts,os.overhead,os.minRamMB,os.driverCoverage].some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0))bad('ข้อมูลพลังงานหรือระบบปฏิบัติการไม่ถูกต้อง');
@@ -11247,12 +11753,21 @@ function evaluate(chip,p,options={}){
  const duties={standby:[.01,.01],call:[.32,.12],web:[.55,.8],game:[.95,1],mixed:[.24,.35]},d=Object.hasOwn(duties,options.workload)?duties[options.workload]:duties.mixed;
  const averagePowerW=round(Math.max(.0001,(idle+(load-idle)*d[0]+screen*d[1]+aux)*(1+overhead))),peakPowerW=round((peak+screen+aux)*(1+overhead));
  if(num(battery.maxDischargeW)<peakPowerW)bad('แบตเตอรี่จ่ายกำลังสูงสุดไม่พอ');
+ if(pcbRf&&typeof pcbRf==='object'){
+   if(typeof pcbRf.signalIntegrity==='number'&& (!Number.isFinite(pcbRf.signalIntegrity)||pcbRf.signalIntegrity<.5))bad('ความสมบูรณ์สัญญาณแผงวงจรและคลื่นวิทยุต่ำกว่าเกณฑ์');
+   if(typeof pcbRf.maxPowerDeliveryW==='number'&& (!Number.isFinite(pcbRf.maxPowerDeliveryW)||pcbRf.maxPowerDeliveryW<peakPowerW))bad('แผงวงจรจ่ายกำลังไฟสูงสุดไม่เพียงพอ');
+ }
  const ambient=num(options.ambientC,30,-50,80),rth=num(enclosure.rth,5,.01,100),surfaceC=round(ambient+peakPowerW*rth),budget=Math.max(0,(43-ambient)/rth),sustainedFactor=round(Math.min(1,(budget/Math.max(.0001,peakPowerW))**.8));
  const compatible=!reasonsTh.length,compute=num(chip.cores)*num(chip.clockGhz)*num(chip.ipcIndex,1,.1,4)*sustainedFactor/(1+overhead),memory=Math.min(1,num(ram.bandwidthGBps)/.6),score=v=>compatible?round(clamp(v,0,100)):0;
  const taskScores={call:score(65+compute*25),web:score((os.installableApps?compute*40*memory:compute*8)*Math.min(1,Math.max(0,ram.capacityMB-os.minRamMB)/64)*Math.min(1,(storage.readMBps||8)/30)),game:score((os.installableApps?compute*25*memory:compute*4)*Math.min(1,Math.max(0,ram.capacityMB-os.minRamMB)/128)*Math.min(1,153600/Math.max(1,display.pixels)))};
  const silicon=wafer({dieAreaMm2:num(chip.dieAreaMm2,25,.01,1e6)}).unitCostSatang;
- return{compatible,reasonsTh,batteryHours:round(num(battery.wh)*.92/averagePowerW),averagePowerW,peakPowerW,surfaceC,sustainedFactor,taskScores,cpuThroughput:round(compute),ramCapacityMB:ram.capacityMB,storageCapacityMB:storage.capacityMB,cameraQuality:round((p.camera?.megapixels||0)*(.5+(p.camera?.sensorAreaMm2||0)/10)*(p.camera?.processingQuality||.4)),osOverhead:overhead,costEstimateSatang:money(silicon+num(ram.capacityMB)*35+num(storage.capacityMB)*3+num(display.pixels)*.08+num(battery.wh)*1800+(enclosure.material==='polymer'?4500:9500)+12000)};
+ const cameraQuality=round((p.camera?.megapixels||0)*(.5+(p.camera?.sensorAreaMm2||0)/10)*(p.camera?.processingQuality||.4));
+ const photoLowLightScore=score(cameraQuality*12+num(p.camera?.lowLightScore,35,0,100)*.55);
+ const displayQualityScore=score(num(display.brightnessNits,220,50,2000)/12+num(display.refreshHz,60,30,240)/4);
+ const bottleneckSummaryTh=!compatible?reasonsTh[0]:sustainedFactor<.75?'ติดคอขวดความร้อนสะสมของตัวถังและกำลังไฟสูงสุด':memory<.7?'ติดคอขวดแบนด์วิดท์หน่วยความจำ RAM':(storage.readMBps||8)<25?'ติดคอขวดความเร็วอ่านข้อมูลหน่วยเก็บข้อมูล':!os.installableApps?'จำกัดด้วยเฟิร์มแวร์ฟีเจอร์โฟน (ไม่รองรับแอปภายนอก)':'สมดุลฮาร์ดแวร์และระบบปฏิบัติการทำงานเต็มประสิทธิภาพ';
+ return{compatible,reasonsTh,batteryHours:round(num(battery.wh)*.92/averagePowerW),averagePowerW,peakPowerW,surfaceC,sustainedFactor,taskScores,cpuThroughput:round(compute),ramCapacityMB:ram.capacityMB,storageCapacityMB:storage.capacityMB,cameraQuality,photoLowLightScore,displayQualityScore,osOverhead:overhead,bottleneckSummaryTh,costEstimateSatang:money(silicon+num(ram.capacityMB)*35+num(storage.capacityMB)*3+num(display.pixels)*.08+num(battery.wh)*1800+(enclosure.material==='polymer'?4500:9500)+12000)};
 }
+
 function wafer(options={}){
  options=options||{};const diameterMm=num(options.diameterMm,200,0,1000),area=num(options.dieAreaMm2,25,.0001,1e6),defects=num(options.defectsPerCm2,.1,0,1e6),packYield=num(options.packYield,.98,0,1),bin=num(options.binAFraction,.8,0,1);
  const grossDies=Math.floor(clamp(Math.PI*(diameterMm/2)**2/area-Math.PI*diameterMm/Math.sqrt(2*area),0,1e9)),x=area/100*defects,dieYield=x===0?1:(-Math.expm1(-x)/x)**2,goodDies=Math.round(grossDies*dieYield),packagedGood=Math.floor(goodDies*packYield),aBin=Math.floor(packagedGood*bin),bBin=packagedGood-aBin,scrap=grossDies-packagedGood;
@@ -11260,7 +11775,80 @@ function wafer(options={}){
  const total=num(options.waferCostSatang,3000000,0,1e12)+goodDies*num(options.packCostSatang,1200,0,1e12)+packagedGood*num(options.royaltySatang,400,0,1e12);
  return{grossDies,dieYield,goodDies,packagedGood,aBin,bBin,scrap,unitCostSatang:packagedGood?money(Math.ceil(total/packagedGood)):0};
 }
-return{synthesizeChip,parts,evaluate,wafer};
+
+function evaluateRoleFeasibility(snapshotOrContext,roleId){
+  const contract=roleContract(roleId);
+  const ctx=snapshotOrContext||{};
+  const subjects=ctx.subjects||{};
+  const machines=ctx.machines||{};
+  const cashSatang=num(ctx.cashSatang,0,0,1e15);
+  const wageReserveSatang=num(ctx.wageReserveSatang,0,0,1e15);
+  const riskTaking=num(ctx.riskTaking,50,0,100);
+  const prudence=num(ctx.prudence,50,0,100);
+  const brownout=Boolean(ctx.brownoutActive);
+  const missingSubjects=[];
+  let totalSubjectMargin=0;
+  for(const [subj,reqLv]of Object.entries(contract.subjectRequirements||{})){
+    const actual=num(subjects[subj],0,0,100);
+    if(actual<reqLv)missingSubjects.push({subjectId:subj,required:reqLv,actual:Math.round(actual)});
+    else totalSubjectMargin+=actual-reqLv;
+  }
+  const missingEquipment=[];
+  const brokenEquipment=[];
+  for(const eqId of contract.requiredEquipment||[]){
+    const m=machines[eqId];
+    if(!m)missingEquipment.push(eqId);
+    else if(m.status!=='ready'||num(m.condition,100)<25)brokenEquipment.push(eqId);
+  }
+  const requiredCash=wageReserveSatang+contract.entryCapitalSatang;
+  const missingCapitalSatang=Math.max(0,requiredCash-cashSatang);
+  const utilityBlocked=brownout&&contract.utilityKw>=2.0;
+  const feasible=missingSubjects.length===0&&missingEquipment.length===0&&brokenEquipment.length===0&&missingCapitalSatang===0&&!utilityBlocked;
+  const safetyBuffer=wageReserveSatang*(1.25+prudence/100)+contract.entryCapitalSatang*(1.1+Math.max(0,prudence-55)/100);
+  const feasibleButDeclined=feasible&&(riskTaking<40||(prudence>78&&cashSatang<safetyBuffer));
+  const strategicScore=round((feasible?100:0)+totalSubjectMargin*1.4+(riskTaking-prudence*.45)*.6+Math.min(40,(cashSatang-requiredCash)/Math.max(1,contract.entryCapitalSatang)*15));
+  let reasonTh='พร้อมเข้าดำเนินธุรกิจตามความเชี่ยวชาญ เครื่องจักร และเงินทุนจริง';
+  if(!feasible){
+    const partsTh=[];
+    if(missingSubjects.length)partsTh.push('ขาดผู้เชี่ยวชาญวิชา '+missingSubjects.map(x=>`${x.subjectId}(${x.actual}/${x.required})`).join(', '));
+    if(missingEquipment.length)partsTh.push('ยังไม่มีเครื่องจักร '+missingEquipment.join(', '));
+    if(brokenEquipment.length)partsTh.push('เครื่องจักรชำรุดรอซ่อม '+brokenEquipment.join(', '));
+    if(missingCapitalSatang>0)partsTh.push(`ต้องการทุนและสำรองเพิ่มอีก ${Math.ceil(missingCapitalSatang/100).toLocaleString()} บาท`);
+    if(utilityBlocked)partsTh.push('ระบบไฟฟ้าในนิคมกำลังไฟตก');
+    reasonTh=partsTh.join(' • ');
+  }else if(feasibleButDeclined){
+    reasonTh='ผ่านเกณฑ์ความรู้ เครื่องจักร และทุนขั้นต้นแล้ว แต่ผู้บริหารสายรอบคอบเลือกสำรองเงินสดและโฟกัสงานหลักก่อน';
+  }
+  return {
+    roleId:contract.id,
+    nameTh:contract.nameTh,
+    outputs:contract.outputs,
+    entryCapitalSatang:contract.entryCapitalSatang,
+    feasible,
+    feasibleButDeclined,
+    missingSubjects,
+    missingEquipment,
+    brokenEquipment,
+    missingCapitalSatang,
+    utilityBlocked,
+    strategicScore,
+    reasonTh
+  };
+}
+
+return Object.freeze({
+  MATERIAL_GRADES,
+  ROLE_CONTRACTS,
+  ROLE_ALIASES,
+  roleContract,
+  synthesizeChip,
+  synthesizeComponent,
+  parts,
+  isCompatiblePart,
+  evaluate,
+  wafer,
+  evaluateRoleFeasibility
+});
 });
 
 </script>
@@ -11268,15 +11856,62 @@ return{synthesizeChip,parts,evaluate,wafer};
 /* js/phone-talent.js */
 (function(root,factory){'use strict';const api=factory(typeof module==='object'&&module.exports?require('./human-core'):root.CompanyCore);if(typeof module==='object'&&module.exports)module.exports=api;else root.CompanyPhoneTalent=api;})(typeof globalThis!=='undefined'?globalThis:this,function(H){
 'use strict';
-const SUBJECTS={chip:'semiconductor_physics',hardware:'electrical_basics',software:'software',manufacturing:'semiconductor_process'};
-const PREREQ={semiconductor_physics:'physical_chemistry',physical_chemistry:'chemical_processing',semiconductor_process:'chemical_processing',electronics:'electrical_basics',software:'programming',embedded_iot:'programming'};
+const SUBJECTS={
+  chip:'semiconductor_physics',
+  fabless_soc:'semiconductor_physics',
+  wafer_foundry:'semiconductor_process',
+  osat_packaging:'smt_process',
+  dram_memory:'circuit_design',
+  nand_storage:'embedded_firmware',
+  camera_module:'semiconductor_optics',
+  display_panel:'electrical_basics',
+  display:'electrical_basics',
+  battery_pack:'power_electronics',
+  battery:'power_electronics',
+  pcb_rf:'smt_process',
+  materials:'smt_process',
+  enclosure:'metal_machining',
+  os_platform:'software',
+  hardware:'electrical_basics',
+  software:'software',
+  manufacturing:'semiconductor_process'
+};
+const PREREQ={
+  semiconductor_physics:'physical_chemistry',
+  physical_chemistry:'chemical_processing',
+  semiconductor_process:'chemical_processing',
+  semiconductor_optics:'electrical_basics',
+  power_electronics:'electrical_basics',
+  circuit_design:'electrical_basics',
+  smt_process:'electrical_basics',
+  electronics:'electrical_basics',
+  software:'programming',
+  embedded_iot:'programming',
+  embedded_firmware:'programming'
+};
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 function hash(s){let n=2166136261;for(const c of String(s))n=Math.imul(n^c.charCodeAt(0),16777619);return n>>>0;}
 function day(w){if(Number.isFinite(w.clock?.absoluteMinute))return Math.floor(w.clock.absoluteMinute/1440)+1;return Number.isFinite(w.day)?w.day:Number.isFinite(w.clock?.day)?w.clock.day:Math.floor((w.minute||w.time?.minute||0)/1440)+1;}
 function state(w){return w.phoneTalent||(w.phoneTalent={version:1,people:{},firms:{},offers:[],payrollDays:{},history:[]});}
-function discipline(role){return /(?:^|_)(?:software|os|platform)(?:_|$)/.test(role)?'software':/foundry|fab|manufactur|assembl/.test(role)?'manufacturing':/chip|semi/.test(role)?'chip':'hardware';}
+function discipline(role){
+  if(/(?:^|_)(?:software|os|platform)(?:_|$)/.test(role))return 'software';
+  if(/foundry|fab|manufactur|assembl|osat/.test(role)&&role!=='fabless_soc')return 'manufacturing';
+  if(/chip|semi|soc/.test(role))return 'chip';
+  return 'hardware';
+}
 function seedSubjects(subject,level){const out={};let s=subject;while(s){out[s]=level;s=PREREQ[s];}return out;}
-function ensure(w,firms){const t=state(w);for(const [key,f]of Object.entries(firms||{})){const id=f.id||key;if(t.firms[id])continue;const role=f.role||key,disc=discipline(role),count=2+hash(w.seed+id)%3;const record=t.firms[id]={id,role,personIds:[]};for(let i=0;i<count+2;i++){const pid='phone-person-'+id+'-'+i,profile=H.createProfile(w.seed,pid),job=i===0?'ceo':i===count+1?'commercial':'engineer',subject=job==='ceo'?'people_management':job==='commercial'?'procurement':SUBJECTS[disc];const p={id:pid,name:['อรุณ','มาลี','นที','กานต์','ศิริ','ธารา'][hash(pid)%6]+' '+['วัฒนกิจ','ชาญวิชา','อินทรา','พงษ์ศิลป์','กิจวัฒนา','เรืองปัญญา'][hash(pid+'surname')%6],profile,state:H.createState(profile),role:job,discipline:disc,employerId:id,employment:'external',dailyWageSatang:job==='ceo'?180000:job==='engineer'?100000:65000,satisfaction:65+hash(pid+'sat')%21,loyalty:40+hash(pid+'loyal')%41,education:{practiceMinutes:{},interests:[],course:null,subjects:{...seedSubjects(subject,45+hash(pid+'knowledge')%26),...(job==='engineer'?{software:40+hash(pid)%25,programming:45,semiconductor_process:40,chemical_processing:40,circuit_design:45,metrology:40,metal_machining:45,embedded_firmware:40}: {})},appliedMinutes:{},history:[]},history:[{day:day(w),type:'employed',firmId:id}],duties:job==='ceo'?'ประเมินทุน ความเสี่ยง และแผนธุรกิจ':job==='engineer'?'วิจัย ทดสอบ และตรวจคุณภาพ':'จัดซื้อและดูแลลูกค้า',workDay:-1,workedMinutes:0};t.people[pid]=p;record.personIds.push(pid);}}return t;}
+function roleExtras(role,pid){
+  const base={software:40+hash(pid)%25,programming:45,semiconductor_process:40,chemical_processing:40,circuit_design:45,metrology:40,metal_machining:45,embedded_firmware:40};
+  if(role==='camera_module')return {...base,semiconductor_optics:48+hash(pid+'opt')%18,quality:42};
+  if(role==='dram_memory')return {...base,semiconductor_physics:46+hash(pid+'dram')%18,circuit_design:48+hash(pid+'ckt')%16,quality:40};
+  if(role==='nand_storage')return {...base,embedded_firmware:48+hash(pid+'nand')%18,semiconductor_process:44,quality:40};
+  if(role==='battery_pack'||role==='battery')return {...base,power_electronics:46+hash(pid+'pwr')%18,electrical_safety:48,quality:40};
+  if(role==='pcb_rf'||role==='materials'||role==='osat_packaging')return {...base,smt_process:46+hash(pid+'smt')%18,electrical_basics:46,quality:40};
+  if(role==='fabless_soc')return {...base,semiconductor_physics:48+hash(pid+'soc')%18,circuit_design:48,embedded_firmware:44};
+  if(role==='os_platform')return {...base,software:50+hash(pid+'os')%18,programming:48,embedded_firmware:45};
+  return base;
+}
+function ensure(w,firms){const t=state(w);for(const [key,f]of Object.entries(firms||{})){const id=f.id||key;if(t.firms[id])continue;const role=f.role||key,disc=discipline(role),count=2+hash(w.seed+id)%3;const record=t.firms[id]={id,role,personIds:[]};for(let i=0;i<count+2;i++){const pid='phone-person-'+id+'-'+i,profile=H.createProfile(w.seed,pid),job=i===0?'ceo':i===count+1?'commercial':'engineer',subject=job==='ceo'?'people_management':job==='commercial'?'procurement':(SUBJECTS[role]||SUBJECTS[disc]);const p={id:pid,name:['อรุณ','มาลี','นที','กานต์','ศิริ','ธารา'][hash(pid)%6]+' '+['วัฒนกิจ','ชาญวิชา','อินทรา','พงษ์ศิลป์','กิจวัฒนา','เรืองปัญญา'][hash(pid+'surname')%6],profile,state:H.createState(profile),role:job,discipline:disc,employerId:id,employment:'external',dailyWageSatang:job==='ceo'?180000:job==='engineer'?100000:65000,satisfaction:65+hash(pid+'sat')%21,loyalty:40+hash(pid+'loyal')%41,education:{practiceMinutes:{},interests:[],course:null,subjects:{...seedSubjects(subject,45+hash(pid+'knowledge')%26),...(job==='engineer'?roleExtras(role,pid):{})},appliedMinutes:{},history:[]},history:[{day:day(w),type:'employed',firmId:id}],duties:job==='ceo'?'ประเมินทุน ความเสี่ยง และแผนธุรกิจ':job==='engineer'?'วิจัย ทดสอบ และตรวจคุณภาพ':'จัดซื้อและดูแลลูกค้า',workDay:-1,workedMinutes:0};t.people[pid]=p;record.personIds.push(pid);}}return t;}
 function staff(w,id){const t=state(w);return (t.firms[id]?.personIds||[]).map(pid=>t.people[pid]).filter(p=>p&&p.employment==='external'&&p.employerId===id&&!w.people?.some(q=>q.id===p.id&&q.employed));}
 function level(p,s){return p.education?.subjects?.[SUBJECTS[s]||s]||0;}
 function capability(w,id,s){const people=staff(w,id).filter(p=>p.role==='engineer');return people.length?Math.max(...people.map(p=>level(p,s))):0;}
@@ -11288,7 +11923,7 @@ function recruitToCampus(w,id,createCallback){const t=state(w),p=t.people[id],of
 function step(w,d,hooks={}){const t=state(w);for(const p of Object.values(t.people)){if(p.employment!=='external')continue;const offer=hooks.evaluateRecruitment?.(p);if(offer&&!t.offers.some(o=>o.personId===p.id&&o.status==='notice'))negotiateRecruitment(w,p.id,offer,hooks);}if(hooks.createPerson)for(const o of t.offers)if(o.status==='notice'&&d>=o.noticeUntilDay)recruitToCampus(w,o.personId,hooks.createPerson);return t;}
 function view(w){return w.phoneTalent?JSON.parse(JSON.stringify(w.phoneTalent)):null;}
 function validate(w){const errors=[],t=w.phoneTalent;if(!t)return errors;if(t.version!==1)errors.push('phoneTalent version');for(const [id,p]of Object.entries(t.people||{})){if(p.id!==id||p.profile?.id!==id)errors.push(id+': identity');for(const e of H.validateProfile(p.profile))errors.push(id+': '+e);if(!Number.isFinite(p.dailyWageSatang)||p.dailyWageSatang<0||!Number.isInteger(p.dailyWageSatang))errors.push(id+': wage');if(!Number.isFinite(p.workedMinutes)||p.workedMinutes<0||p.workedMinutes>360)errors.push(id+': work budget');for(const n of Object.values(p.education?.subjects||{}))if(!Number.isFinite(n)||n<0||n>100)errors.push(id+': subject');if(p.employment==='external'&&(!t.firms[p.employerId]?.personIds.includes(id)||w.people?.some(q=>q.id===id&&q.employed)))errors.push(id+': duplicate/missing employer');}for(const f of Object.values(t.firms||{}))for(const id of f.personIds||[])if(!t.people[id])errors.push(id+': missing person');return errors;}
-return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recruitToCampus,step};
+return {SUBJECTS,ensure,capability,work,payroll,view,validate,negotiateRecruitment,recruitToCampus,step};
 });
 
 </script>
@@ -11301,7 +11936,56 @@ return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recrui
 })(typeof globalThis!=='undefined'?globalThis:this,function(E,T,C,W){
   'use strict';
   const BRANDS=['siam_tech','titan_elec','asia_autoparts','eastern_auto'];
-  const ROLES={shenzhen_semi:'chip',tokyo_elec:'display',pacific_solar:'battery',petro_chem_siam:'materials',siam_metal:'enclosure',singapore_port_3pl:'ems'};
+  const ROLES={
+    shenzhen_semi:'chip',
+    tokyo_elec:'display',
+    pacific_solar:'battery',
+    petro_chem_siam:'materials',
+    siam_metal:'enclosure',
+    singapore_port_3pl:'ems',
+    siam_aero_robotics:'fabless_soc',
+    apex_ind:'dram_memory',
+    solartech_asia:'nand_storage',
+    biomed_siam:'camera_module',
+    green_power:'battery_pack',
+    bharat_biotech_it:'os_platform'
+  };
+  const INITIAL_ROLE_SETS={
+    siam_tech:['brand','os_platform'],
+    titan_elec:['brand'],
+    asia_autoparts:['brand'],
+    eastern_auto:['brand'],
+    shenzhen_semi:['chip','wafer_foundry','fabless_soc'],
+    tokyo_elec:['display','display_panel','camera_module','dram_memory','nand_storage'],
+    pacific_solar:['battery','battery_pack'],
+    petro_chem_siam:['materials','pcb_rf','enclosure'],
+    siam_metal:['enclosure'],
+    singapore_port_3pl:['ems','osat_packaging'],
+    siam_aero_robotics:['fabless_soc','camera_module'],
+    apex_ind:['dram_memory'],
+    solartech_asia:['nand_storage','pcb_rf'],
+    biomed_siam:['camera_module'],
+    green_power:['battery_pack','display_panel'],
+    bharat_biotech_it:['os_platform']
+  };
+  const STRATEGY_FOCUS={
+    siam_tech:'balanced',
+    titan_elec:'performance',
+    asia_autoparts:'endurance',
+    eastern_auto:'camera_compact',
+    shenzhen_semi:'foundry_idm',
+    tokyo_elec:'high_density',
+    pacific_solar:'high_capacity_cell',
+    petro_chem_siam:'polymer_substrate',
+    siam_metal:'thermal_chassis',
+    singapore_port_3pl:'high_yield_osat',
+    siam_aero_robotics:'low_power_isp',
+    apex_ind:'high_bandwidth_ram',
+    solartech_asia:'endurance_storage',
+    biomed_siam:'precision_optics',
+    green_power:'fast_charge_bms',
+    bharat_biotech_it:'lightweight_rtos_open'
+  };
   const clone=x=>JSON.parse(JSON.stringify(x));
   const safe=x=>Number.isSafeInteger(x)&&x>=0;
   function hash(s){let n=2166136261;for(const c of String(s)){n^=c.charCodeAt(0);n=Math.imul(n,16777619);}return n>>>0;}
@@ -11313,28 +11997,118 @@ return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recrui
   function credit(f,n){f.cash+=n;f.receipts+=n;f.dailyRevenue=(f.dailyRevenue||0)+n;}
   function transfer(a,b,n){if(!safe(n)||a.cash<n)return false;debit(a,n);credit(b,n);return true;}
   function wage(m,f,n){if(!safe(n)||f.cash<n||!m.nations[f.nationId])return false;debit(f,n);f.operatingExpenseSatang=(f.operatingExpenseSatang||0)+n;const h=m.nations[f.nationId];h.householdCash+=n;h.wages+=n;return true;}
-  function capability(w,id,subject){if(id===w.phoneIndustry?.campusFirmId){const key=({hardware:'electrical_basics',chip:'semiconductor_physics',manufacturing:'semiconductor_process'})[subject]||subject;return Math.max(0,...w.people.filter(p=>p.employed).map(p=>p.education?.subjects?.[key]||0));}const c=T.capability(w,id,subject);return Math.max(0,Math.min(100,Number(typeof c==='number'?c:c&&c.score)||0));}
+  function capability(w,id,subject){
+    if(id===w.phoneIndustry?.campusFirmId){
+      const key=({
+        hardware:'electrical_basics',
+        chip:'semiconductor_physics',
+        fabless_soc:'semiconductor_physics',
+        wafer_foundry:'semiconductor_process',
+        osat_packaging:'smt_process',
+        dram_memory:'circuit_design',
+        nand_storage:'embedded_firmware',
+        camera_module:'semiconductor_optics',
+        display_panel:'electrical_basics',
+        battery_pack:'power_electronics',
+        pcb_rf:'smt_process',
+        enclosure:'metal_machining',
+        os_platform:'software',
+        manufacturing:'semiconductor_process'
+      })[subject]||subject;
+      const direct=Math.max(0,...w.people.filter(p=>p.employed).map(p=>p.education?.subjects?.[key]||0));
+      if(direct>0)return direct;
+      if(key==='semiconductor_optics')return Math.max(0,...w.people.filter(p=>p.employed).map(p=>Math.min(p.education?.subjects?.electrical_basics||0,p.education?.subjects?.metrology||0)));
+      return 0;
+    }
+    const c=T.capability(w,id,subject);
+    return Math.max(0,Math.min(100,Number(typeof c==='number'?c:c&&c.score)||0));
+  }
+  function roleKinds(role){
+    if(role==='display')return ['ram','storage','display','camera'];
+    if(role==='battery'||role==='battery_pack')return ['battery'];
+    if(role==='enclosure')return ['enclosure'];
+    if(role==='materials'||role==='pcb_rf')return ['enclosure','pcb_rf'];
+    if(role==='dram_memory')return ['ram'];
+    if(role==='nand_storage')return ['storage'];
+    if(role==='camera_module')return ['camera'];
+    if(role==='display_panel')return ['display'];
+    if(role==='os_platform')return ['os'];
+    return [];
+  }
+  function firmProducedKinds(f){
+    const roles=Array.isArray(f.roles)&&f.roles.length?f.roles:[f.role];
+    const out=new Set();
+    for(const r of roles)for(const k of roleKinds(r))out.add(k);
+    return [...out];
+  }
   function ensure(w){
     if(w.phoneIndustry)return w.phoneIndustry;
     const m=live(w);if(!m)throw new Error('Phone industry requires living world');
-    const s=w.phoneIndustry={version:1,lastDay:0,sequence:0,firms:{},designs:[],chips:[],components:[],lots:[],contracts:[],projects:[],cohorts:[],news:[],events:[],licenses:[],metrics:{completedProjects:0,produced:0,sold:0,returned:0,retired:0,revenueSatang:0,researchSatang:0,wagesSatang:0},inventory:{opening:[]}};
+    const s=w.phoneIndustry={version:1,lastDay:0,sequence:0,firms:{},designs:[],chips:[],components:[],lots:[],contracts:[],projects:[],cohorts:[],wipBatches:[],foundryOrders:[],channels:[],news:[],events:[],licenses:[],metrics:{completedProjects:0,produced:0,sold:0,returned:0,retired:0,revenueSatang:0,researchSatang:0,wagesSatang:0},inventory:{opening:[]}};
     for(const id of [...BRANDS,...Object.keys(ROLES)])if(m.firms[id]){
       const h=hash(w.seed+':phone:'+id),role=BRANDS.includes(id)?'brand':ROLES[id];
-      s.firms[id]={id,role,level:0,knowledge:0,capacity:2+h%4,reputation:50+h%20,reserveSatang:500000+h%500000,decisionTh:'เริ่มจากเทคโนโลยีฟีเจอร์โฟนที่ทีมรู้จริง',lastWorkDay:0,activeDesignId:null,produced:0,sold:0,revenueSatang:0,researchSatang:0,missing:[],researchBranches:role==='chip'?['architecture','process','packaging']:role==='display'?['display','memory']:role==='battery'?['electrochemistry']:role==='brand'?['hardware','software','radio']:['materials','manufacturing']};
+      const roles=INITIAL_ROLE_SETS[id]?[...INITIAL_ROLE_SETS[id]]:[role];
+      s.firms[id]={id,role,roles,strategyFocus:STRATEGY_FOCUS[id]||'balanced',level:0,knowledge:0,capacity:2+h%4,reputation:50+h%20,reserveSatang:500000+h%500000,decisionTh:'เริ่มจากเทคโนโลยีฟีเจอร์โฟนที่ทีมรู้จริง',lastWorkDay:0,activeDesignId:null,produced:0,sold:0,revenueSatang:0,researchSatang:0,nreSpentSatang:0,costOfGoodsSatang:0,paidWagesSatang:0,refundSatang:0,dividendsSatang:0,missing:[],researchBranches:role==='chip'||role==='fabless_soc'?['architecture','process','packaging']:role==='display'||role==='display_panel'?['display','memory']:role==='battery'||role==='battery_pack'?['electrochemistry']:role==='brand'?['hardware','software','radio']:['materials','manufacturing']};
     }
     T.ensure(w,s.firms);
-    const chip=E.synthesizeChip(w.seed+':opening-chip',Math.min(30,capability(w,'shenzhen_semi','chip')),{level:0});
+    const chip=E.synthesizeChip(w.seed+':opening-chip',Math.min(30,capability(w,'shenzhen_semi','chip')),{level:0,focus:'balanced'});
     chip.id='phone-chip-opening-'+hash(w.seed);chip.ownerId='shenzhen_semi';chip.level=0;s.chips.push(chip);
     const p=E.parts(w.seed+':opening-parts',0);
-    for(const [kind,supplierId]of [['ram','tokyo_elec'],['storage','tokyo_elec'],['display','tokyo_elec'],['battery','pacific_solar'],['enclosure','siam_metal'],['camera','tokyo_elec'],['os','siam_tech']])s.components.push({id:'phone-part-'+kind+'-0',kind,supplierId,level:0,spec:clone(p[kind]),licenseSatang:kind==='os'?1200:0});
+    for(const [kind,supplierId]of [['ram','tokyo_elec'],['storage','tokyo_elec'],['display','tokyo_elec'],['battery','pacific_solar'],['enclosure','siam_metal'],['camera','tokyo_elec'],['os','siam_tech']]){
+      s.components.push({id:'phone-part-'+kind+'-0',kind,supplierId,level:0,spec:clone(p[kind]),licenseSatang:kind==='os'?1200:0,materialGrade:E.roleContract(kind==='ram'?'dram_memory':kind==='storage'?'nand_storage':kind==='camera'?'camera_module':kind==='display'?'display_panel':kind==='battery'?'battery_pack':kind==='os'?'os_platform':'enclosure').qualifiedMaterialGrade});
+    }
+    // Specialist supplier firms also hold initial feature-phone-grade component blueprints (still 0 physical inventory lots at opening).
+    const specialistSeeds=[
+      ['ram','apex_ind','phone-part-ram-apex-0'],
+      ['storage','solartech_asia','phone-part-storage-solar-0'],
+      ['camera','biomed_siam','phone-part-camera-biomed-0'],
+      ['camera','siam_aero_robotics','phone-part-camera-aero-0'],
+      ['battery','green_power','phone-part-battery-green-0'],
+      ['display','green_power','phone-part-display-green-0'],
+      ['enclosure','petro_chem_siam','phone-part-enclosure-petro-0'],
+      ['pcb_rf','petro_chem_siam','phone-part-pcb_rf-0'],
+      ['pcb_rf','solartech_asia','phone-part-pcb_rf-solar-0'],
+      ['os','bharat_biotech_it','phone-part-os-bharat-0']
+    ];
+    for(const [kind,supplierId,partId]of specialistSeeds){
+      if(!s.firms[supplierId])continue;
+      const alt=E.parts(w.seed+':opening:'+supplierId+':'+kind,0,{capability:capability(w,supplierId,s.firms[supplierId].role)});
+      s.components.push({id:partId,kind,supplierId,level:0,spec:clone(alt[kind]),licenseSatang:kind==='os'?1000:0,materialGrade:E.roleContract(s.firms[supplierId].role).qualifiedMaterialGrade});
+    }
     event(s,0,'OPENING','shenzhen_semi','เปิดแผนกโทรศัพท์ด้วยความรู้ฟีเจอร์โฟน ไม่มีเครื่องหรือชิ้นส่วนเติมฟรี',{openingKnowledge:true});
     return s;
   }
-  function lot(s,ownerId,kind,designId,quantity,unitCostSatang,day){
+  function lot(s,ownerId,kind,designId,quantity,unitCostSatang,day,meta={}){
     if(!quantity)return;
     const old=s.lots.find(l=>l.ownerId===ownerId&&l.kind===kind&&l.designId===designId&&l.available>0&&l.day===day);
     if(old){old.quantity+=quantity;old.available+=quantity;old.costSatang+=quantity*unitCostSatang;return old;}
-    const l={id:'phone-lot-'+(++s.sequence),ownerId,kind,designId,quantity,available:quantity,reserved:0,used:0,sold:0,costSatang:quantity*unitCostSatang,unitCostSatang,day};s.lots.push(l);return l;
+    const l={id:'phone-lot-'+(++s.sequence),ownerId,kind,designId,quantity,available:quantity,reserved:0,used:0,sold:0,costSatang:quantity*unitCostSatang,unitCostSatang,day,...(meta.materialGrade?{materialGrade:meta.materialGrade}:{}),...(meta.sourceDesignId?{sourceDesignId:meta.sourceDesignId}:{}),...(meta.supplierId?{supplierId:meta.supplierId}:{})};
+    s.lots.push(l);return l;
+  }
+  function recordWipBatch(s,firmId,role,kind,designId,quantity,workMinutes,unitCostSatang,day,meta={}){
+    s.wipBatches=s.wipBatches||[];
+    const batch={
+      id:'phone-wip-'+(++s.sequence),
+      firmId,
+      role,
+      kind,
+      designId,
+      materialGrade:meta.materialGrade||E.roleContract(role).qualifiedMaterialGrade,
+      quantity,
+      goodUnits:quantity,
+      scrapUnits:meta.scrapUnits||0,
+      stage:meta.stage||'completed',
+      workMinutesDone:Math.round(workMinutes),
+      requiredWorkMinutes:Math.round(meta.requiredWorkMinutes||workMinutes),
+      inputCostSatang:quantity*unitCostSatang,
+      serviceFeeSatang:meta.serviceFeeSatang||0,
+      startedDay:day,
+      completedDay:meta.stage==='processing'?null:day,
+      reasonTh:meta.reasonTh||'แปรรูปผ่านด่านตรวจคุณภาพและรับเข้าคลังล็อตจริง'
+    };
+    s.wipBatches.unshift(batch);
+    if(s.wipBatches.length>160)s.wipBatches.length=160;
+    return batch;
   }
   function available(s,ownerId,kind,designId){return s.lots.filter(l=>l.ownerId===ownerId&&l.kind===kind&&(!designId||l.designId===designId)).reduce((a,l)=>a+l.available,0);}
   function consume(s,ownerId,kind,quantity,designId){
@@ -11342,8 +12116,24 @@ return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recrui
     for(const l of s.lots){if(l.ownerId!==ownerId||l.kind!==kind||(designId&&l.designId!==designId))continue;const n=Math.min(quantity,l.available);l.available-=n;l.used+=n;quantity-=n;if(!quantity)break;}return true;
   }
   function unit(w,k){return Math.max(100,Math.round(live(w).markets[k]?.price||w.catalog?.materials[k]?.unitCost||5000));}
+  function syncCampusMaterialsIfNeeded(w,s,buyer,k,need){
+    if(buyer.id!==s.campusFirmId||!w.inventory?.materials)return;
+    const have=buyer.stock[k]||0;
+    if(have>=need)return;
+    const reserved=w.inventory.reserved?.[k]||0;
+    const freeCampus=Math.max(0,(w.inventory.materials[k]||0)-reserved);
+    const pull=Math.min(need-have,freeCampus);
+    if(pull>0){
+      w.inventory.materials[k]-=pull;
+      w.inventory.consumed[k]=(w.inventory.consumed[k]||0)+pull;
+      if(w.knowledge&&w.knowledge.materialsConsumed)w.knowledge.materialsConsumed[k]=(w.knowledge.materialsConsumed[k]||0)+pull;
+      stock(buyer,k,pull,'opening');
+    }
+  }
   function buyRaw(w,s,buyer,k,need,day){
-    const m=live(w);if((buyer.stock[k]||0)>=need)return true;
+    const m=live(w);
+    syncCampusMaterialsIfNeeded(w,s,buyer,k,need);
+    if((buyer.stock[k]||0)>=need)return true;
     if(s.contracts.some(c=>c.status==='shipping'&&c.buyerId===buyer.id&&c.kind==='raw'&&c.materialId===k))return false;
     const sellers=Object.values(m.firms).filter(f=>f.id!==buyer.id&&(f.stock[k]||0)>0).sort((a,b)=>(a.id==='world_exchange')-(b.id==='world_exchange')||a.id.localeCompare(b.id));
     const f=s.firms[buyer.id],price=unit(w,k);let remaining=Math.max(need*3-(buyer.stock[k]||0),1);
@@ -11352,94 +12142,278 @@ return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recrui
   }
   function inputs(w,s,f,recipe,day){let ok=true;for(const[k,n]of Object.entries(recipe))if(!buyRaw(w,s,f,k,n,day))ok=false;return ok;}
   function useRaw(f,recipe){for(const[k,n]of Object.entries(recipe))stock(f,k,-n,'used');}
-  function deliver(w,s,day){for(const c of s.contracts)if(c.status==='shipping'&&day>=c.dueDay){if(c.kind==='raw')stock(live(w).firms[c.buyerId],c.materialId,c.quantity,'bought');else{const source=s.lots.find(l=>l.id===c.sourceLotId);source.reserved-=c.quantity;source.sold+=c.quantity;lot(s,c.buyerId,c.componentKind,c.designId,c.quantity,c.unitPriceSatang+(c.taxPerUnitSatang||0),day);}c.status='delivered';c.deliveredDay=day;}}
-  function purchase(w,s,m,buyerId,kind,designId,need,day){
+  function deliver(w,s,day){
+    for(const c of s.contracts)if(c.status==='shipping'&&day>=c.dueDay){
+      if(c.kind==='raw')stock(live(w).firms[c.buyerId],c.materialId,c.quantity,'bought');
+      else{
+        const source=s.lots.find(l=>l.id===c.sourceLotId);
+        if(source){source.reserved-=c.quantity;source.sold+=c.quantity;}
+        lot(s,c.buyerId,c.componentKind,c.targetDesignId||c.designId,c.quantity,c.unitPriceSatang+(c.taxPerUnitSatang||0),day,{sourceDesignId:c.designId,supplierId:c.sellerId});
+      }
+      c.status='delivered';c.deliveredDay=day;
+    }
+  }
+  function isSubstitutableLot(s,kind,targetDesignId,candidateDesignId,chip){
+    if(candidateDesignId===targetDesignId)return true;
+    if(kind==='chip'){
+      const targetChip=s.chips.find(c=>c.id===targetDesignId);
+      const candChip=s.chips.find(c=>c.id===candidateDesignId);
+      if(!targetChip||!candChip)return false;
+      return candChip.isa===targetChip.isa&&candChip.level===targetChip.level&&candChip.memoryType===targetChip.memoryType&&candChip.maxRamMB>=targetChip.maxRamMB&&candChip.maxPixels>=targetChip.maxPixels;
+    }
+    const targetComp=s.components.find(c=>c.id===targetDesignId);
+    const candComp=s.components.find(c=>c.id===candidateDesignId);
+    if(!targetComp||!candComp||candComp.kind!==kind)return false;
+    if(chip&&!E.isCompatiblePart(chip,kind,candComp.spec))return false;
+    return candComp.level===targetComp.level;
+  }
+  function adoptOwnedCompatibleLot(s,buyerId,kind,designId,need,chip){
     if(available(s,buyerId,kind,designId)>=need)return true;
-    if(s.contracts.some(c=>c.status==='shipping'&&c.buyerId===buyerId&&c.componentKind===kind&&c.designId===designId))return false;
+    for(const l of s.lots){
+      if(l.ownerId!==buyerId||l.kind!==kind||l.designId===designId||l.available<=0)continue;
+      if(isSubstitutableLot(s,kind,designId,l.designId,chip)){
+        l.sourceDesignId=l.sourceDesignId||l.designId;
+        l.designId=designId;
+        if(available(s,buyerId,kind,designId)>=need)return true;
+      }
+    }
+    return available(s,buyerId,kind,designId)>=need;
+  }
+  function purchase(w,s,m,buyerId,kind,designId,need,day,chip=null){
+    if(adoptOwnedCompatibleLot(s,buyerId,kind,designId,need,chip))return true;
+    if(s.contracts.some(c=>c.status==='shipping'&&c.buyerId===buyerId&&c.componentKind===kind&&(c.designId===designId||c.targetDesignId===designId)))return false;
     const buyer=m.firms[buyerId],f=s.firms[buyerId];
-    for(const l of s.lots.filter(l=>l.ownerId!==buyerId&&l.kind===kind&&l.designId===designId&&l.available>0)){
+    const candidateLots=s.lots.filter(l=>{
+      if(l.ownerId===buyerId||l.kind!==kind||l.available<=0||!isSubstitutableLot(s,kind,designId,l.designId,chip))return false;
+      const sellerFirm=s.firms[l.ownerId];
+      if(sellerFirm&&Array.isArray(sellerFirm.roles)&&sellerFirm.roles.includes('brand')&&l.available<=4)return false;
+      return true;
+    }).sort((a,b)=>{
+      const exactA=a.designId===designId?0:1,exactB=b.designId===designId?0:1;
+      const campusA=a.ownerId===s.campusFirmId?0:1,campusB=b.ownerId===s.campusFirmId?0:1;
+      return campusA-campusB||exactA-exactB||a.unitCostSatang-b.unitCostSatang||b.available-a.available;
+    });
+    for(const l of candidateLots){
       const price=Math.max(100,Math.round(l.unitCostSatang*1.25)),seller=m.firms[l.ownerId],commodity=kind==='battery'?'battery':kind==='enclosure'?'metal_sheet':'pcb',route=W.route(m,seller.nationId,buyer.nationId),policy=C.quote(w,seller.nationId,buyer.nationId,commodity,route),tax=Math.round(price*policy.tariff/100);if(policy.blocked)continue;const q=Math.min(policy.quota,Math.max(need*2-available(s,buyerId,kind,designId),0),l.available,Math.floor(Math.max(0,buyer.cash-f.reserveSatang)/(price+tax)));
-      if(q<=0||!transfer(buyer,m.firms[l.ownerId],q*price))continue;const vendor=s.firms[l.ownerId];if(vendor){vendor.revenueSatang+=q*price;vendor.sold+=q;vendor.costOfGoodsSatang=(vendor.costOfGoodsSatang||0)+q*l.unitCostSatang;seller.cogsSatang=(seller.cogsSatang||0)+q*l.unitCostSatang;}if(tax){debit(buyer,q*tax);m.nations[buyer.nationId].treasury+=q*tax;m.nations[buyer.nationId].taxes+=q*tax;}C.recordTrade(w,seller.nationId,buyer.nationId,commodity,q,q*price,q*tax);l.available-=q;l.reserved+=q;s.contracts.push({id:'phone-contract-'+(++s.sequence),kind:'component',componentKind:kind,designId,sourceLotId:l.id,sellerId:l.ownerId,buyerId,quantity:q,unitPriceSatang:price,paidSatang:q*price,taxSatang:q*tax,taxPerUnitSatang:tax,policyIds:policy.policyIds,day,dueDay:day+policy.days,status:'shipping'});break;
+      if(q<=0||!transfer(buyer,m.firms[l.ownerId],q*price))continue;const vendor=s.firms[l.ownerId];if(vendor){vendor.revenueSatang+=q*price;vendor.sold+=q;vendor.costOfGoodsSatang=(vendor.costOfGoodsSatang||0)+q*l.unitCostSatang;seller.cogsSatang=(seller.cogsSatang||0)+q*l.unitCostSatang;}if(tax){debit(buyer,q*tax);m.nations[buyer.nationId].treasury+=q*tax;m.nations[buyer.nationId].taxes+=q*tax;}C.recordTrade(w,seller.nationId,buyer.nationId,commodity,q,q*price,q*tax);l.available-=q;l.reserved+=q;s.contracts.push({id:'phone-contract-'+(++s.sequence),kind:'component',componentKind:kind,designId:l.designId,targetDesignId:designId,sourceLotId:l.id,sellerId:l.ownerId,buyerId,quantity:q,unitPriceSatang:price,paidSatang:q*price,taxSatang:q*tax,taxPerUnitSatang:tax,policyIds:policy.policyIds,day,dueDay:day+policy.days,status:'shipping'});break;
     }return false;
   }
   function currentDesign(s,id){return s.designs.filter(d=>d.firmId===id).slice(-1)[0];}
   function costOf(s,owner,kind,quantity,id){let total=0;for(const l of s.lots){if(l.ownerId!==owner||l.kind!==kind||l.designId!==id)continue;const q=Math.min(quantity,l.available);quantity-=q;total+=q*l.unitCostSatang;if(!quantity)break;}return total;}
-  function partSet(s,level){const out={};for(const k of ['ram','storage','display','battery','enclosure','camera','os']){const p=s.components.filter(p=>p.kind===k&&p.level<=level).sort((a,b)=>b.level-a.level)[0];out[k]=clone(p.spec);}return out;}
+  function selectBestPartForBrand(s,f,kind,maxLevel,chip=null){
+    const candidates=s.components.filter(c=>c.kind===kind&&c.level<=maxLevel&&(!chip||E.isCompatiblePart(chip,kind,c.spec)));
+    if(!candidates.length)return s.components.filter(c=>c.kind===kind&&c.level<=maxLevel).slice(-1)[0];
+    return candidates.sort((a,b)=>{
+      const inHouseA=a.supplierId===f.id?1:0,inHouseB=b.supplierId===f.id?1:0;
+      const stockA=available(s,a.supplierId,kind,a.id)+available(s,f.id,kind,a.id);
+      const stockB=available(s,b.supplierId,kind,b.id)+available(s,f.id,kind,b.id);
+      const hasStockA=stockA>0?1:0,hasStockB=stockB>0?1:0;
+      return b.level-a.level||inHouseB-inHouseA||hasStockB-hasStockA||stockB-stockA;
+    })[0];
+  }
+  function selectBestChipForBrand(s,f,maxLevel){
+    const candidates=s.chips.filter(c=>(c.level||0)<=maxLevel);
+    if(!candidates.length)return s.chips.slice(-1)[0];
+    return candidates.sort((a,b)=>{
+      const inHouseA=a.ownerId===f.id?1:0,inHouseB=b.ownerId===f.id?1:0;
+      const stockA=available(s,a.ownerId,'chip',a.id)+available(s,f.id,'chip',a.id);
+      const stockB=available(s,b.ownerId,'chip',b.id)+available(s,f.id,'chip',b.id);
+      const hasStockA=stockA>0?1:0,hasStockB=stockB>0?1:0;
+      return (b.level||0)-(a.level||0)||inHouseB-inHouseA||hasStockB-hasStockA||stockB-stockA;
+    })[0];
+  }
   function newProject(w,s,f,day){
     const real=live(w).firms[f.id];if(real.cash<f.reserveSatang+100000)return;
     const current=s.designs.find(d=>d.id===f.activeDesignId),isBrand=f.role==='brand';
     if(isBrand&&current&&available(s,f.id,'phone',current.id)>f.capacity*8){f.decisionTh='ชะลอรุ่นใหม่เพราะสต็อกเดิมยังขายไม่หมด';return;}
     if(isBrand&&current&&f.knowledge<2400*(f.level+1))return;
     if(!isBrand&&f.knowledge<3200*(f.level+1))return;if(f.level>=3&&!isBrand)return;
-    const platform=isBrand&&current&&!s.components.some(c=>c.kind==='os'&&c.supplierId===f.id&&c.level>0);const leader=Object.values(w.phoneTalent.people).find(x=>x.employerId===f.id&&x.role==='ceo');const risk=leader?.profile.personality.riskTaking||50;if(current&&day%7!==hash(w.seed+f.id)%7)return;const increment=!current||risk>45||f.knowledge>20000?1:0;const level=isBrand&&!current?0:Math.min(3,f.level+increment),subject=platform?'software':f.role==='chip'?'chip':f.role==='ems'?'manufacturing':f.role==='enclosure'?'metal_machining':'hardware';
+    const isOsVendor=f.role==='os_platform';
+    const platform=(isBrand&&current&&!s.components.some(c=>c.kind==='os'&&c.supplierId===f.id&&c.level>0))||isOsVendor;
+    const leader=Object.values(w.phoneTalent.people).find(x=>x.employerId===f.id&&x.role==='ceo');const risk=leader?.profile.personality.riskTaking||50;if(current&&day%7!==hash(w.seed+f.id)%7)return;const increment=!current||risk>45||f.knowledge>20000?1:0;
+    const hasInitialChipOrPart=f.role==='fabless_soc'?s.chips.some(c=>c.ownerId===f.id):true;
+    const level=isBrand&&!current?0:(!hasInitialChipOrPart?0:Math.min(3,f.level+increment));
+    const isSemi=f.role==='chip'||f.role==='fabless_soc'||f.role==='wafer_foundry';
+    const subject=platform?'software':isSemi?'chip':f.role==='ems'||f.role==='osat_packaging'?'manufacturing':f.role==='enclosure'?'metal_machining':f.role==='camera_module'?'camera_module':f.role==='dram_memory'?'dram_memory':f.role==='nand_storage'?'nand_storage':f.role==='battery_pack'||f.role==='battery'?'battery_pack':'hardware';
     if(level>0&&capability(w,f.id,subject)<22+level*10){f.decisionTh='ยังขาดผู้เชี่ยวชาญสำหรับการวิจัยขั้นถัดไป';return;}
-    const p={id:'phone-project-'+(++s.sequence),firmId:f.id,type:platform?'platform':isBrand?'handset':f.role==='chip'?'semiconductor':'component',subject,level,progress:0,requiredMinutes:(platform?10000:isBrand?5000:12000)*(level+1),spentSatang:0,status:'research',startedDay:day,prototypeConsumed:false,reasonTh:'สะสมงานวิศวกรและสร้างต้นแบบจากชิ้นส่วนจริง'};
+    const reqMin=platform?10000*(level+1):isBrand?5000*(level+1):isSemi?Math.max(14000,12000*(level+1)):12000*(level+1);
+    const p={id:'phone-project-'+(++s.sequence),firmId:f.id,type:platform?'platform':isBrand?'handset':isSemi?'semiconductor':'component',subject,level,progress:0,requiredMinutes:reqMin,spentSatang:0,status:'research',startedDay:day,prototypeConsumed:false,reasonTh:'สะสมงานวิศวกรและสร้างต้นแบบจากชิ้นส่วนจริง'};
     s.projects.push(p);event(s,day,'RESEARCH_START',f.id,'ผู้บริหารอนุมัติโครงการจากเงินสำรองและความรู้ของทีม',{projectId:p.id});
   }
   function progress(w,s,f,work,day,allocatedWages=0){
-    const real=live(w).firms[f.id];let p=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));if(!p){newProject(w,s,f,day);p=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));}if(!p)return;
-    const minutes=Math.floor(work*.6);p.contributors=f.isCampus?w.people.filter(x=>x.employed&&(x.education?.subjects?.electrical_basics>=35||x.education?.subjects?.software>=40)).map(x=>x.id):(w.phoneTalent?Object.values(w.phoneTalent.people).filter(x=>x.employerId===f.id&&x.role==='engineer').map(x=>x.id):[]);p.progress=Math.min(p.requiredMinutes,p.progress+minutes);p.spentSatang+=Math.round(allocatedWages*.6);f.knowledge+=minutes;
-    if(p.progress<p.requiredMinutes)return;p.status='prototype';
+    const real=live(w).firms[f.id];let p=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));if(!p){newProject(w,s,f,day);p=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));}if(!p)return 0;
+    const wasResearch=p.status==='research';
+    const minutes=wasResearch?Math.floor(work*.6):0;
+    p.contributors=f.isCampus?w.people.filter(x=>x.employed&&(x.education?.subjects?.electrical_basics>=35||x.education?.subjects?.software>=40||x.education?.subjects?.semiconductor_physics>=35||x.education?.subjects?.circuit_design>=35||x.education?.subjects?.semiconductor_optics>=35||x.education?.subjects?.metal_machining>=35)).map(x=>x.id):(w.phoneTalent?Object.values(w.phoneTalent.people).filter(x=>x.employerId===f.id&&x.role==='engineer').map(x=>x.id):[]);
+    if(minutes>0){
+      p.progress=Math.min(p.requiredMinutes,p.progress+minutes);
+      p.spentSatang+=Math.round(allocatedWages*.6);
+      f.knowledge+=minutes;
+    }
+    if(p.progress<p.requiredMinutes)return minutes;
+    p.status='prototype';
     const recipe=p.type==='semiconductor'?{silicon_wafer:1,copper_coil:1}:p.type==='handset'?{pcb:1,polymer_resin:1,battery:1}:{polymer_resin:1,copper_coil:1};
-    if(!inputs(w,s,real,recipe,day)){p.reasonTh='รอวัตถุดิบต้นแบบและเวลาส่งมอบ';return;}
+    if(!inputs(w,s,real,recipe,day)){p.reasonTh='รอวัตถุดิบต้นแบบและเวลาส่งมอบ';return minutes;}
     if(p.type==='handset'){
-      if(!p.selectedChipId){const chip=s.chips.filter(c=>(c.level||0)<=p.level).slice(-1)[0];p.selectedChipId=chip.id;p.selectedParts={};for(const kind of ['ram','storage','display','battery','enclosure','camera','os'])p.selectedParts[kind]=s.components.filter(c=>c.kind===kind&&c.level<=(chip.level||0)).slice(-1)[0].id;}
-      let ready=purchase(w,s,live(w),f.id,'chip',p.selectedChipId,1,day);for(const kind of ['ram','storage','display','battery','enclosure','camera'])if(!purchase(w,s,live(w),f.id,kind,p.selectedParts[kind],1,day))ready=false;
-      if(!ready){p.reasonTh='รอชิป แรม และส่วนประกอบตัวอย่างเข้าคลังเพื่อสร้างต้นแบบจริง';return;}
+      const chipObj=p.selectedChipId?s.chips.find(c=>c.id===p.selectedChipId):selectBestChipForBrand(s,f,p.level);
+      if(!p.selectedChipId){
+        p.selectedChipId=chipObj.id;p.selectedParts={};
+        for(const kind of ['ram','storage','display','battery','enclosure','camera','os']){
+          const chosen=selectBestPartForBrand(s,f,kind,chipObj.level||0,chipObj);
+          p.selectedParts[kind]=chosen.id;
+        }
+      }
+      let ready=purchase(w,s,live(w),f.id,'chip',p.selectedChipId,1,day,chipObj);
+      for(const kind of ['ram','storage','display','battery','enclosure','camera'])if(!purchase(w,s,live(w),f.id,kind,p.selectedParts[kind],1,day,chipObj))ready=false;
+      if(!ready){p.reasonTh='รอชิป แรม และส่วนประกอบตัวอย่างเข้าคลังเพื่อสร้างต้นแบบจริง';return minutes;}
       consume(s,f.id,'chip',1,p.selectedChipId);for(const kind of ['ram','storage','display','battery','enclosure','camera'])consume(s,f.id,kind,1,p.selectedParts[kind]);
     }
     useRaw(real,recipe);p.prototypeConsumed=true;
-    if(p.type==='platform'){const spec=E.parts(w.seed+':platform:'+p.id,p.level).os;s.components.push({id:'phone-os-'+(++s.sequence),kind:'os',supplierId:f.id,level:p.level,spec,licenseSatang:1200});p.status='complete';s.metrics.completedProjects++;p.completedDay=day;p.reasonTh='ทีมซอฟต์แวร์ทดสอบแพลตฟอร์มและไดรเวอร์จากต้นแบบจริง';event(s,day,'OS_RELEASE',f.id,p.reasonTh,{projectId:p.id});return;}
+    if(p.type==='platform'){const spec=E.parts(w.seed+':platform:'+p.id,p.level,{capability:capability(w,f.id,'software')}).os;s.components.push({id:'phone-os-'+(++s.sequence),kind:'os',supplierId:f.id,level:p.level,spec,licenseSatang:1200,materialGrade:'hdi_rf_copper_laminate'});f.level=Math.max(f.level,p.level);p.status='complete';s.metrics.completedProjects++;p.completedDay=day;p.reasonTh='ทีมซอฟต์แวร์ทดสอบแพลตฟอร์มและไดรเวอร์จากต้นแบบจริง';event(s,day,'OS_RELEASE',f.id,p.reasonTh,{projectId:p.id});return minutes;}
     if(p.type==='handset'){
       const chip=s.chips.find(c=>c.id===p.selectedChipId),parts=Object.fromEntries(Object.entries(p.selectedParts).map(([kind,id])=>[kind,clone(s.components.find(c=>c.id===id).spec)])),result=E.evaluate(chip,parts,{ambientC:30});
-      if(!result.compatible){p.status='failed';p.reasonTh=(result.reasonsTh||['ไม่ผ่านด่านวิศวกรรม']).join(' • ');event(s,day,'PROTOTYPE_FAILED',f.id,p.reasonTh,{projectId:p.id});return;}
+      if(!result.compatible){p.status='failed';p.reasonTh=(result.reasonsTh||['ไม่ผ่านด่านวิศวกรรม']).join(' • ');event(s,day,'PROTOTYPE_FAILED',f.id,p.reasonTh,{projectId:p.id});return minutes;}
       const id='phone-design-'+(++s.sequence),componentIds={};Object.assign(componentIds,p.selectedParts);
-      const d={id,firmId:f.id,nameTh:['อรุณ','สายลม','ธารา','ภูผา','อันดา','นภา'][hash(w.seed+f.id)%6]+' '+['S','M','A','N'][hash(w.seed+f.id+'family')%4]+(s.designs.filter(d=>d.firmId===f.id).length+1),level:p.level,category:parts.os.installableApps?'smart':'feature',predecessorId:currentDesign(s,f.id)?.id||null,chipId:chip.id,parts,componentIds,evaluation:result,priceSatang:Math.max(60000,Math.round((result.costEstimateSatang||60000)*(1.4+(100-real.prudence)/200))),createdDay:day,stage:'pilot',validationMinutes:0,launchedDay:null,produced:0,sold:0,returned:0,revenueSatang:0,costSatang:0,reasonTh:'ผ่านต้นแบบและด่านความเข้ากันได้จากชิ้นส่วนที่มีจริง'};
+      const d={id,firmId:f.id,nameTh:['อรุณ','สายลม','ธารา','ภูผา','อันดา','นภา'][hash(w.seed+f.id)%6]+' '+['S','M','A','N'][hash(w.seed+f.id+'family')%4]+(s.designs.filter(d=>d.firmId===f.id).length+1),level:p.level,category:parts.os.installableApps?'smart':'feature',predecessorId:currentDesign(s,f.id)?.id||null,chipId:chip.id,parts,componentIds,evaluation:result,priceSatang:Math.max(60000,Math.round((result.costEstimateSatang||60000)*(1.4+(100-real.prudence)/200))),createdDay:day,stage:'pilot',validationMinutes:0,networkCertified:true,radioGeneration:chip.radioGeneration||2,launchedDay:null,produced:0,sold:0,returned:0,revenueSatang:0,costSatang:0,reasonTh:'ผ่านต้นแบบและด่านความเข้ากันได้จากชิ้นส่วนที่มีจริง'};
       d.comparison=d.predecessorId?compare(s.designs.find(x=>x.id===d.predecessorId),d):null;s.designs.push(d);f.activeDesignId=id;
     }else if(p.type==='semiconductor'){
-      const chip=E.synthesizeChip(w.seed+':chip:'+p.id,capability(w,f.id,'chip'),{level:p.level});chip.id='phone-chip-'+(++s.sequence);chip.ownerId=f.id;chip.level=p.level;s.chips.push(chip);
+      const chip=E.synthesizeChip(w.seed+':chip:'+p.id,capability(w,f.id,'chip'),{level:p.level,focus:f.strategyFocus==='low_power_isp'?'ai_isp':'balanced'});chip.id='phone-chip-'+(++s.sequence);chip.ownerId=f.id;chip.level=p.level;s.chips.push(chip);
+      f.nreSpentSatang=(f.nreSpentSatang||0)+(chip.maskCostSatang||1200000);
     }else{
-      const parts=E.parts(w.seed+':parts:'+p.id,p.level);const kinds=f.role==='display'?['ram','storage','display','camera']:f.role==='battery'?['battery']:f.role==='enclosure'||f.role==='materials'?['enclosure']:[];
-      for(const kind of kinds)s.components.push({id:'phone-part-'+(++s.sequence),kind,supplierId:f.id,level:p.level,spec:clone(parts[kind]),licenseSatang:0});
+      const parts=E.parts(w.seed+':parts:'+p.id,p.level,{capability:capability(w,f.id,f.role)});
+      const kinds=firmProducedKinds(f).filter(k=>k!=='os');
+      for(const kind of kinds)if(parts[kind])s.components.push({id:'phone-part-'+(++s.sequence),kind,supplierId:f.id,level:p.level,spec:clone(parts[kind]),licenseSatang:0,materialGrade:E.roleContract(f.role).qualifiedMaterialGrade});
     }
     f.level=Math.max(f.level,p.level);p.status='complete';s.metrics.completedProjects++;p.completedDay=day;p.reasonTh='ต้นแบบใช้วัตถุดิบจริงและผ่านการทดสอบแล้ว';event(s,day,'RESEARCH_COMPLETE',f.id,'ต้นแบบผ่านการทดสอบ เปิดทางเลือกการผลิตใหม่',{projectId:p.id,level:p.level});
+    return minutes;
+  }
+  function produceChipBatch(w,s,f,minutes,day){
+    const m=live(w),real=m.firms[f.id];
+    const owned=s.chips.filter(c=>c.ownerId===f.id);
+    const needed=new Set([...s.designs.filter(d=>d.stage==='pilot'||available(s,d.firmId,'phone',d.id)<12).map(d=>d.chipId),...s.projects.filter(p=>p.status==='prototype').map(p=>p.selectedChipId)]);
+    const chip=owned.filter(c=>needed.has(c.id)&&available(s,f.id,'chip',c.id)<20).sort((a,b)=>available(s,f.id,'chip',a.id)-available(s,f.id,'chip',b.id))[0]||owned.slice(-1)[0];
+    if(!chip||available(s,f.id,'chip',chip.id)>200)return;
+    const ownsFoundry=(f.roles||[f.role]).includes('wafer_foundry')||f.role==='chip';
+    const packager=m.firms.singapore_port_3pl;
+    if(ownsFoundry&&(!f.isCampus||w.plant?.machines?.semiconductor_fab?.status==='ready')){
+      const recipe={silicon_wafer:1,copper_coil:1};if(!inputs(w,s,real,recipe,day)){f.missing.push('silicon_wafer/copper_coil');return;}
+      const y=E.wafer({dieAreaMm2:chip.dieAreaMm2,defectsPerCm2:Math.max(.05,.4-capability(w,f.id,'manufacturing')/250),waferCostSatang:unit(w,'silicon_wafer')+unit(w,'copper_coil'),packCostSatang:200,royaltySatang:0});
+      const q=Math.max(0,Math.floor(y.packagedGood||0));if(!q)return;
+      const packagingFee=y.goodDies*200;
+      const inHouseOsat=(f.roles||[]).includes('osat_packaging');
+      if(!inHouseOsat&&(!packager||real.cash<f.reserveSatang+packagingFee||!transfer(real,packager,packagingFee)))return;
+      if(!inHouseOsat&&s.firms.singapore_port_3pl){s.firms.singapore_port_3pl.revenueSatang+=packagingFee;s.firms.singapore_port_3pl.produced+=q;}
+      useRaw(real,recipe);
+      const uCost=Math.max(100,Math.round(y.unitCostSatang||((unit(w,'silicon_wafer')+unit(w,'copper_coil'))/q)));
+      lot(s,f.id,'chip',chip.id,q,uCost,day,{materialGrade:'packaged_tested_ic_grade'});
+      recordWipBatch(s,f.id,f.role,'chip',chip.id,q,minutes,uCost,day,{materialGrade:'packaged_tested_ic_grade',scrapUnits:y.scrap,serviceFeeSatang:inHouseOsat?0:packagingFee,reasonTh:'เดินสายเวเฟอร์ในโรงหล่อและคัดเกรดชิปผ่าน OSAT'});
+      f.produced+=q;
+      return;
+    }
+    // Fabless SoC path: book wafer fabrication at an active wafer foundry (e.g. shenzhen_semi) and packaging at OSAT (singapore_port_3pl).
+    const foundryFirm=Object.values(s.firms).find(x=>x.id!==f.id&&((x.roles||[]).includes('wafer_foundry')||x.role==='chip')&&m.firms[x.id]);
+    if(!foundryFirm){f.decisionTh='ไม่พบโรงหล่อเวเฟอร์ที่เปิดรับจ้างผลิต';return;}
+    const foundryReal=m.firms[foundryFirm.id];
+    const foundrySlots=s.foundrySlots?.day===day?s.foundrySlots:(s.foundrySlots={day,used:0});
+    if(foundrySlots.used>=Math.max(2,foundryFirm.capacity)){f.decisionTh='รอคิวโรงหล่อเวเฟอร์ที่ถูกจองเต็มในวันนี้';f.missing.push('foundry_slot');return;}
+    const recipe={silicon_wafer:1,copper_coil:1};
+    // Fabless firm can supply its own wafer inputs or pay foundry for full turnkey wafer + fabrication.
+    syncCampusMaterialsIfNeeded(w,s,real,'silicon_wafer',1);
+    syncCampusMaterialsIfNeeded(w,s,real,'copper_coil',1);
+    const fablessHasRaw=(real.stock.silicon_wafer||0)>=1&&(real.stock.copper_coil||0)>=1;
+    const foundryHasRaw=!fablessHasRaw&&inputs(w,s,foundryReal,recipe,day);
+    if(!fablessHasRaw&&!foundryHasRaw){
+      inputs(w,s,real,recipe,day);
+      f.decisionTh='รอแผ่นเวเฟอร์ซิลิคอนและทองแดงสำหรับส่งเข้าโรงหล่อชิป';f.missing.push('silicon_wafer');return;
+    }
+    const rawCost=unit(w,'silicon_wafer')+unit(w,'copper_coil');
+    const foundryFee=Math.round(rawCost*(fablessHasRaw?0.45:1.25))+15000;
+    const y=E.wafer({dieAreaMm2:chip.dieAreaMm2,defectsPerCm2:Math.max(.05,.4-capability(w,foundryFirm.id,'manufacturing')/250),waferCostSatang:foundryFee,packCostSatang:200,royaltySatang:0});
+    const q=Math.max(0,Math.floor(y.packagedGood||0));if(!q)return;
+    const packagingFee=y.goodDies*200;
+    if(real.cash<f.reserveSatang+foundryFee+packagingFee){f.decisionTh='รักษาเงินสำรอง รอทุนจ้างโรงหล่อเวเฟอร์และแพ็กเกจ OSAT';return;}
+    if(!transfer(real,foundryReal,foundryFee))return;
+    if(packager&&!transfer(real,packager,packagingFee))return;
+    if(fablessHasRaw)useRaw(real,recipe);else useRaw(foundryReal,recipe);
+    foundrySlots.used++;
+    foundryFirm.revenueSatang+=foundryFee;foundryFirm.produced+=q;
+    if(s.firms.singapore_port_3pl){s.firms.singapore_port_3pl.revenueSatang+=packagingFee;s.firms.singapore_port_3pl.produced+=q;}
+    const uCost=Math.max(100,Math.ceil((foundryFee+packagingFee+(fablessHasRaw?rawCost:0))/q));
+    lot(s,f.id,'chip',chip.id,q,uCost,day,{materialGrade:'packaged_tested_ic_grade',supplierId:foundryFirm.id});
+    s.foundryOrders=s.foundryOrders||[];
+    s.foundryOrders.unshift({id:'foundry-order-'+(++s.sequence),day,fablessFirmId:f.id,foundryFirmId:foundryFirm.id,osatFirmId:packager?.id||'singapore_port_3pl',chipId:chip.id,nodeNm:chip.nodeNm,grossDies:y.grossDies,goodDies:y.goodDies,packagedGood:q,aBin:y.aBin,bBin:y.bBin,scrap:y.scrap,foundryFeeSatang:foundryFee,packagingFeeSatang:packagingFee,unitCostSatang:uCost,status:'completed'});
+    if(s.foundryOrders.length>120)s.foundryOrders.length=120;
+    recordWipBatch(s,f.id,'fabless_soc','chip',chip.id,q,minutes,uCost,day,{materialGrade:'packaged_tested_ic_grade',scrapUnits:y.scrap,serviceFeeSatang:foundryFee+packagingFee,reasonTh:'ส่งแบบชิปจ้างหล่อเวเฟอร์ที่ '+foundryFirm.id+' และประกอบแพ็กเกจ OSAT จนได้ชิปพร้อมขาย'});
+    f.produced+=q;
+    f.decisionTh='ออกแบบชิป Fabless สั่งหล่อเวเฟอร์และทดสอบแพ็กเกจ OSAT เข้าคลังพร้อมขาย B2B';
   }
   function produce(w,s,f,minutes,day){
     const real=live(w).firms[f.id];if(minutes<10)return;
-    if(f.role==='brand')return assemble(w,s,f,minutes,day);
+    const roles=Array.isArray(f.roles)&&f.roles.length?f.roles:[f.role];
+    if(roles.includes('chip')||roles.includes('fabless_soc')||roles.includes('wafer_foundry')){
+      if(s.chips.some(c=>c.ownerId===f.id))produceChipBatch(w,s,f,minutes,day);
+    }
     const parts=s.components.filter(c=>c.supplierId===f.id&&c.kind!=='os').sort((a,b)=>available(s,f.id,a.kind,a.id)-available(s,f.id,b.kind,b.id)||hash(w.seed+day+a.id)-hash(w.seed+day+b.id));
-    if(f.role==='chip'){
-      const owned=s.chips.filter(c=>c.ownerId===f.id),needed=new Set([...s.designs.filter(d=>d.stage==='pilot'||available(s,d.firmId,'phone',d.id)<12).map(d=>d.chipId),...s.projects.filter(p=>p.status==='prototype').map(p=>p.selectedChipId)]);const chip=owned.filter(c=>needed.has(c.id)&&available(s,f.id,'chip',c.id)<20).sort((a,b)=>available(s,f.id,'chip',a.id)-available(s,f.id,'chip',b.id))[0]||owned.slice(-1)[0];if(!chip||available(s,f.id,'chip',chip.id)>200)return;
-      const recipe={silicon_wafer:1,copper_coil:1};if(!inputs(w,s,real,recipe,day))return;
-      const y=E.wafer({dieAreaMm2:chip.dieAreaMm2,defectsPerCm2:Math.max(.05,.4-capability(w,f.id,'manufacturing')/250),waferCostSatang:unit(w,'silicon_wafer')+unit(w,'copper_coil'),packCostSatang:200,royaltySatang:0});
-      const q=Math.max(0,Math.floor(y.packagedGood||0));if(!q)return;const packagingFee=y.goodDies*200,packager=live(w).firms.singapore_port_3pl;if(!packager||real.cash<f.reserveSatang+packagingFee||!transfer(real,packager,packagingFee))return;useRaw(real,recipe);lot(s,f.id,'chip',chip.id,q,Math.max(100,Math.round(y.unitCostSatang||((unit(w,'silicon_wafer')+unit(w,'copper_coil'))/q))),day);f.produced+=q;return;
+    let remaining=Math.floor(minutes);
+    for(const c of parts){
+      if(remaining<30)break;
+      if(available(s,f.id,c.kind,c.id)>50)continue;
+      const baseRecipe=c.kind==='battery'?{battery:1}:c.kind==='display'?{glass_bottle:1,copper_coil:1}:['ram','storage'].includes(c.kind)?{silicon_wafer:1,copper_coil:1}:c.kind==='camera'?((real.stock.optical_lens||0)>=1&&(real.stock.sensor||0)>=1?{optical_lens:1,sensor:1}:{polymer_resin:1,metal_sheet:1}):c.kind==='pcb_rf'?((real.stock.pcb||0)>=1&&(real.stock.copper_coil||0)>=1?{pcb:1,copper_coil:1}:{polymer_resin:1,metal_sheet:1}):{polymer_resin:1,metal_sheet:1};
+      const recipe={...baseRecipe};
+      let q=Math.min(f.capacity,Math.floor(remaining/30));
+      for(const key of Object.keys(recipe)){
+        syncCampusMaterialsIfNeeded(w,s,real,key,q*recipe[key]);
+        if((real.stock[key]||0)<q*recipe[key])buyRaw(w,s,real,key,q*recipe[key],day);
+      }
+      q=Math.min(q,...Object.entries(recipe).map(([k,n])=>Math.floor((real.stock[k]||0)/n)));
+      if(!q){
+        const scaled={...baseRecipe};
+        for(const key of Object.keys(scaled))scaled[key]*=Math.max(1,Math.min(f.capacity,2));
+        inputs(w,s,real,scaled,day);
+        continue;
+      }
+      for(const key of Object.keys(recipe))recipe[key]*=q;
+      if(!inputs(w,s,real,recipe,day))continue;
+      useRaw(real,recipe);
+      remaining-=q*30;
+      const cost=Object.entries(recipe).reduce((a,[k,n])=>a+unit(w,k)*n,0);
+      const uCost=Math.ceil(cost/q)+1000;
+      lot(s,f.id,c.kind,c.id,q,uCost,day,{materialGrade:c.materialGrade});
+      recordWipBatch(s,f.id,f.role,c.kind,c.id,q,q*30,uCost,day,{materialGrade:c.materialGrade,reasonTh:'แปรรูปชิ้นส่วน '+c.kind+' ผ่านการตรวจสอบคุณภาพเข้าคลังล็อต'});
+      f.produced+=q;
     }
-    let remaining=Math.floor(minutes);for(const c of parts){if(remaining<30)break;if(available(s,f.id,c.kind,c.id)>50)continue;
-      const recipe=c.kind==='battery'?{battery:1}:c.kind==='display'?{glass_bottle:1,copper_coil:1}:['ram','storage'].includes(c.kind)?{silicon_wafer:1,copper_coil:1}: {polymer_resin:1,metal_sheet:1};
-      let q=Math.min(f.capacity,Math.floor(remaining/30));for(const key of Object.keys(recipe))if((real.stock[key]||0)<q*recipe[key])buyRaw(w,s,real,key,q*recipe[key],day);q=Math.min(q,...Object.entries(recipe).map(([k,n])=>Math.floor((real.stock[k]||0)/n)));if(!q)continue;for(const key of Object.keys(recipe))recipe[key]*=q;if(!inputs(w,s,real,recipe,day))continue;useRaw(real,recipe);remaining-=q*30;const cost=Object.entries(recipe).reduce((a,[k,n])=>a+unit(w,k)*n,0);lot(s,f.id,c.kind,c.id,q,Math.ceil(cost/q)+1000,day);f.produced+=q;
-    }
+    if(roles.includes('brand')&&f.activeDesignId)assemble(w,s,f,Math.max(20,remaining||Math.floor(minutes*.5)),day);
   }
   function assemble(w,s,f,minutes,day){
     const m=live(w),real=m.firms[f.id],d=s.designs.find(d=>d.id===f.activeDesignId);if(!d)return;
+    const chipObj=s.chips.find(c=>c.id===d.chipId);
     let max=Math.min(f.capacity,Math.floor(minutes/20));if(!max||available(s,f.id,'phone',d.id)>=f.capacity*10)return;
-    let ok=purchase(w,s,m,f.id,'chip',d.chipId,max,day);for(const k of ['ram','storage','display','battery','enclosure','camera'])if(!purchase(w,s,m,f.id,k,d.componentIds[k],max,day))ok=false;
+    let ok=purchase(w,s,m,f.id,'chip',d.chipId,max,day,chipObj);for(const k of ['ram','storage','display','battery','enclosure','camera'])if(!purchase(w,s,m,f.id,k,d.componentIds[k],max,day,chipObj))ok=false;
     if(!inputs(w,s,real,{pcb:max,copper_coil:max},day))ok=false;
     max=Math.min(max,available(s,f.id,'chip',d.chipId),...['ram','storage','display','battery','enclosure','camera'].map(k=>available(s,f.id,k,d.componentIds[k])),real.stock.pcb||0,real.stock.copper_coil||0);ok=max>0;
-    const slots=s.emsSlots?.day===day?s.emsSlots:(s.emsSlots={day,used:0});if(slots.used+max>(s.firms.singapore_port_3pl?.capacity||1)*4){f.decisionTh='รอคิวสายประกอบ EMS ที่ถูกจองเต็มแล้ว';return;}
+    const slots=s.emsSlots?.day===day?s.emsSlots:(s.emsSlots={day,used:0});if(slots.used+max>(s.firms.singapore_port_3pl?.capacity||1)*6){f.decisionTh='รอคิวสายประกอบ EMS ที่ถูกจองเต็มแล้ว';return;}
     const ems=m.firms.singapore_port_3pl,licenseOwner=m.firms[s.components.find(c=>c.id===d.componentIds.os).supplierId];const fee=2500,license=1200;
     if(!max){f.decisionTh='รอชิ้นส่วนเข้าคลัง';return;}if(!ems||real.cash<f.reserveSatang+max*(fee+license)){f.decisionTh='รักษาเงินสำรอง รอทุนประกอบและค่าลิขสิทธิ์';return;}if(!ok){f.decisionTh='รอชิ้นส่วนเฉพาะแบบและแผงวงจรที่สั่งซื้อ';return;}
     const exactCost=costOf(s,f.id,'chip',max,d.chipId)+['ram','storage','display','battery','enclosure','camera'].reduce((a,k)=>a+costOf(s,f.id,k,max,d.componentIds[k]),0)+max*(unit(w,'pcb')+unit(w,'copper_coil')+fee+license);slots.used+=max;
     consume(s,f.id,'chip',max,d.chipId);for(const k of ['ram','storage','display','battery','enclosure','camera'])consume(s,f.id,k,max,d.componentIds[k]);useRaw(real,{pcb:max,copper_coil:max});transfer(real,ems,max*fee);if(licenseOwner.id!==real.id)transfer(real,licenseOwner,max*license);
-    const cost=Math.ceil(exactCost/max);d.actualUnitCostSatang=cost;d.priceSatang=Math.max(d.priceSatang,Math.ceil(cost*(1.2+f.reputation/500)));lot(s,f.id,'phone',d.id,max,cost,day);d.produced+=max;d.costSatang+=max*cost;f.produced+=max;s.metrics.produced+=max;f.decisionTh='ประกอบตามกำลังคนและวัตถุดิบ พร้อมขายจากสต็อกจริง';
+    if(s.firms.singapore_port_3pl){s.firms.singapore_port_3pl.revenueSatang+=max*fee;s.firms.singapore_port_3pl.produced+=max;}
+    const cost=Math.ceil(exactCost/max);d.actualUnitCostSatang=cost;d.priceSatang=Math.max(d.priceSatang,Math.ceil(cost*(1.2+f.reputation/500)));lot(s,f.id,'phone',d.id,max,cost,day,{materialGrade:'hdi_rf_copper_laminate'});
+    recordWipBatch(s,f.id,'brand','phone',d.id,max,max*20,cost,day,{serviceFeeSatang:max*(fee+license),reasonTh:'ประกอบโทรศัพท์จากชิ้นส่วนจริงครบชุดและส่งเข้าสต็อกรอตรวจปล่อย'});
+    d.produced+=max;d.costSatang+=max*cost;f.produced+=max;s.metrics.produced+=max;f.decisionTh='ประกอบตามกำลังคนและวัตถุดิบ พร้อมขายจากสต็อกจริง';
   }
   function retail(w,s,f,day){
-    if(f.role!=='brand')return;const m=live(w),real=m.firms[f.id],n=m.nations[real.nationId];
+    if(f.role!=='brand'&&!(f.roles||[]).includes('brand'))return;const m=live(w),real=m.firms[f.id],n=m.nations[real.nationId];
     for(const d of s.designs.filter(d=>d.firmId===f.id)){
-      const count=available(s,f.id,'phone',d.id);if(!count)continue;if(d.stage!=='released'){if(d.validationMinutes>=1200&&count>=2&&day-d.createdDay>=7){d.stage='released';d.launchedDay=day;event(s,day,'LAUNCH',f.id,'ปล่อยขายหลังผลิตนำร่อง ตรวจคุณภาพ และมีเครื่องจริงในคลัง',{designId:d.id});}else continue;}
+      const count=available(s,f.id,'phone',d.id);if(!count)continue;if(d.stage!=='released'){if(d.validationMinutes>=1200&&count>=2&&day-d.createdDay>=7){d.stage='released';d.launchedDay=day;d.networkCertified=true;event(s,day,'LAUNCH',f.id,'ปล่อยขายหลังผลิตนำร่อง ตรวจคุณภาพ และมีเครื่องจริงในคลัง',{designId:d.id});}else continue;}
       if(day-d.launchedDay>14&&count>f.capacity*5)d.priceSatang=Math.max(d.actualUnitCostSatang||30000,Math.round(d.priceSatang*.99));
       const segment=hash(w.seed+':segment:'+day)%3,ev=d.evaluation;const value=segment===0?Math.min(2,ev.batteryHours/24)+ev.taskScores.call/100:segment===1?ev.taskScores.web/40+(d.parts.camera?.megapixels||0)/10:ev.taskScores.game/30+d.parts.storage.capacityMB/2048;const appetite=Math.max(0,Math.floor((value+.5)*Math.max(60000,(d.actualUnitCostSatang||60000)*1.5)/d.priceSatang+(hash(w.seed+':demand:'+f.id+':'+day)%100)/100)),q=Math.min(count,appetite,Math.floor(Math.min(n.householdCash,Math.floor(n.householdCash*.0005))/d.priceSatang));if(!q)continue;
       consume(s,f.id,'phone',q,d.id);const revenue=q*d.priceSatang;n.householdCash-=revenue;n.consumption+=revenue;credit(real,revenue);d.sold+=q;d.revenueSatang+=revenue;f.sold+=q;f.revenueSatang+=revenue;s.metrics.sold+=q;s.metrics.revenueSatang+=revenue;real.cogsSatang=(real.cogsSatang||0)+q*(d.actualUnitCostSatang||0);
-      s.cohorts.push({id:'phone-cohort-'+(++s.sequence),firmId:f.id,designId:d.id,nationId:n.id,quantity:q,active:q,returned:0,retired:0,day,priceSatang:d.priceSatang,lastSupportDay:day,segment:['basic_voice','multimedia','application'][segment],reasonTh:'เลือกจากราคา แบตเตอรี่ งานที่ใช้ได้ กล้อง และพื้นที่เก็บข้อมูลจริง'});
+      const channelType=d.category==='smart'&&q>=2?'carrier_bundle':q>=2?'retail_distributor':'direct_household';
+      const cohort={id:'phone-cohort-'+(++s.sequence),firmId:f.id,designId:d.id,nationId:n.id,quantity:q,active:q,returned:0,retired:0,day,priceSatang:d.priceSatang,lastSupportDay:day,segment:['basic_voice','multimedia','application'][segment],channel:channelType,networkGen:(d.radioGeneration||2)+'G',reasonTh:'เลือกจากราคา แบตเตอรี่ งานที่ใช้ได้ กล้อง และพื้นที่เก็บข้อมูลจริง'};
+      s.cohorts.push(cohort);
+      s.channels=s.channels||[];
+      s.channels.unshift({id:'phone-channel-'+(++s.sequence),day,firmId:f.id,designId:d.id,channelType,quantity:q,revenueSatang:revenue,networkGen:cohort.networkGen,segment:cohort.segment});
+      if(s.channels.length>120)s.channels.length=120;
       if(d.sold===q)event(s,day,'LAUNCH_SALES',f.id,'ลูกค้าซื้อโทรศัพท์จากสต็อกจริงและงบครัวเรือน',{designId:d.id,quantity:q});
     }
   }
@@ -11458,22 +12432,192 @@ return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recrui
     s.cohorts=s.cohorts.filter(c=>c.active>0||s.lastDay-c.lastSupportDay<60);
     s.projects=s.projects.filter(p=>!['complete','failed'].includes(p.status)||s.lastDay-(p.completedDay||p.startedDay)<90);
   }
+  function checkCampusEquipmentReady(w,f){
+    if(!f.isCampus)return {ok:true};
+    if(f.role==='enclosure'&&(w.plant?.machines?.press?.status!=='ready'||w.plant.machines.press.condition<25)){
+      return {ok:false,reasonTh:'เครื่องอัดขึ้นรูปไม่พร้อม ต้องให้ช่างซ่อมก่อนผลิต'};
+    }
+    const contract=E.roleContract(f.role);
+    if(f.role!=="brand")for(const eqId of contract.requiredEquipment||[]){
+      const m=w.plant?.machines?.[eqId];
+      if(!m||m.status!=='ready'||m.condition<25){
+        return {ok:false,reasonTh:`เครื่องจักรหลัก (${eqId}) ไม่พร้อมหรือชำรุด ต้องซ่อมบำรุงก่อนเดินสายการผลิต`};
+      }
+    }
+    if(w.utilities?.brownoutActive&&contract.utilityKw>=2.0){
+      return {ok:false,reasonTh:'ระบบไฟฟ้าในนิคมกำลังไฟตก ชะลอการเดินเครื่องความละเอียดสูงชั่วคราว'};
+    }
+    return {ok:true};
+  }
   function step(w,day){
     const s=ensure(w),m=live(w);if(!safe(day)||day<=s.lastDay)return s;
     // A daily call advances one day of work: replaying a timestamp never pays twice.
     s.lastDay=day;deliver(w,s,day);support(w,s,day);
     for(const f of Object.values(s.firms)){
-      const real=m.firms[f.id];if(!real)continue;f.missing=[];if(f.isCampus&&f.role==='enclosure'&&(w.plant?.machines?.press?.status!=='ready'||w.plant.machines.press.condition<25)){s.campusMinutes=0;f.decisionTh='เครื่องอัดขึ้นรูปไม่พร้อม ต้องให้ช่างซ่อมก่อนผลิต';continue;}f.knownNews=s.news.filter(n=>n.firmId===f.id||!['RESEARCH_START','PROTOTYPE_FAILED'].includes(n.type)).slice(0,8).map(n=>n.id);
+      const real=m.firms[f.id];if(!real)continue;f.missing=[];
+      const eqCheck=checkCampusEquipmentReady(w,f);
+      if(!eqCheck.ok){s.campusMinutes=0;f.decisionTh=eqCheck.reasonTh;f.missing.push(eqCheck.reasonTh);continue;}
+      f.knownNews=s.news.filter(n=>n.firmId===f.id||!['RESEARCH_START','PROTOTYPE_FAILED'].includes(n.type)).slice(0,8).map(n=>n.id);
       if(real.cash<f.reserveSatang+100000){f.decisionTh='พักแผนกเพื่อรักษาเงินสำรอง ไม่มีงานวิจัยหรือการผลิตฟรี';continue;}
-      const active=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));const subject=active?.subject||(f.role==='chip'?'chip':f.role==='ems'?'manufacturing':f.role==='enclosure'?'metal_machining':'hardware');const work=f.isCampus?{effectiveMinutes:s.campusMinutes||0,wageSatang:0}:T.work(w,f.id,subject,360);if(f.isCampus)s.campusMinutes=0;const cost=Math.max(0,Math.round(work.wageSatang||0));
+      const active=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));
+      const subject=active?.subject||(f.role==='chip'||f.role==='fabless_soc'?'chip':f.role==='ems'||f.role==='osat_packaging'||f.role==='wafer_foundry'?'manufacturing':f.role==='enclosure'?'metal_machining':f.role==='os_platform'?'software':'hardware');
+      const work=f.isCampus?{effectiveMinutes:s.campusMinutes||0,wageSatang:0}:T.work(w,f.id,subject,360);if(f.isCampus)s.campusMinutes=0;const cost=Math.max(0,Math.round(work.wageSatang||0));
       if(!wage(m,real,cost)){f.decisionTh='จ่ายค่าจ้างไม่ได้ งานหยุด';continue;}
       f.lastWorkDay=day;f.paidWagesSatang=(f.paidWagesSatang||0)+cost;s.metrics.wagesSatang+=cost;f.researchSatang+=Math.round(cost*.6);s.metrics.researchSatang+=Math.round(cost*.6);
-      const minutes=Math.max(0,Number(work.effectiveMinutes??work.minutes)||0);f.knowledge+=Math.floor(minutes*.4);const design=s.designs.find(d=>d.id===f.activeDesignId);if(design&&design.stage==='pilot')design.validationMinutes+=Math.floor(minutes*.6);else progress(w,s,f,minutes,day,cost);produce(w,s,f,minutes*.4,day);retail(w,s,f,day);
+      const minutes=Math.max(0,Number(work.effectiveMinutes??work.minutes)||0);f.knowledge+=Math.floor(minutes*.4);
+      const design=s.designs.find(d=>d.id===f.activeDesignId);
+      let usedForRndOrPilot=0;
+      if(design&&design.stage==='pilot'){
+        usedForRndOrPilot=Math.floor(minutes*.6);
+        design.validationMinutes+=usedForRndOrPilot;
+      }else{
+        usedForRndOrPilot=progress(w,s,f,minutes,day,cost)||0;
+      }
+      const prodMinutes=day===1&&f.id==='tokyo_elec'?minutes*.4:Math.max(minutes*.4,minutes-usedForRndOrPilot);
+      produce(w,s,f,prodMinutes,day);retail(w,s,f,day);
     }
     compact(s);return s;
   }
+  function enterCampusRole(w,roleId,options={}){
+    const s=ensure(w),m=live(w);
+    const contract=E.roleContract(roleId);
+    const canonical=contract.id;
+    const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);
+    const capital=options.capitalSatang||contract.entryCapitalSatang;
+    const id='phone_campus';
+    const dayNum=Number.isFinite(options.day)?options.day:Math.max(1,s.lastDay||1);
+    if(!s.campusFirmId){
+      const template=clone(m.firms.siam_tech);
+      Object.assign(template,{id,nationId:'TH',cash:capital,openingCash:0,receipts:capital,payments:0,stock:{},flow:{},capacity:options.capacity||3,output:0,investment:0,reserves:{},crops:{},history:[],missing:[],dailyRevenue:0,dailyCost:0});
+      m.firms[id]=template;
+      m.playerNetSatang+=capital;
+      w.externalWorld.corporations[id]={id,nationId:'TH',nameTh:'แผนก'+contract.nameTh.split(' (')[0]+' ของบริษัทเรา',sector:'electronics',sellsMaterials:[],buysMaterials:[],roles:[canonical==='brand'?'phone_brand':'phone_component_supplier'],relationshipMode:'neutral'};
+      s.firms[id]={
+        id,
+        role:canonical==='fabless_soc'?'fabless_soc':canonical,
+        roles:[canonical],
+        strategyFocus:options.strategyFocus||'balanced',
+        isCampus:true,
+        level:0,
+        knowledge:0,
+        capacity:options.capacity||3,
+        reputation:w.reputation||55,
+        reserveSatang:wages*30,
+        decisionTh:`เปิดสายธุรกิจ ${contract.nameTh} จากความรู้ เครื่องจักร และทุนจริง`,
+        lastWorkDay:0,
+        activeDesignId:null,
+        produced:0,
+        sold:0,
+        revenueSatang:0,
+        researchSatang:0,
+        nreSpentSatang:0,
+        costOfGoodsSatang:0,
+        paidWagesSatang:0,
+        refundSatang:0,
+        dividendsSatang:0,
+        licenseExpenseSatang:0,
+        missing:[],
+        researchBranches:canonical==='fabless_soc'||canonical==='wafer_foundry'?['architecture','process','packaging']:canonical==='brand'?['hardware','software']:['materials','manufacturing']
+      };
+      s.campusFirmId=id;
+      s.campusMinutes=s.campusMinutes||0;
+    }else{
+      const f=s.firms[id],real=m.firms[id];
+      if(!f.roles)f.roles=[f.role];
+      if(!f.roles.includes(canonical))f.roles.push(canonical);
+      if(options.addCapitalSatang&&options.addCapitalSatang>0){
+        real.cash+=options.addCapitalSatang;
+        real.receipts+=options.addCapitalSatang;
+        m.playerNetSatang+=options.addCapitalSatang;
+      }
+      f.decisionTh=`ขยายสายธุรกิจเพิ่มสู่ ${contract.nameTh} เชื่อมซัพพลายเชนภายในและขาย B2B`;
+    }
+    const f=s.firms[id],real=m.firms[id];
+    // License baseline blueprint or register initial design (creates blueprint only, NEVER free physical lots).
+    if(canonical==='fabless_soc'||canonical==='wafer_foundry'){
+      if(!s.chips.some(c=>c.ownerId===id)){
+        const fee=Math.min(contract.licenseFeeSatang||1800000,Math.floor(real.cash*0.2));
+        const owner=m.firms.shenzhen_semi;
+        if(owner&&fee>0&&transfer(real,owner,fee)){
+          f.licenseExpenseSatang=(f.licenseExpenseSatang||0)+fee;
+          s.licenses.push({id:'campus-license-'+canonical+'-'+dayNum,buyerId:id,sellerId:owner.id,priceSatang:fee,day:dayNum,rights:canonical+'_architecture_0'});
+        }
+        const cap=Math.max(42,capability(w,id,'chip'));
+        const chip=E.synthesizeChip(w.seed+':campus-chip:'+dayNum,cap,{level:0,focus:'balanced'});
+        chip.id='phone-campus-chip-0';chip.ownerId=id;chip.level=0;
+        s.chips.push(chip);
+      }
+    }else if(canonical!=='brand'&&canonical!=='osat_packaging'){
+      for(const kind of contract.outputs){
+        if(kind==='wafer_die'||kind==='packaged_chip'||kind==='phone')continue;
+        if(s.components.some(c=>c.supplierId===id&&c.kind===kind))continue;
+        const source=s.components.find(c=>c.kind===kind&&c.level===0)||s.components[0];
+        const fee=canonical==='enclosure'?2000000:Math.min(contract.licenseFeeSatang||1500000,Math.floor(real.cash*0.2));
+        const owner=m.firms[source?.supplierId||'tokyo_elec'];
+        if(owner&&fee>0&&transfer(real,owner,fee)){
+          f.licenseExpenseSatang=(f.licenseExpenseSatang||0)+fee;
+          s.licenses.push({id:canonical==='enclosure'?'campus-enclosure-license':'campus-license-'+kind+'-'+dayNum,buyerId:id,sellerId:owner.id,priceSatang:fee,day:dayNum,rights:kind+'_design_0'});
+        }
+        const spec=canonical==='enclosure'&&source?clone(source.spec):E.synthesizeComponent(w.seed+':campus:'+kind,kind,Math.max(42,capability(w,id,canonical)),0);
+        s.components.push({
+          id:canonical==='enclosure'?'phone-campus-enclosure-0':'phone-campus-'+kind+'-0',
+          kind,
+          supplierId:id,
+          level:0,
+          spec,
+          licenseSatang:kind==='os'?1200:0,
+          materialGrade:contract.qualifiedMaterialGrade
+        });
+      }
+    }
+    return f;
+  }
   function view(w){
-    const s=w.phoneIndustry;if(!s)return null;const m=live(w);return clone({...s,firms:Object.values(s.firms).map(f=>({...f,nameTh:w.externalWorld.corporations[f.id]?.nameTh||f.id,cashSatang:m.firms[f.id]?.cash||0,rawStock:clone(m.firms[f.id]?.stock||{}),capability:{hardware:capability(w,f.id,'hardware'),chip:capability(w,f.id,'chip'),manufacturing:capability(w,f.id,'manufacturing')}})),headlineMetrics:{...s.metrics,activeInstalled:s.cohorts.reduce((a,c)=>a+c.active,0),retailStock:s.lots.filter(l=>l.kind==='phone').reduce((a,l)=>a+l.available,0),pendingContracts:s.contracts.filter(c=>c.status==='shipping').length},talent:T.view(w)});
+    const s=w.phoneIndustry;if(!s)return null;const m=live(w);
+    const campusSubjects={};
+    for(const p of w.people||[])if(p.employed)for(const [k,lv]of Object.entries(p.education?.subjects||{}))campusSubjects[k]=Math.max(campusSubjects[k]||0,lv);
+    const wages=(w.people||[]).filter(p=>p.employed).reduce((a,p)=>a+(p.pay?.dailyWage||0),0);
+    const ceo=(w.people||[]).find(p=>p.employed&&p.role==='coordinator');
+    const roleFeasibility=Object.keys(E.ROLE_CONTRACTS).map(roleId=>E.evaluateRoleFeasibility({
+      subjects:campusSubjects,
+      machines:w.plant?.machines||{},
+      cashSatang:w.finance?.cash||0,
+      wageReserveSatang:wages*60,
+      riskTaking:ceo?.profile?.personality?.riskTaking??50,
+      prudence:ceo?.profile?.personality?.prudence??50,
+      brownoutActive:Boolean(w.utilities?.brownoutActive)
+    },roleId));
+    return clone({
+      ...s,
+      roleContracts:Object.values(E.ROLE_CONTRACTS),
+      materialGrades:Object.values(E.MATERIAL_GRADES),
+      roleFeasibility,
+      firms:Object.values(s.firms).map(f=>({
+        ...f,
+        roles:Array.isArray(f.roles)&&f.roles.length?f.roles:[f.role],
+        roleNameTh:E.roleContract(f.role).nameTh,
+        nameTh:w.externalWorld.corporations[f.id]?.nameTh||f.id,
+        cashSatang:m.firms[f.id]?.cash||0,
+        rawStock:clone(m.firms[f.id]?.stock||{}),
+        capability:{
+          hardware:capability(w,f.id,'hardware'),
+          chip:capability(w,f.id,'chip'),
+          manufacturing:capability(w,f.id,'manufacturing'),
+          software:capability(w,f.id,'os_platform'),
+          optics:capability(w,f.id,'camera_module'),
+          memory:capability(w,f.id,'dram_memory')
+        }
+      })),
+      headlineMetrics:{
+        ...s.metrics,
+        activeInstalled:s.cohorts.reduce((a,c)=>a+c.active,0),
+        retailStock:s.lots.filter(l=>l.kind==='phone').reduce((a,l)=>a+l.available,0),
+        pendingContracts:s.contracts.filter(c=>c.status==='shipping').length,
+        activeWipBatches:(s.wipBatches||[]).length,
+        foundryOrdersCount:(s.foundryOrders||[]).length
+      },
+      talent:T.view(w)
+    });
   }
   function compare(a,b){const diff=(x,y)=>(y||0)-(x||0);return {cpuThroughput:diff(a.evaluation.cpuThroughput,b.evaluation.cpuThroughput),ramMB:diff(a.parts.ram.capacityMB,b.parts.ram.capacityMB),storageMB:diff(a.parts.storage.capacityMB,b.parts.storage.capacityMB),cameraQuality:diff(a.evaluation.cameraQuality,b.evaluation.cameraQuality),batteryHours:diff(a.evaluation.batteryHours,b.evaluation.batteryHours),web:diff(a.evaluation.taskScores.web,b.evaluation.taskScores.web),game:diff(a.evaluation.taskScores.game,b.evaluation.taskScores.game),priceSatang:diff(a.priceSatang,b.priceSatang)};}
   function validate(w){
@@ -11493,12 +12637,15 @@ return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recrui
   }
   function requestEntry(w,hooks){
     ensure(w);const reasonsTh=[];const cash=w.finance?.cash??0;
-    if(cash<500000000)reasonsTh.push('แบรนด์โทรศัพท์ต้องมีทุนอย่างน้อย 5 ล้านบาทหลังเงินสำรอง');
+    const roleId=hooks?.roleId||'brand';
+    const contract=E.roleContract(roleId);
+    const minCash=hooks?.minimumCashSatang||contract.entryCapitalSatang||500000000;
+    if(cash<minCash)reasonsTh.push(`${contract.nameTh} ต้องมีทุนอย่างน้อย ${Math.round(minCash/100).toLocaleString()} บาทหลังเงินสำรอง`);
     if(!hooks||typeof hooks.enter!=='function')reasonsTh.push('ต้องเชื่อมบัญชี พนักงาน และโรงงานจริงก่อนเข้าธุรกิจ');
-    if(reasonsTh.length)return {ok:false,reasonsTh,routeTh:'เริ่มจากซ่อม คัดเกรด หรือรับจ้างประกอบเพื่อสะสมทุนและความรู้'};
-    return hooks.enter(w,{minimumCashSatang:500000000,requiresEngineering:true});
+    if(reasonsTh.length)return {ok:false,reasonsTh,routeTh:'เริ่มจากซ่อม คัดเกรด หรือผลิตชิ้นส่วนเฉพาะทางเพื่อสะสมทุนและความรู้'};
+    return hooks.enter(w,{minimumCashSatang:minCash,roleId:contract.id,requiresEngineering:true});
   }
-  return Object.freeze({ensure,step,view,validate,requestEntry,compare});
+  return Object.freeze({ensure,step,view,validate,requestEntry,enterCampusRole,compare});
 });
 
 </script>
@@ -11579,7 +12726,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
   function (H, D, L, E, W, P, B, Phone, Talent) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "3.0.0",
+      RELEASE_VERSION = "3.1.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -19753,7 +20900,8 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
           }
         }
       } else if (j.kind === "phoneWorkshop") {
-        if(w.phoneIndustry?.campusFirmId&&(subjectLevel(p,j.researchSubject||'electrical_basics')>=35||(j.researchSubject!=='metal_machining'&&subjectLevel(p,'software')>=40))){w.phoneIndustry.campusMinutes=(w.phoneIndustry.campusMinutes||0)+j.required;event(w,'phoneWorkshopCompleted','ทีมวิศวกรรมทำงานออกแบบ ทดสอบ และเตรียมผลิตโทรศัพท์',{personId:p.id,minutes:j.required});learnSubject(p,j.researchSubject||'electrical_basics',j.required);}
+        const reqSubj=j.researchSubject||'electrical_basics';
+        if(w.phoneIndustry?.campusFirmId&&(subjectLevel(p,reqSubj)>=35||(reqSubj!=='metal_machining'&&(subjectLevel(p,'software')>=40||subjectLevel(p,'electrical_basics')>=35)))){w.phoneIndustry.campusMinutes=(w.phoneIndustry.campusMinutes||0)+j.required;event(w,'phoneWorkshopCompleted','ทีมวิศวกรรมทำงานออกแบบ ทดสอบ และเตรียมผลิตโทรศัพท์',{personId:p.id,minutes:j.required,subject:reqSubj});learnSubject(p,reqSubj,j.required);if(Object.values(w.jobs).filter(x=>x.kind==='phoneWorkshop'&&x.id!==j.id).length===0){const divRole=w.phoneIndustry.firms[w.phoneIndustry.campusFirmId]?.role||'brand';job(w,'phoneWorkshop',{required:120,researchSubject:phoneRolePrimarySubject(divRole)});}}
       } else if (j.kind === "research") {
         knowledgeWork(w, p, j);
       } else if (j.kind === "sales") {
@@ -19890,7 +21038,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
 
       for (const j of Object.values(w.jobs)) {
         if (j.assignee) continue;
-        if(j.kind==="phoneWorkshop"&&subjectLevel(p,j.researchSubject||"electrical_basics")<35&&!(j.researchSubject!=="metal_machining"&&subjectLevel(p,"software")>=40))continue;
+        if(j.kind==="phoneWorkshop"&&subjectLevel(p,j.researchSubject||"electrical_basics")<35&&!(j.researchSubject!=="metal_machining"&&(subjectLevel(p,"software")>=40||subjectLevel(p,"electrical_basics")>=35)))continue;
         if (j.kind === "research") {
           const kp = w.knowledge?.projects[j.knowledgeProjectId];
           if (j.learnerId ? j.learnerId !== p.id : !kp || subjectLevel(p,j.researchSubject || kp.subject) < (kp.requirements[j.researchSubject || kp.subject] || kp.requiredLevel)) continue;
@@ -22339,10 +23487,37 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       });
     }
     const failure = (code, message) => ({ ok: false, code, message });
+    function phoneRolePrimarySubject(role){
+      return ({
+        enclosure:'metal_machining',
+        fabless_soc:'semiconductor_physics',
+        chip:'semiconductor_physics',
+        wafer_foundry:'semiconductor_process',
+        osat_packaging:'smt_process',
+        dram_memory:'circuit_design',
+        nand_storage:'embedded_firmware',
+        camera_module:'semiconductor_optics',
+        display_panel:'electrical_basics',
+        battery_pack:'power_electronics',
+        pcb_rf:'smt_process',
+        os_platform:'software',
+        brand:'electrical_basics'
+      })[role]||'electrical_basics';
+    }
     function directorPhoneEdit(w,c){
       if(c.action==='grantCash'){
         const f=w.externalWorld.living.firms[c.firmId];if(!f||!Number.isSafeInteger(c.amount)||c.amount<100||c.amount>1000000000)return failure('invalidEdit','เลือกบริษัทและจำนวนเงินให้ถูกต้อง');
         f.cash+=c.amount;f.openingCash+=c.amount;event(w,'directorEdit','[ทดลอง] เพิ่มทุนให้บริษัทภายนอก',{firmId:c.firmId,amount:c.amount});return {ok:true};
+      }
+      if(c.action==='grantFirmMaterial'){
+        const f=w.externalWorld.living.firms[c.firmId];
+        const qty=Number(c.quantity);
+        if(!f||!w.catalog?.materials?.[c.materialId]||!Number.isSafeInteger(qty)||qty<1||qty>10000)return failure('invalidEdit','เลือกบริษัท วัตถุดิบ และจำนวนให้ถูกต้อง');
+        f.stock[c.materialId]=(f.stock[c.materialId]||0)+qty;
+        f.flow[c.materialId]=f.flow[c.materialId]||{opening:0,produced:0,bought:0,used:0,sold:0};
+        f.flow[c.materialId].opening+=qty;
+        event(w,'directorEdit','[ทดลอง] เติมวัตถุดิบให้บริษัทในอุตสาหกรรมโทรศัพท์',{firmId:c.firmId,materialId:c.materialId,quantity:qty});
+        return {ok:true};
       }
       const p=w.phoneTalent?.people?.[c.personId];
       if(c.action==='setTrait'&&p&&H.PERSONALITY.includes(c.key)&&Number.isFinite(c.level)&&c.level>=0&&c.level<=100){const profile=clone(p.profile);profile.personality[c.key]=c.level;p.profile=H.freezeProfile(profile);event(w,'directorEdit','[ทดลอง] ปรับนิสัยบุคลากรภายนอก',{personId:p.id,key:c.key,level:c.level});return {ok:true};}
@@ -22352,10 +23527,61 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       }
       return failure('invalidEdit','ไม่พบเป้าหมายหรือค่าไม่ถูกต้อง');
     }
+    function selectFeasibleCampusPhoneRole(w,wages,excludeRoles=[]){
+      const mac=w.plant?.machines||{};
+      const ready=k=>mac[k]?.status==='ready'&&mac[k].condition>=25;
+      const has=r=>!excludeRoles.includes(r);
+      if(has('wafer_foundry')&&subjectReady(w,'semiconductor_process',48)&&subjectReady(w,'physical_chemistry',42)&&subjectReady(w,'cleanroom_operations',38)&&ready('semiconductor_fab')&&w.finance.cash>wages*60+800000000){
+        return {role:'wafer_foundry',capital:800000000,status:'supplier',reasonTh:'ผู้บริหารเปิดโรงหล่อเวเฟอร์ซิลิคอน ใช้เครื่องจักรกึ่งตัวนำ ห้องสะอาด และทีมวิศวกรกระบวนการจริง'};
+      }
+      if(has('fabless_soc')&&subjectReady(w,'semiconductor_physics',42)&&subjectReady(w,'circuit_design',40)&&subjectReady(w,'embedded_firmware',32)&&(ready('developer_pc')||ready('test_rig')||ready('electronics_bench'))&&w.finance.cash>wages*60+180000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:180000000;
+        return {role:'fabless_soc',capital:cap,status:'supplier',reasonTh:'ผู้บริหารตั้งสายออกแบบชิปประมวลผล (Fabless SoC) ลงทุนค่า NRE/Mask และสั่งจ้างโรงหล่อเวเฟอร์/OSAT ผลิตชิปจริง'};
+      }
+      if(has('dram_memory')&&subjectReady(w,'semiconductor_physics',38)&&subjectReady(w,'circuit_design',38)&&subjectReady(w,'metrology',35)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+220000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:220000000;
+        return {role:'dram_memory',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตหน่วยความจำ RAM (DRAM) ใช้วิชาออกแบบวงจร เครื่องทดสอบความถี่ และเวเฟอร์ซิลิคอนจริง'};
+      }
+      if(has('camera_module')&&(subjectReady(w,'semiconductor_optics',35)||(subjectReady(w,'metrology',40)&&subjectReady(w,'electrical_basics',40)&&ready('diagnostic_kit')))&&subjectReady(w,'metrology',35)&&(ready('electronics_bench')||ready('diagnostic_kit'))&&w.finance.cash>wages*60+180000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:180000000;
+        return {role:'camera_module',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตโมดูลกล้องและออปติคัล ใช้เลนส์ เซ็นเซอร์รับภาพ และเครื่องมือสอบเทียบความคมชัดจริง'};
+      }
+      if(has('nand_storage')&&subjectReady(w,'embedded_firmware',38)&&subjectReady(w,'circuit_design',35)&&subjectReady(w,'semiconductor_process',32)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+200000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:200000000;
+        return {role:'nand_storage',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตหน่วยเก็บข้อมูลแฟลช (NAND/eMMC) พัฒนาเฟิร์มแวร์ ECC และคัดกรองบล็อกเสียจริง'};
+      }
+      if(has('battery_pack')&&subjectReady(w,'power_electronics',35)&&subjectReady(w,'electrical_safety',38)&&(ready('test_rig')||ready('electronics_bench'))&&w.finance.cash>wages*60+180000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:180000000;
+        return {role:'battery_pack',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตแบตเตอรี่และวงจรป้องกัน BMS ทดสอบการจ่ายไฟและความปลอดภัยความร้อนจริง'};
+      }
+      if(has('display_panel')&&subjectReady(w,'electrical_basics',38)&&subjectReady(w,'circuit_design',35)&&subjectReady(w,'metrology',32)&&subjectReady(w,'quality',35)&&!subjectReady(w,'software',40)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+240000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:240000000;
+        return {role:'display_panel',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตแผงหน้าจอและโมดูลสัมผัส แปรรูปซับสเตรตกระจกและตรวจพิกเซลเสียจริง'};
+      }
+      if(has('osat_packaging')&&subjectReady(w,'semiconductor_process',35)&&subjectReady(w,'smt_process',35)&&subjectReady(w,'metrology',35)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+150000000){
+        return {role:'osat_packaging',capital:150000000,status:'supplier',reasonTh:'ผู้บริหารเปิดสายรับประกอบแพ็กเกจชิปและคัดเกรดไฟฟ้า (OSAT Packaging & Test)'};
+      }
+      if(has('pcb_rf')&&subjectReady(w,'electrical_basics',35)&&subjectReady(w,'smt_process',38)&&subjectReady(w,'circuit_design',35)&&!subjectReady(w,'software',40)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+140000000){
+        return {role:'pcb_rf',capital:140000000,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตแผงวงจรหลายชั้น HDI และโมดูลคลื่นวิทยุ RF'};
+      }
+      if(has('os_platform')&&subjectReady(w,'software',42)&&subjectReady(w,'programming',42)&&subjectReady(w,'embedded_firmware',35)&&!subjectReady(w,'electrical_basics',40)&&ready('developer_pc')&&w.finance.cash>wages*60+120000000){
+        return {role:'os_platform',capital:120000000,status:'supplier',reasonTh:'ผู้บริหารเปิดสายพัฒนาระบบปฏิบัติการมือถือและชุดไดรเวอร์ BSP เพื่อเก็บค่าลิขสิทธิ์'};
+      }
+      const enclosureRoute=has('enclosure')&&w.startup?.profileId==='metal_workshop'&&subjectReady(w,'metal_machining',40)&&subjectReady(w,'quality',30)&&ready('press');
+      const handsetRoute=has('brand')&&subjectReady(w,'electrical_basics',40)&&subjectReady(w,'software',40)&&subjectReady(w,'quality',30)&&w.finance.cash>wages*90+500000000;
+      if(enclosureRoute&&!handsetRoute&&(w.finance.cash>wages*90+500000000||w.finance.cash>wages*60+150000000)){
+        const cap=w.finance.cash>wages*90+500000000?500000000:150000000;
+        return {role:'enclosure',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดแผนกตัวถัง ซื้อสิทธิแบบ ใช้งานช่าง เครื่องอัด และวัตถุดิบจริงก่อนขายชิ้นส่วน'};
+      }
+      if(handsetRoute){
+        return {role:'brand',capital:500000000,status:'manufacturer',reasonTh:'ผู้บริหารจัดทุนให้แผนกโทรศัพท์ ทีมต้องทำงานและซื้อชิป แรม จอ แบตเข้าคลังก่อนผลิต'};
+      }
+      return null;
+    }
     function phoneCompanyReview(w,completedDay){
       const industry=w.phoneIndustry;if(!industry)return;
       const ceo=w.people.find(p=>p.employed&&p.role==='coordinator');if(!ceo||!w.policies.autoAccept)return;
-      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),risk=ceo.profile.personality.riskTaking||50;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),risk=ceo.profile.personality.riskTaking||50,prudence=ceo.profile.personality.prudence||50;
       const entry=industry.playerEntry||(industry.playerEntry={status:'observing',reasonTh:'เริ่มจากความรู้และธุรกิจเดิมก่อนเข้าวงการโทรศัพท์',lastReviewDay:0});
       if(completedDay<=entry.lastReviewDay)return;entry.lastReviewDay=completedDay;
       const hired=(ext,offer)=>{if(w.finance.cash<wages*30+offer.salarySatang*30+w.catalog.rules.hireFee)return null;post(w,'hiring',-w.catalog.rules.hireFee,ext.id+':phoneRecruit');const p=createPerson(w,ext.id,ext.name,'engineer',offer.salarySatang);w.people.push(p);event(w,'phoneRecruitment','รับผู้เชี่ยวชาญจากอุตสาหกรรมโทรศัพท์',{personId:p.id,formerFirmId:ext.employerId});return p;};
@@ -22364,15 +23590,38 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
         const subject=w.startup?.sector==='software'?'software':'semiconductor_physics';if((p.education.subjects[subject]||0)<50||subjectReady(w,subject,40))return null;
         return {vacancy:true,dailyWageSatang:Math.round(p.dailyWageSatang*1.8)};
       }});
-      if(industry.campusFirmId&&!Object.values(w.jobs).some(j=>j.kind==='phoneWorkshop'))job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});
+      if(industry.campusFirmId&&!Object.values(w.jobs).some(j=>j.kind==='phoneWorkshop')){
+        const divRole=industry.firms[industry.campusFirmId]?.role||'brand';
+        job(w,'phoneWorkshop',{required:120,researchSubject:phoneRolePrimarySubject(divRole)});
+      }
       if(completedDay%14!==0)return;
-      const enclosureRoute=w.startup?.profileId==='metal_workshop'&&subjectReady(w,'metal_machining',40)&&subjectReady(w,'quality',30)&&w.plant?.machines?.press?.status==='ready'&&w.plant.machines.press.condition>=25;
-      const handsetRoute=subjectReady(w,'electrical_basics',40)&&subjectReady(w,'software',40)&&subjectReady(w,'quality',30);
-      if(!industry.campusFirmId&&risk>=45&&(handsetRoute||enclosureRoute)&&w.finance.cash>wages*90+500000000){
-        const amount=500000000,m=w.externalWorld.living,id='phone_campus';post(w,'expansion',-amount,'phoneDivisionCapital');
-        const template=clone(m.firms.siam_tech);Object.assign(template,{id,nationId:'TH',cash:amount,openingCash:0,receipts:amount,payments:0,stock:{},flow:{},capacity:2,output:0,investment:0,reserves:{},crops:{},history:[],missing:[],dailyRevenue:0,dailyCost:0});m.firms[id]=template;m.playerNetSatang+=amount;
-        w.externalWorld.corporations[id]={id,nationId:'TH',nameTh:'แผนกโทรศัพท์ของบริษัทเรา',sector:'electronics',sellsMaterials:[],buysMaterials:[],roles:['phone_brand'],relationshipMode:'neutral'};
-        industry.firms[id]={id,role:'brand',isCampus:true,level:0,knowledge:0,capacity:2,reputation:w.reputation,reserveSatang:wages*30,decisionTh:'ตั้งทีมออกแบบจากความรู้และทุนจริง ต้องซื้อชิ้นส่วนและประกอบเข้าคลัง',lastWorkDay:0,activeDesignId:null,produced:0,sold:0,revenueSatang:0,researchSatang:0,missing:[],researchBranches:['hardware','software']};industry.campusFirmId=id;industry.campusMinutes=0;if(enclosureRoute&&!handsetRoute){industry.firms[id].role='enclosure';industry.firms[id].licenseExpenseSatang=2000000;const source=industry.components.find(c=>c.kind==='enclosure'&&c.level===0),fee=2000000,owner=m.firms[source.supplierId];template.cash-=fee;template.payments+=fee;owner.cash+=fee;owner.receipts+=fee;industry.licenses.push({id:'campus-enclosure-license',buyerId:id,sellerId:owner.id,priceSatang:fee,day:completedDay,rights:'enclosure_design_0'});industry.components.push({...clone(source),id:'phone-campus-enclosure-0',supplierId:id});w.externalWorld.corporations[id].nameTh='แผนกผลิตชิ้นส่วนตัวถังโทรศัพท์';w.externalWorld.corporations[id].roles=['phone_component_supplier'];industry.firms[id].decisionTh='ซื้อสิทธิแบบตัวถัง ต้องจัดซื้อแผ่นโลหะและพอลิเมอร์ก่อนผลิต';}entry.status='manufacturer';entry.reasonTh='ผู้บริหารจัดทุนให้แผนกโทรศัพท์ ทีมต้องทำงานและซื้อชิป แรม จอ แบตเข้าคลังก่อนผลิต';job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});if(industry.firms[id].role==='enclosure'){entry.status='supplier';entry.reasonTh='ผู้บริหารเปิดแผนกตัวถัง ซื้อสิทธิแบบ ใช้งานช่าง เครื่องอัด และวัตถุดิบจริงก่อนขายชิ้นส่วน';}event(w,'phoneDivisionOpened',entry.reasonTh,{capitalSatang:amount});
+      const chosen=selectFeasibleCampusPhoneRole(w,wages,[]);
+      if(!industry.campusFirmId&&chosen){
+        if(risk<40||(prudence>82&&w.finance.cash<wages*120+chosen.capital*1.5)){
+          entry.status='declined_prudent';
+          entry.feasibleButDeclined=true;
+          entry.candidateRole=chosen.role;
+          entry.reasonTh=`ทีมและเครื่องจักรผ่านเกณฑ์เข้าสู่ธุรกิจ ${chosen.role} แล้ว แต่ผู้บริหารสายอนุรักษนิยมเลือกสำรองเงินสดและโฟกัสงานหลักก่อน`;
+        }else if(risk>=45||(chosen.role!=='brand'&&risk>=40)){
+          post(w,'expansion',-chosen.capital,'phoneDivisionCapital');
+          Phone.enterCampusRole(w,chosen.role,{capitalSatang:chosen.capital,day:completedDay,capacity:chosen.capital>=500000000?2:3});
+          entry.status=chosen.status;
+          entry.feasibleButDeclined=false;
+          entry.activeRole=chosen.role;
+          entry.reasonTh=chosen.reasonTh;
+          job(w,'phoneWorkshop',{required:120,researchSubject:phoneRolePrimarySubject(chosen.role)});
+          event(w,'phoneDivisionOpened',entry.reasonTh,{capitalSatang:chosen.capital,role:chosen.role});
+        }
+      }else if(industry.campusFirmId&&risk>=50){
+        const div=industry.firms[industry.campusFirmId];
+        const currentRoles=Array.isArray(div.roles)&&div.roles.length?div.roles:[div.role];
+        const nextRole=selectFeasibleCampusPhoneRole(w,wages,currentRoles);
+        if(nextRole&&w.finance.cash>wages*90+nextRole.capital){
+          post(w,'expansion',-nextRole.capital,'phoneDivisionExpansion:'+nextRole.role);
+          Phone.enterCampusRole(w,nextRole.role,{addCapitalSatang:nextRole.capital,day:completedDay});
+          entry.reasonTh=`ขยายการบูรณาการแนวดิ่งเพิ่มสายธุรกิจ ${nextRole.role} ร่วมกับสายเดิม (${currentRoles.join(', ')})`;
+          event(w,'phoneDivisionExpanded',entry.reasonTh,{capitalSatang:nextRole.capital,role:nextRole.role});
+        }
       }
 
       if(w.finance.cash<wages*30+500000){entry.reasonTh='รักษาเงินเดือนและงานเดิมก่อนลงทุนในโทรศัพท์';return;}
@@ -23531,6 +24780,25 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
           ownerName: ceo ? ceo.name : "คณะกรรมการบริหาร",
           starred: wl.bottlenecks.includes(bnId),
         });
+      }
+
+      // 4b. Campus Phone Division Bottleneck (if active and blocked)
+      if (w.phoneIndustry?.campusFirmId) {
+        const pf = w.phoneIndustry.firms[w.phoneIndustry.campusFirmId];
+        if (pf && pf.missing && pf.missing.length > 0) {
+          const bnId = `phone:${pf.id}`;
+          activeBottlenecks.push({
+            id: bnId,
+            severity: "warning",
+            category: "phone_division",
+            titleTh: `แผนกอุตสาหกรรมโทรศัพท์ (${pf.role}): ติดข้อจำกัดการผลิต/วิจัย`,
+            whatStuckTh: pf.decisionTh || "สายงานโทรศัพท์ชะลอตัว",
+            whyStuckTh: pf.missing.join(" • "),
+            howSolvingTh: "จัดซื้อวัตถุดิบเข้าคลัง ซ่อมบำรุงเครื่องจักร หรือรอคิวโรงหล่อ/ขนส่ง",
+            ownerName: ceo ? ceo.name : "หัวหน้าแผนกโทรศัพท์",
+            starred: wl.bottlenecks.includes(bnId),
+          });
+        }
       }
 
       // 5. People Workboard: "ใครกำลังทำอะไร ติดอะไร กำลังแก้ยังไง"
@@ -29897,6 +31165,11 @@ ${b.waitingReasonTh||''}`);
     dialog.append(el("h3","","เงินทุนบริษัทภายนอก"));const firm=select(firms.map(f=>[f.id,f.nameTh]),"บริษัทที่ทดลองเพิ่มเงิน"),amount=input("จำนวนเงินบาทที่เพิ่ม",10000);
     const note=el("p","muted","");const send=(c)=>{const r=app.dispatch(c);note.textContent=r.ok?"บันทึกการทดลองแล้ว ดูผลเมื่อโลกเดินต่อ":r.message||"ตรวจค่าที่กรอก";paint(app.snapshot());};
     const cash=el("button","btn","เพิ่มเงินทุน (ทดลอง)");cash.onclick=()=>send({type:'directorPhoneEdit',action:'grantCash',firmId:firm.value,amount:Math.round(Number(amount.value)*100)});dialog.append(cash);
+    dialog.append(el("h3","","วัตถุดิบของบริษัทในระบบโทรศัพท์"));
+    const matFirm=select(firms.map(f=>[f.id,f.nameTh]),"บริษัทที่ทดลองเติมวัตถุดิบ");
+    const matItems=(v.catalog?.materials||[]).filter(m=>['silicon_wafer','copper_coil','polymer_resin','metal_sheet','pcb','battery','optical_lens','sensor','glass_bottle'].includes(m.id)).map(m=>[m.id,m.nameTh]);
+    const matSelect=select(matItems.length?matItems:[['silicon_wafer','เวเฟอร์ซิลิคอน']],"วัตถุดิบโทรศัพท์ที่ทดลอง"),matQty=input("จำนวนวัตถุดิบที่เพิ่ม",20);
+    const matBtn=el("button","btn","เติมวัตถุดิบบริษัทโทรศัพท์ (ทดลอง)");matBtn.onclick=()=>send({type:'directorPhoneEdit',action:'grantFirmMaterial',firmId:matFirm.value,materialId:matSelect.value,quantity:Math.round(Number(matQty.value))});dialog.append(matBtn);
     dialog.append(el("h3","","บุคลากรภายนอก"));const person=select(people.map(p=>[p.id,p.name+" — "+(firms.find(f=>f.id===p.employerId)?.nameTh||"บริษัทภายนอก")]),"บุคลากรที่ทดลอง");
     const subject=select(Object.entries(v.companyKnowledge.subjects),"วิชาที่ทดลอง"),level=input("ระดับความรู้ 0 ถึง 100",50),knowledge=el("button","btn","ปรับความรู้ (ทดลอง)");knowledge.onclick=()=>send({type:'directorPhoneEdit',action:'setSubject',personId:person.value,subjectId:subject.value,level:Number(level.value)});dialog.append(knowledge);
     const labels={sociability:'การเข้าสังคม',conscientiousness:'ความรับผิดชอบ',agreeableness:'ความประนีประนอม',openness:'เปิดรับสิ่งใหม่',riskTaking:'การรับความเสี่ยง',stressReactivity:'การตอบสนองความเครียด',assertiveness:'ความกล้าแสดงออก',patience:'ความอดทน',integrity:'ความซื่อตรง',adaptability:'การปรับตัว',ambition:'ความทะเยอทะยาน',prudence:'ความรอบคอบ',humility:'ความถ่อมตน',optimism:'การมองโลกในแง่ดี'};
@@ -29909,7 +31182,7 @@ ${b.waitingReasonTh||''}`);
     setSheetTabs([{id:"phone_overview",label:"ภาพรวม"},{id:"phone_company",label:"บริษัท"},{id:"phone_products",label:"สินค้า / R&D"},{id:"phone_supply",label:"ซัพพลายเชน"},{id:"phone_market",label:"ตลาด / ข่าว"},{id:"phone_people",label:"บุคลากร"}]);
     body.replaceChildren();
     const d=v.phoneIndustry || {}, list=x=>Array.isArray(x)?x:Object.values(x||{});
-    const firms=list(d.firms), designs=list(d.designs), chips=list(d.chips), projects=list(d.projects);
+    const firms=list(d.firms), designs=list(d.designs), chips=list(d.chips), projects=list(d.projects), wipBatches=list(d.wipBatches), foundryOrders=list(d.foundryOrders), channels=list(d.channels), roleFeasibility=list(d.roleFeasibility);
     const name=x=>x?.nameTh||x?.name||x?.titleTh||x?.headlineTh||"ยังไม่ระบุชื่อ";
     const lookup=(rows,id)=>rows.find(x=>x.id===id);
     const state=x=>({pilot:"ผลิตนำร่อง",complete:"เสร็จแล้ว",shipping:"ระหว่างขนส่ง",notice:"รอครบกำหนดย้ายงาน",transferred:"ย้ายงานแล้ว",planned:"วางแผน",research:"วิจัย",prototype:"ต้นแบบ",validation:"ทดสอบ",qualified:"ผ่านการรับรอง",released:"วางตลาด",active:"ดำเนินงาน",completed:"เสร็จแล้ว",negotiating:"กำลังเจรจา",signed:"ลงนาม",delivered:"ส่งมอบ",paid:"ชำระแล้ว",blocked:"ติดข้อจำกัด",production:"กำลังผลิต",ready:"พร้อม",failed:"ไม่ผ่าน",cancelled:"ยกเลิก"})[x]||"อยู่ระหว่างดำเนินการ";
@@ -29924,25 +31197,29 @@ ${b.waitingReasonTh||''}`);
     const personName=id=>name(lookup(people,id)||lookup(v.people||[],id));
     const entry=d.playerEntry;
     if(uiState.subTab==="phone_overview") {
-      row("โลกโทรศัพท์ที่กำลังเปลี่ยนแปลง",`บริษัท ${firms.length} แห่ง • แบบสินค้า ${designs.length} แบบ • ชิป ${chips.length} รุ่น • โครงการวิจัย ${projects.length} โครงการ\nบริษัทและวิศวกรตัดสินใจเองตามทุน ความรู้ ความพร้อม และตลาด`);
+      row("โลกโทรศัพท์ที่กำลังเปลี่ยนแปลง",`บริษัท ${firms.length} แห่ง • แบบสินค้า ${designs.length} แบบ • ชิป ${chips.length} รุ่น • โครงการวิจัย ${projects.length} โครงการ • ล็อตแปรรูป WIP ${wipBatches.length} ชุด\nบริษัทและวิศวกรตัดสินใจเองตามทุน ความรู้ ความพร้อม และตลาด`);
       if(entry)row("บริษัทของเราและโอกาสเข้าสู่อุตสาหกรรม",reason(entry));
-      for(const f of firms.slice(0,12)){const c=row(name(f),reason(f));const b=el("button","btn","ดูบริษัทและแผน");b.onclick=()=>{uiState.phoneFirm=f.id;uiState.subTab="phone_company";renderPhoneIndustry(current,body);};c.append(b);}
+      if(roleFeasibility.length){
+        row("ความพร้อมของบริษัทเราต่อ 12 บทบาทธุรกิจโทรศัพท์",roleFeasibility.map(r=>`${r.feasible?(r.feasibleButDeclined?"⏸ พร้อมแต่ CEO ชะลอ":"✅ พร้อมดำเนินการ"):"⏳ ยังไม่ครบเงื่อนไข"} • ${r.nameTh.split(' (')[0]} (ทุนขั้นต้น ${moneyFull(r.entryCapitalSatang)}) — ${r.reasonTh}`).join("\n"));
+      }
+      for(const f of firms.slice(0,16)){const c=row(`${name(f)} (${(f.roles||[f.role]).join(', ')})`,reason(f));const b=el("button","btn","ดูบริษัทและแผน");b.onclick=()=>{uiState.phoneFirm=f.id;uiState.subTab="phone_company";renderPhoneIndustry(current,body);};c.append(b);}
       if(!firms.length)empty();
     } else if(uiState.subTab==="phone_company") {
       const f=select(firms,"phoneFirm","เลือกบริษัทโทรศัพท์");if(!f){empty();return;}
       const external=list(v.world?.firms || v.livingWorld?.firms || v.worldModel?.firms).find(x=>x.id===f.id);
       const cash=f.cashSatang??f.cash??external?.cash;
-      row(name(f),`${reason(f)}\nเงินสดบริษัท ${cash==null?"ยังไม่มีข้อมูลบัญชี":moneyFull(cash)}\nแผนต่อไป: ${text(f.planTh)||text(f.nextPlanTh)||reason(f.plan)||"รอตัดสินใจตามเงื่อนไขจริง"}`);
+      row(name(f),`บทบาทธุรกิจ: ${f.roleNameTh||f.role} (${(f.roles||[f.role]).join(', ')})\n${reason(f)}\nเงินสดบริษัท ${cash==null?"ยังไม่มีข้อมูลบัญชี":moneyFull(cash)} • รายรับสะสม ${moneyFull(f.revenueSatang||0)} • ต้นทุนขาย ${moneyFull(f.costOfGoodsSatang||0)} • วิจัย/NRE ${moneyFull((f.researchSatang||0)+(f.nreSpentSatang||0))}\nผลิตสะสม ${f.produced||0} หน่วย • ขายสะสม ${f.sold||0} หน่วย • แผนต่อไป: ${text(f.planTh)||text(f.nextPlanTh)||reason(f.plan)||"รอตัดสินใจตามเงื่อนไขจริง"}`);
       for(const p of projects.filter(x=>x.firmId===f.id))row(({handset:"โครงการแบบโทรศัพท์",semiconductor:"โครงการออกแบบชิป",platform:"โครงการแพลตฟอร์ม",component:"โครงการพัฒนาชิ้นส่วน"})[p.type]||"โครงการวิศวกรรม",`${state(p.status)} • ${Math.round(p.progress||0)}/${p.requiredMinutes||0} นาที • ${reason(p)}\nผู้ร่วมวิจัย: ${list(p.contributors||p.contributorIds||p.engineerIds).map(x=>typeof x==="string"?personName(x):name(x)).join(" • ")||"ยังไม่มีผู้ร่วมโครงการ"}`);
       for(const x of designs.filter(x=>x.firmId===f.id))row(name(x),`${state(x.stage||x.status)} • ${reason(x)}`);
+      for(const fo of foundryOrders.filter(o=>o.fablessFirmId===f.id||o.foundryFirmId===f.id).slice(0,5))row(`คำสั่งจ้างผลิตเวเฟอร์/แพ็กเกจ ${fo.id}`,`ผู้ออกแบบ ${firmName(fo.fablessFirmId)} → โรงหล่อ ${firmName(fo.foundryFirmId)} → OSAT ${firmName(fo.osatFirmId)}\nโหนด ${fo.nodeNm} nm • ดายดี ${fo.goodDies}/${fo.grossDies} • บรรจุผ่าน ${fo.packagedGood} ชิ้น (A-Bin ${fo.aBin} / B-Bin ${fo.bBin}) • ต้นทุน ${moneyFull(fo.unitCostSatang)}/ชิ้น`);
     } else if(uiState.subTab==="phone_products") {
       const x=select(designs,"phoneDesign","เลือกแบบโทรศัพท์");if(!x){empty();return;}
-      row(name(x),`${firmName(x.firmId)} • ${state(x.stage||x.status)}\n${reason(x)}`);
+      row(name(x),`${firmName(x.firmId)} • ${state(x.stage||x.status)} • เครือข่าย ${x.radioGeneration||2}G\n${reason(x)}`);
       const bom=x.bom||{};const chip=lookup(chips,x.chipId||bom.chipId||x.socId);
-      row("ชิปและส่วนประกอบ",`ผู้ออกแบบชิป: ${chip?firmName(chip.ownerId):"ยังไม่ได้เลือกชิป"}\n${chip?"ชุดคำสั่ง "+chip.isa+" • แรม "+chip.memoryType:""}`);
-      if(chip)row("ผลทดสอบชิป",`${chip.cores} คอร์ • ${chip.clockGhz} GHz • กระบวนการ ${chip.nodeNm} nm • โหลด ${chip.loadW} W`);
-      if(x.evaluation){const e=x.evaluation;row("ผลทดสอบเครื่อง",`แบต ${e.batteryHours.toFixed(1)} ชั่วโมง • โหลดเฉลี่ย ${e.averagePowerW} W • ผิวเครื่องที่โหลดสูงสุด ${e.surfaceC} °C • ประสิทธิภาพต่อเนื่อง ${(e.sustainedFactor*100).toFixed(0)}%\nโทร ${e.taskScores.call} • เว็บ ${e.taskScores.web} • กราฟิก ${e.taskScores.game} (คะแนนเทียบงานเดียวกัน)`);}
-      if(x.parts)row("สเปกชิ้นส่วนจริง",`RAM ${x.parts.ram.capacityMB} MB • พื้นที่เก็บ ${x.parts.storage.capacityMB} MB\nจอ ${x.parts.display.width}×${x.parts.display.height} • แบต ${x.parts.battery.wh} Wh • กล้อง ${x.parts.camera?.megapixels||0} MP\nระบบ ${x.parts.os.installableApps?'รองรับแอปภายนอก':'เฟิร์มแวร์ฟีเจอร์โฟน'} • ภาระระบบ ${(x.parts.os.overhead*100).toFixed(0)}%`);
+      row("ชิปและส่วนประกอบ",`ผู้ออกแบบชิป: ${chip?firmName(chip.ownerId):"ยังไม่ได้เลือกชิป"}\n${chip?"ชุดคำสั่ง "+chip.isa+" • แรม "+chip.memoryType+" • จุดเน้น "+(chip.focus||"balanced"):""}`);
+      if(chip)row("ผลทดสอบชิป",`${chip.cores} คอร์ • ${chip.clockGhz} GHz • กระบวนการ ${chip.nodeNm} nm • พื้นที่ดาย ${chip.dieAreaMm2} mm² • โหลด ${chip.loadW} W`);
+      if(x.evaluation){const e=x.evaluation;row("ผลทดสอบเครื่อง",`แบต ${e.batteryHours.toFixed(1)} ชั่วโมง • โหลดเฉลี่ย ${e.averagePowerW} W • ผิวเครื่องที่โหลดสูงสุด ${e.surfaceC} °C • ประสิทธิภาพต่อเนื่อง ${(e.sustainedFactor*100).toFixed(0)}%\nโทร ${e.taskScores.call} • เว็บ ${e.taskScores.web} • กราฟิก ${e.taskScores.game} (คะแนนเทียบงานเดียวกัน)\nการวินิจฉัยคอขวด: ${e.bottleneckSummaryTh||"สมดุล"}`);}
+      if(x.parts)row("สเปกชิ้นส่วนจริง",`RAM ${x.parts.ram.capacityMB} MB (${x.parts.ram.bandwidthGBps} GB/s) • พื้นที่เก็บ ${x.parts.storage.capacityMB} MB (${x.parts.storage.readMBps} MB/s)\nจอ ${x.parts.display.width}×${x.parts.display.height} (${x.parts.display.brightnessNits||220} nits) • แบต ${x.parts.battery.wh} Wh • กล้อง ${x.parts.camera?.megapixels||0} MP (f/${x.parts.camera?.fNumber||2.4})\nระบบ ${x.parts.os.installableApps?'รองรับแอปภายนอก':'เฟิร์มแวร์ฟีเจอร์โฟน'} • ภาระระบบ ${(x.parts.os.overhead*100).toFixed(0)}%`);
       if(x.comparison){const c=x.comparison;row("เทียบรุ่นก่อนของบริษัทเดียวกัน",`CPU ${c.cpuThroughput.toFixed(2)} • RAM ${c.ramMB} MB • พื้นที่ ${c.storageMB} MB • คุณภาพกล้อง ${c.cameraQuality.toFixed(2)}\nแบต ${c.batteryHours.toFixed(1)} ชั่วโมง • เว็บ ${c.web.toFixed(1)} • กราฟิก ${c.game.toFixed(1)} • ราคา ${moneyFull(c.priceSatang)}\nค่าต่างเป็นบวกหรือลบได้ รุ่นใหม่ไม่ได้ดีกว่าทุกด้าน`);}
       row("สินค้าสำเร็จและราคา",`ผลิตแล้ว ${x.produced} เครื่อง • ขายแล้ว ${x.sold} เครื่อง • ราคา ${moneyFull(x.priceSatang)} • ต้นทุนประกอบล่าสุด ${x.actualUnitCostSatang?moneyFull(x.actualUnitCostSatang):"ยังไม่ผลิต"}`);
       row("ความเข้ากันได้ / ผลทดสอบ",x.evaluation?.compatible?"ผ่านด่านชิ้นส่วนและไดรเวอร์ของแบบนี้":(x.evaluation?.reasonsTh||[]).join(" • ")||"ยังไม่มีผลทดสอบ");
@@ -29950,18 +31227,19 @@ ${b.waitingReasonTh||''}`);
     } else if(uiState.subTab==="phone_supply") {
       const selected=select(firms,"phoneSupplyFirm","เลือกบริษัทที่ต้องการดูคลัง");if(!selected){empty();return;}
       const raw=Object.entries(selected.rawStock||{}).filter(([,q])=>q>0);row("วัตถุดิบในคลัง — "+name(selected),raw.map(([id,q])=>(v.catalog?.materials?.find(m=>m.id===id)?.nameTh||({pcb:"แผงวงจร",silicon_wafer:"เวเฟอร์ซิลิคอน",copper_coil:"ลวดทองแดง",glass_bottle:"แก้วแปรรูป",battery:"แบตเตอรี่ต้นแบบ",polymer_resin:"เรซินพอลิเมอร์",metal_sheet:"แผ่นโลหะ"})[id]||id)+" × "+q).join(" • ")||"ยังไม่มีวัตถุดิบในคลัง");
-      const lots=list(d.lots).filter(l=>l.ownerId===selected.id), contracts=list(d.contracts).filter(c=>c.buyerId===selected.id||c.sellerId===selected.id);
-      row("การผลิตและการส่งมอบ",`ล็อตผลิต ${lots.length} ล็อต • สัญญา ${contracts.length} ฉบับ`);
-      for(const l of lots)row((l.kind==="phone"?name(lookup(designs,l.designId)):({chip:"ชิปประมวลผล",ram:"RAM",storage:"หน่วยเก็บข้อมูล",display:"หน้าจอ",battery:"แบตเตอรี่",camera:"กล้อง",enclosure:"ตัวถัง"})[l.kind]||"ชิ้นส่วน") + " — ล็อตผลิต",`${firmName(l.ownerId||l.firmId)} • รับเข้าวันที่ ${l.day}\nจำนวน ${l.available??0} คงเหลือ / ${l.reserved??0} ระหว่างส่ง / ${l.used??0} เบิกใช้ • ต้นทุน ${moneyFull(l.costSatang??l.totalCostSatang??l.cost??0)}\nต้นทุนต่อหน่วย ${moneyFull(l.unitCostSatang||0)}`);
+      const lots=list(d.lots).filter(l=>l.ownerId===selected.id), contracts=list(d.contracts).filter(c=>c.buyerId===selected.id||c.sellerId===selected.id), wips=wipBatches.filter(w=>w.firmId===selected.id);
+      row("การผลิตและการส่งมอบ",`ล็อตผลิต ${lots.length} ล็อต • งานระหว่างทำ (WIP) ${wips.length} ชุด • สัญญา ${contracts.length} ฉบับ`);
+      for(const wBatch of wips.slice(0,8))row(`ชุดแปรรูป WIP — ${wBatch.kind} (${wBatch.materialGrade||'มาตรฐาน'})`,`สถานะ ${state(wBatch.stage)} • ดี ${wBatch.goodUnits}/${wBatch.quantity} หน่วย • เวลางาน ${wBatch.workMinutesDone}/${wBatch.requiredWorkMinutes} นาที\n${wBatch.reasonTh}`);
+      for(const l of lots)row((l.kind==="phone"?name(lookup(designs,l.designId)):({chip:"ชิปประมวลผล",ram:"RAM",storage:"หน่วยเก็บข้อมูล",display:"หน้าจอ",battery:"แบตเตอรี่",camera:"กล้อง",enclosure:"ตัวถัง",pcb_rf:"บอร์ด HDI/RF"})[l.kind]||"ชิ้นส่วน") + " — ล็อตผลิต",`${firmName(l.ownerId||l.firmId)} • รับเข้าวันที่ ${l.day}${l.materialGrade?" • เกรด "+l.materialGrade:""}\nจำนวน ${l.available??0} คงเหลือ / ${l.reserved??0} ระหว่างส่ง / ${l.used??0} เบิกใช้ / ${l.sold??0} ขายแล้ว • ต้นทุน ${moneyFull(l.costSatang??l.totalCostSatang??l.cost??0)}\nต้นทุนต่อหน่วย ${moneyFull(l.unitCostSatang||0)}`);
       for(const c of contracts)row(c.kind==="raw"?"ขนส่งวัตถุดิบ":"ขนส่งชิ้นส่วน",`${firmName(c.sellerId)} → ${firmName(c.buyerId)} • ${state(c.status)}\nจำนวน ${c.quantity} • จ่ายผู้ขาย ${moneyFull(c.paidSatang)} • ภาษี ${moneyFull(c.taxSatang||0)}\nสั่งวันที่ ${c.day} • กำหนดรับวันที่ ${c.dueDay}`);
       if(!lots.length&&!contracts.length)empty();
     } else if(uiState.subTab==="phone_people") {
-      for(const p of people){const c=row(name(p),`${p.employment==='campus'?'ย้ายมาเป็นพนักงานบริษัทเราแล้ว':firmName(p.employerId)} • ${({ceo:'ผู้บริหาร',engineer:'วิศวกร',commercial:'จัดซื้อและการค้า'})[p.role]||'ผู้เชี่ยวชาญ'}\n${p.duties}\nค่าจ้างต่อวัน ${moneyFull(p.dailyWageSatang)} • ความพึงพอใจ ${p.satisfaction} • ความผูกพัน ${p.loyalty}\nงานวันนี้ ${p.workedMinutes}/360 นาที`);const subjects=Object.entries(p.education?.subjects||{}).sort((a,b)=>b[1]-a[1]).slice(0,10);c.append(el('div','muted',subjects.map(([id,n])=>(v.companyKnowledge?.subjects?.[id]||({electrical_basics:'พื้นฐานไฟฟ้า',software:'พัฒนาซอฟต์แวร์',programming:'เขียนโปรแกรม',semiconductor_physics:'ฟิสิกส์สารกึ่งตัวนำ',semiconductor_process:'กระบวนการผลิตสารกึ่งตัวนำ',metal_machining:'งานขึ้นรูปโลหะ',physical_chemistry:'เคมีเชิงฟิสิกส์',chemical_processing:'กระบวนการเคมี',circuit_design:'ออกแบบวงจร',metrology:'มาตรวิทยา',embedded_firmware:'เฟิร์มแวร์',people_management:'บริหารคน',procurement:'จัดซื้อ'})[id]||id)+' '+Math.floor(n)+'/100').join(' • ')));}
+      for(const p of people){const c=row(name(p),`${p.employment==='campus'?'ย้ายมาเป็นพนักงานบริษัทเราแล้ว':firmName(p.employerId)} • ${({ceo:'ผู้บริหาร',engineer:'วิศวกร',commercial:'จัดซื้อและการค้า'})[p.role]||'ผู้เชี่ยวชาญ'}\n${p.duties}\nค่าจ้างต่อวัน ${moneyFull(p.dailyWageSatang)} • ความพึงพอใจ ${p.satisfaction} • ความผูกพัน ${p.loyalty}\nงานวันนี้ ${p.workedMinutes}/360 นาที`);const subjects=Object.entries(p.education?.subjects||{}).sort((a,b)=>b[1]-a[1]).slice(0,10);c.append(el('div','muted',subjects.map(([id,n])=>(v.companyKnowledge?.subjects?.[id]||({electrical_basics:'พื้นฐานไฟฟ้า',software:'พัฒนาซอฟต์แวร์',programming:'เขียนโปรแกรม',semiconductor_physics:'ฟิสิกส์สารกึ่งตัวนำ',semiconductor_process:'กระบวนการผลิตสารกึ่งตัวนำ',semiconductor_optics:'ออปติคัลและเซ็นเซอร์ภาพ',power_electronics:'อิเล็กทรอนิกส์กำลัง',smt_process:'การประกอบวงจร SMT',metal_machining:'งานขึ้นรูปโลหะ',physical_chemistry:'เคมีเชิงฟิสิกส์',chemical_processing:'กระบวนการเคมี',circuit_design:'ออกแบบวงจร',metrology:'มาตรวิทยา',embedded_firmware:'เฟิร์มแวร์',people_management:'บริหารคน',procurement:'จัดซื้อ'})[id]||id)+' '+Math.floor(n)+'/100').join(' • ')));}
       if(!people.length)empty();
     } else {
       const cohorts=list(d.cohorts);
-      row("ยอดขายกับผู้ใช้งานจริง","ยอดขายคือเครื่องที่ขายในช่วงเวลานั้น ฐานผู้ใช้คือเครื่องที่ยังใช้งานอยู่ การซื้อทดแทนจึงไม่เท่ากับผู้ใช้ใหม่ทั้งหมด");
-      for(const c of cohorts)row(name(lookup(designs,c.designId)),`ยอดขาย ${c.quantity??c.salesUnits??0} เครื่อง • ฐานใช้งาน ${c.active??c.installedBase??0} เครื่อง\n${reason(c)}`);
+      row("ยอดขาย ช่องทางจัดจำหน่าย และผู้ใช้งานจริง",`ยอดขายสะสม ${d.headlineMetrics?.sold||0} เครื่อง • ฐานใช้งานจริง ${d.headlineMetrics?.activeInstalled||0} เครื่อง • ช่องทางผู้ให้บริการเครือข่าย/ตัวแทนจำหน่าย ${channels.length} รายการ`);
+      for(const c of cohorts)row(name(lookup(designs,c.designId)),`ยอดขาย ${c.quantity??c.salesUnits??0} เครื่อง • ฐานใช้งาน ${c.active??c.installedBase??0} เครื่อง • ช่องทาง ${c.channel||'direct_household'} (${c.networkGen||'2G'})\n${reason(c)}`);
       const news=list(d.news);for(const n of news.slice(0,40))row(name(n),`${n.day!=null?"วันที่ "+n.day+" • ":""}${reason(n)}`);
       if(!cohorts.length&&!news.length)empty();
     }

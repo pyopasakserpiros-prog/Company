@@ -1,22 +1,18 @@
 # Company Simulation — Current Project Status and AI Onboarding
 
-**Updated:** 2026-11-12. **Runtime:** v3.0.0. **Implementation base:** `a2c5514` on `main`, repository `pyopasakserpiros-prog/Company` (previous runtime v2.9.0). This status is maintained identically at repository root, `COMPANY_SOURCE/` and `era3/`.
-
-## Current handoff assignment (not implemented features)
-
-The owner requests a Gemini implementation of a deeper phone-manufacturing ecosystem, including actual campus entry into CPU/SoC, RAM, camera and other supplier businesses. Canonical English assignment: repository-root `ACTIVE_PROMPT.md`; source base `786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc`. Prompt prepared, awaiting owner-mediated main ZIP handoff; Gemini start/receipt not verified. Runtime remains v3.0.0 and the limitations below still apply. This documentation update does not implement the requested supplier expansion.
+**Updated:** 2026-11-12. **Runtime:** v3.1.0. **Implementation base:** `786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc` on `main`, repository `pyopasakserpiros-prog/Company` (previous runtime v3.0.0). This status is maintained identically at repository root, `COMPANY_SOURCE/` and `era3/`.
 
 ## What this game is
 
 Company Simulation / Siam Enterprise is an **autonomous NPC life-and-business world**. Executives and employees decide, learn, work, trade and invest themselves. The player observes, controls time/camera and experiments through Edit Hub; normal management orders or approvals are not required. The owner is not a programmer and enjoys watching different people react differently to traits, knowledge, money and resources. AI collaborators must help design and create, not wait for every detail from the owner.
 
-Read actual `AGENTS.md` before every assignment, then this status, `START_HERE_FOR_AI.md`, the work register/workflow and relevant `.agents/skills`. Do not change AGENTS or the locked Human Core without separate explicit permission. The current implementation authorization does not grant that permission.
+Read actual `AGENTS.md` before every assignment, then this status, `START_HERE_FOR_AI.md`, the work register/workflow and relevant `.agents/skills`. Do not change AGENTS or the locked Human Core without separate explicit permission.
 
 ## Runtime identity and invariants
 
 | Contract | Current value |
 |---|---|
-| Release in data/sim | `3.0.0` |
+| Release in data/sim | `3.1.0` |
 | Save/package version | `0.1.0`; schema `company-foundation-1` |
 | Source | Browser JavaScript, UMD/CommonJS, Canvas + DOM in `COMPANY_SOURCE/` |
 | Tick / 1× speed | Five game minutes/tick; two game minutes/real second (12 real minutes/full game day) |
@@ -34,35 +30,40 @@ Read actual `AGENTS.md` before every assignment, then this status, `START_HERE_F
 - Twelve countries/blocs, 28 initial outside firms, finite cash/stock/resources, household/treasury accounts, trade, transport and prices. Fictional leaders/terms/approval, commerce ministries, commodity measures, treaties, conflicts and recovery affect funded operations. Parliamentary politics, tactical warfare and full population/legal economies are not implemented.
 - NPC personal news consumption and risk beliefs affect buying/learning/partnership choices. Observer knowledge is broader than individual NPC information.
 
-## v3.0.0 — Implemented Era 3 phone sector
+## v3.1.0 — Implemented Era 3 Phone-Manufacturing Supplier Ecosystem & Vertical Integration
 
-A distinct physical phone market runs independently of whether the observed SME enters it. Initial outside divisions know feature-phone engineering; opening phone/component inventories are empty. Funded research and compatible supplier designs can generate smartphones. There is no calendar smartphone unlock or fixed finished handset catalogue.
+Building on the v3.0.0 generated physical phone industry foundation, **v3.1.0** delivers the executable 12-role phone-manufacturing supplier ecosystem, own-company entry and vertical integration across specialist supplier roles, and normal-opening upstream supply calibration:
 
-**Generated engineering:** CPU cores/GHz/IPC/node/die area/power, RAM capacity/bandwidth, storage capacity/speed, camera MP/sensor/processing, display/power, battery Wh, enclosure thermals and OS compatibility/overhead are measurable. Bottleneck/task estimates and predecessor deltas show where a model improves or regresses. These are simplified engineering estimates, not real benchmark data.
+1. **12 Executable Business Roles (`E.ROLE_CONTRACTS`) & 8 Qualified Material Grades (`E.MATERIAL_GRADES`)**:
+   - Models `fabless_soc` (Fabless CPU/SoC Design), `wafer_foundry` (Semiconductor Wafer Foundry), `osat_packaging` (OSAT Packaging & Test), `dram_memory` (DRAM / Volatile Memory Supplier), `nand_storage` (NAND Flash / eMMC / UFS Supplier), `camera_module` (Camera & Optics Supplier), `display_panel` (Display & Touch Panel Supplier), `battery_pack` (Battery & BMS Pack Supplier), `pcb_rf` (PCB / Interconnect / RF Supplier), `enclosure` (Mechanical & Thermal Enclosure Supplier), `os_platform` (OS / Firmware / Platform Vendor), and `brand` (Handset Brand / ODM / EMS).
+   - Each role contract specifies subject requirements, key specialist subject, required campus equipment, utility draw (`utilityKw`), entry capital (`entryCapitalSatang`), NRE/licensing costs, working-capital days, qualified material grade (`electronic_silicon_wafer_9n`, `tested_wafer_die_lot`, `packaged_tested_ic_grade`, `cmos_optical_wafer_grade`, `aluminosilicate_panel_substrate`, `high_cycle_lipo_cell_grade`, `hdi_rf_copper_laminate`, `anodized_thermal_enclosure_grade`), BOM, and 3-stage process stages.
+   - External industry expanded to **16 active firms** across all 12 roles (`siam_aero_robotics`, `apex_ind`, `solartech_asia`, `biomed_siam`, `green_power`, `bharat_biotech_it` alongside `shenzhen_semi`, `tokyo_elec`, `pacific_solar`, `petro_chem_siam`, `siam_metal`, `singapore_port_3pl`, and the 4 handset brands).
 
-**Real inventory:** supplier raw purchases → transit/delivery → material-consuming component batches → specific CPU/RAM/display/etc. lots → brand purchases → owned component inventory → assembly/EMS/licence payment → finished phones → pilot qualification → release/household purchase. Missing parts block output, and small complete batches can proceed. Finished inventory can wait before launch. Warranty returns and active/retired customer cohorts have actual money/stock consequences.
+2. **Fabless SoC -> Wafer Foundry -> OSAT Packaging Pipeline (`produceChipBatch`, `foundryOrders`) & Persistent WIP (`wipBatches`)**:
+   - Distinguishes owning a semiconductor fab (`wafer_foundry`) from fabless chip design (`fabless_soc`). A fabless company designs its architecture, pays foundry + OSAT fees, books finite daily foundry slots (`foundrySlots`), and receives packaged, tested `chip` lots (`packaged_tested_ic_grade`) logged in `w.phoneIndustry.foundryOrders`.
+   - Component and handset production records multi-stage WIP batches in `w.phoneIndustry.wipBatches`, and compatible multi-supplier lots substitute cleanly (`isSubstitutableLot`, `adoptOwnedCompatibleLot`) while preserving a 4-unit internal buffer when a supplier also operates `brand`.
 
-**Named outside people:** persistent profiles/subjects/work/pay/loyalty, shared finite engineering time, slow learning, staffing capability and recruitment with notice. Recruitment preserves identity and turns a person into a full campus NPC; the former firm loses that contribution. Current saves freeze profiles and retain recruited education continuity.
+3. **Own-Company Entry Across All Supplier Roles, Vertical Integration & `declined_prudent` Separation**:
+   - `I.enterCampusRole(w, roleId, options)`, `S.selectFeasibleCampusPhoneRole`, and `S.phoneCompanyReview` allow the observed campus SME (`phone_campus`) to enter any feasible supplier or brand role, sell components B2B to external handset makers, and vertically integrate across multiple roles (e.g., `fabless_soc` + `dram_memory` + `camera_module` + `brand`).
+   - `E.evaluateRoleFeasibility` and `S.phoneCompanyReview` explicitly separate objective feasibility (`feasible: true`) from strategic refusal (`feasibleButDeclined: true`, `entry.status = "declined_prudent"`) when a cautious CEO preserves cash reserves.
+   - Campus production pulls available campus warehouse inputs via `syncCampusMaterialsIfNeeded` (reconciling `w.inventory.consumed` and `w.knowledge.materialsConsumed`), checks campus machine readiness and utility brownouts (`checkCampusEquipmentReady`), and automatically continues `phoneWorkshop` jobs while `campusFirmId` is active.
 
-**Own company entry:** the CEO evaluates knowledge, personality, tools and cash reserves. A funded handset division uses actual completed campus work and the same purchased-component/assembly pipeline. A qualified metal SME can license an enclosure design and manufacture components using real polymer/metal inputs and a ready press. A repair SME can service a chip firm. Conditional acquisition retains an outside company's team/designs/obligations; dividends require measured operating profit. Full own-company entry into every specialist supplier role is not finished.
-
-**World integration:** component/raw trade obeys route/customs/policy constraints; wages, purchases, taxes, licence/EMS fees, sales and refunds have real counterparties. Phone work runs before world firm profit/tax/history close. The inherited world cash-surplus tax and approximate raw valuation are not full statutory accrual accounting.
-
-**Observation:** the 📱 phone button opens overview, company, products/R&D, supply/stock, market/news and people tabs. These are pure readers. Logged Edit Hub experiments adjust outside cash or an individual's subject/trait; they do not order phone operations. Public events enter World Chronicle without exposing private research starts/failures.
-
-Source/API details and units: `docs/company/ERA3_PHONE_SYSTEM.md`. The original `era3/` briefs remain design history and unresolved ambitions, not proof every proposed system shipped.
+4. **Normal-Opening Upstream Supply Calibration (`world.js`)**:
+   - Fixed the 4 root causes of v3.0.0 normal-opening supply starvation (`24/25` phones over 360 days) without hidden refills or free endowments: (a) sorted `operate()` outputs by ascending material tier so vertically integrated firms produce raw/refined materials before consuming them; (b) added biological inputs (`raw_water_m3`, `npk_fertilizer`, `soybean_crop`, `rice_bran_husk`) for `natural_latex`/`timber_bamboo_log`/`fresh_milk_soy` to `World.step` procurement `needs`; (c) scaled Tier 0 extraction and added regional refining for `copper_coil`, `polymer_resin`, `silicon_wafer`, `pcb`, `nitrogen_ammonia`, and `npk_fertilizer`; (d) protected B2B working stock buffers and active phone division materials (`PHONE_CRITICAL_MATERIALS`) from domestic residual consumption before `Phone.step` runs.
+   - Normal 360-day sector runs now produce **`601` phones (`16` designs, `12` smart)** in `era3-independent` and **`796` phones (`17` designs, `13` smart)** in `era3-world-b`, compared to `1,031` phones (`22` designs, `18` smart) in the endowed `era3-capable` fixture.
 
 ## Known limitations and next useful work
 
-Normal opening supply can constrain phone output severely. A deliberately resource-endowed opening proves a later smartphone path but does not establish default economic balance. Supplier raw recipes, process purity, equipment/energy/capital costs and daily capacity remain aggregate. Specialist supplier competition/entry, distributors/carriers, app economy, legal IP/exclusivity/full M&A and detailed lifecycle accounting remain partial or absent. Technical envelopes are bounded, and initial supplier roles are assigned to existing firms. Do not describe this release as a completed replica of the real industry.
-
-Prioritise economic calibration and missing-input observability, then supplier-specific manufacturing and competing technology development, using conservation and actual-work evidence. Preserve legacy businesses and the observer role. Do not force every seed, CEO or firm to enter phones or succeed.
+- Outside firms and EMS still use aggregate daily batch models rather than per-machine cleanroom/SMT placement queues.
+- Base catalog material IDs (`64` materials, `40` recipes, `42` products) are preserved for backward compatibility while `E.MATERIAL_GRADES` tracks phone-grade qualification on phone lots and WIP batches.
+- Carrier/retail channels (`carrier_bundle`, `retail_distributor`, `direct_household` in `w.phoneIndustry.channels`) record segment and radio-generation sales, while full carrier balance-sheet financing, app-store developer ecosystems, and formal patent/IP litigation remain partial or future scope.
+- Playwright (`playwright` npm package) is not pre-installed in the offline sandbox VM container, so `npm run test:browser` must be run in an environment with Playwright/Chromium installed.
 
 ## Verification and delivery
 
-See `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md` and `docs/company/validation/v300/` for actual commands/results, scenarios and limitations. The initial v2.9 baseline passed 203 tests; this is historical context, not the current test total. Current totals must be read from delivery records.
+See `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md` for exact commands, results, scenarios and limitations.
 
-Run in `COMPANY_SOURCE/` with Node20+:
+Run in `COMPANY_SOURCE/` with Node 18/20+:
 
 ```sh
 npm test
@@ -73,9 +74,7 @@ node tools/phone-industry-soak.cjs
 node tools/benchmark.cjs
 ```
 
-Browser checks need Playwright/Chromium. Node timing is simulation-only, not mobile FPS. The sector soak advances world/phone days directly, checks daily audit/save and separately labels an edited resource-endowment fixture; it is not a 360-day full campus-life playthrough. Actual campus jobs are covered by dedicated integration cases.
-
-Play root `Company_single.html` offline, or serve `COMPANY_SOURCE/index.html` with `python3 -m http.server 8000`. All three standalone HTML aliases are rebuilt from source.
+At v3.1.0, `node tools/verify.cjs` passes (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`), `node tools/test.cjs` passes **236/236** unit/integration tests (including `test/phone-supplier-ecosystem-v310.test.cjs`), `node tools/build.cjs` builds `CompanyFoundation_single.html` (`1,982,770` UTF-8 bytes, copied to `COMPANY_SOURCE/Company_single.html` and root `Company_single.html`), `node tools/phone-industry-soak.cjs` passes 360-day sector soaks + 45-day full-campus-life (`S.advance(1440)`) soak, and `node tools/benchmark.cjs` records `1.499 ms/tick` mean at 500 NPCs.
 
 ## Source map and collaboration
 
@@ -84,16 +83,10 @@ Play root `Company_single.html` offline, or serve `COMPANY_SOURCE/index.html` wi
 | `js/sim.js`, `data.js`, `layout.js` | People/subjects/jobs/autonomy/catalogues/campus |
 | `js/economy.js`, `world.js`, `civics.js` | Ledgers, living firms/trade/settlement, governments/policy |
 | `js/startup.js`, `plant.js` | SME opening, machines/processes/maintenance |
-| `js/phone-engineering.js` | Pure component synthesis/compatibility/thermal/yield estimates |
-| `js/phone-talent.js`, `phone-industry.js` | Stable professionals/recruitment; funded physical industry |
+| `js/phone-engineering.js` | 12 role contracts, 8 material grades, pure component synthesis/compatibility/thermal/yield/feasibility estimates |
+| `js/phone-talent.js`, `phone-industry.js` | Stable professionals/recruitment across 12 roles; funded 16-firm physical industry, foundry orders, WIP batches & campus vertical integration |
 | `js/api.js`, `save.js` | Cloned observation/commands and state/reference validation |
-| `js/debug.js`, CSS/render modules | Read-only sheets, Edit Hub and presentation |
+| `js/debug.js`, CSS/render modules | Read-only sheets, 6 phone tabs, role feasibility diagnostics, Edit Hub and presentation |
 | `test/`, `tools/` | Tests, checks, builds and reproducible experiments |
 
-Browser load: civics before world; plant/startup and the three phone modules before sim. Use the actual index/build tooling when adding modules.
-
-Codex/Agy access GitHub directly; app Gemini/ChatGPT receive a recorded-base source ZIP via the owner and return a full verified ZIP. Do not overwrite concurrent work; compare base/returned/current main. Both repository master skills, affected domain references, status mirrors, docs and reports must be updated every patch. The two Gemini app skills require an update inside that app by its operator; **app synchronization has not been accessed or verified**.
-
-A full ZIP includes source/assets/tools/tests/manifests, all standalone builds, hidden `.agents/skills`, rules/docs/ideas/status/reports under one root; excludes `.git`, installed dependencies/cache and nested ZIPs. Reopen/CRC/path/hash-check, extract fresh and rerun supported checks/build. Current handoff: `docs/company/ERA3_V300_HANDOFF.md`; outstanding proposals: `ideas/company/36_era3_phone_industry_remaining.md`.
-
-Recent history retained: v2.3 knowledge/company/zoom; v2.4 living world; v2.5 slower time/stock; v2.6 plant/contracts; v2.7 operational processes; v2.8 crises/observability/human depth; v2.9 SME/civics/news; v3.0 physical generated phone industry foundation. Historical patch reports remain in `docs/company/PATCH_REPORTS/`.
+Both repository master skills, root skill copies, all 14 domain skills, status mirrors, docs and reports are updated for v3.1.0, and the two installed Gemini app skills (`user:company-evolution-dev` and `user:company-for-every-patch`) were updated via `skills:update_skill` in the Gemini environment.

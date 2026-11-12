@@ -1,58 +1,53 @@
-# Company v3.0.0 — Era 3 phone-industry contracts
+# Company v3.1.0 — Era 3 phone-industry & supplier-ecosystem contracts
 
-Updated 2026-11-12. Implementation base: `a2c5514` on `main`, runtime v2.9.0. Runtime delivery: **v3.0.0**. Save/package version stays `0.1.0`, schema `company-foundation-1`.
+Updated 2026-11-12. Implementation base: `786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc` on `main`, runtime v3.0.0. Runtime delivery: **v3.1.0**. Save/package version stays `0.1.0`, schema `company-foundation-1`.
 
-This is an autonomous life-and-business simulation. NPCs make decisions; the player observes and edits conditions. The Era 3 vision is larger than this release. This guide describes executable contracts and explicit abstractions, not a claim to simulate an entire real phone industry.
+This is an autonomous life-and-business simulation. NPCs make decisions; the player observes and edits conditions. This guide describes the executable v3.1.0 contracts and explicit abstractions.
 
-## Models and evidence
+## 1. 12 Executable Business Roles & 8 Qualified Material Grades (`phone-engineering.js`)
 
-`phone-engineering.js` exports pure `synthesizeChip(seed, capability, options)`, `parts(seed, level)`, `evaluate(chip, parts, options)` and `wafer(options)`. Hardware varies deterministically by seed, company knowledge and funded project. Technical envelopes currently have bounded levels; the game does not discover arbitrary CPU architectures. Finished handset names and specifications are generated from selected supplier designs, never drawn from a fixed finished-phone catalogue.
+`phone-engineering.js` exports:
+- `MATERIAL_GRADES`: 8 qualified phone-grade inputs (`electronic_silicon_wafer_9n`, `tested_wafer_die_lot`, `packaged_tested_ic_grade`, `cmos_optical_wafer_grade`, `aluminosilicate_panel_substrate`, `high_cycle_lipo_cell_grade`, `hdi_rf_copper_laminate`, `anodized_thermal_enclosure_grade`) with purity grade, raw inputs, and process transformation descriptions.
+- `ROLE_CONTRACTS`: 12 executable roles (`fabless_soc`, `wafer_foundry`, `osat_packaging`, `dram_memory`, `nand_storage`, `camera_module`, `display_panel`, `battery_pack`, `pcb_rf`, `enclosure`, `os_platform`, `brand`) plus legacy alias mapping (`roleContract(roleId)`). Each contract defines `outputs`, `actualBuyers`, `subjectRequirements`, `keySpecialistSubject`, `requiredEquipment`, `utilityKw`, `entryCapitalSatang`, `nreCostSatang`, `licenseFeeSatang`, `workingCapitalDays`, `qualifiedMaterialGrade`, `bom`, `workMinutesPerUnit`, `minBatchSize`, `baseYield`, and 3-stage `processStages`.
+- Pure functions: `synthesizeChip(seed, capability, options)`, `synthesizeComponent(seed, kind, capability, level, options)`, `parts(seed, level, options)`, `isCompatiblePart(chip, kind, spec)`, `evaluate(chip, parts, options)`, `wafer(options)`, and `evaluateRoleFeasibility(snapshotOrContext, roleId)`.
 
-Chip records expose cores, GHz, IPC index, GPU estimate, node nm, die mm², memory interface/limit, display limit and W. Parts expose RAM MB/bandwidth, storage MB/read speed/interface, camera MP/sensor/processing, display dimensions/W, battery Wh/discharge W, enclosure thermal resistance, and OS ISA/RAM/driver requirements/overhead/app capability. Compatibility is a gate. Battery hours = usable Wh / workload-average W. Peak W, ambient temperature and thermal resistance constrain sustained throughput. Call/web/game task estimates respond to bottlenecks; a newer label does not make a model better. Comparisons retain improvements and regressions against the preceding handset.
+`evaluateRoleFeasibility` evaluates campus subject proficiency, installed/ready machines, cash above wage reserve, utility brownout state, and CEO personality (`riskTaking`, `prudence`) to return both objective feasibility (`feasible`) and strategic refusal (`feasibleButDeclined` when a cautious CEO declines a feasible entry to protect reserves).
 
-Wafer yield uses die area in cm² when applying defects/cm², a stable Murphy zero-defect limit, integer dies and conserved good/bin/scrap totals. Failed packaging costs remain in unit cost. These are disclosed engineering estimates, not measured silicon benchmarks or a full PDK/process simulator.
+## 2. 16-Firm Supplier Ecosystem, Fabless->Foundry->OSAT & WIP Batches (`phone-industry.js`)
 
-## Physical stock and cash sequence
+- **16 Active External Firms**:
+  - Handset Brands (`brand`): `siam_tech` (also `os_platform`), `titan_elec`, `asia_autoparts`, `eastern_auto`.
+  - Semiconductor & Foundry/OSAT: `shenzhen_semi` (`chip`, `wafer_foundry`, `fabless_soc`), `siam_aero_robotics` (`fabless_soc`, `camera_module`), `singapore_port_3pl` (`ems`, `osat_packaging`).
+  - Memory, Storage, Optics, Display, Battery, PCB/RF, Enclosure, OS: `tokyo_elec` (`display`, `display_panel`, `camera_module`, `dram_memory`, `nand_storage`), `apex_ind` (`dram_memory`), `solartech_asia` (`nand_storage`, `pcb_rf`), `biomed_siam` (`camera_module`), `pacific_solar` (`battery`, `battery_pack`), `green_power` (`battery_pack`, `display_panel`), `petro_chem_siam` (`materials`, `pcb_rf`, `enclosure`), `siam_metal` (`enclosure`), `bharat_biotech_it` (`os_platform`).
+- **IDM vs. Fabless SoC Manufacturing (`produceChipBatch`)**:
+  - Firms owning a wafer foundry (`wafer_foundry`) consume `silicon_wafer` + `copper_coil`, run `E.wafer(...)`, pay OSAT packaging fees to `singapore_port_3pl` (unless vertically integrated in `osat_packaging`), and receive `packaged_tested_ic_grade` chip lots.
+  - Fabless firms (`fabless_soc`, including `phone_campus` or `siam_aero_robotics`) do not own a wafer fab: they book finite daily foundry capacity (`foundrySlots`) at an active wafer foundry (`shenzhen_semi`) and OSAT packaging at `singapore_port_3pl`, pay real foundry + packaging fees, and receive owned `chip` lots recorded in `w.phoneIndustry.foundryOrders`.
+- **Multi-Supplier Lot Compatibility & Internal Buffer (`isSubstitutableLot`, `adoptOwnedCompatibleLot`, `purchase`)**:
+  - Handset makers can source compatible same-level components from any qualified supplier (`apex_ind`, `solartech_asia`, `biomed_siam`, `green_power`, `phone_campus`, etc.) verified by `E.isCompatiblePart`.
+  - When a vertically integrated firm operates both supplier roles and `brand`, external B2B buyers leave a 4-unit internal buffer per lot so the integrated firm can assemble its own handsets while selling surplus lots B2B.
+- **Persistent WIP & Channel Ledgers**:
+  - Every chip, component, and phone batch records a structured entry in `w.phoneIndustry.wipBatches` (`materialGrade`, `goodUnits`, `scrapUnits`, `workMinutesDone`, `inputCostSatang`, `serviceFeeSatang`).
+  - Retail sales classify transactions into `carrier_bundle`, `retail_distributor`, or `direct_household` in `w.phoneIndustry.channels`.
 
-1. Research work comes from named, paid outside engineers or actual completed campus `phoneWorkshop` jobs. A campus day by itself grants no work. Shared outside engineering budgets are at most 360 minutes/person/day; campus jobs compete with other work, travel and needs.
-2. A handset prototype requires purchased CPU, RAM, storage, display, camera, battery and enclosure samples in that firm's lots, plus actual generic prototype materials. Consumed samples cannot be sold afterward.
-3. Suppliers purchase real processed inputs from finite world stocks. Cash leaves the buyer, enters the seller, customs reaches the importing treasury, and stock becomes an in-transit contract before delivery. Existing legacy resources are shared with other industries.
-4. Supplier manufacturing consumes inputs before creating owned component lots. All component types share one production-time budget, with lower-stock designs prioritised. Chip packaging transfers a real fee to EMS. Chip suppliers retain demand for older silicon designs instead of producing only the newest one.
-5. Brand procurement reserves specific seller lots, pays actual costs/tax and waits for delivery. Owned input lots carry supplier/design IDs and FIFO costs. Missing components prevent assembly; a smaller complete batch can proceed when a planned larger batch cannot.
-6. Assembly consumes one of each selected component plus PCB/copper inputs, pays EMS and an OS licence where another firm owns it, and uses finite shared daily EMS capacity. Output is an owned finished-phone lot. There is no direct materials-to-cash conversion.
-7. A design starts in `pilot`. At least two physical units, 1,200 further paid effective validation minutes and a seven-day post-design observation interval are required before the NPC releases it. Finished units may wait in stock while qualification runs.
-8. Actual household budgets purchase released stock. Components and phones are not sold twice. NPC pricing includes measured component/assembly costs and a margin; clearance respects the current cost floor. Cohorts track active devices, returns and retirement. Warranty refunds are actual cash transfers, bounded to 365 days and a low heat-dependent monthly hazard; retirement begins at 540 days.
+## 3. Own-Company Supplier Entry & Vertical Integration (`enterCampusRole`, `phoneCompanyReview`)
 
-`w.phoneIndustry.lots`: `quantity = available + reserved + used + sold`. Procurement moves reserved stock into a buyer lot on delivery. `contracts` retain raw/component type, ownership, price, tax, dates and shipping state. No opening physical phone/component gifts are created. Initial feature-phone engineering knowledge is an explicit opening condition, separate from inventory.
+- Every 14 days in `S.phoneCompanyReview`, the autonomous CEO evaluates `selectFeasibleCampusPhoneRole(w, wages, excludeRoles)` across all 12 roles.
+- If a role is objectively feasible (`feasible: true`) but the CEO is highly conservative (`riskTaking < 40` or `prudence > 82` with tight buffer), `w.phoneIndustry.playerEntry` records `status: "declined_prudent"` and `feasibleButDeclined: true`.
+- Otherwise, the company invests role-specific `entryCapitalSatang` (`120m–800m` satang depending on role) via `I.enterCampusRole(w, roleId, options)`, licenses or synthesizes an initial blueprint (never granting free physical lots), and schedules `phoneWorkshop` jobs.
+- When `phoneWorkshop` completes in `finishJob`, if `w.phoneIndustry.campusFirmId` is active and no other `phoneWorkshop` job is queued, a new `phoneWorkshop` job is automatically queued so daily campus engineering and production proceed continuously.
+- If `phone_campus` is already active and the CEO has `riskTaking >= 50` with sufficient cash reserves, `phoneCompanyReview` can expand `phone_campus.roles` into additional feasible roles (Vertical Integration across CPU + RAM + Camera + Handset).
+- `syncCampusMaterialsIfNeeded` pulls unreserved materials from `w.inventory.materials` into `phone_campus` stock while incrementing both `w.inventory.consumed[k]` and `w.knowledge.materialsConsumed[k]` so `S.audit(w)` material conservation and allocation equations hold exactly.
 
-## Cross-system accounting and policy
+## 4. Normal-Opening Upstream Supply Calibration (`world.js`)
 
-The living world calls sector work via `World.step(w, day, beforeSettlement)` after generic production/trade but before firm profit/tax/history and government review. `sim.js` supplies the phone callback. This avoids erasing phone transactions at the next day's reset. Raw and component routes consult `Civics.quote`; tariffs/waivers/quotas and blocked routes affect actual transfers and delivery. Component customs currently use proxy commodity groups, not HS codes.
+Four systemic bottlenecks in `world.js` were resolved so normal openings produce sustained electronics and agricultural inputs without artificial gifts:
+1. `operate()` sorts firm outputs by ascending material tier so vertically integrated firms produce Tier 0/1/2 inputs before attempting Tier 2/3 recipes on the same day.
+2. `World.step` procurement `needs` includes biological crop/livestock inputs (`raw_water_m3`, `npk_fertilizer`, `soybean_crop`, `rice_bran_husk`) for firms producing `natural_latex`, `timber_bamboo_log`, and `fresh_milk_soy`.
+3. Tier 0 extraction and regional refining capacities cover `copper_coil`, `polymer_resin`, `silicon_wafer`, `pcb`, `nitrogen_ammonia`, and `npk_fertilizer`.
+4. Domestic household residual consumption preserves B2B working stock buffers and skips `PHONE_CRITICAL_MATERIALS` held by active phone industry firms so `Phone.step` can consume them.
 
-World firm cash reconciles opening + receipts − payments. Wages go to national households; consumers fund sales; refunds reverse consumption; customs goes to treasury. Generic world tax remains the inherited simplified levy on positive cash surplus, not a real tax return. Phone sale COGS uses the latest measured assembly unit cost; raw stock valuation remains a spot-price estimate. This is not a complete FIFO accrual ledger for every upstream operation. R&D wage allocation is informational, not a second cash debit.
+## 5. Boundaries That Remain Visible
 
-Campus capital is an `expansion` expense into a separately funded division account (`phone_campus`), reconciled through `playerNetSatang`. There is no free duplicate workforce: the division consumes actual campus job credits. Conditional acquisition pays previous owners' households and retains an outside company/team/obligations. Profitable owned phone operations can return dividends through `investmentIncome`; initial contributed capital cannot create a dividend. Full legal M&A/IP/exclusivity is not implemented.
-
-## Campus business entry
-
-The SME starts in its existing sector. Every fourteen days the autonomous CEO can evaluate entry using personality, knowledge, equipment and cash after wage reserves. A handset team needs electrical/software/quality capability and THB5m division capital plus 90 days' wages. Money alone does not unlock it. Repair SMEs may instead perform real maintenance service work for the semiconductor company.
-
-A qualified metal workshop with a ready press can take the enclosure-supplier route. It spends the same conservative division capital and buys a paid licence to an existing enclosure design. The licence creates a usable blueprint, not physical components. Actual polymer/metal stock and campus work create saleable enclosure lots. A failed press blocks new supplier work. This route demonstrates own-company supplier production; comprehensive entry into RAM/foundry/camera/battery businesses is still future scope.
-
-## People, save and observation
-
-`phone-talent.js` keeps stable named people, immutable Human Core profiles, subjects, employer, pay, loyalty/satisfaction, work and recruitment notice. Subject level, potential, learning aptitude and condition affect effective work. Staff loss removes capability. Accepted recruitment observes notice and preserves identity/profile/education while creating a full campus person and removing outside work contribution. Save loading re-freezes outside profiles and restores the recruited education reference so subsequent edits continue identically.
-
-`sim.js`: `phoneView`, `phoneTalentView`, `phoneAudit`, `phoneCompanyReview`. `api.js` exposes cloned phone/talent snapshots. UI button **📱 โทรศัพท์** opens six observation tabs: overview, firms, products/R&D, supply/stock, market/news and people. They show prices/specs/comparisons, decisions, contributors, lots and shipments. Reading tabs never advances time or RNG. Public phone events feed World Chronicle; private research-start/failure records are withheld from that public feed.
-
-Edit Hub phone experiments permit external cash endowment and a named person's subject/trait edits through `directorPhoneEdit`, with validated units and logged provenance. No ordinary purchase/design/launch command is required from the player. Repository skill updates do not synchronize Gemini's app skills.
-
-## Boundaries that must remain visible
-
-- Outside production and EMS use aggregate daily capacity, inputs and paid labor, not a full placement/reflow/cleanroom machine queue. Campus phone labor uses campus stations; its division inventory is displayed in the phone screen, separate from the legacy material warehouse.
-- Some old processed-material proxies are coarse (including generic wafer, battery and glass resources). They are not natural upstream materials. Dedicated phone-grade purity/chemistry recipes and full capital/utility costs remain unfinished.
-- Initial supplier roles are assigned to existing firms. Supplier generation and technical levels are bounded. The new market has direct household sell-through, not a complete distributor/retailer/carrier balance-sheet network.
-- Information, recruiting and acquisition are partial models. No full app-store economy, carrier standards/certification, IP litigation, exclusivity, liquidation or professional labour-market replacement is claimed.
-- Normal openings can be severely input-constrained. The 360-day ample-input experiment is explicitly an edited opening endowment, not the default economy. Calibration of supply, wages, scale and profitability needs further work; do not promise smartphones or a profitable phone firm in every seed.
-
-Verification and scope matrix: [report](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md). Continuing work: [handoff](ERA3_V300_HANDOFF.md).
+- External firms and EMS operate as daily batch models rather than per-machine cleanroom/SMT queues.
+- Base catalog material/product/recipe counts (`64` / `42` / `40`) remain fixed for legacy test compatibility while phone-grade qualifications live in `E.MATERIAL_GRADES` and `w.phoneIndustry`.
+- Full carrier balance-sheet financing, third-party app developer ecosystems, and formal patent litigation remain simplified or future scope.

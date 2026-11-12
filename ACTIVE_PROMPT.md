@@ -1,6 +1,9 @@
-# ACTIVE IMPLEMENTATION PROMPT — Gemini: Build the Phone Manufacturing Ecosystem
+# ACTIVE IMPLEMENTATION PROMPT — Gemini: Build the Phone Manufacturing Ecosystem (COMPLETED IN v3.1.0)
 
-## Assignment and authority
+> **Status: IMPLEMENTED & VERIFIED IN RUNTIME v3.1.0 (2026-11-12)**
+> - **Base**: `786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc` (`v3.0.0`) -> **Delivered**: `v3.1.0` (`236/236` unit/integration tests passing, `tools/phone-industry-soak.cjs` normal opening `601` / `796` phones, full-campus-life `S.advance(1440)` vertical-integration soak passing).
+> - **Report**: See [`docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md`](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md) and [`docs/company/ERA3_PHONE_SYSTEM.md`](docs/company/ERA3_PHONE_SYSTEM.md).
+> - The original assignment prompt is retained below in full for provenance.
 
 You are the implementing developer receiving the complete Company repository as a ZIP from its owner. Continue from **v3.0.0**, gameplay/source commit **786f5b1bced6e43cdb1e10d02114bda2cbf0e8fc**. Later commits may update only this brief and handoff documents. Record the actual received archive/base. You do not have live GitHub access in this workflow: implement locally and return a verified complete project ZIP. Codex/Agy will inspect and integrate it.
 

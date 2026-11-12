@@ -1,16 +1,13 @@
-# Era 3 — remaining phone-industry proposals after v3.0.0
+# Era 3 — remaining phone-industry proposals after v3.1.0
 
-Implemented stock/prototype/assembly/launch, measured engineering, named people, autonomous entry and finite trade now belong in project status and the v3 report. Do not list them as unimplemented ideas. The original multi-AI briefs in `era3/` remain provenance; use their detailed suggestions critically.
+Completed in v3.0.0 and v3.1.0 (and now documented in `project_status_and_ai_onboarding.md`, `docs/company/ERA3_PHONE_SYSTEM.md`, and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md`):
+- 12 executable supplier & brand business roles (`E.ROLE_CONTRACTS`: `fabless_soc`, `wafer_foundry`, `osat_packaging`, `dram_memory`, `nand_storage`, `camera_module`, `display_panel`, `battery_pack`, `pcb_rf`, `enclosure`, `os_platform`, `brand`) and 8 qualified phone material grades (`E.MATERIAL_GRADES`).
+- Own-company entry, B2B component sales, and vertical integration across CPU/SoC (booking wafer foundry + OSAT), RAM, Camera, Flash, Display, Battery, PCB/RF, Enclosure, OS, and Handset Brand (`I.enterCampusRole`, `S.selectFeasibleCampusPhoneRole`, `declined_prudent`).
+- Normal-opening upstream supply calibration in `world.js` (resolving the v3.0.0 `24/25`-phone starvation to `601–796` phones over 360 days without artificial refills) and multi-day full-campus-life (`S.advance(1440)`) verification.
 
-Still proposed / partial:
-
-1. Calibrate the normal opening: severe raw shortages, producer scale, wages, input prices and margins. Add bottleneck histories and compare affordable SME routes, specialists, cash preservation and failed investment. Do not refill resources or force smartphones to hide failures.
-2. Replace coarse phone-material proxies with qualified glass/wafer/cell/material grades, real transformation routes, process tooling/purity, utility and capital needs. A processed input is never a natural upstream resource.
-3. Deepen competing chip/memory/camera/display/battery/OS firms: separate design/foundry/packaging roles, learning curves, yield qualification, licences, backward support and deliberate product portfolios. Current numerical envelopes are bounded and roles are assigned to initial firms.
-4. Extend own-company supplier entry beyond the demonstrated enclosure route. Use named specialists, equipment, technology rights, funding, real inputs/capacity and opportunity cost. Capital alone is insufficient.
-5. Add funded distributors/carriers/retail inventory, segments/contracts/replacements and network certification. Current retail is direct household sell-through.
-6. Full R&D portfolios, public/private information beliefs, IP/exclusivity/legal acquisition/failed deal handling, support updates and app/service ecosystem. Current notice/acquisition/platform models are partial.
-7. Complete lifecycle accrual inventory/R&D/warranty costing and fiscal treatment. Current money transfers conserve cash, but raw cost valuation, COGS allocation and world tax are simplified.
-8. Broader long-run full-campus-life testing and mobile performance evidence. Sector-only 360-day soaks do not establish these.
-
-Player remains an observer with Edit Hub; NPCs decide whether and how to pursue opportunities. These are proposals for future authorised work, not an instruction to begin another patch automatically.
+Still proposed / partial for future authorised patches:
+1. Per-machine cleanroom/SMT placement queues for external firms (currently aggregate daily batches for off-screen performance).
+2. Independent carrier/distributor corporate balance sheets with multi-month postpaid subsidy contracts and spectrum auctions (currently channel classification in `w.phoneIndustry.channels` over household budgets).
+3. Third-party app-store developer ecosystem, SDK royalties, and platform network effects beyond OS licensing fees.
+4. Formal patent/IP litigation, injunctions, exclusivity lock-ups, and multi-tranche M&A earn-outs.
+5. Full statutory tax returns and per-lot FIFO tax accounting for external world corporations (currently cash-surplus levy + COGS tracking).

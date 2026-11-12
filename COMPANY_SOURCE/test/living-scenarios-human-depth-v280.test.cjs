@@ -9,9 +9,9 @@ const API = require("../js/api.js");
 const prepare = require("./knowledge-fixtures.cjs");
 
 test("v2.8.0 Pillar 1: Multi-Scenario Bottlenecks — Broken Machine, Locked/Missing Spare Part, Specialist Gap, Overloaded Contract Renegotiation, and Unsold Stock Clearance", () => {
-  assert.strictEqual(D.VERSION, "3.0.0");
-  assert.strictEqual(D.RELEASE_VERSION, "3.0.0");
-  assert.strictEqual(S.RELEASE_VERSION, "3.0.0");
+  assert.strictEqual(D.VERSION, "3.1.0");
+  assert.strictEqual(D.RELEASE_VERSION, "3.1.0");
+  assert.strictEqual(S.RELEASE_VERSION, "3.1.0");
 
   // Scenario A & B: Cash-rich company with broken critical machine, missing specialist, and spare part locked in production reservation
   const w = S.create("v280-crisis-scenarios", { autonomous: true });

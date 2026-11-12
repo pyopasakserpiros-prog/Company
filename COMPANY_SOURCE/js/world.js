@@ -19,6 +19,7 @@
     IN:[4,6,68,57,'software','ซอฟต์แวร์ ยา และตลาดภายในขนาดใหญ่'],
     SG:[2,3,90,85,'fleet','ท่าเรือ คลังสินค้าและบริการการค้าระหว่างประเทศ']
   };
+  const PHONE_CRITICAL_MATERIALS=new Set(['pcb','silicon_wafer','copper_coil','glass_bottle','battery','polymer_resin','metal_sheet','optical_lens','sensor']);
   function record(w,day,type,headlineTh,meaningTh,details={}){
     const m=w.externalWorld.living;
     const e={id:'world-'+(++m.sequence),day,at:Math.max(0,(day-1)*1440),category:type,badgeTh:'🌍 โลกภายนอก',headlineTh,meaningTh,priceImpactSummaryTh:details.impactTh||meaningTh,isMajor:!!details.major,...details};
@@ -40,7 +41,13 @@
       m.nations[id]={id,descriptionTh:p[5],specialty:p[4],technology:p[2],infrastructure:p[3],inflation:p[0],unemployment:p[1],approval:58+(h%17),stability:72,gdpIndex:100,interestRate:3,policy:'balanced',policyReasonTh:'รักษาเสถียรภาพและเงินสำรอง',lastReviewDay:0,nextElectionDay:120+h%121,term:0,treasury:5000000000,openingTreasury:5000000000,taxes:0,spending:0,householdCash:3000000000,openingHouseholdCash:3000000000,wages:0,consumption:0,transfers:0,dailyDemand:0,dailyOutput:0};
     }
     // Opening actors and stocks are scenario endowments; subsequent operations never refill them for free.
-    const regional={US:['silica_bauxite_ore','crude_petro_feedstock'],EU:['copper_iron_ore'],ME:['crude_petro_feedstock'],RU_EE:['phosphate_potash_rock','iron_ore'],ASEAN:['raw_water_m3','ambient_air_gas']};
+    const regional={
+      US:['silica_bauxite_ore','crude_petro_feedstock','metallurgical_silicon','silicon_wafer'],
+      EU:['copper_iron_ore','copper_coil','pcb'],
+      ME:['crude_petro_feedstock','nitrogen_ammonia'],
+      RU_EE:['phosphate_potash_rock','iron_ore','npk_fertilizer'],
+      ASEAN:['raw_water_m3','ambient_air_gas','natural_latex','polymer_resin']
+    };
     for(const [nid,outputs] of Object.entries(regional)){
       const id='regional_'+nid;
       if(!e.corporations[id]) e.corporations[id]={id,nationId:nid,nameTh:'เครือข่ายอุตสาหกรรม '+e.geopolitics.nations[nid].shortNameTh,symbol:nid+'-IND',sector:profiles[nid][4],sectorTh:'อุตสาหกรรมทรัพยากร',originTh:e.geopolitics.nations[nid].nameTh,cashMillionBaht:120,roles:['supplier','client'],sellsMaterials:outputs,buysMaterials:['pack_carton'],relationshipMode:'neutral',trustScore:55};
@@ -69,7 +76,8 @@
       if(out==='natural_latex'||out==='timber_bamboo_log'){materials.add('raw_water_m3');materials.add('npk_fertilizer');}
     }
     for(const k of materials)if(w.catalog.materials[k]){stock[k]=id==='world_exchange'?500:12+h%12;flow[k]={opening:stock[k],produced:0,bought:0,used:0,sold:0};}
-    m.firms[id]={id,nationId,cash,openingCash:cash,receipts:0,payments:0,stock,flow,capacity:4+h%6,utilization:0,technology:Math.round(m.nations[nationId].technology*.5+(48+h%45)*.5),risk:20+h%65,prudence:25+(h>>>8)%60,priceFactor:1,consecutiveLossDays:0,status:'operating',strategy:'maintain',decisionTh:'รักษากำลังผลิตและเงินสำรอง',dailyRevenue:0,dailyCost:0,cogsSatang:0,operatingExpenseSatang:0,capexSatang:0,cashFlowSurplusSatang:0,accrualProfitSatang:0,profit:0,investment:0,lastInvestmentDay:0,output:0,missing:[],reserves:{},crops:{},history:[],lastReviewDay:0};
+    const baseTech=Math.round(m.nations[nationId].technology*.5+(48+h%45)*.5);
+    m.firms[id]={id,nationId,cash,openingCash:cash,receipts:0,payments:0,stock,flow,capacity:id.startsWith('regional_')?8+h%5:4+h%6,utilization:0,technology:id.startsWith('regional_')?Math.max(72,baseTech):baseTech,risk:20+h%65,prudence:25+(h>>>8)%60,priceFactor:1,consecutiveLossDays:0,status:'operating',strategy:'maintain',decisionTh:'รักษากำลังผลิตและเงินสำรอง',dailyRevenue:0,dailyCost:0,cogsSatang:0,operatingExpenseSatang:0,capexSatang:0,cashFlowSurplusSatang:0,accrualProfitSatang:0,profit:0,investment:0,lastInvestmentDay:0,output:0,missing:[],reserves:{},crops:{},history:[],lastReviewDay:0};
     for(const out of c.sellsMaterials||[])if(!D.MATERIAL_RECIPES[out])m.firms[id].reserves[out]=5000+h%10000;
     return m.firms[id];
   }
@@ -114,8 +122,10 @@
     if(f.cash<reserve){f.status='suspended';f.decisionTh='หยุดผลิตเพื่อรักษาเงินสด: เงินไม่พอทุนหมุนเวียน';f.utilization=0;return;}
     f.status='operating';
     const overhead=Math.min(f.cash,Math.round(600*f.capacity));payment(f,overhead);f.operatingExpenseSatang+=overhead;n.householdCash+=overhead;n.wages+=overhead;
-    const outputs=(c.sellsMaterials||[]).filter(k=>m.markets[k]);
+    const priorityOrder=k=>k==='copper_coil'||k==='polymer_resin'||k==='silicon_wafer'||k==='pcb'?0:1;
+    const outputs=(c.sellsMaterials||[]).filter(k=>m.markets[k]).slice().sort((a,b)=>(w.catalog.materials[a]?.tier||0)-(w.catalog.materials[b]?.tier||0)||priorityOrder(a)-priorityOrder(b));
     if(f.id==='world_exchange'){f.utilization=0;f.decisionTh='ค้าส่งจากสต็อกสำรองจำกัด รับซื้อเพื่อเติมคลังเมื่อมีผู้ผลิตขาย';return;}
+    const phoneActive=Boolean(w.phoneIndustry?.firms?.[f.id]&&w.phoneIndustry.lastDay>0);
     for(const k of outputs){
       const recipe=D.MATERIAL_RECIPES[k],mat=w.catalog.materials[k],crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===k),inputs=recipe?.inputs||{},current=f.stock[k]||0;
       if(!recipe&&!mat.isTrueNaturalResource){
@@ -134,27 +144,34 @@
         }else if(k==='fresh_milk_soy'||k==='natural_latex'||k==='timber_bamboo_log'){
           const bio=f.crops[k];
           if(bio&&day>=bio.dueDay){
-            const yieldQty=bio.yieldQty||Math.max(4,f.capacity);
+            const yieldQty=bio.yieldQty||Math.max(8,f.capacity*2);
             addStock(f,k,yieldQty,'produced');
             if(k==='fresh_milk_soy'&&m.markets.organic_compost)addStock(f,'organic_compost',1,'produced');
             f.output+=yieldQty;n.dailyOutput+=yieldQty;delete f.crops[k];
           }
-          if(!f.crops[k]&&current<f.capacity*6){
+          if(!f.crops[k]&&current<f.capacity*8){
             const feedKey=k==='fresh_milk_soy'?((f.stock.rice_bran_husk||0)>=1?'rice_bran_husk':(f.stock.soybean_crop||0)>=1?'soybean_crop':null):(f.stock.npk_fertilizer||0)>=1?'npk_fertilizer':null;
             if(feedKey&&(f.stock.raw_water_m3||0)>=1){
               addStock(f,feedKey,-1,'used');addStock(f,'raw_water_m3',-1,'used');
-              f.crops[k]={dueDay:day+2,yieldQty:Math.max(4,f.capacity)};
+              f.crops[k]={dueDay:day+2,yieldQty:Math.max(8,f.capacity*2)};
             }else f.missing.push('อาหารสัตว์/ปุ๋ย หรือน้ำดิบสำหรับ '+mat.nameTh);
           }
         }else f.missing.push('ยังไม่มีวงจรผลิตต้นทาง '+mat.nameTh);
         continue;
       }
-      if(current>=f.capacity*6)continue;
+      const stockCap=!recipe?f.capacity*10:f.capacity*6;
+      if(current>=stockCap)continue;
       const knowledgeNeed=recipe?40+(w.catalog.materials[k].tier||1)*10:30;
       if(f.technology<knowledgeNeed){f.missing.push('เทคโนโลยี '+w.catalog.materials[k].nameTh);continue;}
-      let qty=Math.max(0,Math.floor(f.capacity*(1-(n.security?.damageIndex||0)/100)*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
-      for(const [ik,q]of Object.entries(inputs))qty=Math.min(qty,Math.floor((f.stock[ik]||0)/q));
-      if(!recipe)qty=Math.min(qty,mat.resourceClass==='environmental_flow'?Math.max(0,Math.floor(f.capacity*n.infrastructure/100)):f.reserves[k]||0);
+      const baseScale=!recipe?3:1;
+      let qty=Math.max(0,Math.floor(f.capacity*baseScale*(1-(n.security?.damageIndex||0)/100)*m.shocks.filter(s=>s.nations.includes(f.nationId)).reduce((a,s)=>a*s.outputMultiplier,1)));
+      for(const [ik,q]of Object.entries(inputs)){
+        const phoneHold=phoneActive&&PHONE_CRITICAL_MATERIALS.has(ik)&&!PHONE_CRITICAL_MATERIALS.has(k)?6:0;
+        const sharedHold=outputs.length>1&&(outputs.includes(ik)||ik==='copper_iron_ore'||ik==='polymer_resin'||ik==='copper_coil')?Math.min(6,Math.floor((f.stock[ik]||0)*0.45)):0;
+        const keep=Math.max(phoneHold,sharedHold);
+        qty=Math.min(qty,Math.floor(Math.max(0,(f.stock[ik]||0)-keep)/q));
+      }
+      if(!recipe)qty=Math.min(qty,mat.resourceClass==='environmental_flow'?Math.max(0,Math.floor(f.capacity*4*n.infrastructure/100)):f.reserves[k]||0);
       qty=Math.min(qty,Math.floor(Math.max(0,f.cash-reserve)/(Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18)))));
       if(qty<=0){f.missing.push(w.catalog.materials[k].nameTh);continue;}
       const expense=qty*Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18));payment(f,expense);f.operatingExpenseSatang+=expense;n.householdCash+=expense;n.wages+=expense;
@@ -170,7 +187,7 @@
     // Downstream aggregate production uses real purchased inputs and domestic buyers' finite cash.
     if(!outputs.length){
       const inputs=(c.buysMaterials||[]).filter(k=>m.markets[k]);
-      const usable=inputs.filter(k=>(f.stock[k]||0)>0);
+      const usable=inputs.filter(k=>(f.stock[k]||0)>(phoneActive&&PHONE_CRITICAL_MATERIALS.has(k)?6:0));
       if(usable.length>=Math.min(2,inputs.length)&&usable.length){
         const batch=usable.slice(0,Math.min(3,usable.length)),value=batch.reduce((a,k)=>a+m.markets[k].price,0);
         const revenue=Math.round(value*1.65*clamp(n.gdpIndex/100,.65,1.3)),wage=Math.round(value*.2);
@@ -184,7 +201,9 @@
     // Domestic demand is a bounded residual sector, not an unlimited buyer.
     for(const k of outputs){
       const demand=Math.max(0,Math.round((2+n.gdpIndex/50)*(n.policy==='stimulus'?1.15:1)/(1+n.interestRate/30)));
-      const price=Math.round(m.markets[k].price*f.priceFactor),qty=Math.min(demand,f.stock[k]||0,Math.floor(n.householdCash/price));
+      const b2bBuffer=(w.catalog.materials[k]?.tier||0)>=1||k==='copper_iron_ore'||k==='natural_latex'||PHONE_CRITICAL_MATERIALS.has(k)?Math.max(10,f.capacity*2):0;
+      const sellable=Math.max(0,(f.stock[k]||0)-b2bBuffer);
+      const price=Math.round(m.markets[k].price*f.priceFactor),qty=Math.min(demand,sellable,Math.floor(n.householdCash/price));
       m.markets[k].demand+=demand;
       if(qty>0){
         n.householdCash-=qty*price;n.consumption+=qty*price;receipt(f,qty*price);
@@ -247,24 +266,30 @@
     for(const k of Object.values(m.markets)){k.supply=0;k.demand=0;k.traded=0;}
     deliver(w,day);
     for(const f of Object.values(m.firms))operate(w,f,day);
-    // Buyers reserve capital and buy only their actual input gaps, including recipe inputs.
+    // Buyers reserve capital and buy only their actual input gaps, including recipe and biological inputs.
     for(const buyer of Object.values(m.firms)){
       const c=w.externalWorld.corporations[buyer.id],needs={};
       for(const k of c.buysMaterials||[])needs[k]=buyer.capacity*3;
       if(buyer.id==='world_exchange')for(const k of Object.keys(m.markets))needs[k]=20;
-      for(const out of c.sellsMaterials||[]){const crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===out);if(crop){needs[crop.seedMaterialId]=4;needs.raw_water_m3=6;needs.npk_fertilizer=3;}}
+      for(const out of c.sellsMaterials||[]){
+        const crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===out);
+        if(crop){needs[crop.seedMaterialId]=4;needs.raw_water_m3=6;needs.npk_fertilizer=3;}
+        if(out==='fresh_milk_soy'){needs.soybean_crop=4;needs.rice_bran_husk=4;needs.raw_water_m3=6;}
+        if(out==='natural_latex'||out==='timber_bamboo_log'){needs.raw_water_m3=6;needs.npk_fertilizer=4;}
+      }
       for(const out of c.sellsMaterials||[])for(const [k,q]of Object.entries(D.MATERIAL_RECIPES[out]?.inputs||{}))needs[k]=Math.max(needs[k]||0,buyer.capacity*q*3);
       let deals=0;
-      for(const [k,target]of Object.entries(needs)){
+      const sortedNeeds=Object.entries(needs).sort((a,b)=>(buyer.stock[a[0]]||0)-(buyer.stock[b[0]]||0));
+      for(const [k,target]of sortedNeeds){
         if(!m.markets[k])continue;
         const inbound=m.shipments.filter(s=>s.buyerId===buyer.id&&s.materialId===k).reduce((a,s)=>a+s.quantity,0),gap=Math.max(0,target-(buyer.stock[k]||0)-inbound);
-        m.markets[k].demand+=gap;m.nations[buyer.nationId].dailyDemand+=gap;if(!gap||deals>=3)continue;
+        m.markets[k].demand+=gap;m.nations[buyer.nationId].dailyDemand+=gap;if(!gap||deals>=5)continue;
         const seller=Object.values(m.firms).filter(f=>f.id!==buyer.id&&(w.externalWorld.corporations[f.id].sellsMaterials||[]).includes(k)&&(f.stock[k]||0)>0).sort((a,b)=>{
           const ar=route(m,a.nationId,buyer.nationId),br=route(m,b.nationId,buyer.nationId);
           return a.priceFactor*(1+ar.tariff/100)+ar.days*.03+(95-a.technology)*.001-(b.priceFactor*(1+br.tariff/100)+br.days*.03+(95-b.technology)*.001)||a.id.localeCompare(b.id);
         })[0];
         const available=Math.max(0,buyer.cash-15000*buyer.capacity*(15+buyer.prudence/5)),affordable=Math.floor(available/(m.markets[k].price*1.25));
-        if(seller&&trade(w,seller,buyer,k,Math.min(gap,affordable,12),day))deals++;
+        if(seller&&trade(w,seller,buyer,k,Math.min(gap,affordable,14),day))deals++;
       }
     }
     // Sector extensions post funded production/trade before profit, tax and history close.

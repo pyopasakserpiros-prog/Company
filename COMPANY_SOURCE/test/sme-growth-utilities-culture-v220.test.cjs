@@ -8,9 +8,9 @@ const Save = require("../js/save.js");
 const API = require("../js/api.js");
 
 test("v2.2.0 SME-to-Conglomerate 6-Stage Progression Ladder & 12 Organic Milestones", () => {
-  assert.strictEqual(D.VERSION, "3.0.0");
-  assert.strictEqual(D.RELEASE_VERSION, "3.0.0");
-  assert.strictEqual(S.RELEASE_VERSION, "3.0.0");
+  assert.strictEqual(D.VERSION, "3.1.0");
+  assert.strictEqual(D.RELEASE_VERSION, "3.1.0");
+  assert.strictEqual(S.RELEASE_VERSION, "3.1.0");
   assert.strictEqual(D.SME_GROWTH_STAGES.length, 6);
   assert.strictEqual(D.SME_MILESTONE_CATALOG.length, 12);
 
@@ -168,7 +168,7 @@ test("v2.2.0 Complete 10 B2B Services (Wholesale Anti-Arbitrage & Toll Smelting 
 test("v2.2.0 Workplace Culture, Water-Cooler Gossip, Employee Wallet Grant, Parking Lot & Alumni Spin-Off Companies", () => {
   const app = API.create("culture-spinoff-v220", { autonomous: true });
   const initSnap = app.snapshot();
-  assert.strictEqual(initSnap.releaseVersion, "3.0.0");
+  assert.strictEqual(initSnap.releaseVersion, "3.1.0");
   const targetPerson = initSnap.people.find((p) => p.role === "engineer") || initSnap.people[0];
   const cashBefore = initSnap.company.cash;
 

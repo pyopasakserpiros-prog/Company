@@ -19,7 +19,7 @@
   function (H, D, L, E, W, P, B, Phone, Talent) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "3.0.0",
+      RELEASE_VERSION = "3.1.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -8193,7 +8193,8 @@
           }
         }
       } else if (j.kind === "phoneWorkshop") {
-        if(w.phoneIndustry?.campusFirmId&&(subjectLevel(p,j.researchSubject||'electrical_basics')>=35||(j.researchSubject!=='metal_machining'&&subjectLevel(p,'software')>=40))){w.phoneIndustry.campusMinutes=(w.phoneIndustry.campusMinutes||0)+j.required;event(w,'phoneWorkshopCompleted','ทีมวิศวกรรมทำงานออกแบบ ทดสอบ และเตรียมผลิตโทรศัพท์',{personId:p.id,minutes:j.required});learnSubject(p,j.researchSubject||'electrical_basics',j.required);}
+        const reqSubj=j.researchSubject||'electrical_basics';
+        if(w.phoneIndustry?.campusFirmId&&(subjectLevel(p,reqSubj)>=35||(reqSubj!=='metal_machining'&&(subjectLevel(p,'software')>=40||subjectLevel(p,'electrical_basics')>=35)))){w.phoneIndustry.campusMinutes=(w.phoneIndustry.campusMinutes||0)+j.required;event(w,'phoneWorkshopCompleted','ทีมวิศวกรรมทำงานออกแบบ ทดสอบ และเตรียมผลิตโทรศัพท์',{personId:p.id,minutes:j.required,subject:reqSubj});learnSubject(p,reqSubj,j.required);if(Object.values(w.jobs).filter(x=>x.kind==='phoneWorkshop'&&x.id!==j.id).length===0){const divRole=w.phoneIndustry.firms[w.phoneIndustry.campusFirmId]?.role||'brand';job(w,'phoneWorkshop',{required:120,researchSubject:phoneRolePrimarySubject(divRole)});}}
       } else if (j.kind === "research") {
         knowledgeWork(w, p, j);
       } else if (j.kind === "sales") {
@@ -8330,7 +8331,7 @@
 
       for (const j of Object.values(w.jobs)) {
         if (j.assignee) continue;
-        if(j.kind==="phoneWorkshop"&&subjectLevel(p,j.researchSubject||"electrical_basics")<35&&!(j.researchSubject!=="metal_machining"&&subjectLevel(p,"software")>=40))continue;
+        if(j.kind==="phoneWorkshop"&&subjectLevel(p,j.researchSubject||"electrical_basics")<35&&!(j.researchSubject!=="metal_machining"&&(subjectLevel(p,"software")>=40||subjectLevel(p,"electrical_basics")>=35)))continue;
         if (j.kind === "research") {
           const kp = w.knowledge?.projects[j.knowledgeProjectId];
           if (j.learnerId ? j.learnerId !== p.id : !kp || subjectLevel(p,j.researchSubject || kp.subject) < (kp.requirements[j.researchSubject || kp.subject] || kp.requiredLevel)) continue;
@@ -10779,10 +10780,37 @@
       });
     }
     const failure = (code, message) => ({ ok: false, code, message });
+    function phoneRolePrimarySubject(role){
+      return ({
+        enclosure:'metal_machining',
+        fabless_soc:'semiconductor_physics',
+        chip:'semiconductor_physics',
+        wafer_foundry:'semiconductor_process',
+        osat_packaging:'smt_process',
+        dram_memory:'circuit_design',
+        nand_storage:'embedded_firmware',
+        camera_module:'semiconductor_optics',
+        display_panel:'electrical_basics',
+        battery_pack:'power_electronics',
+        pcb_rf:'smt_process',
+        os_platform:'software',
+        brand:'electrical_basics'
+      })[role]||'electrical_basics';
+    }
     function directorPhoneEdit(w,c){
       if(c.action==='grantCash'){
         const f=w.externalWorld.living.firms[c.firmId];if(!f||!Number.isSafeInteger(c.amount)||c.amount<100||c.amount>1000000000)return failure('invalidEdit','เลือกบริษัทและจำนวนเงินให้ถูกต้อง');
         f.cash+=c.amount;f.openingCash+=c.amount;event(w,'directorEdit','[ทดลอง] เพิ่มทุนให้บริษัทภายนอก',{firmId:c.firmId,amount:c.amount});return {ok:true};
+      }
+      if(c.action==='grantFirmMaterial'){
+        const f=w.externalWorld.living.firms[c.firmId];
+        const qty=Number(c.quantity);
+        if(!f||!w.catalog?.materials?.[c.materialId]||!Number.isSafeInteger(qty)||qty<1||qty>10000)return failure('invalidEdit','เลือกบริษัท วัตถุดิบ และจำนวนให้ถูกต้อง');
+        f.stock[c.materialId]=(f.stock[c.materialId]||0)+qty;
+        f.flow[c.materialId]=f.flow[c.materialId]||{opening:0,produced:0,bought:0,used:0,sold:0};
+        f.flow[c.materialId].opening+=qty;
+        event(w,'directorEdit','[ทดลอง] เติมวัตถุดิบให้บริษัทในอุตสาหกรรมโทรศัพท์',{firmId:c.firmId,materialId:c.materialId,quantity:qty});
+        return {ok:true};
       }
       const p=w.phoneTalent?.people?.[c.personId];
       if(c.action==='setTrait'&&p&&H.PERSONALITY.includes(c.key)&&Number.isFinite(c.level)&&c.level>=0&&c.level<=100){const profile=clone(p.profile);profile.personality[c.key]=c.level;p.profile=H.freezeProfile(profile);event(w,'directorEdit','[ทดลอง] ปรับนิสัยบุคลากรภายนอก',{personId:p.id,key:c.key,level:c.level});return {ok:true};}
@@ -10792,10 +10820,61 @@
       }
       return failure('invalidEdit','ไม่พบเป้าหมายหรือค่าไม่ถูกต้อง');
     }
+    function selectFeasibleCampusPhoneRole(w,wages,excludeRoles=[]){
+      const mac=w.plant?.machines||{};
+      const ready=k=>mac[k]?.status==='ready'&&mac[k].condition>=25;
+      const has=r=>!excludeRoles.includes(r);
+      if(has('wafer_foundry')&&subjectReady(w,'semiconductor_process',48)&&subjectReady(w,'physical_chemistry',42)&&subjectReady(w,'cleanroom_operations',38)&&ready('semiconductor_fab')&&w.finance.cash>wages*60+800000000){
+        return {role:'wafer_foundry',capital:800000000,status:'supplier',reasonTh:'ผู้บริหารเปิดโรงหล่อเวเฟอร์ซิลิคอน ใช้เครื่องจักรกึ่งตัวนำ ห้องสะอาด และทีมวิศวกรกระบวนการจริง'};
+      }
+      if(has('fabless_soc')&&subjectReady(w,'semiconductor_physics',42)&&subjectReady(w,'circuit_design',40)&&subjectReady(w,'embedded_firmware',32)&&(ready('developer_pc')||ready('test_rig')||ready('electronics_bench'))&&w.finance.cash>wages*60+180000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:180000000;
+        return {role:'fabless_soc',capital:cap,status:'supplier',reasonTh:'ผู้บริหารตั้งสายออกแบบชิปประมวลผล (Fabless SoC) ลงทุนค่า NRE/Mask และสั่งจ้างโรงหล่อเวเฟอร์/OSAT ผลิตชิปจริง'};
+      }
+      if(has('dram_memory')&&subjectReady(w,'semiconductor_physics',38)&&subjectReady(w,'circuit_design',38)&&subjectReady(w,'metrology',35)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+220000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:220000000;
+        return {role:'dram_memory',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตหน่วยความจำ RAM (DRAM) ใช้วิชาออกแบบวงจร เครื่องทดสอบความถี่ และเวเฟอร์ซิลิคอนจริง'};
+      }
+      if(has('camera_module')&&(subjectReady(w,'semiconductor_optics',35)||(subjectReady(w,'metrology',40)&&subjectReady(w,'electrical_basics',40)&&ready('diagnostic_kit')))&&subjectReady(w,'metrology',35)&&(ready('electronics_bench')||ready('diagnostic_kit'))&&w.finance.cash>wages*60+180000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:180000000;
+        return {role:'camera_module',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตโมดูลกล้องและออปติคัล ใช้เลนส์ เซ็นเซอร์รับภาพ และเครื่องมือสอบเทียบความคมชัดจริง'};
+      }
+      if(has('nand_storage')&&subjectReady(w,'embedded_firmware',38)&&subjectReady(w,'circuit_design',35)&&subjectReady(w,'semiconductor_process',32)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+200000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:200000000;
+        return {role:'nand_storage',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตหน่วยเก็บข้อมูลแฟลช (NAND/eMMC) พัฒนาเฟิร์มแวร์ ECC และคัดกรองบล็อกเสียจริง'};
+      }
+      if(has('battery_pack')&&subjectReady(w,'power_electronics',35)&&subjectReady(w,'electrical_safety',38)&&(ready('test_rig')||ready('electronics_bench'))&&w.finance.cash>wages*60+180000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:180000000;
+        return {role:'battery_pack',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตแบตเตอรี่และวงจรป้องกัน BMS ทดสอบการจ่ายไฟและความปลอดภัยความร้อนจริง'};
+      }
+      if(has('display_panel')&&subjectReady(w,'electrical_basics',38)&&subjectReady(w,'circuit_design',35)&&subjectReady(w,'metrology',32)&&subjectReady(w,'quality',35)&&!subjectReady(w,'software',40)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+240000000){
+        const cap=w.finance.cash>wages*90+500000000?500000000:240000000;
+        return {role:'display_panel',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตแผงหน้าจอและโมดูลสัมผัส แปรรูปซับสเตรตกระจกและตรวจพิกเซลเสียจริง'};
+      }
+      if(has('osat_packaging')&&subjectReady(w,'semiconductor_process',35)&&subjectReady(w,'smt_process',35)&&subjectReady(w,'metrology',35)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+150000000){
+        return {role:'osat_packaging',capital:150000000,status:'supplier',reasonTh:'ผู้บริหารเปิดสายรับประกอบแพ็กเกจชิปและคัดเกรดไฟฟ้า (OSAT Packaging & Test)'};
+      }
+      if(has('pcb_rf')&&subjectReady(w,'electrical_basics',35)&&subjectReady(w,'smt_process',38)&&subjectReady(w,'circuit_design',35)&&!subjectReady(w,'software',40)&&(ready('electronics_bench')||ready('test_rig'))&&w.finance.cash>wages*60+140000000){
+        return {role:'pcb_rf',capital:140000000,status:'supplier',reasonTh:'ผู้บริหารเปิดสายผลิตแผงวงจรหลายชั้น HDI และโมดูลคลื่นวิทยุ RF'};
+      }
+      if(has('os_platform')&&subjectReady(w,'software',42)&&subjectReady(w,'programming',42)&&subjectReady(w,'embedded_firmware',35)&&!subjectReady(w,'electrical_basics',40)&&ready('developer_pc')&&w.finance.cash>wages*60+120000000){
+        return {role:'os_platform',capital:120000000,status:'supplier',reasonTh:'ผู้บริหารเปิดสายพัฒนาระบบปฏิบัติการมือถือและชุดไดรเวอร์ BSP เพื่อเก็บค่าลิขสิทธิ์'};
+      }
+      const enclosureRoute=has('enclosure')&&w.startup?.profileId==='metal_workshop'&&subjectReady(w,'metal_machining',40)&&subjectReady(w,'quality',30)&&ready('press');
+      const handsetRoute=has('brand')&&subjectReady(w,'electrical_basics',40)&&subjectReady(w,'software',40)&&subjectReady(w,'quality',30)&&w.finance.cash>wages*90+500000000;
+      if(enclosureRoute&&!handsetRoute&&(w.finance.cash>wages*90+500000000||w.finance.cash>wages*60+150000000)){
+        const cap=w.finance.cash>wages*90+500000000?500000000:150000000;
+        return {role:'enclosure',capital:cap,status:'supplier',reasonTh:'ผู้บริหารเปิดแผนกตัวถัง ซื้อสิทธิแบบ ใช้งานช่าง เครื่องอัด และวัตถุดิบจริงก่อนขายชิ้นส่วน'};
+      }
+      if(handsetRoute){
+        return {role:'brand',capital:500000000,status:'manufacturer',reasonTh:'ผู้บริหารจัดทุนให้แผนกโทรศัพท์ ทีมต้องทำงานและซื้อชิป แรม จอ แบตเข้าคลังก่อนผลิต'};
+      }
+      return null;
+    }
     function phoneCompanyReview(w,completedDay){
       const industry=w.phoneIndustry;if(!industry)return;
       const ceo=w.people.find(p=>p.employed&&p.role==='coordinator');if(!ceo||!w.policies.autoAccept)return;
-      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),risk=ceo.profile.personality.riskTaking||50;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),risk=ceo.profile.personality.riskTaking||50,prudence=ceo.profile.personality.prudence||50;
       const entry=industry.playerEntry||(industry.playerEntry={status:'observing',reasonTh:'เริ่มจากความรู้และธุรกิจเดิมก่อนเข้าวงการโทรศัพท์',lastReviewDay:0});
       if(completedDay<=entry.lastReviewDay)return;entry.lastReviewDay=completedDay;
       const hired=(ext,offer)=>{if(w.finance.cash<wages*30+offer.salarySatang*30+w.catalog.rules.hireFee)return null;post(w,'hiring',-w.catalog.rules.hireFee,ext.id+':phoneRecruit');const p=createPerson(w,ext.id,ext.name,'engineer',offer.salarySatang);w.people.push(p);event(w,'phoneRecruitment','รับผู้เชี่ยวชาญจากอุตสาหกรรมโทรศัพท์',{personId:p.id,formerFirmId:ext.employerId});return p;};
@@ -10804,15 +10883,38 @@
         const subject=w.startup?.sector==='software'?'software':'semiconductor_physics';if((p.education.subjects[subject]||0)<50||subjectReady(w,subject,40))return null;
         return {vacancy:true,dailyWageSatang:Math.round(p.dailyWageSatang*1.8)};
       }});
-      if(industry.campusFirmId&&!Object.values(w.jobs).some(j=>j.kind==='phoneWorkshop'))job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});
+      if(industry.campusFirmId&&!Object.values(w.jobs).some(j=>j.kind==='phoneWorkshop')){
+        const divRole=industry.firms[industry.campusFirmId]?.role||'brand';
+        job(w,'phoneWorkshop',{required:120,researchSubject:phoneRolePrimarySubject(divRole)});
+      }
       if(completedDay%14!==0)return;
-      const enclosureRoute=w.startup?.profileId==='metal_workshop'&&subjectReady(w,'metal_machining',40)&&subjectReady(w,'quality',30)&&w.plant?.machines?.press?.status==='ready'&&w.plant.machines.press.condition>=25;
-      const handsetRoute=subjectReady(w,'electrical_basics',40)&&subjectReady(w,'software',40)&&subjectReady(w,'quality',30);
-      if(!industry.campusFirmId&&risk>=45&&(handsetRoute||enclosureRoute)&&w.finance.cash>wages*90+500000000){
-        const amount=500000000,m=w.externalWorld.living,id='phone_campus';post(w,'expansion',-amount,'phoneDivisionCapital');
-        const template=clone(m.firms.siam_tech);Object.assign(template,{id,nationId:'TH',cash:amount,openingCash:0,receipts:amount,payments:0,stock:{},flow:{},capacity:2,output:0,investment:0,reserves:{},crops:{},history:[],missing:[],dailyRevenue:0,dailyCost:0});m.firms[id]=template;m.playerNetSatang+=amount;
-        w.externalWorld.corporations[id]={id,nationId:'TH',nameTh:'แผนกโทรศัพท์ของบริษัทเรา',sector:'electronics',sellsMaterials:[],buysMaterials:[],roles:['phone_brand'],relationshipMode:'neutral'};
-        industry.firms[id]={id,role:'brand',isCampus:true,level:0,knowledge:0,capacity:2,reputation:w.reputation,reserveSatang:wages*30,decisionTh:'ตั้งทีมออกแบบจากความรู้และทุนจริง ต้องซื้อชิ้นส่วนและประกอบเข้าคลัง',lastWorkDay:0,activeDesignId:null,produced:0,sold:0,revenueSatang:0,researchSatang:0,missing:[],researchBranches:['hardware','software']};industry.campusFirmId=id;industry.campusMinutes=0;if(enclosureRoute&&!handsetRoute){industry.firms[id].role='enclosure';industry.firms[id].licenseExpenseSatang=2000000;const source=industry.components.find(c=>c.kind==='enclosure'&&c.level===0),fee=2000000,owner=m.firms[source.supplierId];template.cash-=fee;template.payments+=fee;owner.cash+=fee;owner.receipts+=fee;industry.licenses.push({id:'campus-enclosure-license',buyerId:id,sellerId:owner.id,priceSatang:fee,day:completedDay,rights:'enclosure_design_0'});industry.components.push({...clone(source),id:'phone-campus-enclosure-0',supplierId:id});w.externalWorld.corporations[id].nameTh='แผนกผลิตชิ้นส่วนตัวถังโทรศัพท์';w.externalWorld.corporations[id].roles=['phone_component_supplier'];industry.firms[id].decisionTh='ซื้อสิทธิแบบตัวถัง ต้องจัดซื้อแผ่นโลหะและพอลิเมอร์ก่อนผลิต';}entry.status='manufacturer';entry.reasonTh='ผู้บริหารจัดทุนให้แผนกโทรศัพท์ ทีมต้องทำงานและซื้อชิป แรม จอ แบตเข้าคลังก่อนผลิต';job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});if(industry.firms[id].role==='enclosure'){entry.status='supplier';entry.reasonTh='ผู้บริหารเปิดแผนกตัวถัง ซื้อสิทธิแบบ ใช้งานช่าง เครื่องอัด และวัตถุดิบจริงก่อนขายชิ้นส่วน';}event(w,'phoneDivisionOpened',entry.reasonTh,{capitalSatang:amount});
+      const chosen=selectFeasibleCampusPhoneRole(w,wages,[]);
+      if(!industry.campusFirmId&&chosen){
+        if(risk<40||(prudence>82&&w.finance.cash<wages*120+chosen.capital*1.5)){
+          entry.status='declined_prudent';
+          entry.feasibleButDeclined=true;
+          entry.candidateRole=chosen.role;
+          entry.reasonTh=`ทีมและเครื่องจักรผ่านเกณฑ์เข้าสู่ธุรกิจ ${chosen.role} แล้ว แต่ผู้บริหารสายอนุรักษนิยมเลือกสำรองเงินสดและโฟกัสงานหลักก่อน`;
+        }else if(risk>=45||(chosen.role!=='brand'&&risk>=40)){
+          post(w,'expansion',-chosen.capital,'phoneDivisionCapital');
+          Phone.enterCampusRole(w,chosen.role,{capitalSatang:chosen.capital,day:completedDay,capacity:chosen.capital>=500000000?2:3});
+          entry.status=chosen.status;
+          entry.feasibleButDeclined=false;
+          entry.activeRole=chosen.role;
+          entry.reasonTh=chosen.reasonTh;
+          job(w,'phoneWorkshop',{required:120,researchSubject:phoneRolePrimarySubject(chosen.role)});
+          event(w,'phoneDivisionOpened',entry.reasonTh,{capitalSatang:chosen.capital,role:chosen.role});
+        }
+      }else if(industry.campusFirmId&&risk>=50){
+        const div=industry.firms[industry.campusFirmId];
+        const currentRoles=Array.isArray(div.roles)&&div.roles.length?div.roles:[div.role];
+        const nextRole=selectFeasibleCampusPhoneRole(w,wages,currentRoles);
+        if(nextRole&&w.finance.cash>wages*90+nextRole.capital){
+          post(w,'expansion',-nextRole.capital,'phoneDivisionExpansion:'+nextRole.role);
+          Phone.enterCampusRole(w,nextRole.role,{addCapitalSatang:nextRole.capital,day:completedDay});
+          entry.reasonTh=`ขยายการบูรณาการแนวดิ่งเพิ่มสายธุรกิจ ${nextRole.role} ร่วมกับสายเดิม (${currentRoles.join(', ')})`;
+          event(w,'phoneDivisionExpanded',entry.reasonTh,{capitalSatang:nextRole.capital,role:nextRole.role});
+        }
       }
 
       if(w.finance.cash<wages*30+500000){entry.reasonTh='รักษาเงินเดือนและงานเดิมก่อนลงทุนในโทรศัพท์';return;}
@@ -11971,6 +12073,25 @@
           ownerName: ceo ? ceo.name : "คณะกรรมการบริหาร",
           starred: wl.bottlenecks.includes(bnId),
         });
+      }
+
+      // 4b. Campus Phone Division Bottleneck (if active and blocked)
+      if (w.phoneIndustry?.campusFirmId) {
+        const pf = w.phoneIndustry.firms[w.phoneIndustry.campusFirmId];
+        if (pf && pf.missing && pf.missing.length > 0) {
+          const bnId = `phone:${pf.id}`;
+          activeBottlenecks.push({
+            id: bnId,
+            severity: "warning",
+            category: "phone_division",
+            titleTh: `แผนกอุตสาหกรรมโทรศัพท์ (${pf.role}): ติดข้อจำกัดการผลิต/วิจัย`,
+            whatStuckTh: pf.decisionTh || "สายงานโทรศัพท์ชะลอตัว",
+            whyStuckTh: pf.missing.join(" • "),
+            howSolvingTh: "จัดซื้อวัตถุดิบเข้าคลัง ซ่อมบำรุงเครื่องจักร หรือรอคิวโรงหล่อ/ขนส่ง",
+            ownerName: ceo ? ceo.name : "หัวหน้าแผนกโทรศัพท์",
+            starred: wl.bottlenecks.includes(bnId),
+          });
+        }
       }
 
       // 5. People Workboard: "ใครกำลังทำอะไร ติดอะไร กำลังแก้ยังไง"
