@@ -1,3 +1,9 @@
+# Latest runtime report — v3.0.0
+
+[v3.0.0 implementation report](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md) · [current status](../project_status_and_ai_onboarding.md)
+
+Runtime now v3.0.0. Read current project status, `docs/company/ERA3_PHONE_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md` at repository root for delivered scope, evidence and limitations. Original proposals/reports below are historical inputs and may describe unfinished scope.
+
 # ดัชนีรายงาน Company Simulation
 
 รายงานแพตช์เก็บผลตามเวลาที่รัน; สถานะล่าสุดหลังตรวจ source อยู่ใน [project status](../../../project_status_and_ai_onboarding.md)

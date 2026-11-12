@@ -237,7 +237,7 @@ for (const version of ["review1", "review2"])
         w = Save.deserialize(text),
         v = Save.deserialize(text);
       assert.equal(w.coreVersion, H.VERSION);
-      assert.deepEqual(w.finance, old.finance);
+      assert.deepEqual(w.finance, {...old.finance,totals:{...old.finance.totals,investmentIncome:0}});
       assert.deepEqual(w.rng, old.rng);
       assert.deepEqual(w.people[0].skills, old.people[0].skills);
       for (const g of ["personality", "values", "aptitudes", "potential"])

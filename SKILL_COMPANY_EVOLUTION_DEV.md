@@ -1,8 +1,21 @@
 ---
 name: company-evolution-dev
-description: MASTER SKILL for Siam Enterprise / Company Simulation (บริษัทจำลองธุรกิจและอุตสาหกรรมอัตโนมัติ, COMPANY_SOURCE/) through v2.9.0 (living-scenarios-observability-and-human-depth-v280; historical foundations retained below). Covers the Permanently Locked Human Core 1.0.0, Multi-Scenario Bottleneck & Crisis Resolution (OEM Repair, Specialist Hiring, Part Unreserving, Contract Renegotiation, Clearance Markdown), Counterfactual Personality & Capability Divergence (S.runCounterfactualComparison), Live Bottleneck Tracker & Persistent Watchlist (w.watchlist, S.buildObservabilityView), Deep Human Life & Organizational Dynamics (Personal Aspirations, Episodic Memories, QC/Promotion Conflicts, Internal Role Switches, Retention Counter-Offers, Living Spin-off Firms), 170 Learned Subjects, 20 Equipment Types, 42 Product Routes, Timed Refinery Batches (w.plant.refineryBatches), Physical Warehouse Lots (w.warehouse), Competitive Tenders, 180m Biological Livestock Cycle, and 500-NPC Scaling. MANDATORY RULE: Update this Master Skill on every future patch.
+description: Use when developing or reviewing Company Simulation systems, autonomous NPCs, business operations or their source integration.
 ---
-## Current release — v2.9.0 (SME origins / civics / informed decisions)
+## Current v3.0.0 — generated physical phone industry
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md` and the v3 report before changing phones. Runtime is3.0.0; package/save remain0.1.0. NPCs operate; player observes/EditHub only.
+
+- `phone-engineering.js`: pure `synthesizeChip`, `parts`, `evaluate`, `wafer`; GHz/MB/Wh/W/mm² and integer satang. Check ISA/memory/display/driver/power compatibility, workload/thermal bottlenecks and predecessor deltas. Bounded generated envelopes are not arbitrary technological discovery.
+- `phone-industry.js`: `ensure/step/view/validate/compare`. No opening physical phones/parts; funded samples and actual input lots precede prototypes, assembly, pilot stock, release and household sales. Retain older demanded chips. Preserve reserved/used/sold conservation and in-flight obligations. Costs/fees/customs need actual counterparties.
+- `phone-talent.js`: `ensure/capability/work/payroll/negotiateRecruitment/recruitToCampus/step/view/validate`. Stable profiles, subjects, finite shared360minute work, notice and identity-preserving recruitment. Re-freeze outside profiles and restore transferred education aliases in Save.deserialize.
+- `sim.js:phoneCompanyReview` chooses affordable handset/enclosure/repair/acquisition routes from real subjects/tools/reserves/personality. Campus credits come only from completed `phoneWorkshop` jobs. Capital is funded expansion; dividends require measured profit via `investmentIncome`.
+- `World.step(w,day,beforeSettlement)` calls phone work BEFORE profit/tax/history and government close. Both raw/component trade use Civics.quote, customs and finite shipping. Pure `phoneView/phoneTalentView` feed api/debug tabs. Experimental edits use validated/logged `directorPhoneEdit`, not normal management commands.
+- Re-run new `test/phone-*-*.test.cjs`, baseline suite/check/build/browser, actual campus work/supplier cases, recruited save continuation and `node tools/phone-industry-soak.cjs`. This sector-only soak labels its deliberately endowed input fixture; it does not prove360daycampuslife or mobileFPS.
+- Limits: aggregate factories/EMS, coarse processed inputs, bounded levels/initial supplier roles, direct household retail, incomplete legal IP/M&A/carrier/apps and normal supply calibration. Do not call all Era3 proposals completed. Maintain reference facts each patch; no new maturity certification or Gemini app synchronization is claimed.
+
+
+## Retained v2.9.0 release (SME origins / civics / informed decisions)
 
 Use the current source as authority; v2.8 foundations below remain implemented. New contracts:
 
@@ -47,7 +60,3 @@ Timed Material Processing (`w.plant.refineryBatches`) for all 40 recipes; 42 pro
 - **v2.6.0:** Plant module (20 equipment types, 42 product routes) & commercial sales contracts (`World.commercialEscrows`).
 - **v2.4.0 – v2.5.0:** External World (`js/world.js`, 12 nations, 28+ firms, 66 bilateral relations), 1× time (2 game min/real sec), 8 cells/tick walk, `stockBatch`.
 - **v2.2.0 – v2.3.0:** 170 learned subjects outside the locked Human Core, 6-stage SME ladder, utilities/brownout, workplace culture, 64 materials, 40 recipes, 42 products, 10 B2B services, and Permanently Locked Human Core 1.0.0 (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
-
-## Era 3 proposal routing — documentation update, 2026-11-12
-
-The current runtime remains v2.9.0. `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` is the canonical **proposed** major phone-industry design, accompanied by `era3/project_status_and_ai_onboarding.md`; root and COMPANY_SOURCE status copies must match the canonical English status. Two files provide context, not source access or an implementation. NPCs make all engineering/business decisions; the observer can inspect/time-control/edit conditions, never issue normal operational orders. Keep proposed dynamic products, semiconductor operations and external professionals separate from existing capabilities. Update status/report/skills with actual evidence when implementation occurs. Gemini app synchronization is not established by these repo files.

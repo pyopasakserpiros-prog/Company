@@ -1,0 +1,16 @@
+✔ Era3 opening is seeded feature technology, no complimentary phones, lots or sales; snapshots pure (83.66677ms)
+✔ independent external industry funds design, procurement, manufacture, retail and support for 180 days (2249.052269ms)
+✔ missing engineering staff blocks new projects; empty cash blocks free work; daily steps are idempotent (123.113582ms)
+✔ different seeds generate different measurable hardware and stable identities, not only new names (41.758027ms)
+✔ damaged lots, design references, external work and finite balances cannot pass save validation (35.131864ms)
+✔ EditHub can alter external knowledge/cash as a logged experiment without issuing business commands (18.587594ms)
+✔ campus entry spends capital, creates no free devices, requires actual work and component ownership (21.68718ms)
+✔ sale pricing covers measured component and assembly cost instead of a nominal feature-phone price (551.289826ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3272.719889

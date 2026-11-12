@@ -1,8 +1,21 @@
 ---
 name: company-for-every-patch
-description: Evergreen pre-patch and post-patch workflow, architectural invariants, Zero Code-Zero verification, Process-Driven Realism & Living Scenarios/Observability/Human Depth invariants (v2.8.0), and MANDATORY Master Skill update checklist for every patch of Siam Enterprise / Company Simulation (COMPANY_SOURCE/) through v2.9.0. Use on every Company patch alongside company-evolution-dev.
+description: Use on every Company Simulation patch and when preparing its verification, documentation, skill updates or full editable delivery.
 ---
-## Current release — v2.9.0
+## Current v3.0.0 — generated physical phone industry
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md` and the v3 report before changing phones. Runtime is3.0.0; package/save remain0.1.0. NPCs operate; player observes/EditHub only.
+
+- `phone-engineering.js`: pure `synthesizeChip`, `parts`, `evaluate`, `wafer`; GHz/MB/Wh/W/mm² and integer satang. Check ISA/memory/display/driver/power compatibility, workload/thermal bottlenecks and predecessor deltas. Bounded generated envelopes are not arbitrary technological discovery.
+- `phone-industry.js`: `ensure/step/view/validate/compare`. No opening physical phones/parts; funded samples and actual input lots precede prototypes, assembly, pilot stock, release and household sales. Retain older demanded chips. Preserve reserved/used/sold conservation and in-flight obligations. Costs/fees/customs need actual counterparties.
+- `phone-talent.js`: `ensure/capability/work/payroll/negotiateRecruitment/recruitToCampus/step/view/validate`. Stable profiles, subjects, finite shared360minute work, notice and identity-preserving recruitment. Re-freeze outside profiles and restore transferred education aliases in Save.deserialize.
+- `sim.js:phoneCompanyReview` chooses affordable handset/enclosure/repair/acquisition routes from real subjects/tools/reserves/personality. Campus credits come only from completed `phoneWorkshop` jobs. Capital is funded expansion; dividends require measured profit via `investmentIncome`.
+- `World.step(w,day,beforeSettlement)` calls phone work BEFORE profit/tax/history and government close. Both raw/component trade use Civics.quote, customs and finite shipping. Pure `phoneView/phoneTalentView` feed api/debug tabs. Experimental edits use validated/logged `directorPhoneEdit`, not normal management commands.
+- Re-run new `test/phone-*-*.test.cjs`, baseline suite/check/build/browser, actual campus work/supplier cases, recruited save continuation and `node tools/phone-industry-soak.cjs`. This sector-only soak labels its deliberately endowed input fixture; it does not prove360daycampuslife or mobileFPS.
+- Limits: aggregate factories/EMS, coarse processed inputs, bounded levels/initial supplier roles, direct household retail, incomplete legal IP/M&A/carrier/apps and normal supply calibration. Do not call all Era3 proposals completed. Maintain reference facts each patch; no new maturity certification or Gemini app synchronization is claimed.
+
+
+## Retained v2.9.0 release
 
 Every patch: read AGENTS and source first, preserve Agy's existing systems, update both repo master references and affected domain references/status/report together. For SME/political/news changes, additionally verify:
 
@@ -22,7 +35,7 @@ Full ZIP delivery: one root with directories including .agents; all tracked sour
    - Run baseline checks in `COMPANY_SOURCE/`: `node tools/verify.cjs` and `node tools/test.cjs`.
 2. **Non-Negotiable Architectural & Process-Realism Invariants (Up to v2.8.0)**:
    - **Permanently Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`)**: NEVER edit `js/human-core.js`, `CORE_LOCK.json` (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`), or `AGENTS.md`.
-   - **Version Identifiers**: `D.VERSION = "2.9.0"`, `D.RELEASE_VERSION = "2.9.0"`, `S.RELEASE_VERSION = "2.9.0"`; keep `S.VERSION = "0.1.0"`, `S.SCHEMA = "company-foundation-1"`, and `package.json = "0.1.0"`.
+   - **Version Identifiers**: `D.VERSION = "3.0.0"`, `D.RELEASE_VERSION = "3.0.0"`, `S.RELEASE_VERSION = "3.0.0"`; keep `S.VERSION = "0.1.0"`, `S.SCHEMA = "company-foundation-1"`, and `package.json = "0.1.0"`.
    - **Timed Material Refinery Batches (`w.plant.refineryBatches`)**: Never revert `craftMaterialRecipe` or `runMidstreamRefining` to synchronous instant output. Inputs are reserved at enqueue (`w.inventory.reserved`), deducted after `loading_setup` (`inputsConsumed = true`), and released only after `inspection` and warehouse space verification.
    - **Multi-Scenario Crisis & Bottleneck Autonomy**: Keep `P.maintain` iterating across all pending tasks (never head-of-line blocking on `x.maintenance[0]`), `unreservePartForRepair` releasing unstarted unit reservations when a broken machine needs a part in stock, `S.contractOemMaintenance` providing paid OEM fallback repair, and `evaluateCommercialSales` autonomously renegotiating late contracts (`renegotiateCommercialContract`) and offering `warehouseSale` clearance markdowns (`clearanceDiscountPct`).
    - **Observability Purity & Relationship Integrity**: `S.buildObservabilityView(w)` must remain a pure reader (never mutating `w` or advancing RNG during `API.view(w)`). Never create self-relationships (`otherId !== p.id`) in `finishJob` or `evaluatePromotions`, as `Save.validate(w)` enforces `other !== p.id`.
@@ -31,7 +44,3 @@ Full ZIP delivery: one root with directories including .agents; all tracked sour
    - Run `node tools/verify.cjs`, `node tools/test.cjs` (report the actual discovered/pass/fail counts), `node tools/build.cjs`, and `node tools/benchmark.cjs` in `COMPANY_SOURCE/`, and copy `CompanyFoundation_single.html` to `Company_single.html` and root `Company_single.html`.
    - Update `.agents/skills/company-evolution-dev/SKILL.md`, `.agents/skills/company-for-every-patch/SKILL.md`, root `SKILL.md`, `SKILL_COMPANY_EVOLUTION_DEV.md`, `SKILL_COMPANY_FOR_EVERY_PATCH.md`, `.agents/skills/README.md`, `START_HERE_FOR_AI.md`, `project_status_and_ai_onboarding.md`, `docs/company/AGENT_WORK_STATUS.md`, and affected domain skills/docs.
    - Write `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V<X.Y.Z>.md` and keep `main` free of `.zip` files.
-
-## Era 3 proposal routing — documentation update, 2026-11-12
-
-The current runtime remains v2.9.0. `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` is the canonical **proposed** major phone-industry design, accompanied by `era3/project_status_and_ai_onboarding.md`; root and COMPANY_SOURCE status copies must match the canonical English status. Two files provide context, not source access or an implementation. NPCs make all engineering/business decisions; the observer can inspect/time-control/edit conditions, never issue normal operational orders. Keep proposed dynamic products, semiconductor operations and external professionals separate from existing capabilities. Update status/report/skills with actual evidence when implementation occurs. Gemini app synchronization is not established by these repo files.

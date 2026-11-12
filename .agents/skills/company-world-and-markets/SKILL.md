@@ -64,8 +64,14 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 - **Physical Warehouse Lots (`w.warehouse`), Competitive Tenders (`w.commerce.tenders`), and 180m Biological Livestock Cycle**: `reconcileWarehouseLots` / `warehouseAudit` with FEFO/FIFO and cold-chain shelf life; `W.evaluateCompetitiveTender`, `renegotiateCommercialContract`, `terminateCommercialContract`, and `W.payFromCounterparty`; separated `feedLivestockHerd` and `milkLivestockHerd` (180m cycle) and external firm `cogsSatang`/`accrualProfitSatang`.
 - Read `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`, `docs/company/LIVING_WORLD_SYSTEM.md`, and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md`. Verified with **186/186** tests (`test/process-realism-v270.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 civics.js owns governments/leaders, ministries, commodity policies, treaties and budgeted conflicts. W.quote/trade/sellToPlayer apply these to real stock and cash. Verify commodity-specific exemptions, policy notice/expiry, actual customs, staged agreements and ceasefire recovery; do not treat fictional leaders/bloc councils as real legal structures.
 
 Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.
+
+## Current v3.0.0 integration reference
+
+Reference key: `beforeSettlement`. World.step(w,day,beforeSettlement) posts sector transactions before firm profit/tax/history/national review. Phone cash/households/treasury are the same living-world accounts; Civics.quote constrains component/raw trade. Public launches enter chronicle while private research-start/failure stays private. Direct household retail/cohorts exist; distributors/carriers/full product certification remain future scope.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.

@@ -52,8 +52,14 @@ centerCamera fits both world axes and clears follow mode; minimumZoom is viewpor
 - **Physical Warehouse Lots (`w.warehouse`), Competitive Tenders (`w.commerce.tenders`), and 180m Biological Livestock Cycle**: `reconcileWarehouseLots` / `warehouseAudit` with FEFO/FIFO and cold-chain shelf life; `W.evaluateCompetitiveTender`, `renegotiateCommercialContract`, `terminateCommercialContract`, and `W.payFromCounterparty`; separated `feedLivestockHerd` and `milkLivestockHerd` (180m cycle) and external firm `cogsSatang`/`accrualProfitSatang`.
 - Read `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`, `docs/company/LIVING_WORLD_SYSTEM.md`, and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md`. Verified with **186/186** tests (`test/process-realism-v270.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 Chooser is a native responsive dialog with paused clock, readable capital/team costs and new-game/load routes. Sheets remain snapshot readers. Latest Node benchmark in validation/v290/benchmark.json is simulation-only, not mobile FPS; browser suite checks source/standalone and phone/desktop surfaces.
 
 Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.
+
+## Current v3.0.0 integration reference
+
+Reference key: `phoneIndustry`. phoneIndustry/phoneTalent snapshots clone bounded histories and live obligations; phone tabs may not alter world/RNG. New outside people use lightweight work/subject state, not rendered campus movement. Capture mobile/standalone screens and benchmark actual source. Node ms/tick and sector-only soak are not mobile FPS or full-campus long-run proof; keep actual results in validation/v300.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.

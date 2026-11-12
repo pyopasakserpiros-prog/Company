@@ -62,8 +62,14 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 - **Physical Warehouse Lots (`w.warehouse`), Competitive Tenders (`w.commerce.tenders`), and 180m Biological Livestock Cycle**: `reconcileWarehouseLots` / `warehouseAudit` with FEFO/FIFO and cold-chain shelf life; `W.evaluateCompetitiveTender`, `renegotiateCommercialContract`, `terminateCommercialContract`, and `W.payFromCounterparty`; separated `feedLivestockHerd` and `milkLivestockHerd` (180m cycle) and external firm `cogsSatang`/`accrualProfitSatang`.
 - Read `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`, `docs/company/LIVING_WORLD_SYSTEM.md`, and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md`. Verified with **186/186** tests (`test/process-realism-v270.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 B.REQUIREMENTS corrects chili/cable/metal product disciplines; P.route metal rails/tray/suspension uses mechanical work. Software advanceSoftwareProject no longer completes when minutes omitted; actual qualified developer/tester time, compute/QA funds and real client cash are required. Daily bypass removed. Service ranking weights team coverage, available parts and net margin. Preserve v2.7 timed refinery/warehouse/machine subsystems.
 
 Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.
+
+## Current v3.0.0 integration reference
+
+Reference key: `phoneWorkshop`. Campus phoneWorkshop jobs at research stations consume real NPC work; unqualified staff cannot take them. Enclosure entry requires a paid design licence, ready press, actual metal/polymer stock and work. Brand prototype/assembly consumes owned samples/components, pays EMS/licence fees and creates finished phone lots before release/sale. Component types share one production-minute budget; lower-stock designs are prioritised so sequential recipe order cannot monopolise it. External factories remain aggregate daily batches, not full machine-step simulations.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.

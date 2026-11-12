@@ -239,7 +239,7 @@
     }
   }
   function statusName(s){return {peace:'สัมพันธ์ปกติ',treaty:'ข้อตกลงการค้า',sanctions:'จำกัดการค้า',war:'ความขัดแย้งติดอาวุธ'}[s]||s;}
-  function step(w,day){
+  function step(w,day,beforeSettlement){
     const m=ensure(w);if(day<=m.lastDay)return false;m.lastDay=day;
     m.shocks=m.shocks.filter(s=>day<s.untilDay);
     for(const [id,c]of Object.entries(w.externalWorld.corporations))if(!m.firms[id])initFirm(w,id,c);
@@ -267,6 +267,8 @@
         if(seller&&trade(w,seller,buyer,k,Math.min(gap,affordable,12),day))deals++;
       }
     }
+    // Sector extensions post funded production/trade before profit, tax and history close.
+    if(typeof beforeSettlement==='function')beforeSettlement();
     for(const f of Object.values(m.firms)){reviewFirm(w,f,day);for(const k of w.externalWorld.corporations[f.id].sellsMaterials||[])if(m.markets[k])m.markets[k].supply+=f.stock[k]||0;}
     for(const k of Object.values(m.markets)){
       const base=w.catalog.materials[k.id].unitCost,pressure=(k.demand-k.supply)/Math.max(10,k.demand+k.supply);
@@ -416,7 +418,7 @@
       if(!m.nations[f.nationId]||!Number.isFinite(f.capacity)||f.capacity<1||!f.flow||!f.stock){errors.push('world firm structure '+f.id);continue;}
       for(const [k,x]of Object.entries(f.flow))if(!safe(f.stock[k])||Object.values(x).some(v=>!safe(v))||f.stock[k]!==x.opening+x.produced+x.bought-x.used-x.sold)errors.push('world stock '+f.id+':'+k);
     }
-    for(const n of Object.values(m.nations))if(!Number.isFinite(n.inflation)||n.inflation < -2||n.inflation>25||!Number.isFinite(n.unemployment)||n.unemployment<1||n.unemployment>30||!safe(n.treasury)||!safe(n.householdCash)||n.treasury!==n.openingTreasury+n.taxes-n.spending||n.householdCash!==n.openingHouseholdCash+n.wages+n.transfers-n.consumption)errors.push('world national accounts '+n.id);
+    for(const n of Object.values(m.nations))if(!Number.isFinite(n.inflation)||n.inflation < -2||n.inflation>25||!Number.isFinite(n.unemployment)||n.unemployment<1||n.unemployment>30||!safe(n.treasury)||!safe(n.householdCash)||n.treasury!==n.openingTreasury+n.taxes-n.spending||n.householdCash!==n.openingHouseholdCash+n.wages+n.transfers+(n.capitalReceipts||0)-n.consumption)errors.push('world national accounts '+n.id);
     for(const k of Object.values(m.markets))if(!Number.isFinite(k.price)||k.price<1||!Number.isFinite(k.multiplier)||k.multiplier<.5||k.multiplier>3)errors.push('world market '+k.id);
     for(const r of m.relations)if(!m.nations[r.a]||!m.nations[r.b]||!['peace','treaty','sanctions','war'].includes(r.status)||!Number.isFinite(r.tension)||r.tension<0||r.tension>100)errors.push('world relation '+r.id);
     if(new Set(m.shipments.map(s=>s.id)).size!==m.shipments.length)errors.push('world duplicate shipment');

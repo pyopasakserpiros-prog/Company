@@ -966,3 +966,10 @@ canvas.pt {
 .world-card .muted { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.7; }
 .world-select { width:100%; min-height:44px; margin:8px 0 16px; background:#173c32; color:#eaf5e8; border:1px solid #537666; border-radius:10px; padding:10px; }
 .business-chooser{width:min(620px,94vw);max-height:90dvh;overflow:auto;box-sizing:border-box;background:#16352e;color:#eef9f0;border:1px solid #679681;border-radius:18px;padding:20px;z-index:10000}.business-chooser::backdrop{background:#051811d9}.business-chooser select,.business-chooser input{display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:12px;background:#10271f;color:#fff;border:1px solid #678578;border-radius:8px;font-size:16px}.business-chooser button{margin:8px 5px 0 0;min-height:44px}
+
+/* Read-only phone industry inspection. Keep long Thai text and selectors usable. */
+.phone-card { min-width:0; }
+.phone-card .muted { white-space:pre-line; overflow-wrap:anywhere; line-height:1.75; }
+.phone-card h3 { overflow-wrap:anywhere; }
+.phone-card .btn { min-height:44px; margin-top:10px; }
+.phone-select { font-size:16px; box-sizing:border-box; }

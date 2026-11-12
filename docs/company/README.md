@@ -1,3 +1,9 @@
+# Current v3.0.0 phone-sector references
+
+[Current status](../../project_status_and_ai_onboarding.md) · [phone contracts](ERA3_PHONE_SYSTEM.md) · [v3 report](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md) · [handoff](ERA3_V300_HANDOFF.md)
+
+Runtime now v3.0.0. Read current project status, `docs/company/ERA3_PHONE_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md` at repository root for delivered scope, evidence and limitations. Original proposals/reports below are historical inputs and may describe unfinished scope.
+
 # ดัชนีเอกสาร Company
 
 เปิดจากหน้านี้เพื่อหาเอกสารตามงาน ไม่ต้องไล่หาไฟล์จากรายชื่อปะปน

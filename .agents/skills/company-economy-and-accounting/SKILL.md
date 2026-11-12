@@ -64,8 +64,14 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 - **Physical Warehouse Lots (`w.warehouse`), Competitive Tenders (`w.commerce.tenders`), and 180m Biological Livestock Cycle**: `reconcileWarehouseLots` / `warehouseAudit` with FEFO/FIFO and cold-chain shelf life; `W.evaluateCompetitiveTender`, `renegotiateCommercialContract`, `terminateCommercialContract`, and `W.payFromCounterparty`; separated `feedLivestockHerd` and `milkLivestockHerd` (180m cycle) and external firm `cogsSatang`/`accrualProfitSatang`.
 - Read `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`, `docs/company/LIVING_WORLD_SYSTEM.md`, and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md`. Verified with **186/186** tests (`test/process-realism-v270.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 B.configure opening paid-in capital = cash + equipment + stock + 30-day deposit + registration/preparation, all satang. W.sellToPlayer splits landed payment into supplier receipt and destination customs; C.recordTrade records real transactions. Conflict spending is treasury-to-domestic-sector transfer. Software deposits/UAT/final receipts require W.payFromCounterparty success. Project labor allocation remains approximate.
 
 Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.
+
+## Current v3.0.0 integration reference
+
+Reference key: `investmentIncome`. Phone transfers post actual world firm receipts/payments, customs to treasury, wages/refunds to households and sales from household budgets. World.step sector callback precedes review/tax/history. expansion funds the campus division; investmentIncome permits positive profitable dividends, not a refund of contributed capital. Check playerNetSatang, national capitalReceipts and all conservation. COGS/raw valuation/tax remain approximate.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.

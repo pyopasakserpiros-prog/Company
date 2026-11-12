@@ -1,6 +1,12 @@
 # สถานะงานร่วมระหว่างเอเจนต์
 
-อัปเดต: 12 พฤศจิกายน 2026 (runtime v2.9.0; งานล่าสุดคือเอกสารข้อเสนอ Era 3 ไม่ใช่การส่งมอบ v3.0.0) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
+อัปเดต: 12 พฤศจิกายน 2026 (runtime v3.0.0; ยุค3มีระบบจริงพร้อมข้อจำกัดที่ระบุในรายงาน) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
+
+## Current implementation — Era3 v3.0.0
+
+Owner/integrator Codex, base `a2c5514`, previous runtime2.9.0. User authorised creative implementation. Five delegated implementation contributors supplied initial modules/UI/docs; parent completed integration/corrections. Independent review found profile-freeze, recruited education-reference and world settlement-order issues; parent added regressions and fixed them. No AGENTS/Human Core changes.
+
+Status: **integrated on main in the commit containing this entry**, final delivery evidence in [v3 report](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md); main commit is the commit containing this report (record exact SHA from Git). Delivered physical phone sector and enclosure supplier entry; partial/deferred scope is explicit. No evidence that Gemini's app skills were synchronized. Do not replace existing agent assignments or infer they saw this source before receiving it.
 
 ## งานแพตช์ที่ดำเนินการเสร็จในรอบนี้ (รวมบน main แล้ว)
 
@@ -32,7 +38,7 @@
 
 Codex ฐาน `f7167e2` / Agy v2.8.0 → **v2.9.0 implemented/verified**: 6SME origins, political leaders/ministries/commodity agreements, NPCnews/learning, actual supplier risk/partnerships, software bypass/payment fixes. คงAgyเดิม ไม่แก้AGENTS/HumanCore. Unit/integration203, browser14, 12โลก×30วันaudit/saveผ่าน. ดู [รายงาน](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md), [handoff](SME_CIVICS_V290_HANDOFF.md). ข้อจำกัดด้านรายสินค้า/การเมืองเต็มรูปแบบแยกไว้ ไม่อ้างทำทุกอย่างครบ
 
-## Era 3 — Feature and Smart Phones (documentation assignment)
+## Era 3 — Feature and Smart Phones (historical documentation assignment)
 
 - Owner: Codex; source baseline `855e183d9b7a404c857e9abc162c1a67a4a84f76` / runtime v2.9.0.
 - Status: documentation complete and validated — two English documents grouped in `era3/`; runtime implementation not started. Initial audit, source/core check, English-only handoff, status/master mirrors and 185 repository links checked.

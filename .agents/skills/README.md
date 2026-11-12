@@ -2,14 +2,14 @@
 
 สกิลเหล่านี้ใช้กับ `COMPANY_SOURCE/` ของเกม Siam Enterprise / Company Simulation โดยเฉพาะ ตรวจ source และ [project status](../../project_status_and_ai_onboarding.md) ทุกครั้งก่อนอ้างพฤติกรรมหรือเวอร์ชัน
 
-## สกิลหลัก (ซิงก์ถึงรุ่น v2.9.0)
+## สกิลหลัก (อ้างอิงปัจจุบัน v3.0.0)
 
-- [`company-evolution-dev/SKILL.md`](company-evolution-dev/SKILL.md) — Master Skill ภาพรวมสถาปัตยกรรมและระบบที่ตรวจถึง **v2.9.0 (`sme-origins-civics-informed-decisions-v290`)**; สำเนาระดับ root คือ [`SKILL.md`](../../SKILL.md), [`SKILL_COMPANY_EVOLUTION_DEV.md`](../../SKILL_COMPANY_EVOLUTION_DEV.md), และ [`SKILL_COMPANY_FOR_EVERY_PATCH.md`](../../SKILL_COMPANY_FOR_EVERY_PATCH.md) สำหรับการส่งต่อไฟล์
-- [`company-for-every-patch/SKILL.md`](company-for-every-patch/SKILL.md) — Evergreen workflow ก่อน/หลังแพตช์และรายการตรวจความสมจริงเชิงกระบวนการ สถานการณ์วิกฤต การติดตามผล และความลึกชีวิต NPC ถึง **v2.9.0**
+- [`company-evolution-dev/SKILL.md`](company-evolution-dev/SKILL.md) — Master Skill ภาพรวมสถาปัตยกรรมและระบบที่ตรวจถึง **v3.0.0 (`sme-origins-civics-informed-decisions-v290`)**; สำเนาระดับ root คือ [`SKILL.md`](../../SKILL.md), [`SKILL_COMPANY_EVOLUTION_DEV.md`](../../SKILL_COMPANY_EVOLUTION_DEV.md), และ [`SKILL_COMPANY_FOR_EVERY_PATCH.md`](../../SKILL_COMPANY_FOR_EVERY_PATCH.md) สำหรับการส่งต่อไฟล์
+- [`company-for-every-patch/SKILL.md`](company-for-every-patch/SKILL.md) — Evergreen workflow ก่อน/หลังแพตช์และรายการตรวจความสมจริงเชิงกระบวนการ สถานการณ์วิกฤต การติดตามผล และความลึกชีวิต NPC ถึง **v3.0.0**
 
 ## สกิลเฉพาะด้าน
 
-สกิล 14 รายการด้านล่างมี metadata `maturity: starter-draft` พร้อมบันทึกการเชื่อมระบบจริงถึง **v2.9.0**:
+สกิล 14 รายการด้านล่างมี metadata `maturity: starter-draft` พร้อมบันทึกการเชื่อมระบบจริงถึง **v3.0.0**:
 
 - `company-npc-life-and-behavior` — ชีวิตและพฤติกรรม NPC (`p.aspiration`, `p.memories`, ความเชื่อใจ/ความขัดแย้ง `w.culture.conflicts`, การย้ายสายงานภายใน, ข้อเสนอรั้่งตัวก่อนลาออก, Spin-off ที่มีชีวิตใน `w.externalWorld.living.firms`)
 - `company-workforce-and-careers` — กำลังคน อาชีพ และการเติบโต (`evaluateAutonomousHiring` คัดผู้เชี่ยวชาญรายวิชา, `evaluateInternalCareerSwitch`, `evaluateEmployeeRetention`)
@@ -36,6 +36,7 @@
 
 ล่าสุด v2.9.0 เพิ่มสัญญา startup.js/civics.js และ news/learning/software fixes ใน Master ทั้งสองและ14domain references; root copiesตรงcanonical รายงานและข้อจำกัดดู `docs/company/SME_AND_CIVICS_SYSTEM.md` จำนวน203เทสต์/14browser เป็นหลักฐานรุ่นนี้ ไม่ใช่เกณฑ์จำนวนตายตัว สถานะdraftของสกิลเฉพาะด้านยังไม่เปลี่ยน และยังไม่ยืนยันอัปเดต2สกิลภายในแอปGemini
 
-## Era 3 proposal (not a runtime skill certification)
 
-See [the English two-document handoff](../../era3/ERA_3_FEATURE_AND_SMART_PHONES.md) and [status copy](../../era3/project_status_and_ai_onboarding.md). Master/evergreen/QA references route collaborators there; no new phone functionality, release or skill maturity is claimed. The player's role is observer/Edit Hub; NPCs operate the world.
+## Current v3.0.0 source references
+
+Both master references and all14affected domain references now include phone contracts and their relevant APIs/invariants/tests. Root master copies match canonical files. Read `docs/company/ERA3_PHONE_SYSTEM.md` and `docs/company/validation/v300/skill-reference-checks.json`. The update is source-backed reference maintenance, not a new maturity certification. Domain starter status remains unchanged; the two skills inside Gemini app have not been accessed or verified. Historical v2.9 notes above remain history.

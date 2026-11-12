@@ -9,15 +9,17 @@
     node ? require("./world.js") : root.CompanyWorld,
     node ? require("./plant.js") : root.CompanyPlant,
     node ? require("./startup.js") : root.CompanyStartup,
+    node ? require("./phone-industry.js") : root.CompanyPhoneIndustry,
+    node ? require("./phone-talent.js") : root.CompanyPhoneTalent,
   );
   if (node) module.exports = value;
   else root.CompanySim = value;
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
-  function (H, D, L, E, W, P, B) {
+  function (H, D, L, E, W, P, B, Phone, Talent) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.9.0",
+      RELEASE_VERSION = "3.0.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -30,6 +32,7 @@
       invoice: "admin",
       research: "engineering",
       sales: "sales",
+      phoneWorkshop: "engineering",
     };
     const BUILTIN_TASK_STATIONS = {
       assembly: "assembly",
@@ -41,6 +44,7 @@
       invoice: "admin",
       research: "research",
       sales: "sales",
+      phoneWorkshop: "research",
     };
     // Levels are simulation state; amounts are integer satang, not visual-only upgrades.
     const FACILITY_RULES = Object.freeze({
@@ -630,6 +634,7 @@
     }
     function jobSubject(w,j) {
       if(j.unitId && ["assembly","rework"].includes(j.kind)) return productSubject(w,w.units[j.unitId]?.productId);
+      if(j.kind==="phoneWorkshop") return j.researchSubject || "electrical_basics";
       if(j.kind==="research") return j.courseSubject || j.researchSubject || w.knowledge?.projects[j.knowledgeProjectId]?.subject || "research_methods";
       return ({qa:"quality",purchase:"procurement",invoice:"accounting",sales:"sales_negotiation",shipping:"logistics",packing:"warehouse_operations"})[j.kind] || null;
     }
@@ -3430,7 +3435,9 @@
     function simulateGlobalGeopoliticsDaily(w, completedDay) {
       const geo = ensureGeopolitics(w);
       if (geo.activeEvent && completedDay >= geo.activeEvent.expiresDay) geo.activeEvent = null;
-      W.step(w, completedDay);
+      W.step(w, completedDay,()=>{Phone.step(w,completedDay);phoneCompanyReview(w,completedDay);});
+      for(const n of (w.phoneIndustry.news||[]).filter(n=>n.day===completedDay&&!['RESEARCH_START','PROTOTYPE_FAILED'].includes(n.type))){const ext=w.externalWorld;if(!ext.worldChronicle.some(x=>x.id===n.id)){ext.worldChronicle.unshift({...n,category:'PHONE_TRADE',at:Math.max(0,(completedDay-1)*1440),nationId:ext.living.firms[n.firmId]?.nationId||'TH',badgeTh:'📱 อุตสาหกรรมโทรศัพท์',meaningTh:n.reasonTh,isMajor:true});ext.worldChronicle.length=Math.min(120,ext.worldChronicle.length);}}
+
       recomputeGeopoliticalMultipliers(w);
     }
 
@@ -6585,6 +6592,7 @@
       }
       for (const p of w.people) ensurePersonExtensions(w, p);
       ensureWatchlist(w);
+      Phone.ensure(w);
       return w;
     }
 
@@ -6621,7 +6629,7 @@
       const minQty=Math.max(contract.ordered||1,options.newQuantity||Math.max(contract.ordered||1,Math.ceil(contract.quantity*0.6)));
       if(minQty<contract.quantity){
         W.adjustCommercialEscrow(w,contract.id,minQty*contract.unitPrice);
-        contract.reducedFromQuantity=contract.quantity;
+        contract.reducedFromQuantity=contract.reducedFromQuantity||contract.quantity;
         contract.quantity=minQty;
       }
       contract.renegotiatedCount=(contract.renegotiatedCount||0)+1;
@@ -8184,6 +8192,8 @@
             ship.dueAt = purchase.dueAt;
           }
         }
+      } else if (j.kind === "phoneWorkshop") {
+        if(w.phoneIndustry?.campusFirmId&&(subjectLevel(p,j.researchSubject||'electrical_basics')>=35||(j.researchSubject!=='metal_machining'&&subjectLevel(p,'software')>=40))){w.phoneIndustry.campusMinutes=(w.phoneIndustry.campusMinutes||0)+j.required;event(w,'phoneWorkshopCompleted','ทีมวิศวกรรมทำงานออกแบบ ทดสอบ และเตรียมผลิตโทรศัพท์',{personId:p.id,minutes:j.required});learnSubject(p,j.researchSubject||'electrical_basics',j.required);}
       } else if (j.kind === "research") {
         knowledgeWork(w, p, j);
       } else if (j.kind === "sales") {
@@ -8320,6 +8330,7 @@
 
       for (const j of Object.values(w.jobs)) {
         if (j.assignee) continue;
+        if(j.kind==="phoneWorkshop"&&subjectLevel(p,j.researchSubject||"electrical_basics")<35&&!(j.researchSubject!=="metal_machining"&&subjectLevel(p,"software")>=40))continue;
         if (j.kind === "research") {
           const kp = w.knowledge?.projects[j.knowledgeProjectId];
           if (j.learnerId ? j.learnerId !== p.id : !kp || subjectLevel(p,j.researchSubject || kp.subject) < (kp.requirements[j.researchSubject || kp.subject] || kp.requiredLevel)) continue;
@@ -8369,7 +8380,7 @@
           (primary ? 26 : 0) +
           Math.min(12, (now(w) - j.createdAt) / 120) +
           urgent * 8;
-        if (j.kind === "research")
+        if (["research","phoneWorkshop"].includes(j.kind))
           score +=
             per.openness * 0.1 +
             v.learning * 0.06 +
@@ -10768,6 +10779,53 @@
       });
     }
     const failure = (code, message) => ({ ok: false, code, message });
+    function directorPhoneEdit(w,c){
+      if(c.action==='grantCash'){
+        const f=w.externalWorld.living.firms[c.firmId];if(!f||!Number.isSafeInteger(c.amount)||c.amount<100||c.amount>1000000000)return failure('invalidEdit','เลือกบริษัทและจำนวนเงินให้ถูกต้อง');
+        f.cash+=c.amount;f.openingCash+=c.amount;event(w,'directorEdit','[ทดลอง] เพิ่มทุนให้บริษัทภายนอก',{firmId:c.firmId,amount:c.amount});return {ok:true};
+      }
+      const p=w.phoneTalent?.people?.[c.personId];
+      if(c.action==='setTrait'&&p&&H.PERSONALITY.includes(c.key)&&Number.isFinite(c.level)&&c.level>=0&&c.level<=100){const profile=clone(p.profile);profile.personality[c.key]=c.level;p.profile=H.freezeProfile(profile);event(w,'directorEdit','[ทดลอง] ปรับนิสัยบุคลากรภายนอก',{personId:p.id,key:c.key,level:c.level});return {ok:true};}
+      if(c.action==='setSubject'&&p&&Object.hasOwn(SUBJECTS,c.subjectId)&&Number.isFinite(c.level)&&c.level>=0&&c.level<=100){
+        const subjects=p.subjects||p.education?.subjects||p.learnedSubjects;
+        if(!subjects||Array.isArray(subjects))return failure('invalidEdit','ข้อมูลความรู้ไม่พร้อม');subjects[c.subjectId]=c.level;event(w,'directorEdit','[ทดลอง] ปรับความรู้บุคลากรภายนอก',{personId:p.id,subjectId:c.subjectId,level:c.level});return {ok:true};
+      }
+      return failure('invalidEdit','ไม่พบเป้าหมายหรือค่าไม่ถูกต้อง');
+    }
+    function phoneCompanyReview(w,completedDay){
+      const industry=w.phoneIndustry;if(!industry)return;
+      const ceo=w.people.find(p=>p.employed&&p.role==='coordinator');if(!ceo||!w.policies.autoAccept)return;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),risk=ceo.profile.personality.riskTaking||50;
+      const entry=industry.playerEntry||(industry.playerEntry={status:'observing',reasonTh:'เริ่มจากความรู้และธุรกิจเดิมก่อนเข้าวงการโทรศัพท์',lastReviewDay:0});
+      if(completedDay<=entry.lastReviewDay)return;entry.lastReviewDay=completedDay;
+      const hired=(ext,offer)=>{if(w.finance.cash<wages*30+offer.salarySatang*30+w.catalog.rules.hireFee)return null;post(w,'hiring',-w.catalog.rules.hireFee,ext.id+':phoneRecruit');const p=createPerson(w,ext.id,ext.name,'engineer',offer.salarySatang);w.people.push(p);event(w,'phoneRecruitment','รับผู้เชี่ยวชาญจากอุตสาหกรรมโทรศัพท์',{personId:p.id,formerFirmId:ext.employerId});return p;};
+      Talent.step(w,day(w),{createPerson:hired,evaluateRecruitment:p=>{
+        if(completedDay%14!==0||p.role!=='engineer'||w.people.filter(p=>p.employed).length>=25||w.finance.cash<wages*60+p.dailyWageSatang*90||risk<45)return null;
+        const subject=w.startup?.sector==='software'?'software':'semiconductor_physics';if((p.education.subjects[subject]||0)<50||subjectReady(w,subject,40))return null;
+        return {vacancy:true,dailyWageSatang:Math.round(p.dailyWageSatang*1.8)};
+      }});
+      if(industry.campusFirmId&&!Object.values(w.jobs).some(j=>j.kind==='phoneWorkshop'))job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});
+      if(completedDay%14!==0)return;
+      const enclosureRoute=w.startup?.profileId==='metal_workshop'&&subjectReady(w,'metal_machining',40)&&subjectReady(w,'quality',30)&&w.plant?.machines?.press?.status==='ready'&&w.plant.machines.press.condition>=25;
+      const handsetRoute=subjectReady(w,'electrical_basics',40)&&subjectReady(w,'software',40)&&subjectReady(w,'quality',30);
+      if(!industry.campusFirmId&&risk>=45&&(handsetRoute||enclosureRoute)&&w.finance.cash>wages*90+500000000){
+        const amount=500000000,m=w.externalWorld.living,id='phone_campus';post(w,'expansion',-amount,'phoneDivisionCapital');
+        const template=clone(m.firms.siam_tech);Object.assign(template,{id,nationId:'TH',cash:amount,openingCash:0,receipts:amount,payments:0,stock:{},flow:{},capacity:2,output:0,investment:0,reserves:{},crops:{},history:[],missing:[],dailyRevenue:0,dailyCost:0});m.firms[id]=template;m.playerNetSatang+=amount;
+        w.externalWorld.corporations[id]={id,nationId:'TH',nameTh:'แผนกโทรศัพท์ของบริษัทเรา',sector:'electronics',sellsMaterials:[],buysMaterials:[],roles:['phone_brand'],relationshipMode:'neutral'};
+        industry.firms[id]={id,role:'brand',isCampus:true,level:0,knowledge:0,capacity:2,reputation:w.reputation,reserveSatang:wages*30,decisionTh:'ตั้งทีมออกแบบจากความรู้และทุนจริง ต้องซื้อชิ้นส่วนและประกอบเข้าคลัง',lastWorkDay:0,activeDesignId:null,produced:0,sold:0,revenueSatang:0,researchSatang:0,missing:[],researchBranches:['hardware','software']};industry.campusFirmId=id;industry.campusMinutes=0;if(enclosureRoute&&!handsetRoute){industry.firms[id].role='enclosure';industry.firms[id].licenseExpenseSatang=2000000;const source=industry.components.find(c=>c.kind==='enclosure'&&c.level===0),fee=2000000,owner=m.firms[source.supplierId];template.cash-=fee;template.payments+=fee;owner.cash+=fee;owner.receipts+=fee;industry.licenses.push({id:'campus-enclosure-license',buyerId:id,sellerId:owner.id,priceSatang:fee,day:completedDay,rights:'enclosure_design_0'});industry.components.push({...clone(source),id:'phone-campus-enclosure-0',supplierId:id});w.externalWorld.corporations[id].nameTh='แผนกผลิตชิ้นส่วนตัวถังโทรศัพท์';w.externalWorld.corporations[id].roles=['phone_component_supplier'];industry.firms[id].decisionTh='ซื้อสิทธิแบบตัวถัง ต้องจัดซื้อแผ่นโลหะและพอลิเมอร์ก่อนผลิต';}entry.status='manufacturer';entry.reasonTh='ผู้บริหารจัดทุนให้แผนกโทรศัพท์ ทีมต้องทำงานและซื้อชิป แรม จอ แบตเข้าคลังก่อนผลิต';job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});if(industry.firms[id].role==='enclosure'){entry.status='supplier';entry.reasonTh='ผู้บริหารเปิดแผนกตัวถัง ซื้อสิทธิแบบ ใช้งานช่าง เครื่องอัด และวัตถุดิบจริงก่อนขายชิ้นส่วน';}event(w,'phoneDivisionOpened',entry.reasonTh,{capitalSatang:amount});
+      }
+
+      if(w.finance.cash<wages*30+500000){entry.reasonTh='รักษาเงินเดือนและงานเดิมก่อนลงทุนในโทรศัพท์';return;}
+      if(w.startup?.profileId==='repair_service'&&!Object.values(w.serviceBusiness.orders).some(o=>!['paid','cancelled'].includes(o.status))){const result=startServiceOrder(w,'field_maintenance','shenzhen_semi');if(result.ok){entry.status='supplier';entry.reasonTh='ทีมช่างรับบำรุงรักษาให้บริษัทชิป ใช้เครื่องมือ วิชา และเวลางานจริง';}}
+      if(!industry.playerOwnedFirmId&&subjectReady(w,'software',40)&&subjectReady(w,'accounting',35)&&risk>=65){
+        const candidate=Object.values(industry.firms).filter(f=>f.role==='brand'&&!f.isCampus).sort((a,b)=>w.externalWorld.living.firms[a.id].cash-w.externalWorld.living.firms[b.id].cash)[0];
+        const firm=w.externalWorld.living.firms[candidate.id],valuation=Math.max(500000000,Math.round(firm.cash*1.2));
+        if(w.finance.cash>=valuation+wages*180){post(w,'expansion',-valuation,'phoneAcquisition:'+firm.id);const n=w.externalWorld.living.nations[firm.nationId];n.householdCash+=valuation;n.capitalReceipts=(n.capitalReceipts||0)+valuation;w.externalWorld.living.playerNetSatang+=valuation;industry.playerOwnedFirmId=firm.id;industry.ownership={firmId:firm.id,priceSatang:valuation,day:day(w),rights:'company_team_designs_obligations'};entry.status='owner';entry.reasonTh='ผู้บริหารซื้อกิจการแบรนด์พร้อมทีม แบบสินค้า และภาระเดิม แผนกดำเนินงานด้วยบัญชีและคนจริง';event(w,'phoneAcquisition',entry.reasonTh,{firmId:firm.id,priceSatang:valuation});}
+        else entry.reasonTh='สนใจถือกิจการโทรศัพท์ แต่ราคากิจการและเงินสำรองยังเกินทุนที่มี';
+      }
+      if(industry.playerOwnedFirmId||industry.campusFirmId){const f=w.externalWorld.living.firms[industry.playerOwnedFirmId||industry.campusFirmId],division=industry.firms[f.id];const profit=Math.max(0,division.revenueSatang-w.phoneIndustry.designs.filter(d=>d.firmId===f.id).reduce((a,d)=>a+d.costSatang,0)-(division.paidWagesSatang||0)-(division.dividendsSatang||0)-(division.costOfGoodsSatang||0)-(division.licenseExpenseSatang||0)-(division.refundSatang||0));const amount=Math.min(1000000,profit,Math.max(0,f.cash-division.reserveSatang*12));if(amount>0){division.dividendsSatang=(division.dividendsSatang||0)+amount;f.cash-=amount;f.payments+=amount;w.externalWorld.living.playerNetSatang-=amount;post(w,'investmentIncome',amount,'phoneDividend:'+completedDay);entry.reasonTh='กิจการโทรศัพท์จ่ายปันผลส่วนที่เกินเงินสำรอง โดยไม่ดึงทุนหมุนเวียนทั้งหมด';}}
+
+    }
     function command(w, c) {
       if (!c || typeof c !== "object" || typeof c.type !== "string")
         return failure("invalidCommand", "คำสั่งไม่ถูกต้อง");
@@ -10777,6 +10835,7 @@
         ? w.people.find((p) => p.id === c.personId && p.employed)
         : null;
       switch (c.type) {
+        case "directorPhoneEdit": return directorPhoneEdit(w,c);
         case "beginKnowledgeProject": return beginKnowledgeProject(w,c.targetId,c.kind || "product");
         case "acquireTechnologyLicense": return acquireTechnologyLicense(w,c.targetId,c.kind || "product");
         case "setPolicy": {
@@ -12083,6 +12142,8 @@
     function audit(w) {
       const errors = [
         ...W.validate(w),
+        ...Phone.validate(w),
+        ...Talent.validate(w),
         ...B.validate(w),
         ...intelligenceAudit(w),
         ...P.validate(w),
@@ -12325,6 +12386,10 @@
       reviewSmallBusinessLearning,
       evaluateSmallBusinessDaily,
       intelligenceAudit,
+      phoneView:Phone.view,
+      phoneTalentView:Talent.view,
+      phoneAudit:w=>[...(w.phoneIndustry&&!w.phoneTalent?['missing phone talent']:[]),...Phone.validate(w),...Talent.validate(w)],
+      phoneCompanyReview,
       startupOptions:B.list,
       startupAudit:B.validate,
       plantView: P.view,

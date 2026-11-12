@@ -1,18 +1,15 @@
-> **Current collaboration: Era 3 — Feature and Smart Phones.** Download the two English context documents in [era3/](era3/): [proposal](era3/ERA_3_FEATURE_AND_SMART_PHONES.md) and [current project status](era3/project_status_and_ai_onboarding.md). Runtime remains v2.9.0; v3.0.0 is proposed, not implemented. NPCs make all operational decisions; the player observes and edits conditions through Edit Hub.
-
-# เริ่มงานกับ Company v2.9.0
+# เริ่มงานกับ Company v3.0.0
 
 อ่าน [AGENTS.md](AGENTS.md) ฉบับจริงทุกครั้ง → [สถานะ](project_status_and_ai_onboarding.md) → [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md) / [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md) → [.agents/skills](.agents/skills/README.md) → source/tests ที่เกี่ยวข้อง
 
-งานล่าสุด: Codex ต่อยอด Agy v2.8.0 (`f7167e2`) เป็น v2.9.0: จุดเริ่ม SME 6 แบบ คน/ความรู้/ทุนตามกิจการ กระทรวงพาณิชย์/ผู้นำ/ข้อตกลงรายสินค้า และ NPC อ่านข่าว/เรียนรู้ตามบริบท แก้ช่องลัดซอฟต์แวร์ที่พบจากการตรวจจริง คง AGENTS/Human Core เดิม
+ล่าสุด: ธุรกิจโทรศัพท์แยก มีชิ้นส่วน/สต็อก/งานวิจัย/ต้นแบบ/ประกอบ/รอเปิดตัว/ขายจริง NPC ทำงานเอง ผู้เล่นดูและทดลองผ่าน Edit Hub ไม่ออกคำสั่งบริหารแทน NPC ระบบยุค3ยังมีข้อจำกัดด้านซัพพลายต้นน้ำและการปรับสมดุล ไม่ถือว่าข้อเสนอทุกฉบับทำครบแล้ว
 
-- [รายงานล่าสุด](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md)
-- [คู่มือ SME/รัฐบาล/ข่าว](docs/company/SME_AND_CIVICS_SYSTEM.md)
-- [รับช่วงและข้อจำกัด](docs/company/SME_CIVICS_V290_HANDOFF.md)
-- [ACTIVE_PROMPT](ACTIVE_PROMPT.md) แยกคำสั่งที่ทำแล้วจากข้อเสนอใหม่
-- ผลตรวจ 203/203 integration/unit, 14/14 browser; 12 โลก SME จำลอง 30 วัน ตรวจบัญชีและเซฟรายวันผ่าน
+- [รายงาน v3.0.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md)
+- [สัญญาระบบโทรศัพท์](docs/company/ERA3_PHONE_SYSTEM.md) / [รับช่วง](docs/company/ERA3_V300_HANDOFF.md)
+- [งานค้าง Era3](ideas/company/36_era3_phone_industry_remaining.md)
+- [ACTIVE_PROMPT](ACTIVE_PROMPT.md) แยกงานที่ส่งมอบจากข้อเสนอถัดไป
 
-ไม่มีสิทธิแก้ AGENTS/Human Core จากคำขอพัฒนาเกมทั่วไป ต้องอัปเดต Master Skills/สถานะ/รายงานทุกแพตช์ สกิล repo และ 2 สกิลในแอป Gemini เป็นคนละปลายทาง ยังไม่ได้เข้าถึงหรือยืนยันการซิงก์แอป
+คง AGENTS/Human Core เดิม สกิล repo และสองสกิลในแอป Gemini เป็นคนละปลายทาง ยังไม่ได้เข้าถึงหรือยืนยันซิงก์แอป
 
 ## บริบทฐาน Agy v2.8.0 (ประวัติ ไม่ใช่งานค้าง)
 

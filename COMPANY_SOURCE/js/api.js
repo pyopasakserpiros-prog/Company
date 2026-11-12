@@ -1162,6 +1162,8 @@
           serviceBusiness: w.serviceBusiness || null,
           capabilities: w.capabilities || null,
           companyKnowledge: S.companyKnowledgeView(w),
+          phoneIndustry:S.phoneView(w),
+          phoneTalent:S.phoneTalentView(w),
           startup:w.startup||null,
           intelligence:w.intelligence||null,
           startupOptions:S.startupOptions(),

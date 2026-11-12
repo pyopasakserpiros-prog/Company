@@ -1657,6 +1657,7 @@
 เช่าพื้นที่ใช้สอย ${s.areaM2} ตร.ม. ในแคมปัสร่วม ค่าเช่า ${moneyFull(s.rentDaily)}/วัน ไม่ได้เป็นเจ้าของอาคารทั้งหมด`);row("การเรียนรู้และการขยายกิจการ",s.decisionTh);for(const h of s.learningHistory.slice(0,5))row("การพัฒนาทีม",h.reasonTh||h.messageTh||JSON.stringify(h));}
       if(v.intelligence){row("ข่าวและการตัดสินใจของผู้บริหาร",v.intelligence.decisionTh);for(const n of v.intelligence.negotiations||[])row("เจรจาพาร์ทเนอร์",`${v.externalWorld.corporations[n.corpId]?.nameTh||n.corpId} • ${({negotiating:'กำลังเจรจา',signed:'ตกลงแล้ว',deferred:'ชะลอไว้ก่อน'})[n.status]} • ${n.reasonTh||''}`);}
 
+      if(v.phoneIndustry?.playerEntry){row("แนวทางเข้าสู่อุตสาหกรรมโทรศัพท์",v.phoneIndustry.playerEntry.reasonTh||v.phoneIndustry.playerEntry.decisionTh||"กำลังประเมินความพร้อม");const phoneLink=el("button","btn","ดูอุตสาหกรรมโทรศัพท์และแผนต่อไป");phoneLink.onclick=()=>openSheet("phoneIndustry","phone_overview");card.append(phoneLink);}
       row("ฐานะบริษัท",`เงินสด ${money(v.company.cash)} • หนี้ ${money(v.company.debt)} • ลูกหนี้ ${money(v.company.receivable)} • เงินสำรองพอประมาณ ${v.company.runwayDays} วัน`);
       row("กิจการขณะนี้",`${v.companyProgression?.currentStageNameTh || "บริษัทเริ่มต้น"} • ทีม ${k.people.length} คน • ออเดอร์ที่จ่ายแล้ว ${v.company.metrics.ordersPaid} • งานที่ยังเปิด ${v.orders.filter(o=>!["paid","cancelled"].includes(o.status)).length}`);
       row("ความพร้อมเทคโนโลยี",`พร้อมดำเนินการ ${k.products.filter(p=>p.ready).length}/${k.products.length} สินค้า • โครงการเฉพาะทาง ${k.projects.filter(p=>p.status!=="qualified").length} โครงการ`);
@@ -1851,12 +1852,91 @@ ${b.waitingReasonTh||''}`);
     }
   }
 
+  function openPhoneExperiment(v){
+    const dialog=el("dialog","business-chooser");dialog.id="phone-experiment";document.body.append(dialog);dialog.append(el("h2","","Edit Hub — การทดลอง"),el("p","muted","เปลี่ยนเงื่อนไขแล้วเฝ้าดู NPC ตัดสินใจเอง การเพิ่มเงินและความรู้ไม่รับประกันผลลัพธ์"));
+    const firms=v.phoneIndustry.firms||[],people=Object.values(v.phoneTalent?.people||{}).filter(p=>p.employment==='external');
+    const select=(items,label)=>{const x=el("select");x.setAttribute("aria-label",label);for(const [value,name]of items){const o=el("option","",name);o.value=value;x.append(o);}dialog.append(x);return x;};
+    const input=(label,value)=>{const x=el("input");x.type="number";x.setAttribute("aria-label",label);x.value=value;dialog.append(x);return x;};
+    dialog.append(el("h3","","เงินทุนบริษัทภายนอก"));const firm=select(firms.map(f=>[f.id,f.nameTh]),"บริษัทที่ทดลองเพิ่มเงิน"),amount=input("จำนวนเงินบาทที่เพิ่ม",10000);
+    const note=el("p","muted","");const send=(c)=>{const r=app.dispatch(c);note.textContent=r.ok?"บันทึกการทดลองแล้ว ดูผลเมื่อโลกเดินต่อ":r.message||"ตรวจค่าที่กรอก";paint(app.snapshot());};
+    const cash=el("button","btn","เพิ่มเงินทุน (ทดลอง)");cash.onclick=()=>send({type:'directorPhoneEdit',action:'grantCash',firmId:firm.value,amount:Math.round(Number(amount.value)*100)});dialog.append(cash);
+    dialog.append(el("h3","","บุคลากรภายนอก"));const person=select(people.map(p=>[p.id,p.name+" — "+(firms.find(f=>f.id===p.employerId)?.nameTh||"บริษัทภายนอก")]),"บุคลากรที่ทดลอง");
+    const subject=select(Object.entries(v.companyKnowledge.subjects),"วิชาที่ทดลอง"),level=input("ระดับความรู้ 0 ถึง 100",50),knowledge=el("button","btn","ปรับความรู้ (ทดลอง)");knowledge.onclick=()=>send({type:'directorPhoneEdit',action:'setSubject',personId:person.value,subjectId:subject.value,level:Number(level.value)});dialog.append(knowledge);
+    const labels={sociability:'การเข้าสังคม',conscientiousness:'ความรับผิดชอบ',agreeableness:'ความประนีประนอม',openness:'เปิดรับสิ่งใหม่',riskTaking:'การรับความเสี่ยง',stressReactivity:'การตอบสนองความเครียด',assertiveness:'ความกล้าแสดงออก',patience:'ความอดทน',integrity:'ความซื่อตรง',adaptability:'การปรับตัว',ambition:'ความทะเยอทะยาน',prudence:'ความรอบคอบ',humility:'ความถ่อมตน',optimism:'การมองโลกในแง่ดี'};
+    const trait=select(Object.entries(labels),"นิสัยที่ทดลอง"),value=input("ค่านิสัย 0 ถึง 100",50),change=el("button","btn","ปรับนิสัย (ทดลอง)");change.onclick=()=>send({type:'directorPhoneEdit',action:'setTrait',personId:person.value,key:trait.value,level:Number(value.value)});dialog.append(change,note);
+    const close=el("button","btn","ปิดการทดลอง");close.onclick=()=>{dialog.close();dialog.remove();};dialog.append(close);dialog.addEventListener('cancel',()=>dialog.remove());dialog.showModal();
+  }
+  // Phone sheets read snapshots only. Selecting an entity never dispatches a command.
+  function renderPhoneIndustry(v, body) {
+    byId("shTitle").textContent="📱 อุตสาหกรรมโทรศัพท์ — เฝ้าดูบริษัทและเทคโนโลยี";
+    setSheetTabs([{id:"phone_overview",label:"ภาพรวม"},{id:"phone_company",label:"บริษัท"},{id:"phone_products",label:"สินค้า / R&D"},{id:"phone_supply",label:"ซัพพลายเชน"},{id:"phone_market",label:"ตลาด / ข่าว"},{id:"phone_people",label:"บุคลากร"}]);
+    body.replaceChildren();
+    const d=v.phoneIndustry || {}, list=x=>Array.isArray(x)?x:Object.values(x||{});
+    const firms=list(d.firms), designs=list(d.designs), chips=list(d.chips), projects=list(d.projects);
+    const name=x=>x?.nameTh||x?.name||x?.titleTh||x?.headlineTh||"ยังไม่ระบุชื่อ";
+    const lookup=(rows,id)=>rows.find(x=>x.id===id);
+    const state=x=>({pilot:"ผลิตนำร่อง",complete:"เสร็จแล้ว",shipping:"ระหว่างขนส่ง",notice:"รอครบกำหนดย้ายงาน",transferred:"ย้ายงานแล้ว",planned:"วางแผน",research:"วิจัย",prototype:"ต้นแบบ",validation:"ทดสอบ",qualified:"ผ่านการรับรอง",released:"วางตลาด",active:"ดำเนินงาน",completed:"เสร็จแล้ว",negotiating:"กำลังเจรจา",signed:"ลงนาม",delivered:"ส่งมอบ",paid:"ชำระแล้ว",blocked:"ติดข้อจำกัด",production:"กำลังผลิต",ready:"พร้อม",failed:"ไม่ผ่าน",cancelled:"ยกเลิก"})[x]||"อยู่ระหว่างดำเนินการ";
+    const text=x=>typeof x==="string"?x:"";
+    const reason=x=>text(x?.reasonTh)||text(x?.decisionTh)||text(x?.descriptionTh)||text(x?.messageTh)||text(x?.meaningTh)||"ยังไม่มีคำอธิบายการตัดสินใจ";
+    const row=(title,detail)=>{const c=el("div","card phone-card");c.append(el("h3","",title),el("div","muted",detail));body.append(c);return c;};
+    const empty=()=>row("ยังไม่มีรายการ","ข้อมูลจะปรากฏเมื่อบริษัทตัดสินใจและเกิดกิจกรรมจริงในโลก");
+    const experiment=el("button","btn","Edit Hub — ทดลองเปลี่ยนเงื่อนไข");experiment.onclick=()=>openPhoneExperiment(v);body.append(experiment);
+    const select=(rows,key,label)=>{if(!rows.length)return null;const s=el("select","world-select phone-select");s.setAttribute("aria-label",label);for(const x of rows){const o=el("option","",name(x));o.value=x.id;s.append(o);}if(!rows.some(x=>x.id===uiState[key]))uiState[key]=rows[0].id;s.value=uiState[key];s.onchange=()=>{uiState[key]=s.value;renderPhoneIndustry(current,body);};body.append(s);return lookup(rows,s.value);};
+    const firmName=id=>name(lookup(firms,id));
+    const people=list(v.phoneTalent?.people || v.phoneTalent?.engineers);
+    const personName=id=>name(lookup(people,id)||lookup(v.people||[],id));
+    const entry=d.playerEntry;
+    if(uiState.subTab==="phone_overview") {
+      row("โลกโทรศัพท์ที่กำลังเปลี่ยนแปลง",`บริษัท ${firms.length} แห่ง • แบบสินค้า ${designs.length} แบบ • ชิป ${chips.length} รุ่น • โครงการวิจัย ${projects.length} โครงการ\nบริษัทและวิศวกรตัดสินใจเองตามทุน ความรู้ ความพร้อม และตลาด`);
+      if(entry)row("บริษัทของเราและโอกาสเข้าสู่อุตสาหกรรม",reason(entry));
+      for(const f of firms.slice(0,12)){const c=row(name(f),reason(f));const b=el("button","btn","ดูบริษัทและแผน");b.onclick=()=>{uiState.phoneFirm=f.id;uiState.subTab="phone_company";renderPhoneIndustry(current,body);};c.append(b);}
+      if(!firms.length)empty();
+    } else if(uiState.subTab==="phone_company") {
+      const f=select(firms,"phoneFirm","เลือกบริษัทโทรศัพท์");if(!f){empty();return;}
+      const external=list(v.world?.firms || v.livingWorld?.firms || v.worldModel?.firms).find(x=>x.id===f.id);
+      const cash=f.cashSatang??f.cash??external?.cash;
+      row(name(f),`${reason(f)}\nเงินสดบริษัท ${cash==null?"ยังไม่มีข้อมูลบัญชี":moneyFull(cash)}\nแผนต่อไป: ${text(f.planTh)||text(f.nextPlanTh)||reason(f.plan)||"รอตัดสินใจตามเงื่อนไขจริง"}`);
+      for(const p of projects.filter(x=>x.firmId===f.id))row(({handset:"โครงการแบบโทรศัพท์",semiconductor:"โครงการออกแบบชิป",platform:"โครงการแพลตฟอร์ม",component:"โครงการพัฒนาชิ้นส่วน"})[p.type]||"โครงการวิศวกรรม",`${state(p.status)} • ${Math.round(p.progress||0)}/${p.requiredMinutes||0} นาที • ${reason(p)}\nผู้ร่วมวิจัย: ${list(p.contributors||p.contributorIds||p.engineerIds).map(x=>typeof x==="string"?personName(x):name(x)).join(" • ")||"ยังไม่มีผู้ร่วมโครงการ"}`);
+      for(const x of designs.filter(x=>x.firmId===f.id))row(name(x),`${state(x.stage||x.status)} • ${reason(x)}`);
+    } else if(uiState.subTab==="phone_products") {
+      const x=select(designs,"phoneDesign","เลือกแบบโทรศัพท์");if(!x){empty();return;}
+      row(name(x),`${firmName(x.firmId)} • ${state(x.stage||x.status)}\n${reason(x)}`);
+      const bom=x.bom||{};const chip=lookup(chips,x.chipId||bom.chipId||x.socId);
+      row("ชิปและส่วนประกอบ",`ผู้ออกแบบชิป: ${chip?firmName(chip.ownerId):"ยังไม่ได้เลือกชิป"}\n${chip?"ชุดคำสั่ง "+chip.isa+" • แรม "+chip.memoryType:""}`);
+      if(chip)row("ผลทดสอบชิป",`${chip.cores} คอร์ • ${chip.clockGhz} GHz • กระบวนการ ${chip.nodeNm} nm • โหลด ${chip.loadW} W`);
+      if(x.evaluation){const e=x.evaluation;row("ผลทดสอบเครื่อง",`แบต ${e.batteryHours.toFixed(1)} ชั่วโมง • โหลดเฉลี่ย ${e.averagePowerW} W • ผิวเครื่องที่โหลดสูงสุด ${e.surfaceC} °C • ประสิทธิภาพต่อเนื่อง ${(e.sustainedFactor*100).toFixed(0)}%\nโทร ${e.taskScores.call} • เว็บ ${e.taskScores.web} • กราฟิก ${e.taskScores.game} (คะแนนเทียบงานเดียวกัน)`);}
+      if(x.parts)row("สเปกชิ้นส่วนจริง",`RAM ${x.parts.ram.capacityMB} MB • พื้นที่เก็บ ${x.parts.storage.capacityMB} MB\nจอ ${x.parts.display.width}×${x.parts.display.height} • แบต ${x.parts.battery.wh} Wh • กล้อง ${x.parts.camera?.megapixels||0} MP\nระบบ ${x.parts.os.installableApps?'รองรับแอปภายนอก':'เฟิร์มแวร์ฟีเจอร์โฟน'} • ภาระระบบ ${(x.parts.os.overhead*100).toFixed(0)}%`);
+      if(x.comparison){const c=x.comparison;row("เทียบรุ่นก่อนของบริษัทเดียวกัน",`CPU ${c.cpuThroughput.toFixed(2)} • RAM ${c.ramMB} MB • พื้นที่ ${c.storageMB} MB • คุณภาพกล้อง ${c.cameraQuality.toFixed(2)}\nแบต ${c.batteryHours.toFixed(1)} ชั่วโมง • เว็บ ${c.web.toFixed(1)} • กราฟิก ${c.game.toFixed(1)} • ราคา ${moneyFull(c.priceSatang)}\nค่าต่างเป็นบวกหรือลบได้ รุ่นใหม่ไม่ได้ดีกว่าทุกด้าน`);}
+      row("สินค้าสำเร็จและราคา",`ผลิตแล้ว ${x.produced} เครื่อง • ขายแล้ว ${x.sold} เครื่อง • ราคา ${moneyFull(x.priceSatang)} • ต้นทุนประกอบล่าสุด ${x.actualUnitCostSatang?moneyFull(x.actualUnitCostSatang):"ยังไม่ผลิต"}`);
+      row("ความเข้ากันได้ / ผลทดสอบ",x.evaluation?.compatible?"ผ่านด่านชิ้นส่วนและไดรเวอร์ของแบบนี้":(x.evaluation?.reasonsTh||[]).join(" • ")||"ยังไม่มีผลทดสอบ");
+      for(const p of projects.filter(p=>p.designId===x.id||p.productId===x.id))row(({handset:"โครงการแบบโทรศัพท์",semiconductor:"โครงการออกแบบชิป",platform:"โครงการแพลตฟอร์ม",component:"โครงการพัฒนาชิ้นส่วน"})[p.type]||"โครงการวิศวกรรม",`${state(p.status)} • ${Math.round(p.progress||0)}/${p.requiredMinutes||0} นาที • ${reason(p)}\nผู้ร่วมวิจัย: ${list(p.contributors||p.contributorIds||p.engineerIds).map(z=>typeof z==="string"?personName(z):name(z)).join(" • ")||"ยังไม่มีผู้ร่วมโครงการ"}`);
+    } else if(uiState.subTab==="phone_supply") {
+      const selected=select(firms,"phoneSupplyFirm","เลือกบริษัทที่ต้องการดูคลัง");if(!selected){empty();return;}
+      const raw=Object.entries(selected.rawStock||{}).filter(([,q])=>q>0);row("วัตถุดิบในคลัง — "+name(selected),raw.map(([id,q])=>(v.catalog?.materials?.find(m=>m.id===id)?.nameTh||({pcb:"แผงวงจร",silicon_wafer:"เวเฟอร์ซิลิคอน",copper_coil:"ลวดทองแดง",glass_bottle:"แก้วแปรรูป",battery:"แบตเตอรี่ต้นแบบ",polymer_resin:"เรซินพอลิเมอร์",metal_sheet:"แผ่นโลหะ"})[id]||id)+" × "+q).join(" • ")||"ยังไม่มีวัตถุดิบในคลัง");
+      const lots=list(d.lots).filter(l=>l.ownerId===selected.id), contracts=list(d.contracts).filter(c=>c.buyerId===selected.id||c.sellerId===selected.id);
+      row("การผลิตและการส่งมอบ",`ล็อตผลิต ${lots.length} ล็อต • สัญญา ${contracts.length} ฉบับ`);
+      for(const l of lots)row((l.kind==="phone"?name(lookup(designs,l.designId)):({chip:"ชิปประมวลผล",ram:"RAM",storage:"หน่วยเก็บข้อมูล",display:"หน้าจอ",battery:"แบตเตอรี่",camera:"กล้อง",enclosure:"ตัวถัง"})[l.kind]||"ชิ้นส่วน") + " — ล็อตผลิต",`${firmName(l.ownerId||l.firmId)} • รับเข้าวันที่ ${l.day}\nจำนวน ${l.available??0} คงเหลือ / ${l.reserved??0} ระหว่างส่ง / ${l.used??0} เบิกใช้ • ต้นทุน ${moneyFull(l.costSatang??l.totalCostSatang??l.cost??0)}\nต้นทุนต่อหน่วย ${moneyFull(l.unitCostSatang||0)}`);
+      for(const c of contracts)row(c.kind==="raw"?"ขนส่งวัตถุดิบ":"ขนส่งชิ้นส่วน",`${firmName(c.sellerId)} → ${firmName(c.buyerId)} • ${state(c.status)}\nจำนวน ${c.quantity} • จ่ายผู้ขาย ${moneyFull(c.paidSatang)} • ภาษี ${moneyFull(c.taxSatang||0)}\nสั่งวันที่ ${c.day} • กำหนดรับวันที่ ${c.dueDay}`);
+      if(!lots.length&&!contracts.length)empty();
+    } else if(uiState.subTab==="phone_people") {
+      for(const p of people){const c=row(name(p),`${p.employment==='campus'?'ย้ายมาเป็นพนักงานบริษัทเราแล้ว':firmName(p.employerId)} • ${({ceo:'ผู้บริหาร',engineer:'วิศวกร',commercial:'จัดซื้อและการค้า'})[p.role]||'ผู้เชี่ยวชาญ'}\n${p.duties}\nค่าจ้างต่อวัน ${moneyFull(p.dailyWageSatang)} • ความพึงพอใจ ${p.satisfaction} • ความผูกพัน ${p.loyalty}\nงานวันนี้ ${p.workedMinutes}/360 นาที`);const subjects=Object.entries(p.education?.subjects||{}).sort((a,b)=>b[1]-a[1]).slice(0,10);c.append(el('div','muted',subjects.map(([id,n])=>(v.companyKnowledge?.subjects?.[id]||({electrical_basics:'พื้นฐานไฟฟ้า',software:'พัฒนาซอฟต์แวร์',programming:'เขียนโปรแกรม',semiconductor_physics:'ฟิสิกส์สารกึ่งตัวนำ',semiconductor_process:'กระบวนการผลิตสารกึ่งตัวนำ',metal_machining:'งานขึ้นรูปโลหะ',physical_chemistry:'เคมีเชิงฟิสิกส์',chemical_processing:'กระบวนการเคมี',circuit_design:'ออกแบบวงจร',metrology:'มาตรวิทยา',embedded_firmware:'เฟิร์มแวร์',people_management:'บริหารคน',procurement:'จัดซื้อ'})[id]||id)+' '+Math.floor(n)+'/100').join(' • ')));}
+      if(!people.length)empty();
+    } else {
+      const cohorts=list(d.cohorts);
+      row("ยอดขายกับผู้ใช้งานจริง","ยอดขายคือเครื่องที่ขายในช่วงเวลานั้น ฐานผู้ใช้คือเครื่องที่ยังใช้งานอยู่ การซื้อทดแทนจึงไม่เท่ากับผู้ใช้ใหม่ทั้งหมด");
+      for(const c of cohorts)row(name(lookup(designs,c.designId)),`ยอดขาย ${c.quantity??c.salesUnits??0} เครื่อง • ฐานใช้งาน ${c.active??c.installedBase??0} เครื่อง\n${reason(c)}`);
+      const news=list(d.news);for(const n of news.slice(0,40))row(name(n),`${n.day!=null?"วันที่ "+n.day+" • ":""}${reason(n)}`);
+      if(!cohorts.length&&!news.length)empty();
+    }
+  }
+
   function renderActiveSheet(v) {
     if (!uiState.sheetOpen) return;
     if(uiState.sheetMode === "world" && document.activeElement?.classList.contains("world-select")) return;
     const body = byId("shBody");
     if (!body) return;
 
+    if (uiState.sheetMode === "phoneIndustry") { renderPhoneIndustry(v,body); return; }
     if (uiState.sheetMode === "world") { renderWorldSheet(v,body); return; }
     if (uiState.sheetMode === "company") { renderCompanySheet(v,body); return; }
 
@@ -3536,6 +3616,7 @@ ${b.waitingReasonTh||''}`);
     getCamera: () => renderer?.getCamera(),
     refresh: () => paint(app.snapshot()),
     openPersonSheet,
+    openPhoneIndustry: () => openSheet("phoneIndustry", "phone_overview"),
     openBuildingSheet,
     toggleTrackedPerson,
   });

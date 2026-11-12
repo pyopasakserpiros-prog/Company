@@ -7,6 +7,7 @@
   "use strict";
   const KINDS = [
     "sales",
+    "investmentIncome",
     "materials",
     "rent",
     "interest",
@@ -61,8 +62,8 @@
     )
       throw new RangeError("invalid principal transaction");
     if (
-      (e.kind === "sales" && e.delta < 0) ||
-      (!["sales", "loan"].includes(e.kind) && e.delta > 0)
+      (["sales", "investmentIncome"].includes(e.kind) && e.delta < 0) ||
+      (!["sales", "investmentIncome", "loan"].includes(e.kind) && e.delta > 0)
     )
       throw new RangeError("invalid cash flow sign");
     b.postedIds[e.id] = b.entries.length;

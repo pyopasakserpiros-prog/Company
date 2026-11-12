@@ -49,6 +49,8 @@
     )
       throw new TypeError("unsupported game/save/core version");
     const copy = JSON.parse(JSON.stringify(w));
+    const legacyCore=copy.coreVersion!==H.VERSION;
+    if(legacyCore&&record(copy.finance?.totals)&&copy.finance.totals.investmentIncome===undefined)copy.finance.totals.investmentIncome=0;
     if (copy.coreVersion !== H.VERSION) {
       if (!Array.isArray(copy.people))
         throw new TypeError("missing legacy people");
@@ -216,6 +218,7 @@
     }
     if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
     try{for(const err of S.intelligenceAudit(w))add(false,err);}catch(_){add(false,"invalid market intelligence");}
+    try{for(const err of S.phoneAudit(w))add(false,err);}catch(_){add(false,"invalid phone industry");}
     if(w.startup){try{for(const err of S.startupAudit(w))add(false,err);}catch(_){add(false,"invalid SME startup");}}
     if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
     if(w.warehouse){try{for(const err of S.warehouseAudit(w))add(false,err);}catch(_){add(false,"invalid warehouse");}}
@@ -423,6 +426,7 @@
         "invoice",
         "research",
         "sales",
+        "phoneWorkshop",
         ...customTaskKinds,
       ],
       unitStages = ["assembly", "rework", "qa", "packing", "ready"];
@@ -847,6 +851,7 @@
     if (errors.length)
       throw new TypeError("Cannot load: " + errors.slice(0, 5).join("; "));
     for (const p of world.people) H.freezeProfile(p.profile);
+    for(const p of Object.values(world.phoneTalent?.people||{})){H.freezeProfile(p.profile);if(p.employment==='campus'){const campus=world.people.find(q=>q.id===p.id);if(campus)p.education=campus.education;}}
     return world;
   }
   return Object.freeze({

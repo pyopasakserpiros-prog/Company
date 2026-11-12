@@ -1,3 +1,5 @@
+> Runtime v3.0.0: generated phone industry with real stocks, funded R&D, campus entry and read-only phone market. See [system contracts](../docs/company/ERA3_PHONE_SYSTEM.md) and [current report](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md). Old release sections below are historical. `node tools/phone-industry-soak.cjs` writes a normal/edited-input sector experiment to its output argument (default local JSON); it is not a full-campus endurance test.
+
 # Company Simulation — วิธีเปิดและพัฒนา
 
 รุ่นเกมบน `main`: **v2.9.0** · [สถานะและรายงานแพตช์](../project_status_and_ai_onboarding.md)

@@ -979,6 +979,13 @@ canvas.pt {
 .world-select { width:100%; min-height:44px; margin:8px 0 16px; background:#173c32; color:#eaf5e8; border:1px solid #537666; border-radius:10px; padding:10px; }
 .business-chooser{width:min(620px,94vw);max-height:90dvh;overflow:auto;box-sizing:border-box;background:#16352e;color:#eef9f0;border:1px solid #679681;border-radius:18px;padding:20px;z-index:10000}.business-chooser::backdrop{background:#051811d9}.business-chooser select,.business-chooser input{display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:12px;background:#10271f;color:#fff;border:1px solid #678578;border-radius:8px;font-size:16px}.business-chooser button{margin:8px 5px 0 0;min-height:44px}
 
+/* Read-only phone industry inspection. Keep long Thai text and selectors usable. */
+.phone-card { min-width:0; }
+.phone-card .muted { white-space:pre-line; overflow-wrap:anywhere; line-height:1.75; }
+.phone-card h3 { overflow-wrap:anywhere; }
+.phone-card .btn { min-height:44px; margin-top:10px; }
+.phone-select { font-size:16px; box-sizing:border-box; }
+
 </style>
   </head>
   <body>
@@ -1026,6 +1033,7 @@ canvas.pt {
       <!-- Bottom Navigation Bar (6 Tabs — JS2 Style) -->
       <nav id="hudBottom" role="navigation" aria-label="เมนูหลัก">
         <button type="button" data-nav="world" aria-label="โลก"><span>🌍</span>โลก</button>
+        <button type="button" data-nav="phoneIndustry" aria-label="อุตสาหกรรมโทรศัพท์"><span>📱</span>โทรศัพท์</button>
         <button type="button" data-nav="company" aria-label="บริษัท"><span>🏛️</span>บริษัท</button>
         <button type="button" data-nav="people" aria-label="พนักงาน">
           <span>👥</span>ผู้คน
@@ -9299,8 +9307,8 @@ canvas.pt {
     return e;
   }
   return Object.freeze({
-    VERSION: "2.9.0",
-    RELEASE_VERSION: "2.9.0",
+    VERSION: "3.0.0",
+    RELEASE_VERSION: "3.0.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -9612,6 +9620,7 @@ canvas.pt {
   "use strict";
   const KINDS = [
     "sales",
+    "investmentIncome",
     "materials",
     "rent",
     "interest",
@@ -9666,8 +9675,8 @@ canvas.pt {
     )
       throw new RangeError("invalid principal transaction");
     if (
-      (e.kind === "sales" && e.delta < 0) ||
-      (!["sales", "loan"].includes(e.kind) && e.delta > 0)
+      (["sales", "investmentIncome"].includes(e.kind) && e.delta < 0) ||
+      (!["sales", "investmentIncome", "loan"].includes(e.kind) && e.delta > 0)
     )
       throw new RangeError("invalid cash flow sign");
     b.postedIds[e.id] = b.entries.length;
@@ -10076,7 +10085,7 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
     }
   }
   function statusName(s){return {peace:'สัมพันธ์ปกติ',treaty:'ข้อตกลงการค้า',sanctions:'จำกัดการค้า',war:'ความขัดแย้งติดอาวุธ'}[s]||s;}
-  function step(w,day){
+  function step(w,day,beforeSettlement){
     const m=ensure(w);if(day<=m.lastDay)return false;m.lastDay=day;
     m.shocks=m.shocks.filter(s=>day<s.untilDay);
     for(const [id,c]of Object.entries(w.externalWorld.corporations))if(!m.firms[id])initFirm(w,id,c);
@@ -10104,6 +10113,8 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
         if(seller&&trade(w,seller,buyer,k,Math.min(gap,affordable,12),day))deals++;
       }
     }
+    // Sector extensions post funded production/trade before profit, tax and history close.
+    if(typeof beforeSettlement==='function')beforeSettlement();
     for(const f of Object.values(m.firms)){reviewFirm(w,f,day);for(const k of w.externalWorld.corporations[f.id].sellsMaterials||[])if(m.markets[k])m.markets[k].supply+=f.stock[k]||0;}
     for(const k of Object.values(m.markets)){
       const base=w.catalog.materials[k.id].unitCost,pressure=(k.demand-k.supply)/Math.max(10,k.demand+k.supply);
@@ -10253,7 +10264,7 @@ return Object.freeze({ensure,category,governmentStep,diplomacyStep,quote,recordT
       if(!m.nations[f.nationId]||!Number.isFinite(f.capacity)||f.capacity<1||!f.flow||!f.stock){errors.push('world firm structure '+f.id);continue;}
       for(const [k,x]of Object.entries(f.flow))if(!safe(f.stock[k])||Object.values(x).some(v=>!safe(v))||f.stock[k]!==x.opening+x.produced+x.bought-x.used-x.sold)errors.push('world stock '+f.id+':'+k);
     }
-    for(const n of Object.values(m.nations))if(!Number.isFinite(n.inflation)||n.inflation < -2||n.inflation>25||!Number.isFinite(n.unemployment)||n.unemployment<1||n.unemployment>30||!safe(n.treasury)||!safe(n.householdCash)||n.treasury!==n.openingTreasury+n.taxes-n.spending||n.householdCash!==n.openingHouseholdCash+n.wages+n.transfers-n.consumption)errors.push('world national accounts '+n.id);
+    for(const n of Object.values(m.nations))if(!Number.isFinite(n.inflation)||n.inflation < -2||n.inflation>25||!Number.isFinite(n.unemployment)||n.unemployment<1||n.unemployment>30||!safe(n.treasury)||!safe(n.householdCash)||n.treasury!==n.openingTreasury+n.taxes-n.spending||n.householdCash!==n.openingHouseholdCash+n.wages+n.transfers+(n.capitalReceipts||0)-n.consumption)errors.push('world national accounts '+n.id);
     for(const k of Object.values(m.markets))if(!Number.isFinite(k.price)||k.price<1||!Number.isFinite(k.multiplier)||k.multiplier<.5||k.multiplier>3)errors.push('world market '+k.id);
     for(const r of m.relations)if(!m.nations[r.a]||!m.nations[r.b]||!['peace','treaty','sanctions','war'].includes(r.status)||!Number.isFinite(r.tension)||r.tension<0||r.tension>100)errors.push('world relation '+r.id);
     if(new Set(m.shipments.map(s=>s.id)).size!==m.shipments.length)errors.push('world duplicate shipment');
@@ -11199,6 +11210,299 @@ return Object.freeze({
 
 </script>
     <script>
+/* js/phone-engineering.js */
+(function(root,factory){const v=factory();if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyPhoneEngineering=v;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+// Pure deterministic engineering estimates. Power W, capacity MB/Wh, area mm², costs integer satang.
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const num=(v,d=0,a=0,b=1e9)=>typeof v==='number'&&Number.isFinite(v)?clamp(v,a,b):d;
+const round=v=>Math.round(v*10000)/10000;
+const money=v=>Math.round(clamp(v,0,Number.MAX_SAFE_INTEGER));
+function rng(seed){let h=2166136261;for(const c of String(seed)){h=Math.imul(h^c.charCodeAt(0),16777619);}return()=>{h+=0x6D2B79F5;let t=Math.imul(h^h>>>15,1|h);t^=t+Math.imul(t^t>>>7,61|t);return((t^t>>>14)>>>0)/4294967296;};}
+function synthesizeChip(seed,capability=40,options={}){
+ options=options||{};const r=rng(seed),c=num(capability,40,0,100),level=Math.floor(num(options.level,0,0,6)),q=.85+r()*.3;
+ const nodeNm=num(options.nodeNm,Math.max(22,130/Math.pow(1.35,level)),10,350),cores=level?Math.min(8,1+level+Math.floor(r()*2)):1;
+ const clockGhz=round((.18+c*.005+level*.22)*q),dieAreaMm2=round((12+cores*8+level*7)*(nodeNm/130)**1.5*(1.15-c*.003)*(.9+r()*.2));
+ const loadW=round((.22+cores*clockGhz*.5)*(nodeNm/130)**.65*(1.15-c*.003));
+ return{id:'chip-'+String(seed).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,48)+'-'+level+'-'+Math.floor(r()*1e6),isa:'arm32',cores,clockGhz,nodeNm:round(nodeNm),dieAreaMm2,ipcIndex:round(.65+c/120),gpuGflops:level?round(cores*clockGhz*(8+c/20)):0,memoryType:level?'LPDDR':'SDRAM',maxRamMB:level?128*2**level:32,maxPixels:level?320*480*2**(level-1):240*320,radioGeneration:Math.min(5,2+Math.floor(level/2)),idleW:round(loadW*.055),loadW,peakW:round(loadW*1.35),level};
+}
+function parts(seed,level=0){
+ const r=rng(seed),l=Math.floor(num(level,0,0,6)),width=l?240+80*l:128+Math.floor(r()*3)*16,height=l?320+160*l:160+Math.floor(r()*3)*16;
+ return{camera:{megapixels:l?2*2**l:.3,sensorAreaMm2:2+l*2,processingQuality:.4+l*.1},ram:{type:l?'LPDDR':'SDRAM',capacityMB:l?64*2**l:8+Math.floor(r()*3)*8,bandwidthGBps:round((l?.6+l*.8:.08)*(.9+r()*.2))},storage:{readMBps:round((l?30+l*25:8)*(.85+r()*.3)),capacityMB:l?512*2**l:16+Math.floor(r()*4)*8,interface:l?'eMMC':'SPI'},display:{pixels:width*height,width,height,watts:round((.12+l*.25)*(.85+r()*.3)),interface:l?'MIPI':'RGB'},battery:{wh:round((3.5+l*2)*(.85+r()*.3)),maxDischargeW:round(3+l*2+r())},enclosure:{material:l?'aluminium_graphite':'polymer',rth:round((l?3.3:5)*(.9+r()*.2))},os:{id:l?'open_mobile':'embedded_rtos',isa:'arm32',minRamMB:l?64:4,installableApps:!!l,apiLevel:l,version:1+l,driverCoverage:1,overhead:l?round(.16/(1+l*.2)):.03}};
+}
+function evaluate(chip,p,options={}){
+ chip=chip||{};p=p||{};options=options||{};const reasonsTh=[],bad=s=>reasonsTh.push(s),ram=p.ram||{},storage=p.storage||{},display=p.display||{},battery=p.battery||{},enclosure=p.enclosure||{},os=p.os||{};
+ const required=[chip.cores,chip.clockGhz,chip.nodeNm,chip.dieAreaMm2,chip.maxRamMB,chip.maxPixels,ram.capacityMB,ram.bandwidthGBps,storage.capacityMB,display.pixels,display.width,display.height,battery.wh,battery.maxDischargeW,enclosure.rth];
+ if(required.some(v=>typeof v!=='number'||!Number.isFinite(v)||v<=0))bad('ข้อมูลชิ้นส่วนหรือหน่วยไม่ถูกต้อง');
+ if([chip.idleW,chip.loadW,chip.peakW,display.watts,os.overhead,os.minRamMB,os.driverCoverage].some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0))bad('ข้อมูลพลังงานหรือระบบปฏิบัติการไม่ถูกต้อง');
+ if(!chip.isa||!os.id||chip.isa!==os.isa)bad('ระบบปฏิบัติการไม่รองรับชุดคำสั่งของชิป');
+ if(!chip.memoryType||ram.type!==chip.memoryType)bad('ชนิดแรมไม่ตรงกับตัวควบคุมหน่วยความจำ');
+ if(num(ram.capacityMB)>num(chip.maxRamMB))bad('ความจุแรมเกินขีดจำกัดของชิป');
+ if(num(ram.capacityMB)<num(os.minRamMB))bad('แรมไม่พอสำหรับระบบปฏิบัติการ');
+ if(num(display.pixels)>num(chip.maxPixels)||display.pixels!==display.width*display.height)bad('ความละเอียดจอไม่ตรงกับขีดจำกัดของชิป');
+ if(num(os.driverCoverage,0,0,1)<.95)bad('ไดรเวอร์ชิ้นส่วนยังไม่ครบ');
+
+ if(storage.interface!==(num(chip.level)>0?'eMMC':'SPI')||display.interface!==(num(chip.level)>0?'MIPI':'RGB'))bad('อินเทอร์เฟซจอหรือหน่วยเก็บข้อมูลไม่รองรับ');
+ const idle=num(chip.idleW),load=Math.max(idle,num(chip.loadW)),peak=Math.max(load,num(chip.peakW)),screen=num(display.watts),overhead=num(os.overhead,0,0,1),aux=.035+num(ram.capacityMB)*.00007;
+ const duties={standby:[.01,.01],call:[.32,.12],web:[.55,.8],game:[.95,1],mixed:[.24,.35]},d=Object.hasOwn(duties,options.workload)?duties[options.workload]:duties.mixed;
+ const averagePowerW=round(Math.max(.0001,(idle+(load-idle)*d[0]+screen*d[1]+aux)*(1+overhead))),peakPowerW=round((peak+screen+aux)*(1+overhead));
+ if(num(battery.maxDischargeW)<peakPowerW)bad('แบตเตอรี่จ่ายกำลังสูงสุดไม่พอ');
+ const ambient=num(options.ambientC,30,-50,80),rth=num(enclosure.rth,5,.01,100),surfaceC=round(ambient+peakPowerW*rth),budget=Math.max(0,(43-ambient)/rth),sustainedFactor=round(Math.min(1,(budget/Math.max(.0001,peakPowerW))**.8));
+ const compatible=!reasonsTh.length,compute=num(chip.cores)*num(chip.clockGhz)*num(chip.ipcIndex,1,.1,4)*sustainedFactor/(1+overhead),memory=Math.min(1,num(ram.bandwidthGBps)/.6),score=v=>compatible?round(clamp(v,0,100)):0;
+ const taskScores={call:score(65+compute*25),web:score((os.installableApps?compute*40*memory:compute*8)*Math.min(1,Math.max(0,ram.capacityMB-os.minRamMB)/64)*Math.min(1,(storage.readMBps||8)/30)),game:score((os.installableApps?compute*25*memory:compute*4)*Math.min(1,Math.max(0,ram.capacityMB-os.minRamMB)/128)*Math.min(1,153600/Math.max(1,display.pixels)))};
+ const silicon=wafer({dieAreaMm2:num(chip.dieAreaMm2,25,.01,1e6)}).unitCostSatang;
+ return{compatible,reasonsTh,batteryHours:round(num(battery.wh)*.92/averagePowerW),averagePowerW,peakPowerW,surfaceC,sustainedFactor,taskScores,cpuThroughput:round(compute),ramCapacityMB:ram.capacityMB,storageCapacityMB:storage.capacityMB,cameraQuality:round((p.camera?.megapixels||0)*(.5+(p.camera?.sensorAreaMm2||0)/10)*(p.camera?.processingQuality||.4)),osOverhead:overhead,costEstimateSatang:money(silicon+num(ram.capacityMB)*35+num(storage.capacityMB)*3+num(display.pixels)*.08+num(battery.wh)*1800+(enclosure.material==='polymer'?4500:9500)+12000)};
+}
+function wafer(options={}){
+ options=options||{};const diameterMm=num(options.diameterMm,200,0,1000),area=num(options.dieAreaMm2,25,.0001,1e6),defects=num(options.defectsPerCm2,.1,0,1e6),packYield=num(options.packYield,.98,0,1),bin=num(options.binAFraction,.8,0,1);
+ const grossDies=Math.floor(clamp(Math.PI*(diameterMm/2)**2/area-Math.PI*diameterMm/Math.sqrt(2*area),0,1e9)),x=area/100*defects,dieYield=x===0?1:(-Math.expm1(-x)/x)**2,goodDies=Math.round(grossDies*dieYield),packagedGood=Math.floor(goodDies*packYield),aBin=Math.floor(packagedGood*bin),bBin=packagedGood-aBin,scrap=grossDies-packagedGood;
+ // All wafer and attempted packaging spend is borne by sellable dies, including failed packages.
+ const total=num(options.waferCostSatang,3000000,0,1e12)+goodDies*num(options.packCostSatang,1200,0,1e12)+packagedGood*num(options.royaltySatang,400,0,1e12);
+ return{grossDies,dieYield,goodDies,packagedGood,aBin,bBin,scrap,unitCostSatang:packagedGood?money(Math.ceil(total/packagedGood)):0};
+}
+return{synthesizeChip,parts,evaluate,wafer};
+});
+
+</script>
+    <script>
+/* js/phone-talent.js */
+(function(root,factory){'use strict';const api=factory(typeof module==='object'&&module.exports?require('./human-core'):root.CompanyCore);if(typeof module==='object'&&module.exports)module.exports=api;else root.CompanyPhoneTalent=api;})(typeof globalThis!=='undefined'?globalThis:this,function(H){
+'use strict';
+const SUBJECTS={chip:'semiconductor_physics',hardware:'electrical_basics',software:'software',manufacturing:'semiconductor_process'};
+const PREREQ={semiconductor_physics:'physical_chemistry',physical_chemistry:'chemical_processing',semiconductor_process:'chemical_processing',electronics:'electrical_basics',software:'programming',embedded_iot:'programming'};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function hash(s){let n=2166136261;for(const c of String(s))n=Math.imul(n^c.charCodeAt(0),16777619);return n>>>0;}
+function day(w){if(Number.isFinite(w.clock?.absoluteMinute))return Math.floor(w.clock.absoluteMinute/1440)+1;return Number.isFinite(w.day)?w.day:Number.isFinite(w.clock?.day)?w.clock.day:Math.floor((w.minute||w.time?.minute||0)/1440)+1;}
+function state(w){return w.phoneTalent||(w.phoneTalent={version:1,people:{},firms:{},offers:[],payrollDays:{},history:[]});}
+function discipline(role){return /(?:^|_)(?:software|os|platform)(?:_|$)/.test(role)?'software':/foundry|fab|manufactur|assembl/.test(role)?'manufacturing':/chip|semi/.test(role)?'chip':'hardware';}
+function seedSubjects(subject,level){const out={};let s=subject;while(s){out[s]=level;s=PREREQ[s];}return out;}
+function ensure(w,firms){const t=state(w);for(const [key,f]of Object.entries(firms||{})){const id=f.id||key;if(t.firms[id])continue;const role=f.role||key,disc=discipline(role),count=2+hash(w.seed+id)%3;const record=t.firms[id]={id,role,personIds:[]};for(let i=0;i<count+2;i++){const pid='phone-person-'+id+'-'+i,profile=H.createProfile(w.seed,pid),job=i===0?'ceo':i===count+1?'commercial':'engineer',subject=job==='ceo'?'people_management':job==='commercial'?'procurement':SUBJECTS[disc];const p={id:pid,name:['อรุณ','มาลี','นที','กานต์','ศิริ','ธารา'][hash(pid)%6]+' '+['วัฒนกิจ','ชาญวิชา','อินทรา','พงษ์ศิลป์','กิจวัฒนา','เรืองปัญญา'][hash(pid+'surname')%6],profile,state:H.createState(profile),role:job,discipline:disc,employerId:id,employment:'external',dailyWageSatang:job==='ceo'?180000:job==='engineer'?100000:65000,satisfaction:65+hash(pid+'sat')%21,loyalty:40+hash(pid+'loyal')%41,education:{practiceMinutes:{},interests:[],course:null,subjects:{...seedSubjects(subject,45+hash(pid+'knowledge')%26),...(job==='engineer'?{software:40+hash(pid)%25,programming:45,semiconductor_process:40,chemical_processing:40,circuit_design:45,metrology:40,metal_machining:45,embedded_firmware:40}: {})},appliedMinutes:{},history:[]},history:[{day:day(w),type:'employed',firmId:id}],duties:job==='ceo'?'ประเมินทุน ความเสี่ยง และแผนธุรกิจ':job==='engineer'?'วิจัย ทดสอบ และตรวจคุณภาพ':'จัดซื้อและดูแลลูกค้า',workDay:-1,workedMinutes:0};t.people[pid]=p;record.personIds.push(pid);}}return t;}
+function staff(w,id){const t=state(w);return (t.firms[id]?.personIds||[]).map(pid=>t.people[pid]).filter(p=>p&&p.employment==='external'&&p.employerId===id&&!w.people?.some(q=>q.id===p.id&&q.employed));}
+function level(p,s){return p.education?.subjects?.[SUBJECTS[s]||s]||0;}
+function capability(w,id,s){const people=staff(w,id).filter(p=>p.role==='engineer');return people.length?Math.max(...people.map(p=>level(p,s))):0;}
+// Payroll is a claim once per firm/day; the caller posts the returned wages to actual firm/nation accounts.
+function payroll(w,id){const t=state(w),d=day(w);if(t.payrollDays[id]===d)return 0;t.payrollDays[id]=d;return staff(w,id).reduce((n,p)=>n+p.dailyWageSatang,0);}
+function work(w,id,subject,maxMinutes=360){const s=SUBJECTS[subject]||subject,d=day(w),contributors=[];let effectiveMinutes=0,personMinutes=0;for(const p of staff(w,id).filter(p=>p.role==='engineer').sort((a,b)=>level(b,s)-level(a,s))){if(p.workDay!==d){p.workDay=d;p.workedMinutes=0;}const minutes=Math.max(0,Math.min(360-p.workedMinutes,Number.isFinite(maxMinutes)?maxMinutes:0));if(!minutes||!level(p,s))continue;const before=level(p,s),prereq=PREREQ[s];if(prereq&&level(p,prereq)<20)continue;const condition=clamp(((p.state.energy??75)+(100-(p.state.stress??20)))/160,.2,1);const effective=minutes*(before/100)*condition/(1+contributors.length*.2);p.workedMinutes+=minutes;personMinutes+=minutes;effectiveMinutes+=effective;p.education.appliedMinutes[s]=(p.education.appliedMinutes[s]||0)+minutes;const aptitude=p.profile.aptitudes.learningSpeed??50,potential=Object.values(p.profile.potential).reduce((a,b)=>a+b,0)/30;p.education.subjects[s]=Math.min(75+potential*.25,before+minutes/60*.025*(.5+aptitude/100)*condition);contributors.push({personId:p.id,minutes,effectiveMinutes:effective,subject:s});}const wageSatang=payroll(w,id);return {day:d,minutes:effectiveMinutes,effectiveMinutes,personMinutes,wageSatang,contributors};}
+function negotiateRecruitment(w,personId,offer,hooks={}){const t=state(w),p=t.people[personId];if(!p||p.employment!=='external')return {ok:false,reason:'ไม่พบผู้สมัครที่ยังทำงานภายนอก'};const salary=offer?.dailyWageSatang||0,vacancy=offer?.vacancy===true;const premium=salary/p.dailyWageSatang,threshold=1.1+p.loyalty/250+(p.role==='ceo'?.5:0)+(p.satisfaction-60)/300;const assessment=hooks.assess?hooks.assess(p,offer):{ok:true};const accepted=vacancy&&salary>0&&premium>=threshold&&assessment?.ok!==false;const row={id:'phone-offer-'+(t.offers.length+1),personId,day:day(w),salarySatang:salary,accepted,noticeUntilDay:day(w)+3+Math.floor(p.loyalty/25),status:accepted?'notice':'declined',reason:accepted?'รายได้และตำแหน่งใหม่คุ้มค่าต่อการย้ายงาน':'ตำแหน่ง รายได้ หรือความมั่นคงยังไม่เพียงพอ'};t.offers.push(row);return {ok:accepted,...row};}
+function recruitToCampus(w,id,createCallback){const t=state(w),p=t.people[id],offer=[...t.offers].reverse().find(o=>o.personId===id&&o.status==='notice');if(!p||p.employment!=='external'||!offer||day(w)<offer.noticeUntilDay||typeof createCallback!=='function')return {ok:false,reason:'ยังไม่ครบเงื่อนไขย้ายงาน'};const campus=createCallback(p,offer);if(!campus||campus.id!==p.id)return {ok:false,reason:'สร้างบุคคลด้วยตัวตนเดิมไม่สำเร็จ'};campus.profile=p.profile;campus.education=p.education;campus.state=p.state;campus.name=p.name;if(campus.identity){campus.identity.fullName=p.name;campus.identity.displayName=p.name;}p.employment='campus';const former=p.employerId;p.employerId=null;offer.status='transferred';p.history.push({day:day(w),type:'campus_transfer',formerFirmId:former});return {ok:true,person:campus,formerFirmId:former};}
+function step(w,d,hooks={}){const t=state(w);for(const p of Object.values(t.people)){if(p.employment!=='external')continue;const offer=hooks.evaluateRecruitment?.(p);if(offer&&!t.offers.some(o=>o.personId===p.id&&o.status==='notice'))negotiateRecruitment(w,p.id,offer,hooks);}if(hooks.createPerson)for(const o of t.offers)if(o.status==='notice'&&d>=o.noticeUntilDay)recruitToCampus(w,o.personId,hooks.createPerson);return t;}
+function view(w){return w.phoneTalent?JSON.parse(JSON.stringify(w.phoneTalent)):null;}
+function validate(w){const errors=[],t=w.phoneTalent;if(!t)return errors;if(t.version!==1)errors.push('phoneTalent version');for(const [id,p]of Object.entries(t.people||{})){if(p.id!==id||p.profile?.id!==id)errors.push(id+': identity');for(const e of H.validateProfile(p.profile))errors.push(id+': '+e);if(!Number.isFinite(p.dailyWageSatang)||p.dailyWageSatang<0||!Number.isInteger(p.dailyWageSatang))errors.push(id+': wage');if(!Number.isFinite(p.workedMinutes)||p.workedMinutes<0||p.workedMinutes>360)errors.push(id+': work budget');for(const n of Object.values(p.education?.subjects||{}))if(!Number.isFinite(n)||n<0||n>100)errors.push(id+': subject');if(p.employment==='external'&&(!t.firms[p.employerId]?.personIds.includes(id)||w.people?.some(q=>q.id===id&&q.employed)))errors.push(id+': duplicate/missing employer');}for(const f of Object.values(t.firms||{}))for(const id of f.personIds||[])if(!t.people[id])errors.push(id+': missing person');return errors;}
+return {ensure,capability,work,payroll,view,validate,negotiateRecruitment,recruitToCampus,step};
+});
+
+</script>
+    <script>
+/* js/phone-industry.js */
+(function(root,factory){
+  const node=typeof module==='object'&&module.exports;
+  const value=factory(node?require('./phone-engineering.js'):root.CompanyPhoneEngineering,node?require('./phone-talent.js'):root.CompanyPhoneTalent,node?require('./civics.js'):root.CompanyCivics,node?require('./world.js'):root.CompanyWorld);
+  if(node)module.exports=value;else root.CompanyPhoneIndustry=value;
+})(typeof globalThis!=='undefined'?globalThis:this,function(E,T,C,W){
+  'use strict';
+  const BRANDS=['siam_tech','titan_elec','asia_autoparts','eastern_auto'];
+  const ROLES={shenzhen_semi:'chip',tokyo_elec:'display',pacific_solar:'battery',petro_chem_siam:'materials',siam_metal:'enclosure',singapore_port_3pl:'ems'};
+  const clone=x=>JSON.parse(JSON.stringify(x));
+  const safe=x=>Number.isSafeInteger(x)&&x>=0;
+  function hash(s){let n=2166136261;for(const c of String(s)){n^=c.charCodeAt(0);n=Math.imul(n,16777619);}return n>>>0;}
+  function live(w){return w.externalWorld&&w.externalWorld.living;}
+  function event(s,day,type,firmId,reasonTh,detail={}){const id='phone-event-'+(++s.sequence);s.events=s.events||[];s.events.unshift({id,day,type,firmId,reasonTh,...detail});s.events.length=Math.min(200,s.events.length);s.news.unshift({id:'phone-news-'+s.sequence,sourceEventId:id,day,type,firmId,headlineTh:reasonTh,reasonTh,...detail});s.news.length=Math.min(100,s.news.length);}
+  function flow(f,k){return f.flow[k]||(f.flow[k]={opening:0,produced:0,bought:0,used:0,sold:0});}
+  function stock(f,k,n,kind){f.stock[k]=(f.stock[k]||0)+n;flow(f,k)[kind]+=Math.abs(n);}
+  function debit(f,n){f.cash-=n;f.payments+=n;f.dailyCost=(f.dailyCost||0)+n;}
+  function credit(f,n){f.cash+=n;f.receipts+=n;f.dailyRevenue=(f.dailyRevenue||0)+n;}
+  function transfer(a,b,n){if(!safe(n)||a.cash<n)return false;debit(a,n);credit(b,n);return true;}
+  function wage(m,f,n){if(!safe(n)||f.cash<n||!m.nations[f.nationId])return false;debit(f,n);f.operatingExpenseSatang=(f.operatingExpenseSatang||0)+n;const h=m.nations[f.nationId];h.householdCash+=n;h.wages+=n;return true;}
+  function capability(w,id,subject){if(id===w.phoneIndustry?.campusFirmId){const key=({hardware:'electrical_basics',chip:'semiconductor_physics',manufacturing:'semiconductor_process'})[subject]||subject;return Math.max(0,...w.people.filter(p=>p.employed).map(p=>p.education?.subjects?.[key]||0));}const c=T.capability(w,id,subject);return Math.max(0,Math.min(100,Number(typeof c==='number'?c:c&&c.score)||0));}
+  function ensure(w){
+    if(w.phoneIndustry)return w.phoneIndustry;
+    const m=live(w);if(!m)throw new Error('Phone industry requires living world');
+    const s=w.phoneIndustry={version:1,lastDay:0,sequence:0,firms:{},designs:[],chips:[],components:[],lots:[],contracts:[],projects:[],cohorts:[],news:[],events:[],licenses:[],metrics:{completedProjects:0,produced:0,sold:0,returned:0,retired:0,revenueSatang:0,researchSatang:0,wagesSatang:0},inventory:{opening:[]}};
+    for(const id of [...BRANDS,...Object.keys(ROLES)])if(m.firms[id]){
+      const h=hash(w.seed+':phone:'+id),role=BRANDS.includes(id)?'brand':ROLES[id];
+      s.firms[id]={id,role,level:0,knowledge:0,capacity:2+h%4,reputation:50+h%20,reserveSatang:500000+h%500000,decisionTh:'เริ่มจากเทคโนโลยีฟีเจอร์โฟนที่ทีมรู้จริง',lastWorkDay:0,activeDesignId:null,produced:0,sold:0,revenueSatang:0,researchSatang:0,missing:[],researchBranches:role==='chip'?['architecture','process','packaging']:role==='display'?['display','memory']:role==='battery'?['electrochemistry']:role==='brand'?['hardware','software','radio']:['materials','manufacturing']};
+    }
+    T.ensure(w,s.firms);
+    const chip=E.synthesizeChip(w.seed+':opening-chip',Math.min(30,capability(w,'shenzhen_semi','chip')),{level:0});
+    chip.id='phone-chip-opening-'+hash(w.seed);chip.ownerId='shenzhen_semi';chip.level=0;s.chips.push(chip);
+    const p=E.parts(w.seed+':opening-parts',0);
+    for(const [kind,supplierId]of [['ram','tokyo_elec'],['storage','tokyo_elec'],['display','tokyo_elec'],['battery','pacific_solar'],['enclosure','siam_metal'],['camera','tokyo_elec'],['os','siam_tech']])s.components.push({id:'phone-part-'+kind+'-0',kind,supplierId,level:0,spec:clone(p[kind]),licenseSatang:kind==='os'?1200:0});
+    event(s,0,'OPENING','shenzhen_semi','เปิดแผนกโทรศัพท์ด้วยความรู้ฟีเจอร์โฟน ไม่มีเครื่องหรือชิ้นส่วนเติมฟรี',{openingKnowledge:true});
+    return s;
+  }
+  function lot(s,ownerId,kind,designId,quantity,unitCostSatang,day){
+    if(!quantity)return;
+    const old=s.lots.find(l=>l.ownerId===ownerId&&l.kind===kind&&l.designId===designId&&l.available>0&&l.day===day);
+    if(old){old.quantity+=quantity;old.available+=quantity;old.costSatang+=quantity*unitCostSatang;return old;}
+    const l={id:'phone-lot-'+(++s.sequence),ownerId,kind,designId,quantity,available:quantity,reserved:0,used:0,sold:0,costSatang:quantity*unitCostSatang,unitCostSatang,day};s.lots.push(l);return l;
+  }
+  function available(s,ownerId,kind,designId){return s.lots.filter(l=>l.ownerId===ownerId&&l.kind===kind&&(!designId||l.designId===designId)).reduce((a,l)=>a+l.available,0);}
+  function consume(s,ownerId,kind,quantity,designId){
+    if(available(s,ownerId,kind,designId)<quantity)return false;
+    for(const l of s.lots){if(l.ownerId!==ownerId||l.kind!==kind||(designId&&l.designId!==designId))continue;const n=Math.min(quantity,l.available);l.available-=n;l.used+=n;quantity-=n;if(!quantity)break;}return true;
+  }
+  function unit(w,k){return Math.max(100,Math.round(live(w).markets[k]?.price||w.catalog?.materials[k]?.unitCost||5000));}
+  function buyRaw(w,s,buyer,k,need,day){
+    const m=live(w);if((buyer.stock[k]||0)>=need)return true;
+    if(s.contracts.some(c=>c.status==='shipping'&&c.buyerId===buyer.id&&c.kind==='raw'&&c.materialId===k))return false;
+    const sellers=Object.values(m.firms).filter(f=>f.id!==buyer.id&&(f.stock[k]||0)>0).sort((a,b)=>(a.id==='world_exchange')-(b.id==='world_exchange')||a.id.localeCompare(b.id));
+    const f=s.firms[buyer.id],price=unit(w,k);let remaining=Math.max(need*3-(buyer.stock[k]||0),1);
+    for(const seller of sellers){const route=W.route(m,seller.nationId,buyer.nationId),policy=C.quote(w,seller.nationId,buyer.nationId,k,route),tax=Math.round(price*policy.tariff/100);const q=Math.min(remaining,seller.stock[k],policy.quota,Math.floor(Math.max(0,buyer.cash-f.reserveSatang)/(price+tax)));if(q<=0||policy.blocked)continue;if(!transfer(buyer,seller,q*price))continue;if(tax){debit(buyer,q*tax);m.nations[buyer.nationId].treasury+=q*tax;m.nations[buyer.nationId].taxes+=q*tax;}C.recordTrade(w,seller.nationId,buyer.nationId,k,q,q*price,q*tax);stock(seller,k,-q,'sold');const c={id:'phone-contract-'+(++s.sequence),kind:'raw',materialId:k,sellerId:seller.id,buyerId:buyer.id,quantity:q,unitPriceSatang:price,paidSatang:q*price,day,dueDay:day+route.days,taxSatang:q*tax,policyIds:policy.policyIds,status:'shipping'};s.contracts.push(c);remaining-=q;if(remaining<=0)break;}
+    return false;
+  }
+  function inputs(w,s,f,recipe,day){let ok=true;for(const[k,n]of Object.entries(recipe))if(!buyRaw(w,s,f,k,n,day))ok=false;return ok;}
+  function useRaw(f,recipe){for(const[k,n]of Object.entries(recipe))stock(f,k,-n,'used');}
+  function deliver(w,s,day){for(const c of s.contracts)if(c.status==='shipping'&&day>=c.dueDay){if(c.kind==='raw')stock(live(w).firms[c.buyerId],c.materialId,c.quantity,'bought');else{const source=s.lots.find(l=>l.id===c.sourceLotId);source.reserved-=c.quantity;source.sold+=c.quantity;lot(s,c.buyerId,c.componentKind,c.designId,c.quantity,c.unitPriceSatang+(c.taxPerUnitSatang||0),day);}c.status='delivered';c.deliveredDay=day;}}
+  function purchase(w,s,m,buyerId,kind,designId,need,day){
+    if(available(s,buyerId,kind,designId)>=need)return true;
+    if(s.contracts.some(c=>c.status==='shipping'&&c.buyerId===buyerId&&c.componentKind===kind&&c.designId===designId))return false;
+    const buyer=m.firms[buyerId],f=s.firms[buyerId];
+    for(const l of s.lots.filter(l=>l.ownerId!==buyerId&&l.kind===kind&&l.designId===designId&&l.available>0)){
+      const price=Math.max(100,Math.round(l.unitCostSatang*1.25)),seller=m.firms[l.ownerId],commodity=kind==='battery'?'battery':kind==='enclosure'?'metal_sheet':'pcb',route=W.route(m,seller.nationId,buyer.nationId),policy=C.quote(w,seller.nationId,buyer.nationId,commodity,route),tax=Math.round(price*policy.tariff/100);if(policy.blocked)continue;const q=Math.min(policy.quota,Math.max(need*2-available(s,buyerId,kind,designId),0),l.available,Math.floor(Math.max(0,buyer.cash-f.reserveSatang)/(price+tax)));
+      if(q<=0||!transfer(buyer,m.firms[l.ownerId],q*price))continue;const vendor=s.firms[l.ownerId];if(vendor){vendor.revenueSatang+=q*price;vendor.sold+=q;vendor.costOfGoodsSatang=(vendor.costOfGoodsSatang||0)+q*l.unitCostSatang;seller.cogsSatang=(seller.cogsSatang||0)+q*l.unitCostSatang;}if(tax){debit(buyer,q*tax);m.nations[buyer.nationId].treasury+=q*tax;m.nations[buyer.nationId].taxes+=q*tax;}C.recordTrade(w,seller.nationId,buyer.nationId,commodity,q,q*price,q*tax);l.available-=q;l.reserved+=q;s.contracts.push({id:'phone-contract-'+(++s.sequence),kind:'component',componentKind:kind,designId,sourceLotId:l.id,sellerId:l.ownerId,buyerId,quantity:q,unitPriceSatang:price,paidSatang:q*price,taxSatang:q*tax,taxPerUnitSatang:tax,policyIds:policy.policyIds,day,dueDay:day+policy.days,status:'shipping'});break;
+    }return false;
+  }
+  function currentDesign(s,id){return s.designs.filter(d=>d.firmId===id).slice(-1)[0];}
+  function costOf(s,owner,kind,quantity,id){let total=0;for(const l of s.lots){if(l.ownerId!==owner||l.kind!==kind||l.designId!==id)continue;const q=Math.min(quantity,l.available);quantity-=q;total+=q*l.unitCostSatang;if(!quantity)break;}return total;}
+  function partSet(s,level){const out={};for(const k of ['ram','storage','display','battery','enclosure','camera','os']){const p=s.components.filter(p=>p.kind===k&&p.level<=level).sort((a,b)=>b.level-a.level)[0];out[k]=clone(p.spec);}return out;}
+  function newProject(w,s,f,day){
+    const real=live(w).firms[f.id];if(real.cash<f.reserveSatang+100000)return;
+    const current=s.designs.find(d=>d.id===f.activeDesignId),isBrand=f.role==='brand';
+    if(isBrand&&current&&available(s,f.id,'phone',current.id)>f.capacity*8){f.decisionTh='ชะลอรุ่นใหม่เพราะสต็อกเดิมยังขายไม่หมด';return;}
+    if(isBrand&&current&&f.knowledge<2400*(f.level+1))return;
+    if(!isBrand&&f.knowledge<3200*(f.level+1))return;if(f.level>=3&&!isBrand)return;
+    const platform=isBrand&&current&&!s.components.some(c=>c.kind==='os'&&c.supplierId===f.id&&c.level>0);const leader=Object.values(w.phoneTalent.people).find(x=>x.employerId===f.id&&x.role==='ceo');const risk=leader?.profile.personality.riskTaking||50;if(current&&day%7!==hash(w.seed+f.id)%7)return;const increment=!current||risk>45||f.knowledge>20000?1:0;const level=isBrand&&!current?0:Math.min(3,f.level+increment),subject=platform?'software':f.role==='chip'?'chip':f.role==='ems'?'manufacturing':f.role==='enclosure'?'metal_machining':'hardware';
+    if(level>0&&capability(w,f.id,subject)<22+level*10){f.decisionTh='ยังขาดผู้เชี่ยวชาญสำหรับการวิจัยขั้นถัดไป';return;}
+    const p={id:'phone-project-'+(++s.sequence),firmId:f.id,type:platform?'platform':isBrand?'handset':f.role==='chip'?'semiconductor':'component',subject,level,progress:0,requiredMinutes:(platform?10000:isBrand?5000:12000)*(level+1),spentSatang:0,status:'research',startedDay:day,prototypeConsumed:false,reasonTh:'สะสมงานวิศวกรและสร้างต้นแบบจากชิ้นส่วนจริง'};
+    s.projects.push(p);event(s,day,'RESEARCH_START',f.id,'ผู้บริหารอนุมัติโครงการจากเงินสำรองและความรู้ของทีม',{projectId:p.id});
+  }
+  function progress(w,s,f,work,day,allocatedWages=0){
+    const real=live(w).firms[f.id];let p=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));if(!p){newProject(w,s,f,day);p=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));}if(!p)return;
+    const minutes=Math.floor(work*.6);p.contributors=f.isCampus?w.people.filter(x=>x.employed&&(x.education?.subjects?.electrical_basics>=35||x.education?.subjects?.software>=40)).map(x=>x.id):(w.phoneTalent?Object.values(w.phoneTalent.people).filter(x=>x.employerId===f.id&&x.role==='engineer').map(x=>x.id):[]);p.progress=Math.min(p.requiredMinutes,p.progress+minutes);p.spentSatang+=Math.round(allocatedWages*.6);f.knowledge+=minutes;
+    if(p.progress<p.requiredMinutes)return;p.status='prototype';
+    const recipe=p.type==='semiconductor'?{silicon_wafer:1,copper_coil:1}:p.type==='handset'?{pcb:1,polymer_resin:1,battery:1}:{polymer_resin:1,copper_coil:1};
+    if(!inputs(w,s,real,recipe,day)){p.reasonTh='รอวัตถุดิบต้นแบบและเวลาส่งมอบ';return;}
+    if(p.type==='handset'){
+      if(!p.selectedChipId){const chip=s.chips.filter(c=>(c.level||0)<=p.level).slice(-1)[0];p.selectedChipId=chip.id;p.selectedParts={};for(const kind of ['ram','storage','display','battery','enclosure','camera','os'])p.selectedParts[kind]=s.components.filter(c=>c.kind===kind&&c.level<=(chip.level||0)).slice(-1)[0].id;}
+      let ready=purchase(w,s,live(w),f.id,'chip',p.selectedChipId,1,day);for(const kind of ['ram','storage','display','battery','enclosure','camera'])if(!purchase(w,s,live(w),f.id,kind,p.selectedParts[kind],1,day))ready=false;
+      if(!ready){p.reasonTh='รอชิป แรม และส่วนประกอบตัวอย่างเข้าคลังเพื่อสร้างต้นแบบจริง';return;}
+      consume(s,f.id,'chip',1,p.selectedChipId);for(const kind of ['ram','storage','display','battery','enclosure','camera'])consume(s,f.id,kind,1,p.selectedParts[kind]);
+    }
+    useRaw(real,recipe);p.prototypeConsumed=true;
+    if(p.type==='platform'){const spec=E.parts(w.seed+':platform:'+p.id,p.level).os;s.components.push({id:'phone-os-'+(++s.sequence),kind:'os',supplierId:f.id,level:p.level,spec,licenseSatang:1200});p.status='complete';s.metrics.completedProjects++;p.completedDay=day;p.reasonTh='ทีมซอฟต์แวร์ทดสอบแพลตฟอร์มและไดรเวอร์จากต้นแบบจริง';event(s,day,'OS_RELEASE',f.id,p.reasonTh,{projectId:p.id});return;}
+    if(p.type==='handset'){
+      const chip=s.chips.find(c=>c.id===p.selectedChipId),parts=Object.fromEntries(Object.entries(p.selectedParts).map(([kind,id])=>[kind,clone(s.components.find(c=>c.id===id).spec)])),result=E.evaluate(chip,parts,{ambientC:30});
+      if(!result.compatible){p.status='failed';p.reasonTh=(result.reasonsTh||['ไม่ผ่านด่านวิศวกรรม']).join(' • ');event(s,day,'PROTOTYPE_FAILED',f.id,p.reasonTh,{projectId:p.id});return;}
+      const id='phone-design-'+(++s.sequence),componentIds={};Object.assign(componentIds,p.selectedParts);
+      const d={id,firmId:f.id,nameTh:['อรุณ','สายลม','ธารา','ภูผา','อันดา','นภา'][hash(w.seed+f.id)%6]+' '+['S','M','A','N'][hash(w.seed+f.id+'family')%4]+(s.designs.filter(d=>d.firmId===f.id).length+1),level:p.level,category:parts.os.installableApps?'smart':'feature',predecessorId:currentDesign(s,f.id)?.id||null,chipId:chip.id,parts,componentIds,evaluation:result,priceSatang:Math.max(60000,Math.round((result.costEstimateSatang||60000)*(1.4+(100-real.prudence)/200))),createdDay:day,stage:'pilot',validationMinutes:0,launchedDay:null,produced:0,sold:0,returned:0,revenueSatang:0,costSatang:0,reasonTh:'ผ่านต้นแบบและด่านความเข้ากันได้จากชิ้นส่วนที่มีจริง'};
+      d.comparison=d.predecessorId?compare(s.designs.find(x=>x.id===d.predecessorId),d):null;s.designs.push(d);f.activeDesignId=id;
+    }else if(p.type==='semiconductor'){
+      const chip=E.synthesizeChip(w.seed+':chip:'+p.id,capability(w,f.id,'chip'),{level:p.level});chip.id='phone-chip-'+(++s.sequence);chip.ownerId=f.id;chip.level=p.level;s.chips.push(chip);
+    }else{
+      const parts=E.parts(w.seed+':parts:'+p.id,p.level);const kinds=f.role==='display'?['ram','storage','display','camera']:f.role==='battery'?['battery']:f.role==='enclosure'||f.role==='materials'?['enclosure']:[];
+      for(const kind of kinds)s.components.push({id:'phone-part-'+(++s.sequence),kind,supplierId:f.id,level:p.level,spec:clone(parts[kind]),licenseSatang:0});
+    }
+    f.level=Math.max(f.level,p.level);p.status='complete';s.metrics.completedProjects++;p.completedDay=day;p.reasonTh='ต้นแบบใช้วัตถุดิบจริงและผ่านการทดสอบแล้ว';event(s,day,'RESEARCH_COMPLETE',f.id,'ต้นแบบผ่านการทดสอบ เปิดทางเลือกการผลิตใหม่',{projectId:p.id,level:p.level});
+  }
+  function produce(w,s,f,minutes,day){
+    const real=live(w).firms[f.id];if(minutes<10)return;
+    if(f.role==='brand')return assemble(w,s,f,minutes,day);
+    const parts=s.components.filter(c=>c.supplierId===f.id&&c.kind!=='os').sort((a,b)=>available(s,f.id,a.kind,a.id)-available(s,f.id,b.kind,b.id)||hash(w.seed+day+a.id)-hash(w.seed+day+b.id));
+    if(f.role==='chip'){
+      const owned=s.chips.filter(c=>c.ownerId===f.id),needed=new Set([...s.designs.filter(d=>d.stage==='pilot'||available(s,d.firmId,'phone',d.id)<12).map(d=>d.chipId),...s.projects.filter(p=>p.status==='prototype').map(p=>p.selectedChipId)]);const chip=owned.filter(c=>needed.has(c.id)&&available(s,f.id,'chip',c.id)<20).sort((a,b)=>available(s,f.id,'chip',a.id)-available(s,f.id,'chip',b.id))[0]||owned.slice(-1)[0];if(!chip||available(s,f.id,'chip',chip.id)>200)return;
+      const recipe={silicon_wafer:1,copper_coil:1};if(!inputs(w,s,real,recipe,day))return;
+      const y=E.wafer({dieAreaMm2:chip.dieAreaMm2,defectsPerCm2:Math.max(.05,.4-capability(w,f.id,'manufacturing')/250),waferCostSatang:unit(w,'silicon_wafer')+unit(w,'copper_coil'),packCostSatang:200,royaltySatang:0});
+      const q=Math.max(0,Math.floor(y.packagedGood||0));if(!q)return;const packagingFee=y.goodDies*200,packager=live(w).firms.singapore_port_3pl;if(!packager||real.cash<f.reserveSatang+packagingFee||!transfer(real,packager,packagingFee))return;useRaw(real,recipe);lot(s,f.id,'chip',chip.id,q,Math.max(100,Math.round(y.unitCostSatang||((unit(w,'silicon_wafer')+unit(w,'copper_coil'))/q))),day);f.produced+=q;return;
+    }
+    let remaining=Math.floor(minutes);for(const c of parts){if(remaining<30)break;if(available(s,f.id,c.kind,c.id)>50)continue;
+      const recipe=c.kind==='battery'?{battery:1}:c.kind==='display'?{glass_bottle:1,copper_coil:1}:['ram','storage'].includes(c.kind)?{silicon_wafer:1,copper_coil:1}: {polymer_resin:1,metal_sheet:1};
+      let q=Math.min(f.capacity,Math.floor(remaining/30));for(const key of Object.keys(recipe))if((real.stock[key]||0)<q*recipe[key])buyRaw(w,s,real,key,q*recipe[key],day);q=Math.min(q,...Object.entries(recipe).map(([k,n])=>Math.floor((real.stock[k]||0)/n)));if(!q)continue;for(const key of Object.keys(recipe))recipe[key]*=q;if(!inputs(w,s,real,recipe,day))continue;useRaw(real,recipe);remaining-=q*30;const cost=Object.entries(recipe).reduce((a,[k,n])=>a+unit(w,k)*n,0);lot(s,f.id,c.kind,c.id,q,Math.ceil(cost/q)+1000,day);f.produced+=q;
+    }
+  }
+  function assemble(w,s,f,minutes,day){
+    const m=live(w),real=m.firms[f.id],d=s.designs.find(d=>d.id===f.activeDesignId);if(!d)return;
+    let max=Math.min(f.capacity,Math.floor(minutes/20));if(!max||available(s,f.id,'phone',d.id)>=f.capacity*10)return;
+    let ok=purchase(w,s,m,f.id,'chip',d.chipId,max,day);for(const k of ['ram','storage','display','battery','enclosure','camera'])if(!purchase(w,s,m,f.id,k,d.componentIds[k],max,day))ok=false;
+    if(!inputs(w,s,real,{pcb:max,copper_coil:max},day))ok=false;
+    max=Math.min(max,available(s,f.id,'chip',d.chipId),...['ram','storage','display','battery','enclosure','camera'].map(k=>available(s,f.id,k,d.componentIds[k])),real.stock.pcb||0,real.stock.copper_coil||0);ok=max>0;
+    const slots=s.emsSlots?.day===day?s.emsSlots:(s.emsSlots={day,used:0});if(slots.used+max>(s.firms.singapore_port_3pl?.capacity||1)*4){f.decisionTh='รอคิวสายประกอบ EMS ที่ถูกจองเต็มแล้ว';return;}
+    const ems=m.firms.singapore_port_3pl,licenseOwner=m.firms[s.components.find(c=>c.id===d.componentIds.os).supplierId];const fee=2500,license=1200;
+    if(!max){f.decisionTh='รอชิ้นส่วนเข้าคลัง';return;}if(!ems||real.cash<f.reserveSatang+max*(fee+license)){f.decisionTh='รักษาเงินสำรอง รอทุนประกอบและค่าลิขสิทธิ์';return;}if(!ok){f.decisionTh='รอชิ้นส่วนเฉพาะแบบและแผงวงจรที่สั่งซื้อ';return;}
+    const exactCost=costOf(s,f.id,'chip',max,d.chipId)+['ram','storage','display','battery','enclosure','camera'].reduce((a,k)=>a+costOf(s,f.id,k,max,d.componentIds[k]),0)+max*(unit(w,'pcb')+unit(w,'copper_coil')+fee+license);slots.used+=max;
+    consume(s,f.id,'chip',max,d.chipId);for(const k of ['ram','storage','display','battery','enclosure','camera'])consume(s,f.id,k,max,d.componentIds[k]);useRaw(real,{pcb:max,copper_coil:max});transfer(real,ems,max*fee);if(licenseOwner.id!==real.id)transfer(real,licenseOwner,max*license);
+    const cost=Math.ceil(exactCost/max);d.actualUnitCostSatang=cost;d.priceSatang=Math.max(d.priceSatang,Math.ceil(cost*(1.2+f.reputation/500)));lot(s,f.id,'phone',d.id,max,cost,day);d.produced+=max;d.costSatang+=max*cost;f.produced+=max;s.metrics.produced+=max;f.decisionTh='ประกอบตามกำลังคนและวัตถุดิบ พร้อมขายจากสต็อกจริง';
+  }
+  function retail(w,s,f,day){
+    if(f.role!=='brand')return;const m=live(w),real=m.firms[f.id],n=m.nations[real.nationId];
+    for(const d of s.designs.filter(d=>d.firmId===f.id)){
+      const count=available(s,f.id,'phone',d.id);if(!count)continue;if(d.stage!=='released'){if(d.validationMinutes>=1200&&count>=2&&day-d.createdDay>=7){d.stage='released';d.launchedDay=day;event(s,day,'LAUNCH',f.id,'ปล่อยขายหลังผลิตนำร่อง ตรวจคุณภาพ และมีเครื่องจริงในคลัง',{designId:d.id});}else continue;}
+      if(day-d.launchedDay>14&&count>f.capacity*5)d.priceSatang=Math.max(d.actualUnitCostSatang||30000,Math.round(d.priceSatang*.99));
+      const segment=hash(w.seed+':segment:'+day)%3,ev=d.evaluation;const value=segment===0?Math.min(2,ev.batteryHours/24)+ev.taskScores.call/100:segment===1?ev.taskScores.web/40+(d.parts.camera?.megapixels||0)/10:ev.taskScores.game/30+d.parts.storage.capacityMB/2048;const appetite=Math.max(0,Math.floor((value+.5)*Math.max(60000,(d.actualUnitCostSatang||60000)*1.5)/d.priceSatang+(hash(w.seed+':demand:'+f.id+':'+day)%100)/100)),q=Math.min(count,appetite,Math.floor(Math.min(n.householdCash,Math.floor(n.householdCash*.0005))/d.priceSatang));if(!q)continue;
+      consume(s,f.id,'phone',q,d.id);const revenue=q*d.priceSatang;n.householdCash-=revenue;n.consumption+=revenue;credit(real,revenue);d.sold+=q;d.revenueSatang+=revenue;f.sold+=q;f.revenueSatang+=revenue;s.metrics.sold+=q;s.metrics.revenueSatang+=revenue;real.cogsSatang=(real.cogsSatang||0)+q*(d.actualUnitCostSatang||0);
+      s.cohorts.push({id:'phone-cohort-'+(++s.sequence),firmId:f.id,designId:d.id,nationId:n.id,quantity:q,active:q,returned:0,retired:0,day,priceSatang:d.priceSatang,lastSupportDay:day,segment:['basic_voice','multimedia','application'][segment],reasonTh:'เลือกจากราคา แบตเตอรี่ งานที่ใช้ได้ กล้อง และพื้นที่เก็บข้อมูลจริง'});
+      if(d.sold===q)event(s,day,'LAUNCH_SALES',f.id,'ลูกค้าซื้อโทรศัพท์จากสต็อกจริงและงบครัวเรือน',{designId:d.id,quantity:q});
+    }
+  }
+  function support(w,s,day){
+    const m=live(w);for(const c of s.cohorts){if(c.active<=0||day-c.lastSupportDay<30)continue;c.lastSupportDay=day;const f=m.firms[c.firmId],d=s.designs.find(d=>d.id===c.designId),n=m.nations[c.nationId],age=day-c.day;
+      if(age>=540){s.metrics.retired+=c.active;c.retired+=c.active;c.active=0;continue;}
+      // Warranty is finite. A low per-device monthly hazard depends on measured heat, not a flat cohort refund.
+      if(age>365)continue;const heat=Math.max(0,(d.evaluation.surfaceC||30)-43),risk=Math.min(.05,.004+heat*.001),failed=Array.from({length:c.active},(_,i)=>hash(w.seed+c.id+':'+Math.floor(age/30)+':'+i)%100000<risk*100000).filter(Boolean).length,quantity=Math.min(failed,Math.floor(f.cash/c.priceSatang));
+      if(quantity){debit(f,quantity*c.priceSatang);n.householdCash+=quantity*c.priceSatang;n.consumption-=quantity*c.priceSatang;c.active-=quantity;c.returned+=quantity;d.returned+=quantity;s.firms[c.firmId].refundSatang=(s.firms[c.firmId].refundSatang||0)+quantity*c.priceSatang;s.metrics.returned+=quantity;s.firms[c.firmId].reputation=Math.max(0,s.firms[c.firmId].reputation-quantity);event(s,day,'WARRANTY',c.firmId,'คืนเงินประกันจากความเสียหายของเครื่องที่ขายแล้ว',{cohortId:c.id,quantity});}
+    }
+  }
+  function compact(s){
+    s.contracts=s.contracts.filter(c=>c.status==='shipping').concat(s.contracts.filter(c=>c.status!=='shipping'&&s.lastDay-(c.deliveredDay||c.day)<45).slice(-600));
+    const retained=new Set(s.contracts.filter(c=>c.status==='shipping').map(c=>c.sourceLotId));s.lots=s.lots.filter(l=>l.available+l.reserved>0||retained.has(l.id)||s.lastDay-l.day<15);
+    // Finished inactive cohorts may be removed; headline counts remain cumulative.
+    s.cohorts=s.cohorts.filter(c=>c.active>0||s.lastDay-c.lastSupportDay<60);
+    s.projects=s.projects.filter(p=>!['complete','failed'].includes(p.status)||s.lastDay-(p.completedDay||p.startedDay)<90);
+  }
+  function step(w,day){
+    const s=ensure(w),m=live(w);if(!safe(day)||day<=s.lastDay)return s;
+    // A daily call advances one day of work: replaying a timestamp never pays twice.
+    s.lastDay=day;deliver(w,s,day);support(w,s,day);
+    for(const f of Object.values(s.firms)){
+      const real=m.firms[f.id];if(!real)continue;f.missing=[];if(f.isCampus&&f.role==='enclosure'&&(w.plant?.machines?.press?.status!=='ready'||w.plant.machines.press.condition<25)){s.campusMinutes=0;f.decisionTh='เครื่องอัดขึ้นรูปไม่พร้อม ต้องให้ช่างซ่อมก่อนผลิต';continue;}f.knownNews=s.news.filter(n=>n.firmId===f.id||!['RESEARCH_START','PROTOTYPE_FAILED'].includes(n.type)).slice(0,8).map(n=>n.id);
+      if(real.cash<f.reserveSatang+100000){f.decisionTh='พักแผนกเพื่อรักษาเงินสำรอง ไม่มีงานวิจัยหรือการผลิตฟรี';continue;}
+      const active=s.projects.find(p=>p.firmId===f.id&&['research','prototype'].includes(p.status));const subject=active?.subject||(f.role==='chip'?'chip':f.role==='ems'?'manufacturing':f.role==='enclosure'?'metal_machining':'hardware');const work=f.isCampus?{effectiveMinutes:s.campusMinutes||0,wageSatang:0}:T.work(w,f.id,subject,360);if(f.isCampus)s.campusMinutes=0;const cost=Math.max(0,Math.round(work.wageSatang||0));
+      if(!wage(m,real,cost)){f.decisionTh='จ่ายค่าจ้างไม่ได้ งานหยุด';continue;}
+      f.lastWorkDay=day;f.paidWagesSatang=(f.paidWagesSatang||0)+cost;s.metrics.wagesSatang+=cost;f.researchSatang+=Math.round(cost*.6);s.metrics.researchSatang+=Math.round(cost*.6);
+      const minutes=Math.max(0,Number(work.effectiveMinutes??work.minutes)||0);f.knowledge+=Math.floor(minutes*.4);const design=s.designs.find(d=>d.id===f.activeDesignId);if(design&&design.stage==='pilot')design.validationMinutes+=Math.floor(minutes*.6);else progress(w,s,f,minutes,day,cost);produce(w,s,f,minutes*.4,day);retail(w,s,f,day);
+    }
+    compact(s);return s;
+  }
+  function view(w){
+    const s=w.phoneIndustry;if(!s)return null;const m=live(w);return clone({...s,firms:Object.values(s.firms).map(f=>({...f,nameTh:w.externalWorld.corporations[f.id]?.nameTh||f.id,cashSatang:m.firms[f.id]?.cash||0,rawStock:clone(m.firms[f.id]?.stock||{}),capability:{hardware:capability(w,f.id,'hardware'),chip:capability(w,f.id,'chip'),manufacturing:capability(w,f.id,'manufacturing')}})),headlineMetrics:{...s.metrics,activeInstalled:s.cohorts.reduce((a,c)=>a+c.active,0),retailStock:s.lots.filter(l=>l.kind==='phone').reduce((a,l)=>a+l.available,0),pendingContracts:s.contracts.filter(c=>c.status==='shipping').length},talent:T.view(w)});
+  }
+  function compare(a,b){const diff=(x,y)=>(y||0)-(x||0);return {cpuThroughput:diff(a.evaluation.cpuThroughput,b.evaluation.cpuThroughput),ramMB:diff(a.parts.ram.capacityMB,b.parts.ram.capacityMB),storageMB:diff(a.parts.storage.capacityMB,b.parts.storage.capacityMB),cameraQuality:diff(a.evaluation.cameraQuality,b.evaluation.cameraQuality),batteryHours:diff(a.evaluation.batteryHours,b.evaluation.batteryHours),web:diff(a.evaluation.taskScores.web,b.evaluation.taskScores.web),game:diff(a.evaluation.taskScores.game,b.evaluation.taskScores.game),priceSatang:diff(a.priceSatang,b.priceSatang)};}
+  function validate(w){
+    const s=w.phoneIndustry;if(!s)return [];const errors=[],m=live(w);
+    if(!s||s.version!==1||!safe(s.lastDay)||!safe(s.sequence)||!s.firms||!['designs','chips','components','lots','contracts','projects','cohorts','news','licenses'].every(k=>Array.isArray(s[k])))return ['invalid phone industry structure'];
+    for(const key of ['designs','chips','components','lots','contracts','projects','cohorts'])if(new Set(s[key].map(x=>x&&x.id)).size!==s[key].length)errors.push('phone duplicate '+key);
+    const ids=key=>new Set(s[key].map(x=>x.id)),designs=ids('designs'),chips=ids('chips'),components=ids('components');
+    for(const f of Object.values(s.firms))if(!f||!m?.firms[f.id]||!safe(f.capacity)||!safe(f.level)||f.level>3||!safe(f.knowledge)||!safe(f.reserveSatang))errors.push('phone firm structure');
+    for(const l of s.lots)if(!l||!m?.firms[l.ownerId]||!['quantity','available','reserved','used','sold','costSatang','unitCostSatang','day'].every(k=>safe(l[k]))||l.quantity!==l.available+l.reserved+l.used+l.sold||!(l.kind==='phone'?designs.has(l.designId):l.kind==='chip'?chips.has(l.designId):components.has(l.designId)))errors.push('phone lot conservation');
+    for(const c of s.contracts)if(!c||!m?.firms[c.buyerId]||!m?.firms[c.sellerId]||!safe(c.quantity)||c.quantity<1||!safe(c.paidSatang)||!safe(c.unitPriceSatang)||c.paidSatang!==c.quantity*c.unitPriceSatang||!safe(c.dueDay)||!['shipping','delivered'].includes(c.status)||(c.kind==='component'&&c.status==='shipping'&&!s.lots.some(l=>l.id===c.sourceLotId&&l.reserved>=c.quantity)))errors.push('phone contract');
+    for(const p of s.projects)if(!p||!s.firms[p.firmId]||!safe(p.level)||!safe(p.progress)||!safe(p.requiredMinutes)||p.progress>p.requiredMinutes||!safe(p.spentSatang)||!['research','prototype','complete','failed'].includes(p.status))errors.push('phone project');
+    for(const c of s.chips)if(!c||!['cores','clockGhz','nodeNm','dieAreaMm2','maxRamMB','maxPixels'].every(k=>Number.isFinite(c[k])&&c[k]>0))errors.push('phone chip specification');
+    for(const d of s.designs)if(!d||!s.firms[d.firmId]||!chips.has(d.chipId)||!safe(d.priceSatang)||d.priceSatang<1||!d.componentIds||!Object.values(d.componentIds).every(id=>components.has(id))||!d.evaluation?.compatible)errors.push('phone design');
+    for(const c of s.cohorts)if(!c||!designs.has(c.designId)||!m?.nations[c.nationId]||!['quantity','active','returned','retired','priceSatang','day'].every(k=>safe(c[k]))||c.quantity!==c.active+c.returned+c.retired)errors.push('phone cohort');
+    if(!s.metrics||Object.values(s.metrics).some(n=>!safe(n)))errors.push('phone metrics');
+    return errors;
+  }
+  function requestEntry(w,hooks){
+    ensure(w);const reasonsTh=[];const cash=w.finance?.cash??0;
+    if(cash<500000000)reasonsTh.push('แบรนด์โทรศัพท์ต้องมีทุนอย่างน้อย 5 ล้านบาทหลังเงินสำรอง');
+    if(!hooks||typeof hooks.enter!=='function')reasonsTh.push('ต้องเชื่อมบัญชี พนักงาน และโรงงานจริงก่อนเข้าธุรกิจ');
+    if(reasonsTh.length)return {ok:false,reasonsTh,routeTh:'เริ่มจากซ่อม คัดเกรด หรือรับจ้างประกอบเพื่อสะสมทุนและความรู้'};
+    return hooks.enter(w,{minimumCashSatang:500000000,requiresEngineering:true});
+  }
+  return Object.freeze({ensure,step,view,validate,requestEntry,compare});
+});
+
+</script>
+    <script>
 /* js/startup.js */
 (function(root,factory){const v=factory(typeof module==='object'&&module.exports?require('./plant.js'):root.CompanyPlant);if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyStartup=v;})(typeof globalThis!=='undefined'?globalThis:this,function(P){
 'use strict';
@@ -11265,15 +11569,17 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
     node ? require("./world.js") : root.CompanyWorld,
     node ? require("./plant.js") : root.CompanyPlant,
     node ? require("./startup.js") : root.CompanyStartup,
+    node ? require("./phone-industry.js") : root.CompanyPhoneIndustry,
+    node ? require("./phone-talent.js") : root.CompanyPhoneTalent,
   );
   if (node) module.exports = value;
   else root.CompanySim = value;
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
-  function (H, D, L, E, W, P, B) {
+  function (H, D, L, E, W, P, B, Phone, Talent) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.9.0",
+      RELEASE_VERSION = "3.0.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -11286,6 +11592,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       invoice: "admin",
       research: "engineering",
       sales: "sales",
+      phoneWorkshop: "engineering",
     };
     const BUILTIN_TASK_STATIONS = {
       assembly: "assembly",
@@ -11297,6 +11604,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       invoice: "admin",
       research: "research",
       sales: "sales",
+      phoneWorkshop: "research",
     };
     // Levels are simulation state; amounts are integer satang, not visual-only upgrades.
     const FACILITY_RULES = Object.freeze({
@@ -11886,6 +12194,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
     }
     function jobSubject(w,j) {
       if(j.unitId && ["assembly","rework"].includes(j.kind)) return productSubject(w,w.units[j.unitId]?.productId);
+      if(j.kind==="phoneWorkshop") return j.researchSubject || "electrical_basics";
       if(j.kind==="research") return j.courseSubject || j.researchSubject || w.knowledge?.projects[j.knowledgeProjectId]?.subject || "research_methods";
       return ({qa:"quality",purchase:"procurement",invoice:"accounting",sales:"sales_negotiation",shipping:"logistics",packing:"warehouse_operations"})[j.kind] || null;
     }
@@ -14686,7 +14995,9 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
     function simulateGlobalGeopoliticsDaily(w, completedDay) {
       const geo = ensureGeopolitics(w);
       if (geo.activeEvent && completedDay >= geo.activeEvent.expiresDay) geo.activeEvent = null;
-      W.step(w, completedDay);
+      W.step(w, completedDay,()=>{Phone.step(w,completedDay);phoneCompanyReview(w,completedDay);});
+      for(const n of (w.phoneIndustry.news||[]).filter(n=>n.day===completedDay&&!['RESEARCH_START','PROTOTYPE_FAILED'].includes(n.type))){const ext=w.externalWorld;if(!ext.worldChronicle.some(x=>x.id===n.id)){ext.worldChronicle.unshift({...n,category:'PHONE_TRADE',at:Math.max(0,(completedDay-1)*1440),nationId:ext.living.firms[n.firmId]?.nationId||'TH',badgeTh:'📱 อุตสาหกรรมโทรศัพท์',meaningTh:n.reasonTh,isMajor:true});ext.worldChronicle.length=Math.min(120,ext.worldChronicle.length);}}
+
       recomputeGeopoliticalMultipliers(w);
     }
 
@@ -17841,6 +18152,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       }
       for (const p of w.people) ensurePersonExtensions(w, p);
       ensureWatchlist(w);
+      Phone.ensure(w);
       return w;
     }
 
@@ -17877,7 +18189,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       const minQty=Math.max(contract.ordered||1,options.newQuantity||Math.max(contract.ordered||1,Math.ceil(contract.quantity*0.6)));
       if(minQty<contract.quantity){
         W.adjustCommercialEscrow(w,contract.id,minQty*contract.unitPrice);
-        contract.reducedFromQuantity=contract.quantity;
+        contract.reducedFromQuantity=contract.reducedFromQuantity||contract.quantity;
         contract.quantity=minQty;
       }
       contract.renegotiatedCount=(contract.renegotiatedCount||0)+1;
@@ -19440,6 +19752,8 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
             ship.dueAt = purchase.dueAt;
           }
         }
+      } else if (j.kind === "phoneWorkshop") {
+        if(w.phoneIndustry?.campusFirmId&&(subjectLevel(p,j.researchSubject||'electrical_basics')>=35||(j.researchSubject!=='metal_machining'&&subjectLevel(p,'software')>=40))){w.phoneIndustry.campusMinutes=(w.phoneIndustry.campusMinutes||0)+j.required;event(w,'phoneWorkshopCompleted','ทีมวิศวกรรมทำงานออกแบบ ทดสอบ และเตรียมผลิตโทรศัพท์',{personId:p.id,minutes:j.required});learnSubject(p,j.researchSubject||'electrical_basics',j.required);}
       } else if (j.kind === "research") {
         knowledgeWork(w, p, j);
       } else if (j.kind === "sales") {
@@ -19576,6 +19890,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
 
       for (const j of Object.values(w.jobs)) {
         if (j.assignee) continue;
+        if(j.kind==="phoneWorkshop"&&subjectLevel(p,j.researchSubject||"electrical_basics")<35&&!(j.researchSubject!=="metal_machining"&&subjectLevel(p,"software")>=40))continue;
         if (j.kind === "research") {
           const kp = w.knowledge?.projects[j.knowledgeProjectId];
           if (j.learnerId ? j.learnerId !== p.id : !kp || subjectLevel(p,j.researchSubject || kp.subject) < (kp.requirements[j.researchSubject || kp.subject] || kp.requiredLevel)) continue;
@@ -19625,7 +19940,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
           (primary ? 26 : 0) +
           Math.min(12, (now(w) - j.createdAt) / 120) +
           urgent * 8;
-        if (j.kind === "research")
+        if (["research","phoneWorkshop"].includes(j.kind))
           score +=
             per.openness * 0.1 +
             v.learning * 0.06 +
@@ -22024,6 +22339,53 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       });
     }
     const failure = (code, message) => ({ ok: false, code, message });
+    function directorPhoneEdit(w,c){
+      if(c.action==='grantCash'){
+        const f=w.externalWorld.living.firms[c.firmId];if(!f||!Number.isSafeInteger(c.amount)||c.amount<100||c.amount>1000000000)return failure('invalidEdit','เลือกบริษัทและจำนวนเงินให้ถูกต้อง');
+        f.cash+=c.amount;f.openingCash+=c.amount;event(w,'directorEdit','[ทดลอง] เพิ่มทุนให้บริษัทภายนอก',{firmId:c.firmId,amount:c.amount});return {ok:true};
+      }
+      const p=w.phoneTalent?.people?.[c.personId];
+      if(c.action==='setTrait'&&p&&H.PERSONALITY.includes(c.key)&&Number.isFinite(c.level)&&c.level>=0&&c.level<=100){const profile=clone(p.profile);profile.personality[c.key]=c.level;p.profile=H.freezeProfile(profile);event(w,'directorEdit','[ทดลอง] ปรับนิสัยบุคลากรภายนอก',{personId:p.id,key:c.key,level:c.level});return {ok:true};}
+      if(c.action==='setSubject'&&p&&Object.hasOwn(SUBJECTS,c.subjectId)&&Number.isFinite(c.level)&&c.level>=0&&c.level<=100){
+        const subjects=p.subjects||p.education?.subjects||p.learnedSubjects;
+        if(!subjects||Array.isArray(subjects))return failure('invalidEdit','ข้อมูลความรู้ไม่พร้อม');subjects[c.subjectId]=c.level;event(w,'directorEdit','[ทดลอง] ปรับความรู้บุคลากรภายนอก',{personId:p.id,subjectId:c.subjectId,level:c.level});return {ok:true};
+      }
+      return failure('invalidEdit','ไม่พบเป้าหมายหรือค่าไม่ถูกต้อง');
+    }
+    function phoneCompanyReview(w,completedDay){
+      const industry=w.phoneIndustry;if(!industry)return;
+      const ceo=w.people.find(p=>p.employed&&p.role==='coordinator');if(!ceo||!w.policies.autoAccept)return;
+      const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),risk=ceo.profile.personality.riskTaking||50;
+      const entry=industry.playerEntry||(industry.playerEntry={status:'observing',reasonTh:'เริ่มจากความรู้และธุรกิจเดิมก่อนเข้าวงการโทรศัพท์',lastReviewDay:0});
+      if(completedDay<=entry.lastReviewDay)return;entry.lastReviewDay=completedDay;
+      const hired=(ext,offer)=>{if(w.finance.cash<wages*30+offer.salarySatang*30+w.catalog.rules.hireFee)return null;post(w,'hiring',-w.catalog.rules.hireFee,ext.id+':phoneRecruit');const p=createPerson(w,ext.id,ext.name,'engineer',offer.salarySatang);w.people.push(p);event(w,'phoneRecruitment','รับผู้เชี่ยวชาญจากอุตสาหกรรมโทรศัพท์',{personId:p.id,formerFirmId:ext.employerId});return p;};
+      Talent.step(w,day(w),{createPerson:hired,evaluateRecruitment:p=>{
+        if(completedDay%14!==0||p.role!=='engineer'||w.people.filter(p=>p.employed).length>=25||w.finance.cash<wages*60+p.dailyWageSatang*90||risk<45)return null;
+        const subject=w.startup?.sector==='software'?'software':'semiconductor_physics';if((p.education.subjects[subject]||0)<50||subjectReady(w,subject,40))return null;
+        return {vacancy:true,dailyWageSatang:Math.round(p.dailyWageSatang*1.8)};
+      }});
+      if(industry.campusFirmId&&!Object.values(w.jobs).some(j=>j.kind==='phoneWorkshop'))job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});
+      if(completedDay%14!==0)return;
+      const enclosureRoute=w.startup?.profileId==='metal_workshop'&&subjectReady(w,'metal_machining',40)&&subjectReady(w,'quality',30)&&w.plant?.machines?.press?.status==='ready'&&w.plant.machines.press.condition>=25;
+      const handsetRoute=subjectReady(w,'electrical_basics',40)&&subjectReady(w,'software',40)&&subjectReady(w,'quality',30);
+      if(!industry.campusFirmId&&risk>=45&&(handsetRoute||enclosureRoute)&&w.finance.cash>wages*90+500000000){
+        const amount=500000000,m=w.externalWorld.living,id='phone_campus';post(w,'expansion',-amount,'phoneDivisionCapital');
+        const template=clone(m.firms.siam_tech);Object.assign(template,{id,nationId:'TH',cash:amount,openingCash:0,receipts:amount,payments:0,stock:{},flow:{},capacity:2,output:0,investment:0,reserves:{},crops:{},history:[],missing:[],dailyRevenue:0,dailyCost:0});m.firms[id]=template;m.playerNetSatang+=amount;
+        w.externalWorld.corporations[id]={id,nationId:'TH',nameTh:'แผนกโทรศัพท์ของบริษัทเรา',sector:'electronics',sellsMaterials:[],buysMaterials:[],roles:['phone_brand'],relationshipMode:'neutral'};
+        industry.firms[id]={id,role:'brand',isCampus:true,level:0,knowledge:0,capacity:2,reputation:w.reputation,reserveSatang:wages*30,decisionTh:'ตั้งทีมออกแบบจากความรู้และทุนจริง ต้องซื้อชิ้นส่วนและประกอบเข้าคลัง',lastWorkDay:0,activeDesignId:null,produced:0,sold:0,revenueSatang:0,researchSatang:0,missing:[],researchBranches:['hardware','software']};industry.campusFirmId=id;industry.campusMinutes=0;if(enclosureRoute&&!handsetRoute){industry.firms[id].role='enclosure';industry.firms[id].licenseExpenseSatang=2000000;const source=industry.components.find(c=>c.kind==='enclosure'&&c.level===0),fee=2000000,owner=m.firms[source.supplierId];template.cash-=fee;template.payments+=fee;owner.cash+=fee;owner.receipts+=fee;industry.licenses.push({id:'campus-enclosure-license',buyerId:id,sellerId:owner.id,priceSatang:fee,day:completedDay,rights:'enclosure_design_0'});industry.components.push({...clone(source),id:'phone-campus-enclosure-0',supplierId:id});w.externalWorld.corporations[id].nameTh='แผนกผลิตชิ้นส่วนตัวถังโทรศัพท์';w.externalWorld.corporations[id].roles=['phone_component_supplier'];industry.firms[id].decisionTh='ซื้อสิทธิแบบตัวถัง ต้องจัดซื้อแผ่นโลหะและพอลิเมอร์ก่อนผลิต';}entry.status='manufacturer';entry.reasonTh='ผู้บริหารจัดทุนให้แผนกโทรศัพท์ ทีมต้องทำงานและซื้อชิป แรม จอ แบตเข้าคลังก่อนผลิต';job(w,'phoneWorkshop',{required:120,researchSubject:industry.firms[industry.campusFirmId]?.role==='enclosure'?'metal_machining':'electrical_basics'});if(industry.firms[id].role==='enclosure'){entry.status='supplier';entry.reasonTh='ผู้บริหารเปิดแผนกตัวถัง ซื้อสิทธิแบบ ใช้งานช่าง เครื่องอัด และวัตถุดิบจริงก่อนขายชิ้นส่วน';}event(w,'phoneDivisionOpened',entry.reasonTh,{capitalSatang:amount});
+      }
+
+      if(w.finance.cash<wages*30+500000){entry.reasonTh='รักษาเงินเดือนและงานเดิมก่อนลงทุนในโทรศัพท์';return;}
+      if(w.startup?.profileId==='repair_service'&&!Object.values(w.serviceBusiness.orders).some(o=>!['paid','cancelled'].includes(o.status))){const result=startServiceOrder(w,'field_maintenance','shenzhen_semi');if(result.ok){entry.status='supplier';entry.reasonTh='ทีมช่างรับบำรุงรักษาให้บริษัทชิป ใช้เครื่องมือ วิชา และเวลางานจริง';}}
+      if(!industry.playerOwnedFirmId&&subjectReady(w,'software',40)&&subjectReady(w,'accounting',35)&&risk>=65){
+        const candidate=Object.values(industry.firms).filter(f=>f.role==='brand'&&!f.isCampus).sort((a,b)=>w.externalWorld.living.firms[a.id].cash-w.externalWorld.living.firms[b.id].cash)[0];
+        const firm=w.externalWorld.living.firms[candidate.id],valuation=Math.max(500000000,Math.round(firm.cash*1.2));
+        if(w.finance.cash>=valuation+wages*180){post(w,'expansion',-valuation,'phoneAcquisition:'+firm.id);const n=w.externalWorld.living.nations[firm.nationId];n.householdCash+=valuation;n.capitalReceipts=(n.capitalReceipts||0)+valuation;w.externalWorld.living.playerNetSatang+=valuation;industry.playerOwnedFirmId=firm.id;industry.ownership={firmId:firm.id,priceSatang:valuation,day:day(w),rights:'company_team_designs_obligations'};entry.status='owner';entry.reasonTh='ผู้บริหารซื้อกิจการแบรนด์พร้อมทีม แบบสินค้า และภาระเดิม แผนกดำเนินงานด้วยบัญชีและคนจริง';event(w,'phoneAcquisition',entry.reasonTh,{firmId:firm.id,priceSatang:valuation});}
+        else entry.reasonTh='สนใจถือกิจการโทรศัพท์ แต่ราคากิจการและเงินสำรองยังเกินทุนที่มี';
+      }
+      if(industry.playerOwnedFirmId||industry.campusFirmId){const f=w.externalWorld.living.firms[industry.playerOwnedFirmId||industry.campusFirmId],division=industry.firms[f.id];const profit=Math.max(0,division.revenueSatang-w.phoneIndustry.designs.filter(d=>d.firmId===f.id).reduce((a,d)=>a+d.costSatang,0)-(division.paidWagesSatang||0)-(division.dividendsSatang||0)-(division.costOfGoodsSatang||0)-(division.licenseExpenseSatang||0)-(division.refundSatang||0));const amount=Math.min(1000000,profit,Math.max(0,f.cash-division.reserveSatang*12));if(amount>0){division.dividendsSatang=(division.dividendsSatang||0)+amount;f.cash-=amount;f.payments+=amount;w.externalWorld.living.playerNetSatang-=amount;post(w,'investmentIncome',amount,'phoneDividend:'+completedDay);entry.reasonTh='กิจการโทรศัพท์จ่ายปันผลส่วนที่เกินเงินสำรอง โดยไม่ดึงทุนหมุนเวียนทั้งหมด';}}
+
+    }
     function command(w, c) {
       if (!c || typeof c !== "object" || typeof c.type !== "string")
         return failure("invalidCommand", "คำสั่งไม่ถูกต้อง");
@@ -22033,6 +22395,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
         ? w.people.find((p) => p.id === c.personId && p.employed)
         : null;
       switch (c.type) {
+        case "directorPhoneEdit": return directorPhoneEdit(w,c);
         case "beginKnowledgeProject": return beginKnowledgeProject(w,c.targetId,c.kind || "product");
         case "acquireTechnologyLicense": return acquireTechnologyLicense(w,c.targetId,c.kind || "product");
         case "setPolicy": {
@@ -23339,6 +23702,8 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
     function audit(w) {
       const errors = [
         ...W.validate(w),
+        ...Phone.validate(w),
+        ...Talent.validate(w),
         ...B.validate(w),
         ...intelligenceAudit(w),
         ...P.validate(w),
@@ -23581,6 +23946,10 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
       reviewSmallBusinessLearning,
       evaluateSmallBusinessDaily,
       intelligenceAudit,
+      phoneView:Phone.view,
+      phoneTalentView:Talent.view,
+      phoneAudit:w=>[...(w.phoneIndustry&&!w.phoneTalent?['missing phone talent']:[]),...Phone.validate(w),...Talent.validate(w)],
+      phoneCompanyReview,
       startupOptions:B.list,
       startupAudit:B.validate,
       plantView: P.view,
@@ -23656,6 +24025,8 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
     )
       throw new TypeError("unsupported game/save/core version");
     const copy = JSON.parse(JSON.stringify(w));
+    const legacyCore=copy.coreVersion!==H.VERSION;
+    if(legacyCore&&record(copy.finance?.totals)&&copy.finance.totals.investmentIncome===undefined)copy.finance.totals.investmentIncome=0;
     if (copy.coreVersion !== H.VERSION) {
       if (!Array.isArray(copy.people))
         throw new TypeError("missing legacy people");
@@ -23823,6 +24194,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
     }
     if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
     try{for(const err of S.intelligenceAudit(w))add(false,err);}catch(_){add(false,"invalid market intelligence");}
+    try{for(const err of S.phoneAudit(w))add(false,err);}catch(_){add(false,"invalid phone industry");}
     if(w.startup){try{for(const err of S.startupAudit(w))add(false,err);}catch(_){add(false,"invalid SME startup");}}
     if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
     if(w.warehouse){try{for(const err of S.warehouseAudit(w))add(false,err);}catch(_){add(false,"invalid warehouse");}}
@@ -24030,6 +24402,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
         "invoice",
         "research",
         "sales",
+        "phoneWorkshop",
         ...customTaskKinds,
       ],
       unitStages = ["assembly", "rework", "qa", "packing", "ready"];
@@ -24454,6 +24827,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
     if (errors.length)
       throw new TypeError("Cannot load: " + errors.slice(0, 5).join("; "));
     for (const p of world.people) H.freezeProfile(p.profile);
+    for(const p of Object.values(world.phoneTalent?.people||{})){H.freezeProfile(p.profile);if(p.employment==='campus'){const campus=world.people.find(q=>q.id===p.id);if(campus)p.education=campus.education;}}
     return world;
   }
   return Object.freeze({
@@ -25632,6 +26006,8 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
           serviceBusiness: w.serviceBusiness || null,
           capabilities: w.capabilities || null,
           companyKnowledge: S.companyKnowledgeView(w),
+          phoneIndustry:S.phoneView(w),
+          phoneTalent:S.phoneTalentView(w),
           startup:w.startup||null,
           intelligence:w.intelligence||null,
           startupOptions:S.startupOptions(),
@@ -29318,6 +29694,7 @@ return Object.freeze({PROFILES,REQUIREMENTS,configure,apply,validate,list});
 เช่าพื้นที่ใช้สอย ${s.areaM2} ตร.ม. ในแคมปัสร่วม ค่าเช่า ${moneyFull(s.rentDaily)}/วัน ไม่ได้เป็นเจ้าของอาคารทั้งหมด`);row("การเรียนรู้และการขยายกิจการ",s.decisionTh);for(const h of s.learningHistory.slice(0,5))row("การพัฒนาทีม",h.reasonTh||h.messageTh||JSON.stringify(h));}
       if(v.intelligence){row("ข่าวและการตัดสินใจของผู้บริหาร",v.intelligence.decisionTh);for(const n of v.intelligence.negotiations||[])row("เจรจาพาร์ทเนอร์",`${v.externalWorld.corporations[n.corpId]?.nameTh||n.corpId} • ${({negotiating:'กำลังเจรจา',signed:'ตกลงแล้ว',deferred:'ชะลอไว้ก่อน'})[n.status]} • ${n.reasonTh||''}`);}
 
+      if(v.phoneIndustry?.playerEntry){row("แนวทางเข้าสู่อุตสาหกรรมโทรศัพท์",v.phoneIndustry.playerEntry.reasonTh||v.phoneIndustry.playerEntry.decisionTh||"กำลังประเมินความพร้อม");const phoneLink=el("button","btn","ดูอุตสาหกรรมโทรศัพท์และแผนต่อไป");phoneLink.onclick=()=>openSheet("phoneIndustry","phone_overview");card.append(phoneLink);}
       row("ฐานะบริษัท",`เงินสด ${money(v.company.cash)} • หนี้ ${money(v.company.debt)} • ลูกหนี้ ${money(v.company.receivable)} • เงินสำรองพอประมาณ ${v.company.runwayDays} วัน`);
       row("กิจการขณะนี้",`${v.companyProgression?.currentStageNameTh || "บริษัทเริ่มต้น"} • ทีม ${k.people.length} คน • ออเดอร์ที่จ่ายแล้ว ${v.company.metrics.ordersPaid} • งานที่ยังเปิด ${v.orders.filter(o=>!["paid","cancelled"].includes(o.status)).length}`);
       row("ความพร้อมเทคโนโลยี",`พร้อมดำเนินการ ${k.products.filter(p=>p.ready).length}/${k.products.length} สินค้า • โครงการเฉพาะทาง ${k.projects.filter(p=>p.status!=="qualified").length} โครงการ`);
@@ -29512,12 +29889,91 @@ ${b.waitingReasonTh||''}`);
     }
   }
 
+  function openPhoneExperiment(v){
+    const dialog=el("dialog","business-chooser");dialog.id="phone-experiment";document.body.append(dialog);dialog.append(el("h2","","Edit Hub — การทดลอง"),el("p","muted","เปลี่ยนเงื่อนไขแล้วเฝ้าดู NPC ตัดสินใจเอง การเพิ่มเงินและความรู้ไม่รับประกันผลลัพธ์"));
+    const firms=v.phoneIndustry.firms||[],people=Object.values(v.phoneTalent?.people||{}).filter(p=>p.employment==='external');
+    const select=(items,label)=>{const x=el("select");x.setAttribute("aria-label",label);for(const [value,name]of items){const o=el("option","",name);o.value=value;x.append(o);}dialog.append(x);return x;};
+    const input=(label,value)=>{const x=el("input");x.type="number";x.setAttribute("aria-label",label);x.value=value;dialog.append(x);return x;};
+    dialog.append(el("h3","","เงินทุนบริษัทภายนอก"));const firm=select(firms.map(f=>[f.id,f.nameTh]),"บริษัทที่ทดลองเพิ่มเงิน"),amount=input("จำนวนเงินบาทที่เพิ่ม",10000);
+    const note=el("p","muted","");const send=(c)=>{const r=app.dispatch(c);note.textContent=r.ok?"บันทึกการทดลองแล้ว ดูผลเมื่อโลกเดินต่อ":r.message||"ตรวจค่าที่กรอก";paint(app.snapshot());};
+    const cash=el("button","btn","เพิ่มเงินทุน (ทดลอง)");cash.onclick=()=>send({type:'directorPhoneEdit',action:'grantCash',firmId:firm.value,amount:Math.round(Number(amount.value)*100)});dialog.append(cash);
+    dialog.append(el("h3","","บุคลากรภายนอก"));const person=select(people.map(p=>[p.id,p.name+" — "+(firms.find(f=>f.id===p.employerId)?.nameTh||"บริษัทภายนอก")]),"บุคลากรที่ทดลอง");
+    const subject=select(Object.entries(v.companyKnowledge.subjects),"วิชาที่ทดลอง"),level=input("ระดับความรู้ 0 ถึง 100",50),knowledge=el("button","btn","ปรับความรู้ (ทดลอง)");knowledge.onclick=()=>send({type:'directorPhoneEdit',action:'setSubject',personId:person.value,subjectId:subject.value,level:Number(level.value)});dialog.append(knowledge);
+    const labels={sociability:'การเข้าสังคม',conscientiousness:'ความรับผิดชอบ',agreeableness:'ความประนีประนอม',openness:'เปิดรับสิ่งใหม่',riskTaking:'การรับความเสี่ยง',stressReactivity:'การตอบสนองความเครียด',assertiveness:'ความกล้าแสดงออก',patience:'ความอดทน',integrity:'ความซื่อตรง',adaptability:'การปรับตัว',ambition:'ความทะเยอทะยาน',prudence:'ความรอบคอบ',humility:'ความถ่อมตน',optimism:'การมองโลกในแง่ดี'};
+    const trait=select(Object.entries(labels),"นิสัยที่ทดลอง"),value=input("ค่านิสัย 0 ถึง 100",50),change=el("button","btn","ปรับนิสัย (ทดลอง)");change.onclick=()=>send({type:'directorPhoneEdit',action:'setTrait',personId:person.value,key:trait.value,level:Number(value.value)});dialog.append(change,note);
+    const close=el("button","btn","ปิดการทดลอง");close.onclick=()=>{dialog.close();dialog.remove();};dialog.append(close);dialog.addEventListener('cancel',()=>dialog.remove());dialog.showModal();
+  }
+  // Phone sheets read snapshots only. Selecting an entity never dispatches a command.
+  function renderPhoneIndustry(v, body) {
+    byId("shTitle").textContent="📱 อุตสาหกรรมโทรศัพท์ — เฝ้าดูบริษัทและเทคโนโลยี";
+    setSheetTabs([{id:"phone_overview",label:"ภาพรวม"},{id:"phone_company",label:"บริษัท"},{id:"phone_products",label:"สินค้า / R&D"},{id:"phone_supply",label:"ซัพพลายเชน"},{id:"phone_market",label:"ตลาด / ข่าว"},{id:"phone_people",label:"บุคลากร"}]);
+    body.replaceChildren();
+    const d=v.phoneIndustry || {}, list=x=>Array.isArray(x)?x:Object.values(x||{});
+    const firms=list(d.firms), designs=list(d.designs), chips=list(d.chips), projects=list(d.projects);
+    const name=x=>x?.nameTh||x?.name||x?.titleTh||x?.headlineTh||"ยังไม่ระบุชื่อ";
+    const lookup=(rows,id)=>rows.find(x=>x.id===id);
+    const state=x=>({pilot:"ผลิตนำร่อง",complete:"เสร็จแล้ว",shipping:"ระหว่างขนส่ง",notice:"รอครบกำหนดย้ายงาน",transferred:"ย้ายงานแล้ว",planned:"วางแผน",research:"วิจัย",prototype:"ต้นแบบ",validation:"ทดสอบ",qualified:"ผ่านการรับรอง",released:"วางตลาด",active:"ดำเนินงาน",completed:"เสร็จแล้ว",negotiating:"กำลังเจรจา",signed:"ลงนาม",delivered:"ส่งมอบ",paid:"ชำระแล้ว",blocked:"ติดข้อจำกัด",production:"กำลังผลิต",ready:"พร้อม",failed:"ไม่ผ่าน",cancelled:"ยกเลิก"})[x]||"อยู่ระหว่างดำเนินการ";
+    const text=x=>typeof x==="string"?x:"";
+    const reason=x=>text(x?.reasonTh)||text(x?.decisionTh)||text(x?.descriptionTh)||text(x?.messageTh)||text(x?.meaningTh)||"ยังไม่มีคำอธิบายการตัดสินใจ";
+    const row=(title,detail)=>{const c=el("div","card phone-card");c.append(el("h3","",title),el("div","muted",detail));body.append(c);return c;};
+    const empty=()=>row("ยังไม่มีรายการ","ข้อมูลจะปรากฏเมื่อบริษัทตัดสินใจและเกิดกิจกรรมจริงในโลก");
+    const experiment=el("button","btn","Edit Hub — ทดลองเปลี่ยนเงื่อนไข");experiment.onclick=()=>openPhoneExperiment(v);body.append(experiment);
+    const select=(rows,key,label)=>{if(!rows.length)return null;const s=el("select","world-select phone-select");s.setAttribute("aria-label",label);for(const x of rows){const o=el("option","",name(x));o.value=x.id;s.append(o);}if(!rows.some(x=>x.id===uiState[key]))uiState[key]=rows[0].id;s.value=uiState[key];s.onchange=()=>{uiState[key]=s.value;renderPhoneIndustry(current,body);};body.append(s);return lookup(rows,s.value);};
+    const firmName=id=>name(lookup(firms,id));
+    const people=list(v.phoneTalent?.people || v.phoneTalent?.engineers);
+    const personName=id=>name(lookup(people,id)||lookup(v.people||[],id));
+    const entry=d.playerEntry;
+    if(uiState.subTab==="phone_overview") {
+      row("โลกโทรศัพท์ที่กำลังเปลี่ยนแปลง",`บริษัท ${firms.length} แห่ง • แบบสินค้า ${designs.length} แบบ • ชิป ${chips.length} รุ่น • โครงการวิจัย ${projects.length} โครงการ\nบริษัทและวิศวกรตัดสินใจเองตามทุน ความรู้ ความพร้อม และตลาด`);
+      if(entry)row("บริษัทของเราและโอกาสเข้าสู่อุตสาหกรรม",reason(entry));
+      for(const f of firms.slice(0,12)){const c=row(name(f),reason(f));const b=el("button","btn","ดูบริษัทและแผน");b.onclick=()=>{uiState.phoneFirm=f.id;uiState.subTab="phone_company";renderPhoneIndustry(current,body);};c.append(b);}
+      if(!firms.length)empty();
+    } else if(uiState.subTab==="phone_company") {
+      const f=select(firms,"phoneFirm","เลือกบริษัทโทรศัพท์");if(!f){empty();return;}
+      const external=list(v.world?.firms || v.livingWorld?.firms || v.worldModel?.firms).find(x=>x.id===f.id);
+      const cash=f.cashSatang??f.cash??external?.cash;
+      row(name(f),`${reason(f)}\nเงินสดบริษัท ${cash==null?"ยังไม่มีข้อมูลบัญชี":moneyFull(cash)}\nแผนต่อไป: ${text(f.planTh)||text(f.nextPlanTh)||reason(f.plan)||"รอตัดสินใจตามเงื่อนไขจริง"}`);
+      for(const p of projects.filter(x=>x.firmId===f.id))row(({handset:"โครงการแบบโทรศัพท์",semiconductor:"โครงการออกแบบชิป",platform:"โครงการแพลตฟอร์ม",component:"โครงการพัฒนาชิ้นส่วน"})[p.type]||"โครงการวิศวกรรม",`${state(p.status)} • ${Math.round(p.progress||0)}/${p.requiredMinutes||0} นาที • ${reason(p)}\nผู้ร่วมวิจัย: ${list(p.contributors||p.contributorIds||p.engineerIds).map(x=>typeof x==="string"?personName(x):name(x)).join(" • ")||"ยังไม่มีผู้ร่วมโครงการ"}`);
+      for(const x of designs.filter(x=>x.firmId===f.id))row(name(x),`${state(x.stage||x.status)} • ${reason(x)}`);
+    } else if(uiState.subTab==="phone_products") {
+      const x=select(designs,"phoneDesign","เลือกแบบโทรศัพท์");if(!x){empty();return;}
+      row(name(x),`${firmName(x.firmId)} • ${state(x.stage||x.status)}\n${reason(x)}`);
+      const bom=x.bom||{};const chip=lookup(chips,x.chipId||bom.chipId||x.socId);
+      row("ชิปและส่วนประกอบ",`ผู้ออกแบบชิป: ${chip?firmName(chip.ownerId):"ยังไม่ได้เลือกชิป"}\n${chip?"ชุดคำสั่ง "+chip.isa+" • แรม "+chip.memoryType:""}`);
+      if(chip)row("ผลทดสอบชิป",`${chip.cores} คอร์ • ${chip.clockGhz} GHz • กระบวนการ ${chip.nodeNm} nm • โหลด ${chip.loadW} W`);
+      if(x.evaluation){const e=x.evaluation;row("ผลทดสอบเครื่อง",`แบต ${e.batteryHours.toFixed(1)} ชั่วโมง • โหลดเฉลี่ย ${e.averagePowerW} W • ผิวเครื่องที่โหลดสูงสุด ${e.surfaceC} °C • ประสิทธิภาพต่อเนื่อง ${(e.sustainedFactor*100).toFixed(0)}%\nโทร ${e.taskScores.call} • เว็บ ${e.taskScores.web} • กราฟิก ${e.taskScores.game} (คะแนนเทียบงานเดียวกัน)`);}
+      if(x.parts)row("สเปกชิ้นส่วนจริง",`RAM ${x.parts.ram.capacityMB} MB • พื้นที่เก็บ ${x.parts.storage.capacityMB} MB\nจอ ${x.parts.display.width}×${x.parts.display.height} • แบต ${x.parts.battery.wh} Wh • กล้อง ${x.parts.camera?.megapixels||0} MP\nระบบ ${x.parts.os.installableApps?'รองรับแอปภายนอก':'เฟิร์มแวร์ฟีเจอร์โฟน'} • ภาระระบบ ${(x.parts.os.overhead*100).toFixed(0)}%`);
+      if(x.comparison){const c=x.comparison;row("เทียบรุ่นก่อนของบริษัทเดียวกัน",`CPU ${c.cpuThroughput.toFixed(2)} • RAM ${c.ramMB} MB • พื้นที่ ${c.storageMB} MB • คุณภาพกล้อง ${c.cameraQuality.toFixed(2)}\nแบต ${c.batteryHours.toFixed(1)} ชั่วโมง • เว็บ ${c.web.toFixed(1)} • กราฟิก ${c.game.toFixed(1)} • ราคา ${moneyFull(c.priceSatang)}\nค่าต่างเป็นบวกหรือลบได้ รุ่นใหม่ไม่ได้ดีกว่าทุกด้าน`);}
+      row("สินค้าสำเร็จและราคา",`ผลิตแล้ว ${x.produced} เครื่อง • ขายแล้ว ${x.sold} เครื่อง • ราคา ${moneyFull(x.priceSatang)} • ต้นทุนประกอบล่าสุด ${x.actualUnitCostSatang?moneyFull(x.actualUnitCostSatang):"ยังไม่ผลิต"}`);
+      row("ความเข้ากันได้ / ผลทดสอบ",x.evaluation?.compatible?"ผ่านด่านชิ้นส่วนและไดรเวอร์ของแบบนี้":(x.evaluation?.reasonsTh||[]).join(" • ")||"ยังไม่มีผลทดสอบ");
+      for(const p of projects.filter(p=>p.designId===x.id||p.productId===x.id))row(({handset:"โครงการแบบโทรศัพท์",semiconductor:"โครงการออกแบบชิป",platform:"โครงการแพลตฟอร์ม",component:"โครงการพัฒนาชิ้นส่วน"})[p.type]||"โครงการวิศวกรรม",`${state(p.status)} • ${Math.round(p.progress||0)}/${p.requiredMinutes||0} นาที • ${reason(p)}\nผู้ร่วมวิจัย: ${list(p.contributors||p.contributorIds||p.engineerIds).map(z=>typeof z==="string"?personName(z):name(z)).join(" • ")||"ยังไม่มีผู้ร่วมโครงการ"}`);
+    } else if(uiState.subTab==="phone_supply") {
+      const selected=select(firms,"phoneSupplyFirm","เลือกบริษัทที่ต้องการดูคลัง");if(!selected){empty();return;}
+      const raw=Object.entries(selected.rawStock||{}).filter(([,q])=>q>0);row("วัตถุดิบในคลัง — "+name(selected),raw.map(([id,q])=>(v.catalog?.materials?.find(m=>m.id===id)?.nameTh||({pcb:"แผงวงจร",silicon_wafer:"เวเฟอร์ซิลิคอน",copper_coil:"ลวดทองแดง",glass_bottle:"แก้วแปรรูป",battery:"แบตเตอรี่ต้นแบบ",polymer_resin:"เรซินพอลิเมอร์",metal_sheet:"แผ่นโลหะ"})[id]||id)+" × "+q).join(" • ")||"ยังไม่มีวัตถุดิบในคลัง");
+      const lots=list(d.lots).filter(l=>l.ownerId===selected.id), contracts=list(d.contracts).filter(c=>c.buyerId===selected.id||c.sellerId===selected.id);
+      row("การผลิตและการส่งมอบ",`ล็อตผลิต ${lots.length} ล็อต • สัญญา ${contracts.length} ฉบับ`);
+      for(const l of lots)row((l.kind==="phone"?name(lookup(designs,l.designId)):({chip:"ชิปประมวลผล",ram:"RAM",storage:"หน่วยเก็บข้อมูล",display:"หน้าจอ",battery:"แบตเตอรี่",camera:"กล้อง",enclosure:"ตัวถัง"})[l.kind]||"ชิ้นส่วน") + " — ล็อตผลิต",`${firmName(l.ownerId||l.firmId)} • รับเข้าวันที่ ${l.day}\nจำนวน ${l.available??0} คงเหลือ / ${l.reserved??0} ระหว่างส่ง / ${l.used??0} เบิกใช้ • ต้นทุน ${moneyFull(l.costSatang??l.totalCostSatang??l.cost??0)}\nต้นทุนต่อหน่วย ${moneyFull(l.unitCostSatang||0)}`);
+      for(const c of contracts)row(c.kind==="raw"?"ขนส่งวัตถุดิบ":"ขนส่งชิ้นส่วน",`${firmName(c.sellerId)} → ${firmName(c.buyerId)} • ${state(c.status)}\nจำนวน ${c.quantity} • จ่ายผู้ขาย ${moneyFull(c.paidSatang)} • ภาษี ${moneyFull(c.taxSatang||0)}\nสั่งวันที่ ${c.day} • กำหนดรับวันที่ ${c.dueDay}`);
+      if(!lots.length&&!contracts.length)empty();
+    } else if(uiState.subTab==="phone_people") {
+      for(const p of people){const c=row(name(p),`${p.employment==='campus'?'ย้ายมาเป็นพนักงานบริษัทเราแล้ว':firmName(p.employerId)} • ${({ceo:'ผู้บริหาร',engineer:'วิศวกร',commercial:'จัดซื้อและการค้า'})[p.role]||'ผู้เชี่ยวชาญ'}\n${p.duties}\nค่าจ้างต่อวัน ${moneyFull(p.dailyWageSatang)} • ความพึงพอใจ ${p.satisfaction} • ความผูกพัน ${p.loyalty}\nงานวันนี้ ${p.workedMinutes}/360 นาที`);const subjects=Object.entries(p.education?.subjects||{}).sort((a,b)=>b[1]-a[1]).slice(0,10);c.append(el('div','muted',subjects.map(([id,n])=>(v.companyKnowledge?.subjects?.[id]||({electrical_basics:'พื้นฐานไฟฟ้า',software:'พัฒนาซอฟต์แวร์',programming:'เขียนโปรแกรม',semiconductor_physics:'ฟิสิกส์สารกึ่งตัวนำ',semiconductor_process:'กระบวนการผลิตสารกึ่งตัวนำ',metal_machining:'งานขึ้นรูปโลหะ',physical_chemistry:'เคมีเชิงฟิสิกส์',chemical_processing:'กระบวนการเคมี',circuit_design:'ออกแบบวงจร',metrology:'มาตรวิทยา',embedded_firmware:'เฟิร์มแวร์',people_management:'บริหารคน',procurement:'จัดซื้อ'})[id]||id)+' '+Math.floor(n)+'/100').join(' • ')));}
+      if(!people.length)empty();
+    } else {
+      const cohorts=list(d.cohorts);
+      row("ยอดขายกับผู้ใช้งานจริง","ยอดขายคือเครื่องที่ขายในช่วงเวลานั้น ฐานผู้ใช้คือเครื่องที่ยังใช้งานอยู่ การซื้อทดแทนจึงไม่เท่ากับผู้ใช้ใหม่ทั้งหมด");
+      for(const c of cohorts)row(name(lookup(designs,c.designId)),`ยอดขาย ${c.quantity??c.salesUnits??0} เครื่อง • ฐานใช้งาน ${c.active??c.installedBase??0} เครื่อง\n${reason(c)}`);
+      const news=list(d.news);for(const n of news.slice(0,40))row(name(n),`${n.day!=null?"วันที่ "+n.day+" • ":""}${reason(n)}`);
+      if(!cohorts.length&&!news.length)empty();
+    }
+  }
+
   function renderActiveSheet(v) {
     if (!uiState.sheetOpen) return;
     if(uiState.sheetMode === "world" && document.activeElement?.classList.contains("world-select")) return;
     const body = byId("shBody");
     if (!body) return;
 
+    if (uiState.sheetMode === "phoneIndustry") { renderPhoneIndustry(v,body); return; }
     if (uiState.sheetMode === "world") { renderWorldSheet(v,body); return; }
     if (uiState.sheetMode === "company") { renderCompanySheet(v,body); return; }
 
@@ -31197,6 +31653,7 @@ ${b.waitingReasonTh||''}`);
     getCamera: () => renderer?.getCamera(),
     refresh: () => paint(app.snapshot()),
     openPersonSheet,
+    openPhoneIndustry: () => openSheet("phoneIndustry", "phone_overview"),
     openBuildingSheet,
     toggleTrackedPerson,
   });

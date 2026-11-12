@@ -74,8 +74,14 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 - **Persistent Watchlist (`w.watchlist`, `S.toggleWatchlist`)**: Saves starred people, events, threads, and bottlenecks in `w.watchlist` (validated by `Save.validate(w)`) and syncs with `uiState.trackedIds` and `⭐` star buttons in `debug.js`.
 - **Character Sheet & Edit Hub Extensions**: Displays `p.aspiration` and `p.memories` in the Character Sheet (`chronicle` tab) and adds Sandbox triggers for OEM repair, internal career switches, and retention counter-offers. Verified with **190/190** tests (`test/living-scenarios-human-depth-v280.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 debug.showBusinessChooser pauses time and starts six origins through API.newGame. Company overview shows reconciled opening assets/learning/intelligence. World countries show named fictional leaders/terms/ministry measures/customs/security, diplomacy staged agreements. Character News shows only read reports. openSheet refreshes the latest snapshot; test panels do not change saved simulation.
 
 Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.
+
+## Current v3.0.0 integration reference
+
+Reference key: `directorPhoneEdit`. api snapshots include phoneIndustry/phoneTalent; debug.js openPhoneIndustry renders six pure observation tabs, specs/comparisons/projects/lots/people. directorPhoneEdit is an explicitly logged experiment: integer satang grant, individual subject or trait. UI converts THB→satang and uses labels, not raw JSON. Observe differences without issuing launch/procurement commands; test tab reads preserve the serialized world.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.

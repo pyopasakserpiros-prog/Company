@@ -59,8 +59,14 @@ learnSubject / personalStudyTick: individual interests, after-work study funded 
 - **Internal Career Switching (`S.evaluateInternalCareerSwitch`), Retention Counter-Offers (`S.evaluateEmployeeRetention`) & Living Spin-Offs (`S.evaluateEmployeeSpinoff`)**: Employees can switch roles internally when cross-trained (`w.culture.roleSwitches`), receive retention raises/bonuses before leaving (`w.culture.retentionOffers`), or found living spin-off firms registered in `w.externalWorld.living.firms`.
 - **Counterfactual Comparison (`S.runCounterfactualComparison`)**: Compares identical world seeds under altered CEO personality, technician knowledge, or capital. Verified with **190/190** tests (`test/living-scenarios-human-depth-v280.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 S.readNewsTick records a five-minute personal reading slot, role/openness participation and aptitude/market comprehension. Only read executive news enters intelligence and affects supplier/R&D scoring. Validate p.news and inspect Character → News. No origin locks learning; no information-sharing/misinformation model is claimed.
 
 Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.
+
+## Current v3.0.0 integration reference
+
+Reference key: `phone-talent.js`. Outside professionals use stable Human Core profiles, individual subjects, loyalty/satisfaction and paid work. Recruitment removes former-firm contribution and preserves identity on campus. Outside condition updates remain a lightweight model, not full campus life. Validate profiles and recruited current-save continuation.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.

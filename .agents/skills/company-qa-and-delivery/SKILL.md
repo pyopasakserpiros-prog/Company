@@ -64,7 +64,7 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 - **Physical Warehouse Lots (`w.warehouse`), Competitive Tenders (`w.commerce.tenders`), and 180m Biological Livestock Cycle**: `reconcileWarehouseLots` / `warehouseAudit` with FEFO/FIFO and cold-chain shelf life; `W.evaluateCompetitiveTender`, `renegotiateCommercialContract`, `terminateCommercialContract`, and `W.payFromCounterparty`; separated `feedLivestockHerd` and `milkLivestockHerd` (180m cycle) and external firm `cogsSatang`/`accrualProfitSatang`.
 - Read `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`, `docs/company/LIVING_WORLD_SYSTEM.md`, and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md`. Verified with **186/186** tests (`test/process-realism-v270.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 Baselinef7167e2:190/190 tests. New sme-civics-v290.test.cjs adds13 behavioral cases; browser14, 12SME worlds×30days daily audit/save, syntax/core/build and benchmark. Include report/status/skills/standalone and all tracked files in one-root ZIP, CRC+allhash verification, fresh-extract check/test/build. Root master copies must match canonical files; no app Gemini sync claim.
 
@@ -73,3 +73,9 @@ Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PAT
 ## Era 3 proposal routing — documentation update, 2026-11-12
 
 The current runtime remains v2.9.0. `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` is the canonical **proposed** major phone-industry design, accompanied by `era3/project_status_and_ai_onboarding.md`; root and COMPANY_SOURCE status copies must match the canonical English status. Two files provide context, not source access or an implementation. NPCs make all engineering/business decisions; the observer can inspect/time-control/edit conditions, never issue normal operational orders. Keep proposed dynamic products, semiconductor operations and external professionals separate from existing capabilities. Update status/report/skills with actual evidence when implementation occurs. Gemini app synchronization is not established by these repo files.
+
+## Current v3.0.0 integration reference
+
+Reference key: `phone-industry-soak.cjs`. Run npm test/check/build/test:browser, node tools/phone-industry-soak.cjs and benchmark. Preserve red-green regressions for price vs real BOM, outside-profile freeze, recruited education aliases and sector settlement. Verify actual campus research/enclosure manufacture. Sector soak distinguishes normal from explicitly endowed raw stocks. Update status/masters/domain references/report, inspect final ZIP CRC/path/all hashes and rerun checks/test/build after fresh extraction. Report app-skill access separately.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.

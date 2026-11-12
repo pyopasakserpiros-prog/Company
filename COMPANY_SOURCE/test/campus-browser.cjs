@@ -303,8 +303,53 @@ test('country ministry and NPC news are observable and opening panels does not c
  const {page,errors}=await openGame();try{
   await page.evaluate(()=>{CompanyDebug.app.advance(1440*4);CompanyDebug.app.setSpeed(0);CompanyDebug.refresh();});
   const before=await page.evaluate(()=>CompanyDebug.app.save());await page.locator('[data-nav="world"]').click();await page.getByRole('button',{name:'ประเทศ / รัฐบาล',exact:true}).click();await page.getByLabel('เลือกประเทศ',{exact:true}).selectOption('TH');await page.getByLabel('เลือกประเทศ',{exact:true}).blur();
-  const text=await page.locator('#shBody').innerText();assert.ok(text.includes('ผู้นำและวาระ'));assert.ok(text.includes('กระทรวงพาณิชย์'));assert.ok(!text.includes('undefined'));assert.ok(!text.includes('NaN'));
+  const text=await page.locator('#shBody').innerText();assert.ok(text.includes('ผู้นำและวาระ'));assert.ok(text.includes('กระทรวงพาณิชย์'));assert.ok(!text.includes('undefined'));assert.ok(!text.includes('NaN'));if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'phone-products.png')});
   if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'government-ministry.png')});
   await page.evaluate(()=>CompanyDebug.openPersonSheet(CompanyDebug.app.snapshot().people[0].id));await page.getByRole('button',{name:'ข่าวที่รับรู้',exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).includes('ข่าวที่ตัวละครรับรู้'));assert.equal(await page.evaluate(()=>CompanyDebug.app.save()),before);assert.deepEqual(errors,[]);
+ }finally{await page.close();}
+});
+
+test("phone industry mobile inspection has six read-only tabs and preserves saved world", async () => {
+  const { page, errors } = await openGame();
+  try {
+    await page.evaluate(() => CompanyDebug.app.setSpeed(0));
+    const before = await page.evaluate(() => CompanyDebug.app.save());
+    await page.locator('[data-nav="phoneIndustry"]').click();
+    await page.waitForFunction(() => document.querySelector('#shTitle').textContent.includes('อุตสาหกรรมโทรศัพท์'));
+    assert.equal(await page.locator('#shTabs button').count(), 6);
+    for (let i = 0; i < 6; i++) {
+      await page.locator('#shTabs button').nth(i).click();
+      assert.ok((await page.locator('#shBody').innerText()).length > 20);
+      assert.equal(await page.locator('#shBody input, #shBody textarea').count(), 0);
+    }
+    await page.evaluate(() => { CompanyDebug.openPhoneIndustry(); CompanyDebug.refresh(); });
+    assert.equal(await page.evaluate(() => CompanyDebug.app.save()), before);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    assert.equal(overflow, false);
+    assert.deepEqual(errors, []);
+  } finally { await page.close(); }
+});
+
+test("standalone phone industry snapshot inspection stays read-only", async () => {
+  const standalone=path.resolve(root,"../Company_single.html");
+  // The standalone is served from the source root by the delivery build.
+  const sourceStandalone=path.resolve(root,"Company_single.html");
+  const file=fs.existsSync(sourceStandalone)?"Company_single.html":null;
+  if (!file) return;
+  const {page,errors}=await openGame({width:390,height:844},file);
+  try {
+    const before=await page.evaluate(()=>CompanyDebug.app.save());
+    await page.evaluate(()=>CompanyDebug.openPhoneIndustry());
+    for(let i=0;i<6;i++)await page.locator('#shTabs button').nth(i).click();
+    assert.equal(await page.evaluate(()=>CompanyDebug.app.save()),before);
+    assert.deepEqual(errors,[]);
+  } finally {await page.close();}
+});
+
+test('phone designs expose measurable hardware, owned stock and read-only EditHub experiments',async()=>{
+ const {page,errors}=await openGame();try{
+  await page.evaluate(()=>{const app=CompanyDebug.app;app.dispatch({type:'continueEndless'});for(let d=0;d<60;d++){if(app.snapshot().status!=='running')app.dispatch({type:'continueEndless'});app.advance(1440);}app.setSpeed(0);CompanyDebug.refresh();CompanyDebug.openPhoneIndustry();});
+  await page.getByRole('button',{name:'สินค้า / R&D',exact:true}).click();const text=await page.locator('#shBody').innerText();assert.ok(text.includes('GHz'));assert.ok(text.includes('RAM'));assert.ok(text.includes('แบต'));assert.ok(!text.includes('undefined'));assert.ok(!text.includes('NaN'));if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'phone-products.png')});
+  await page.getByRole('button',{name:'Edit Hub — ทดลองเปลี่ยนเงื่อนไข',exact:true}).click();const before=await page.evaluate(()=>CompanyDebug.app.snapshot().phoneIndustry.firms[0].cashSatang);await page.getByLabel('จำนวนเงินบาทที่เพิ่ม').fill('1000');await page.getByRole('button',{name:'เพิ่มเงินทุน (ทดลอง)',exact:true}).click();assert.equal(await page.evaluate(()=>CompanyDebug.app.snapshot().phoneIndustry.firms[0].cashSatang),before+100000);await page.getByRole('button',{name:'ปิดการทดลอง',exact:true}).click();await page.getByRole('button',{name:'ซัพพลายเชน',exact:true}).click();if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'phone-stock.png')});await page.getByRole('button',{name:'บุคลากร',exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).includes('ค่าจ้างต่อวัน'));assert.deepEqual(errors,[]);
  }finally{await page.close();}
 });

@@ -1,0 +1,7 @@
+# v3.0.0 validation evidence
+
+Base a2c5514, Node24.22.1, Linux Chromium/Playwright. `unit-tests.txt` and `browser-tests.txt` are final integrated runs:230/230 and17/17; final fresh-extraction results are reported separately beside the archive. `source-check.txt` verifies syntax/current schema and immutable core; `build.txt` records source-derived HTML. `benchmark.json` is simulation-only Node timing, not mobileFPS. `sector-soak.json`: three360day worlds, normal seeds plus an explicitly resource-endowed opening, daily audit/save validation. It bypasses full campus life and is labelled accordingly. Run `node tools/phone-industry-soak.cjs OUTPUT.json` to reproduce the experiment.
+
+Red/green logs preserve price-vs-BOM, profile-freezing, education-alias and settlement-order failures/fixes. Green review log contains the final corrected test fixture; the original clock-only fixture's accounting-day error was corrected before reproducing both regressions. The compact shipping-retention change followed the recorded fresh-extraction runs; final fresh-extraction tests/CRC/hash results are published in the separate delivery receipt next to the archive, avoiding archive self-hash references.
+
+`skill-reference-checks.json` checks discoverable source reference tokens and canonical mirrors; it is not an agent-behavior or new mastery certification. Screenshots show a390px phone products/stock view (observed desktop Chromium). No claim of physical-device FPS, measured chip performance or Gemini app access.

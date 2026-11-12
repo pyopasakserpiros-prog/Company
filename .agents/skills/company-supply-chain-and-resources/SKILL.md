@@ -64,8 +64,14 @@ Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/P
 - **Physical Warehouse Lots (`w.warehouse`), Competitive Tenders (`w.commerce.tenders`), and 180m Biological Livestock Cycle**: `reconcileWarehouseLots` / `warehouseAudit` with FEFO/FIFO and cold-chain shelf life; `W.evaluateCompetitiveTender`, `renegotiateCommercialContract`, `terminateCommercialContract`, and `W.payFromCounterparty`; separated `feedLivestockHerd` and `milkLivestockHerd` (180m cycle) and external firm `cogsSatang`/`accrualProfitSatang`.
 - Read `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`, `docs/company/LIVING_WORLD_SYSTEM.md`, and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md`. Verified with **186/186** tests (`test/process-realism-v270.test.cjs`).
 
-## Current v2.9.0 integration (source-backed; preceding release notes are historical)
+## Historical v2.9.0 integration (source-backed; preceding release notes are historical)
 
 W.quote chooses real stock-available suppliers by landed price, route time, partner/rival price and known country risk. Purchase records retain origin, customsTaxSatang, tradePolicyIds/reason; all actual sellers accumulate delivery/spend history. C.quote applies finite daily export quota and commodity-specific policy. Startup manufacturing buys intermediate BOM stock, not fictional upstream ownership.
 
 Read `docs/company/SME_AND_CIVICS_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md`; verify with `test/sme-civics-v290.test.cjs` and relevant existing tests. This reference update does not claim a new mastery certification or a Gemini app update.
+
+## Current v3.0.0 integration reference
+
+Reference key: `phone-industry.js`. Owned CPU/RAM/storage/display/camera/battery/enclosure lots retain design IDs. Raw/component prepaid contracts reserve finite seller stock and delay delivery with Civics.quote policy/customs. No physical gifts at opening. Keep needed older chips producible. lots satisfy quantity=available+reserved+used+sold. Coarse legacy processed inputs are not true upstream resources; dedicated purity routes remain unfinished.
+
+Read `docs/company/ERA3_PHONE_SYSTEM.md`, the v3 report and actual source. This source-reference update does not change starter maturity or certify the Gemini app skills.
