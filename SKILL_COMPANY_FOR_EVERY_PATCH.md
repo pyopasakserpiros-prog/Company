@@ -72,3 +72,7 @@ When an app-specific `skills:update_skill` tool is not available to the current 
 ## v2.5.0 integration
 
 sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.
+
+## Pending process-realism assignment
+
+Root ACTIVE_PROMPT.md is the user-authorized English Gemini brief for eight operational workstreams afterv2.6.0. Verify baseline/source, especially synchronous crafting, production completeAllSteps callers and default software effort. It is pending implementation, not current functionality. Follow its acceptance/report/skill/ZIP requirements and record actual handoff ownership.

@@ -45,3 +45,7 @@ Codex v2.5.0: เวลาและฐานผลิตเข้าคลัง
 ## ผลงานล่าสุด12พฤศจิกายน2026 — v2.6.0
 
 Codex ต่อจากc2609be: เครื่อง20ชนิด/route42สินค้า งานช่างและงวดขายจริง ทำและตรวจแล้ว177tests/12browser อ่านรายงานv2.6.0และPLANT_AND_COMMERCIAL_SYSTEMก่อนรับช่วง ไม่มีการเริ่มแพตช์ใหม่จากข้อเสนอในhandoff
+
+## Gemini process-realism assignment — 12 November 2026
+
+User authorized an English implementation brief covering all eight audited realism gaps. Codex prepared root ACTIVE_PROMPT.md against gameplay baseline bbc22e4 (v2.6.0). Status: **brief prepared in repository; implementation pending Gemini**. No claim that the brief/ZIP has been delivered to or imported by the Gemini app. Gameplay remainsv2.6.0; no simulation changes in this documentation update. Gemini/Codex/Agy must update ownership and progress when work actually starts.

@@ -38,3 +38,5 @@
 - [v2.5.0 เวลาและฐานการผลิตเข้าคลัง](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.5.0.md)
 
 - [v2.6.0 เครื่องจักร งานช่าง และสัญญาขายเป็นงวด](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md)
+
+- [Process-realism English prompt handoff (documentation only)](PROMPT_HANDOFF_PROCESS_REALISM_2026-11-12.md)

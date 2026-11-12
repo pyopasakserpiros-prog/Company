@@ -1,3 +1,5 @@
+> งานถัดไปที่ผู้ใช้มอบหมาย: [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) — English implementation brief for the eight-workstream process-realism overhaul. Prepared for Gemini; implementation pending. Gameplay baseline remainsv2.6.0/bbc22e4.
+
 # เริ่มงานกับ Company v2.6.0
 
 ทุกครั้งอ่าน [AGENTS.md](AGENTS.md) → [สถานะจริง](project_status_and_ai_onboarding.md) → [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md) / [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md) → [.agents/skills](.agents/skills/README.md) และ source/testที่กระทบ

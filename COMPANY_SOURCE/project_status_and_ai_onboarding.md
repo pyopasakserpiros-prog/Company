@@ -33,3 +33,7 @@
 ## เอกสารและงานร่วม
 
 อ่าน[AGENTS.md](../AGENTS.md),[workflow](../docs/company/AGENT_COLLABORATION_WORKFLOW.md),[ทะเบียนงาน](../docs/company/AGENT_WORK_STATUS.md) และ[ดัชนีรายงานทุกแพตช์](../docs/company/PATCH_REPORTS/README.md)ก่อนเริ่มทุกครั้ง ข้อเสนอPDF/ideasเป็นข้อเสนอ ไม่ใช่สิ่งที่ทำแล้ว ตรวจsourceก่อนเริ่มซ้ำ อ่าน[ระบบวิชา](../docs/company/LEARNED_KNOWLEDGE_SYSTEM.md)และ[เทมเพลตวิชา](../docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md)ก่อนเพิ่มวิชา
+
+## งานที่ได้รับมอบหมายถัดไป
+
+[English brief for Gemini](../ACTIVE_PROMPT.md) covers eight process-realism workstreams. Prepared againstbbc22e4/v2.6.0; implementation pending. This is documentation, not a new game release or a claim of completed features.
