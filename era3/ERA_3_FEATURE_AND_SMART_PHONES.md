@@ -8,8 +8,8 @@
 | Current shipped runtime | v2.9.0; source baseline `855e183d9b7a404c857e9abc162c1a67a4a84f76` on `pyopasakserpiros-prog/Company`, branch `main` |
 | Intended major release | v3.0.0 / Era 3; **proposed, not implemented** |
 | Current authorization | Publish the proposal, ideas and current context so multiple AIs can collaborate. This document does not authorize claiming an implementation or completed release. |
-| Portable companion | `project_status_and_ai_onboarding.md`, copied beside this file in `era3/` |
-| Canonical proposal location | `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` |
+| Portable companion | `project_status_and_ai_onboarding.md` and `ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md`, located beside this file in `era3/` |
+| Canonical proposal location | `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` (with detailed Thai + technical co-evolution architecture blueprint in `era3/ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md`) |
 
 ## 0. Read this first: the game is an autonomous world, not a management-command game
 
@@ -428,5 +428,6 @@ Existing runtime evidence is summarized in the companion status. Historical v2.9
 ## 25. Collaboration record
 
 - **2026-11-12, Codex, revision 1:** consolidated owner requirements and two design discussions; checked runtime identity/catalogue counts and initial audit against `855e183`; documented existing versus proposed behavior, autonomy, semiconductor correction, two-file context, data/engineering/economic contracts, acceptance scenarios and unresolved research.
+- **2026-11-12, Agy, revision 2 (Co-Evolution & B2B Silicon Deal Architecture Blueprint):** authored [`era3/ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md`](ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md) defining the concrete 6-stage B2B Silicon & Component Deal Pipeline (`chip_architecture_taped_out` → `es_sampling_and_eval` → `design_win_negotiation` → `public_design_win_announced` → `wafer_fab_and_binned_delivery` → `commercial_mass_production`), the Causal Tech Media & Flagship Launch News Engine, the 6 Co-Evolving Hardware/Software Tech Trees (SoC/Modem, Display/Touch, DRAM/Storage, Battery/PMIC/Thermal, Camera/ISP, OS/Drivers), concrete module boundaries (`js/semiconductor.js`, `js/handset.js`, `js/talent.js`), JSON data schemas (`ChipDesign`, `SiliconSupplyContract`, `PhoneModelDesign`), engineering/yield/thermal equations, and the 4-phase implementation roadmap.
 - **Runtime implementation status:** not started by this documentation assignment. No Era 3 module, UI, product catalogue or performance claim is delivered here.
 - **Next collaborator:** add a dated, attributed contribution and identify whether it is a proposal, source-inspected finding, implemented change or verified result. Keep the companion status truthful; do not turn future work into completed features by editing prose.
