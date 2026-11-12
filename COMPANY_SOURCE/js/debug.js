@@ -156,6 +156,22 @@
   };
 
   function toggleTrackedPerson(personId) {
+    const res = app.dispatch({
+      type: "toggleWatchlist",
+      targetType: "person",
+      targetId: personId,
+    });
+    if (res && res.ok) {
+      if (res.starred) {
+        uiState.trackedIds.add(personId);
+        showToast("⭐ ปักหมุดติดตามพนักงานบนแผนที่และรายงานแล้ว (บันทึกถาวรในเซฟ)");
+      } else {
+        uiState.trackedIds.delete(personId);
+        showToast("ยกเลิกการปักหมุดติดตามพนักงานแล้ว");
+      }
+      paint(app.snapshot());
+      return;
+    }
     if (uiState.trackedIds.has(personId)) {
       uiState.trackedIds.delete(personId);
       showToast("ยกเลิกการปักหมุดติดตามพนักงานแล้ว");
@@ -922,6 +938,24 @@
         r.append(el("span", "tm", `วันที่ ${v.time.day}`), el("span", "actor", p.name + " "), el("span", "", th));
         logCard.append(r);
       }
+      if (p.aspiration) {
+        const r = el("div", "logrow");
+        r.append(
+          el("span", "tm", `เป้าหมายชีวิต`),
+          el("strong", "", ` ${p.aspiration.titleTh} (${p.aspiration.progressPct || 0}%) `),
+          el("span", "muted", p.aspiration.descTh || ""),
+        );
+        logCard.append(r);
+      }
+      for (const mem of (p.memories || []).slice(0, 10)) {
+        const r = el("div", "logrow");
+        r.append(
+          el("span", "tm", `วันที่ ${mem.day} (ความทรงจำ)`),
+          el("span", "actor", "🧠 "),
+          el("span", "", mem.textTh),
+        );
+        logCard.append(r);
+      }
       for (const e of myEvents.slice(0, 12)) {
         const r = el("div", "logrow");
         const d = Math.floor(e.at / 1440) + 1;
@@ -1601,7 +1635,7 @@
   /* ---------- 3. Bottom Nav Sheets (People, Campus, Log, Market, Policy, Menu/Edit Hub) ---------- */
   function renderCompanySheet(v, body) {
     byId("shTitle").textContent = "🏛️ บริษัท — กิจการ คน ความรู้ และแผนงาน";
-    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_plant",label:"เครื่องจักร / งานช่าง"},{id:"company_contracts",label:"ฝ่ายขาย / สัญญา"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
+    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_tracker",label:"🔍 ติดตามสด / คอขวด"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_plant",label:"เครื่องจักร / งานช่าง"},{id:"company_contracts",label:"ฝ่ายขาย / สัญญา"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
     setSheetTabs(tabs);
     if (!tabs.some(t=>t.id===uiState.subTab)) uiState.subTab = "company_overview";
     body.replaceChildren();
@@ -1617,6 +1651,50 @@
       row("ความพร้อมเทคโนโลยี",`พร้อมดำเนินการ ${k.products.filter(p=>p.ready).length}/${k.products.length} สินค้า • โครงการเฉพาะทาง ${k.projects.filter(p=>p.status!=="qualified").length} โครงการ`);
       row("แนวทางที่ผู้บริหารกำลังพิจารณา",k.decision);
       row("สาธารณูปโภค",`ไฟฟ้า ${v.utilities?.dailyKwh || 0} kWh/วัน • น้ำ ${v.utilities?.dailyWaterM3 || 0} ลบ.ม./วัน • ${v.utilities?.brownoutActive ? "ไฟตก ต้องชำระบิล" : "ไม่มีไฟตก"}`);
+    } else if(uiState.subTab==="company_tracker") {
+      const obs = v.observability || { activeBottlenecks: [], peopleWorkboard: [], watchlistSummary: { people: [], bottlenecks: [], events: [] } };
+      row("🔍 กระดานติดตามสด: ใครกำลังทำอะไร • ติดอะไร • กำลังแก้ยังไง", `คอขวดที่พบตอนนี้ ${obs.activeBottlenecks.length} รายการ • ติดดาวติดตามแล้ว ${(v.watchlist?.people?.length || 0) + (v.watchlist?.bottlenecks?.length || 0)} รายการ`);
+      if (obs.activeBottlenecks.length === 0) {
+        row("✅ ระบบการผลิตและธุรกิจไหลลื่น", "ไม่พบเครื่องจักรเสียรอช่าง อะไหล่ขาด หรือสัญญาเสี่ยงส่งมอบล่าช้าในขณะนี้");
+      } else {
+        for (const bn of obs.activeBottlenecks) {
+          const r = el("div", "logrow");
+          const top = el("div", "");
+          top.style.display = "flex";
+          top.style.justifyContent = "space-between";
+          top.style.alignItems = "center";
+          top.append(el("strong", "", `${bn.severity === "critical" ? "🚨" : "⚠️"} ${bn.titleTh}`));
+          const starBtn = el("button", "btn sm" + (bn.starred ? " pri" : ""), bn.starred ? "⭐ ติดดาวแล้ว" : "☆ ติดดาว");
+          starBtn.onclick = () => dispatch({ type: "toggleWatchlist", targetType: "bottleneck", targetId: bn.id, labelTh: bn.titleTh }, "อัปเดตดาวติดตามคอขวดแล้ว");
+          top.append(starBtn);
+          r.append(
+            top,
+            el("div", "", `• ติดอะไร: ${bn.whatStuckTh}`),
+            el("div", "", `• สาเหตุ: ${bn.whyStuckTh}`),
+            el("div", "muted", `• กำลังแก้ยังไง (${bn.ownerName}): ${bn.howSolvingTh}`),
+          );
+          card.append(r);
+        }
+      }
+      for (const wb of obs.peopleWorkboard) {
+        const r = el("div", "logrow");
+        const top = el("div", "");
+        top.style.display = "flex";
+        top.style.justifyContent = "space-between";
+        top.style.alignItems = "center";
+        const nameBtn = el("button", "btn sm", `👤 ${wb.name} (${wb.roleNameTh} • ${wb.badge})`);
+        nameBtn.onclick = () => openPersonSheet(wb.personId);
+        const starBtn = el("button", "btn sm" + (wb.starred ? " pri" : ""), wb.starred ? "⭐ ติดตาม" : "☆ ติดดาว");
+        starBtn.onclick = () => toggleTrackedPerson(wb.personId);
+        top.append(nameBtn, starBtn);
+        r.append(
+          top,
+          el("div", "", `🛠️ ทำอะไรอยู่: ${wb.doingWhatTh}`),
+          el("div", "", `🚧 ติดอะไร: ${wb.stuckOnTh}`),
+          el("div", "muted", `💡 กำลังแก้ยังไง: ${wb.solvingHowTh}${wb.aspiration ? ` • เป้าหมายชีวิต: ${wb.aspiration.titleTh} (${wb.aspiration.progressPct || 0}%)` : ""}`),
+        );
+        card.append(r);
+      }
     } else if(uiState.subTab==="company_knowledge") {
       row("ความรู้เป็นของคน เทคโนโลยีเป็นของกระบวนการ", "ต้องมีผู้เชี่ยวชาญเฉพาะวิชา ชั่วโมงทำต้นแบบ ระยะเวลาตรวจสอบ และผู้ตรวจคุณภาพ เงินหรือแต้มสะสมอย่างเดียวไม่ปลดล็อกข้ามอุตสาหกรรม หากผู้เชี่ยวชาญออกจากงาน ความพร้อมอาจหายไปได้");
       row("แผนปัจจุบัน",k.decision);
@@ -3168,6 +3246,8 @@ ${b.waitingReasonTh||''}`);
           ["⚡💧 ชำระบิลค่าไฟฟ้าและน้ำประปาโรงงานรอบสัปดาห์", { type: "directorEdit", action: "payUtilityBills" }],
           ["🏆 จัดพิธีมอบรางวัลพนักงานดีเด่นประจำรอบ (Townhall Award)", { type: "directorEdit", action: "evaluateTownhallAwards", payBonus: true }],
           ["🚀 จำลองพนักงานอาวุโสแยกตัวเปิดบริษัท Spin-off ศิษย์เก่า", { type: "directorEdit", action: "evaluateEmployeeSpinoff", force: true }],
+          ["🔄 โอนย้ายสายอาชีพภายในตามความถนัด/คอขวด", { type: "directorEdit", action: "evaluateInternalCareerSwitch", force: true }],
+          ["🛠️ แก้วิกฤตคอขวดเครื่องจักร/จ้างช่าง OEM ภายนอก", { type: "directorEdit", action: "evaluateOperationalCrisesAndBottlenecks" }],
         ];
         for (const [labelTh, payload] of bpActions) {
           const btn = el("button", "btn", labelTh);
@@ -3250,6 +3330,9 @@ ${b.waitingReasonTh||''}`);
       showToast("🏆 ยินดีด้วย! บริษัทปลดหนี้และพ้นวิกฤตสำเร็จ — เปิดโหมดขยายอาณาจักรไร้ขีดจำกัด (Endless Empire) ต่อเนื่องทันที!");
     }
     current = v;
+    if (v?.watchlist?.people && Array.isArray(v.watchlist.people)) {
+      uiState.trackedIds = new Set(v.watchlist.people);
+    }
     lastPaint = performance.now();
     renderTopHud(v);
     renderSelectionBanner(v);

@@ -343,6 +343,16 @@
         "invalid executiveBoard state",
       );
     }
+    if (w.watchlist !== undefined) {
+      add(
+        record(w.watchlist) &&
+          Array.isArray(w.watchlist.people) &&
+          Array.isArray(w.watchlist.events) &&
+          Array.isArray(w.watchlist.threads) &&
+          Array.isArray(w.watchlist.bottlenecks),
+        "invalid watchlist state",
+      );
+    }
     add(
       ["running", "won", "lost"].includes(w.status) &&
         finite(w.reputation, 0, 100) &&

@@ -313,7 +313,7 @@ test("v1.1.0 Chapter 20 Software & SaaS App Business: 30/40/30 milestone account
 
 test("8. Factory Sector Process Models (Food Spoilage -> Compost, Electronics RMA, Automotive Tooling Changeover, Biomed Sterile COA) & Industrial B2B Services (Calibration, Field SLA, Eco Recycling) preserve 100% audit invariants", () => {
   const w = S.create("sector-and-service-v120", { autonomous: true });
-  assert.strictEqual(D.RELEASE_VERSION, "2.7.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.8.0");
   assert.strictEqual(D.BUSINESS_PROCESS_MODELS.length, 8);
   assert.strictEqual(Object.keys(D.SECTOR_PROCESS_MODELS).length, 4);
   assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 10);

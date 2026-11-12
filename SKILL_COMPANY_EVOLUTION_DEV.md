@@ -1,56 +1,36 @@
 ---
 name: company-evolution-dev
-description: MASTER SKILL for Siam Enterprise / Company Simulation (บริษัทจำลองธุรกิจและอุตสาหกรรมอัตโนมัติ, COMPANY_SOURCE/) through v2.7.0 (process-driven-realism-overhaul-v270; historical foundations retained below). Covers the Permanently Locked Human Core 1.0.0, 170 Learned Subjects & Technology Transfer, 20 Equipment Types (5 Subsystems, Fault Modes, New/Used/Leased Acquisition), 42 Product Routes, Timed Refinery Batches for all 40 Recipes (w.plant.refineryBatches), Physical Warehouse Lots & Cold-Chain FEFO/FIFO (w.warehouse), Competitive Public Tenders & Contract Renegotiation/Termination (w.commerce.tenders), Time-Bound Freight & 10 Industrial B2B Services, Real Software/QA/SLA, 180m Biological Livestock Cycle, 6-Stage SME-to-Conglomerate Ladder, Utilities/Culture/Spin-offs, Living Global Geopolitics (12 Nations, 28+ Firms with Accrual Profit/COGS), and 500-NPC Scaling (~1.05ms/tick). MANDATORY RULE: Update this Master Skill on every future patch.
+description: MASTER SKILL for Siam Enterprise / Company Simulation (บริษัทจำลองธุรกิจและอุตสาหกรรมอัตโนมัติ, COMPANY_SOURCE/) through v2.8.0 (living-scenarios-observability-and-human-depth-v280; historical foundations retained below). Covers the Permanently Locked Human Core 1.0.0, Multi-Scenario Bottleneck & Crisis Resolution (OEM Repair, Specialist Hiring, Part Unreserving, Contract Renegotiation, Clearance Markdown), Counterfactual Personality & Capability Divergence (S.runCounterfactualComparison), Live Bottleneck Tracker & Persistent Watchlist (w.watchlist, S.buildObservabilityView), Deep Human Life & Organizational Dynamics (Personal Aspirations, Episodic Memories, QC/Promotion Conflicts, Internal Role Switches, Retention Counter-Offers, Living Spin-off Firms), 170 Learned Subjects, 20 Equipment Types, 42 Product Routes, Timed Refinery Batches (w.plant.refineryBatches), Physical Warehouse Lots (w.warehouse), Competitive Tenders, 180m Biological Livestock Cycle, and 500-NPC Scaling. MANDATORY RULE: Update this Master Skill on every future patch.
 ---
-## Current release — v2.7.0 (`process-driven-realism-overhaul-v270`, authoritative; earlier sections are historical)
+## Current release — v2.8.0 (`living-scenarios-observability-and-human-depth-v280`, authoritative; earlier sections are historical)
 
-1. **Timed Material Processing & Intermediate Production (`w.plant.refineryBatches`, `P.recipeSpec`, `P.enqueueRefineryBatch`, `P.cancelRefineryBatch`, `P.tickRefinery`)**:
-   - All 40 recipes in `D.MATERIAL_RECIPES` run through timed multi-stage refinery batches (`inputs_reserved -> staged -> loading_setup -> running -> unloading -> inspection -> released / rework / scrapped / cancelled`).
-   - Calling `craftMaterialRecipe` or `runMidstreamRefining` reserves inputs (`w.inventory.reserved`) at tick +0 and never spawns instant output in the same tick.
-   - Inputs are deducted (`safeDeductMaterial`, `inputsConsumed = true`) upon completing `loading_setup`. Cancelling before consumption refunds reservations (`status: "cancelled", refundedInputs: true`); cancelling after consumption turns WIP into scrap (`status: "scrapped", refundedInputs: false`).
-   - Full warehouse capacity at `inspection` holds batch release (`รอพื้นที่ว่างในคลังสินค้าก่อนตรวจปล่อยล็อตแปรรูป`) until space frees up.
-2. **Product-Specific Production Engineering (42 Products) & Shared Machine Guard**:
-   - `P.route(product)` defines 3–4 domain stages with `opCode`, `subject`, `minSubjectLevel`, `safetyCritical`, `batchShared`, `qualityCheckpoint`, and `intermediateOut`.
-   - `P.workerQualifiedForStep(w, person, step)` enforces `minSubjectLevel` (or qualified colleague supervision) on `safetyCritical` stages.
-   - `power(w, m, minutes)` and thermal heating in `P.tick` / `P.tickRefinery` guard with `m.lastPowerAt === w.clock.absoluteMinute` and `m.lastThermalAt === w.clock.absoluteMinute` so multiple jobs/batches sharing a machine in the same tick never multiply power draw or heating speed.
-3. **Equipment Engineering, 5 Subsystems, Fault Diagnosis & 3 Acquisition Modes**:
-   - Each machine in `w.plant.machines` tracks `subsystems: { mechanical, electrical, thermal, calibration, cleanliness }`, `faultMode`, and `acquisitionMode` (`purchased_new`, `used_refurbished` at 65% cost / 82% condition / 60% lead time, or `leased` at 25% upfront cost).
-   - `P.technicianCapability(person, machineId, hasDiagKit)` computes repair `speed`, `diagnosticAccuracy`, and `postCondition` from learned subjects, Human Core aptitudes (`analytical`, `dexterity`, `problemSensitivity`, `attention`), fatigue, and `diagnostic_kit` availability, recording `returnToServiceTest: "passed"` in `w.plant.serviceRecords`.
-4. **Time- and Resource-Bound Freight & 10 Industrial B2B Services**:
-   - Autonomous NPC loops no longer call `completeAllSteps: true`.
-   - Freight contracts enforce elapsed transit time between dispatch and delivery (`elapsedTimeRequired`) and return travel before a truck becomes `idle` (`elapsedReturnTimeRequired`), plus driver fatigue rest (`driverRestRequired`).
-   - All 10 B2B services require `workMinutesDone >= requiredWorkMinutes`, consume spare parts/consumables, record concrete `testMeasurements`, isolate client items in `w.serviceBusiness.instrumentCustody`, and track `storageHoursOccupied` for `cold_storage_3pl`.
-5. **Real Software Development, QA, Scope Changes & Defect SLA Penalties**:
-   - `advanceSoftwareProject` requires an on-duty developer with `programming >= 40` and `software >= 40` (`noQualifiedDeveloper` blocks progress at 0).
-   - Developer productivity and defect generation derive from Human Core traits/fatigue and learned subjects. Supports `discoverScopeChange` (`scopeChangeEvaluated`, `scopeChangeResolution`) and `deployWithKnownDefects` (which triggers `reworkCostSatang` SLA penalties, support tickets, and reputation loss upon entering `supporting`).
-6. **Physical Warehouse Lots, FIFO/FEFO & Cold-Chain Protection (`w.warehouse`)**:
-   - `S.ensureWarehouse`, `S.reconcileWarehouseLots`, and `S.warehouseAudit` maintain `materialLots`, `finishedLots`, `transferMoves`, and `summary` across all inventory states, applying FEFO to perishables (`coldChainProtected`, `expiresDay: 10` days with active `cold_room` vs `4` days during brownout/unprotected) and FIFO to non-perishables.
-7. **Competitive Public Procurement Tenders, Contract Renegotiation, Orderly Termination & Counterparty Funding**:
-   - `W.evaluateCompetitiveTender` scores the player against external firms on price, quality, reputation, and documentation (`w.commerce.tenders`).
-   - `S.renegotiateCommercialContract` (`W.adjustCommercialEscrow`) and `S.terminateCommercialContract` (`W.closeCommercial`) modify or close contracts cleanly without stuck obligations.
-   - `W.payFromCounterparty` links freight, B2B service, and software milestone receipts to external firm cash and `m.playerNetSatang`.
-8. **180-Minute Biological Livestock Cycle & External Firm Accrual Profit / COGS**:
-   - `feedLivestockHerd` starts a 180-minute biological digestion/lactation cycle (`milkingStage: "digesting" -> "ready_to_milk"`); `milkLivestockHerd` rejects premature milking (`lactationCycleIncomplete`).
-   - External firms in `js/world.js` run biological cycles for `fresh_milk_soy`, `natural_latex`, and `timber_bamboo_log`, and separate `cogsSatang`, `operatingExpenseSatang`, `capexSatang`, `accrualProfitSatang`, and `cashFlowSurplusSatang`.
-9. **Verification Evidence (v2.7.0)**:
-   - `node tools/verify.cjs` PASS (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`), `node tools/test.cjs` **186/186** PASS (including `test/process-realism-v270.test.cjs`), `node tools/build.cjs` (`1,695,923` bytes), `node tools/benchmark.cjs` (`1.056 ms/tick` at 500 NPCs).
+1. **Multi-Scenario Bottleneck & Operational Crisis Resolution (`S.evaluateOperationalCrisesAndBottlenecks`, `S.contractOemMaintenance`, `S.unreservePartForRepair`)**:
+   - **Specialist Knowledge Gaps (`evaluateAutonomousHiring`)**: Scans active `w.knowledge.projects`, broken machine maintenance requirements, and product gaps to detect missing specialist subjects, scores recruitment candidates by subject proficiency (`educationFor`), and immediately assigns hired specialists to the required subject course.
+   - **Critical Machine Breakdown & Spare Part Deadlocks**: `P.maintain(w, hooks)` iterates across all unfinished maintenance tasks instead of blocking the entire queue on `x.maintenance[0]`. When a repair part exists in `w.inventory.materials` (`>= 1`) but is locked in `w.inventory.reserved` by unstarted units, `hooks.unreservePartForRepair(part)` releases the reservation so repairs proceed. If a machine stays broken (`> 180` minutes or no qualified internal technician with `>= 30` subject level) and cash exceeds survival reserve, `S.contractOemMaintenance(w, machineId)` hires an external OEM vendor (`post(w, "equipment", -oemFee)`), restoring machine condition and subsystems and logging `serviceRecords`.
+   - **Over-Capacity Contracts & Unsold Finished Stock (`evaluateCommercialSales`)**: When an active commercial installment order is within 24 hours of deadline and `< 50%` ready, NPCs autonomously call `renegotiateCommercialContract(w, contract.id)` to scale down remaining quantity and refund unearned escrow (`W.adjustCommercialEscrow`). When finished stock sits unsold (`>= 4` units or `ageDays >= 2` in `w.warehouse.finishedLots`), NPCs create `warehouseSale` clearance deals with `clearanceDiscountPct` (`12%–18%`) to convert stagnant stock into cash.
+2. **Counterfactual Personality & Capability Divergence (`S.runCounterfactualComparison`)**:
+   - Starting from an identical world seed (`S.clone(baseWorld)`), `S.runCounterfactualComparison(baseWorld, variantSpec, days)` applies targeted mutations (`ceoPersonality`, `technicianSubject`, `cashDeltaSatang`, `breakMachineId`) and advances both worlds deterministically to compare long-term cash, debt, reputation, research projects, OEM repairs, and board decisions.
+   - Prudent (`riskTaking: 20, conscientiousness: 88`) vs. bold (`riskTaking: 88, ambition: 88`) CEOs make context-sensitive decisions on R&D vs. technology licensing and debt vs. expansion without hardcoded outcomes.
+3. **Live Bottleneck Tracker, Causal Chains & Persistent Watchlist (`w.watchlist`, `S.toggleWatchlist`, `S.buildObservabilityView`)**:
+   - `S.buildObservabilityView(w)` provides a pure, zero-mutation causal view answering *"ใครกำลังทำอะไร ติดอะไร กำลังแก้ยังไง"*:
+     - `activeBottlenecks`: real-time blockers across `machine_breakdown`, `knowledge_gap`, `material_shortage`, `contract_overload`, `unsold_inventory`, and `hr_retention_risk`, each with `whatIsStuckTh`, `whyStuckTh`, and `howSolvingTh`.
+     - `peopleStatus`: live per-employee status (`doingTh`, `stuckTh`, `solvingTh`, `aspiration`, `latestMemoryTh`, `starred`).
+     - `causalChains`: recent cause-and-effect chains linking crises, negotiations, conflicts, and resolutions.
+   - `w.watchlist` (`people`, `events`, `threads`, `bottlenecks`, `notes`) persists across saves (`Save.validate`) and syncs with the UI (`🔍 ติดตามสด / คอขวด` sub-tab in Company Sheet and `⭐` star toggles).
+4. **Deep Human Life, Episodic Memory, Trust/Conflict & Organizational Dynamics**:
+   - **Personal Aspirations (`p.aspiration`) & Episodic Memories (`p.memories`, `p.historyLog`, `recordPersonMemory`)**: Every NPC derives a personal life aspiration (`executive_leader`, `independent_founder`, `master_specialist`, `mentor_builder`, `craft_perfectionist`, `financial_security`) from their locked Human Core profile, tracks `progressPct` in `updateSatisfactionAndKpi`, and records episodic memories from real events (promotions, passed-over grievances, QC rework friction/coaching, retention counter-offers, spin-offs).
+   - **Workplace Friction vs. Constructive Coaching (`w.culture.conflicts`)**: When a unit fails QA in `finishJob` or an employee is passed over in `evaluatePromotions`, interpersonal trust (`p.relationships[otherId].trust`), `p.career.promotionGrievance`, and `w.culture.conflicts` update based on inspector/leader empathy and fairness (strictly guarded so `otherId !== p.id`).
+   - **Internal Career Switching (`S.evaluateInternalCareerSwitch`) & Retention Counter-Offers (`S.evaluateEmployeeRetention`)**: Cross-trained employees whose learned subjects fit another department better can transfer internally (`w.culture.roleSwitches`). Before an employee with `considerLeaving` resigns in `settleDay`, the CEO can issue a retention counter-offer (`w.culture.retentionOffers`, wage raise + retention bonus) if cash exceeds survival reserve.
+   - **Living Spin-Off Firms (`S.evaluateEmployeeSpinoff`)**: Ambitious senior employees or departing staff with capital/grievances can found an alumni spin-off that registers in both `w.externalWorld.corporations[corpId]` and `w.externalWorld.living.firms[corpId]` (`partner` or `rival`), participating in the living global economy.
+5. **Verification Evidence (v2.8.0)**:
+   - `node tools/verify.cjs` PASS (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`), `node tools/test.cjs` **190/190** PASS (including `test/living-scenarios-human-depth-v280.test.cjs`), `node tools/build.cjs` PASS (`1,760,571` bytes), `node tools/benchmark.cjs` (`0.911 ms/tick` at 500 NPCs).
 
-## Historical v2.6.0 plant & commercial foundation
+## Historical v2.7.0 process-driven realism foundation
 
-Plant module: 20 equipment types, 42 product routes with actual worker labor, elapsed machine holds, temperatures, stations/capacity, wear, electricity and technical maintenance. Commercial sales: stock offers and 120/240/1000-unit supply contracts split 4–80-unit releases from real buyer/TH budgets held in `World.commercialEscrows`. Read `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md` and `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md`.
+Timed Material Processing (`w.plant.refineryBatches`) for all 40 recipes; 42 product routes with shared machine power/thermal guard; 20 equipment types with 5 subsystems, fault modes, and `purchased_new`/`used_refurbished`/`leased` acquisition; time-bound freight & 10 B2B services; real software/QA/SLA; physical warehouse lots (`w.warehouse`) with FEFO/FIFO; competitive public tenders (`w.commerce.tenders`), contract renegotiation/termination & `W.payFromCounterparty`; 180m biological livestock cycle & external firm accrual profit/COGS.
 
-## Historical v2.4.0 – v2.5.0 world & time foundation
+## Historical v2.3.0 – v2.6.0 foundations
 
-External World uses `COMPANY_SOURCE/js/world.js`, daily aggregate nation and firm accounts, finite material stocks, real interfirm transactions/in-transit shipments and indicator-based government/corporate choices. 12 nations/blocs, 28 opening firms plus later spin-offs, 66 bilateral relations. Time 1× uses 2 game minutes/real second; walking uses 8 cells/5-minute tick.
-
-## Historical v2.3.0 learned knowledge foundation
-
-170 learned subjects outside the locked Human Core (`docs/company/LEARNED_KNOWLEDGE_SYSTEM.md`, `KNOWLEDGE_SUBJECT_CATALOG.md`, `docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md`). `w.knowledge.projects` requires team prerequisites, disciplineMinutes, sample inputs, elapsed days, and independent QA.
-
-## Historical v2.2.0 SME progression, utilities & culture foundation
-
-- **6-Stage SME-to-Conglomerate Growth Progression Ladder & 12 Organic Milestones (`w.companyProgression`)**
-- **Real SME Utility Metering, Solar/Water Offsets & Voltage Brownout (`w.utilities`)**
-- **Workplace Culture, Water-Cooler Gossip, Clubs, Townhall Awards, Employee Parking Lot & Alumni Spin-Offs (`w.culture`)**
-- **10 Resource Classes, 64 Materials, 40 Recipes, 42 Products in 10 Product Families & 10 B2B Industrial Services**
-- **Permanently Locked Human Core 1.0.0 (`COMPANY_SOURCE/js/human-core.js`, SHA-256 `fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`)**
+- **v2.6.0:** Plant module (20 equipment types, 42 product routes) & commercial sales contracts (`World.commercialEscrows`).
+- **v2.4.0 – v2.5.0:** External World (`js/world.js`, 12 nations, 28+ firms, 66 bilateral relations), 1× time (2 game min/real sec), 8 cells/tick walk, `stockBatch`.
+- **v2.2.0 – v2.3.0:** 170 learned subjects outside the locked Human Core, 6-stage SME ladder, utilities/brownout, workplace culture, 64 materials, 40 recipes, 42 products, 10 B2B services, and Permanently Locked Human Core 1.0.0 (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).

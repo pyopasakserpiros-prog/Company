@@ -24,6 +24,7 @@
 | v2.5.0 | เวลาจำลองและฐานการผลิตเข้าคลัง | [รายงาน v2.5.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.5.0.md) |
 | v2.6.0 | เครื่องจักร งานช่าง และสัญญาขายเป็นงวด | [รายงาน v2.6.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md) |
 | v2.7.0 | การยกเครื่องความสมจริงเชิงกระบวนการทั้ง 8 ด้าน (Process-Driven Realism Overhaul) | [รายงาน v2.7.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) |
+| v2.8.0 | การทดลองโลกหลายสถานการณ์ การเปรียบเทียบโลกคู่ขนาน ระบบติดตามคอขวดสด และความลึกชีวิต/องค์กร (Living Scenarios, Observability & Human Depth) | [รายงาน v2.8.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.8.0.md) |
 
 ไม่พบรายงานแยกสำหรับ v0.7–v0.9, v1.1.0 หรือ v1.2.1 ในคลังปัจจุบัน; อ่าน [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) ก่อนสรุปรุ่นเหล่านั้น
 

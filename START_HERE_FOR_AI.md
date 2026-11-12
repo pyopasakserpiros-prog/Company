@@ -1,13 +1,13 @@
-> สถานะล่าสุด (12 พฤศจิกายน 2026): แพตช์ **v2.7.0 (`process-driven-realism-overhaul-v270`)** พัฒนาและตรวจสอบครบทั้ง 8 Workstreams ตาม [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) แล้ว (`186/186` tests ผ่าน) ดู [รายงาน v2.7.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) และ [เอกสารรับช่วง v2.7.0](docs/company/PROCESS_REALISM_V270_HANDOFF.md)
+> สถานะล่าสุด (12 พฤศจิกายน 2026): แพตช์ **v2.8.0 (`living-scenarios-observability-and-human-depth-v280`)** พัฒนาและตรวจสอบครบทั้ง 4 เสาหลักบนสาขา `main` แล้ว (`190/190` tests ผ่าน) ดู [รายงาน v2.8.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.8.0.md)
 
-# เริ่มงานกับ Company v2.7.0
+# เริ่มงานกับ Company v2.8.0
 
 ทุกครั้งอ่าน [AGENTS.md](AGENTS.md) → [สถานะจริง](project_status_and_ai_onboarding.md) → [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md) / [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md) → [.agents/skills](.agents/skills/README.md) และ source/test ที่กระทบ
 
-งานล่าสุดคือการยกเครื่องความสมจริงเชิงกระบวนการทั้ง 8 ด้านใน **v2.7.0**: คิวแปรรูปวัตถุดิบตามเวลาจริง (`w.plant.refineryBatches`), ขนส่งและบริการ B2B 10 แบบตามเวลา/ผลวัดจริง, ซอฟต์แวร์/QA/ปรับขอบเขตงาน, วิศวกรรมเครื่องจักร (ระบบย่อย 5 ด้าน/วินิจฉัยอาการเสีย/ซื้อใหม่-มือสอง-เช่า), คลังสินค้าล็อต/FIFO-FEFO/โซ่ความเย็น (`w.warehouse`), ประมูลภาครัฐแข่งขัน/เจรจาปรับสัญญา/ยุติสัญญา (`w.commerce.tenders`), และวงจรชีวภาพปศุสัตว์ 180 นาทีพร้อมบัญชีต้นทุนขายโลกภายนอก อ่าน [รายงาน v2.7.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md), [สัญญาระบบโรงงานและคลัง](docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md), [คู่มือโลก](docs/company/LIVING_WORLD_SYSTEM.md) และ [รับช่วง v2.7.0](docs/company/PROCESS_REALISM_V270_HANDOFF.md)
+งานล่าสุดใน **v2.8.0 (`living-scenarios-observability-and-human-depth-v280`)** ต่อยอดจากฐาน v2.7.0 ครบ 4 เสาหลัก:
+1. **การแก้คอขวดและวิกฤตหลายสถานการณ์อัตโนมัติ (`evaluateOperationalCrisesAndBottlenecks`, `contractOemMaintenance`, `unreservePartForRepair`)** — เมื่อบริษัทมีเงินแต่ขาดผู้รู้ เครื่องจักรสำคัญเสีย อะไหล่ถูกจองค้าง รับสัญญาเกินกำลัง หรือสินค้าสำเร็จรูปค้างคลัง ผู้บริหารและฝ่ายขาย/ปฏิบัติการจะตัดสินใจรับสมัครผู้เชี่ยวชาญรายวิชา ปลดจองอะไหล่จากงานที่ยังไม่เริ่ม จ้างช่างศูนย์ OEM ภายนอก เจรจาลดขนาดสัญญาล่วงหน้า หรือจัดโปรลดราคาระบายสต็อก (`clearanceDiscountPct`) โดยตรวจสอบย้อนกลับได้ทุกขั้นตอน
+2. **การเปรียบเทียบโลกคู่ขนาน (`S.runCounterfactualComparison`)** — เริ่มจาก seed โลกเดียวกันแล้วเปลี่ยนนิสัย CEO (รอบคอบ vs กล้าเสี่ยง), ความรู้ช่าง หรือเงินทุน เพื่อเทียบผลระยะยาวตามบริบทจริง
+3. **ระบบติดตามสดและปักหมุด (`S.buildObservabilityView`, `w.watchlist`, แท็บ `🔍 ติดตามสด / คอขวด`)** — เปิดดูแล้วรู้ทันทีว่า *"ใครกำลังทำอะไร ติดอะไร กำลังแก้ยังไง"* พร้อมห่วงโซ่สาเหตุ-ผลลัพธ์ และติดดาวคนที่สนใจข้ามวัน/เซฟได้
+4. **ความลึกของชีวิตและองค์กร (`p.aspiration`, `p.memories`, `w.culture.conflicts`, `evaluateInternalCareerSwitch`, `evaluateEmployeeRetention`, `evaluateEmployeeSpinoff`)** — เป้าหมายชีวิตส่วนตัว ความทรงจำจากประสบการณ์จริง ความเชื่อใจ/ความขัดแย้งหน้างาน การย้ายสายงานภายใน การยื่นข้อเสนอรั้่งตัวก่อนลาออก และการแยกตัวตั้งบริษัท Spin-off ที่มีชีวิตจริงใน `w.externalWorld.living.firms`
 
-เล่น `Company_single.html` ออฟไลน์ หรือ `COMPANY_SOURCE/index.html` ผ่าน local server ปุ่มบริษัทมีหน้าเครื่องจักร/งานช่าง/คิวแปรรูป/คลังล็อต และฝ่ายขาย/สัญญา/ผลประมูล เกมเดินเอง ไม่บังคับผู้เล่นรับงาน/ซื้อเครื่อง/ซ่อมแทน NPC
-
-ตรวจใน `COMPANY_SOURCE`: `npm test`, `npm run check`, `npm run build`, `npm run test:browser`, `node tools/benchmark.cjs` ผลล่าสุด **186/186 tests** (`node tools/test.cjs`); hash Human Core และ `AGENTS.md` ห้ามเปลี่ยนโดยไม่มีคำสั่งตรง
-
-วิชาเพิ่มตาม [เทมเพลต](docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md) อ่าน [ระบบวิชา](docs/company/LEARNED_KNOWLEDGE_SYSTEM.md) และ [ทะเบียน](docs/company/KNOWLEDGE_SUBJECT_CATALOG.md) ทุกแพตช์ต้องมีรายงานและปรับสกิล/status/เอกสารที่กระทบ พร้อมซิงก์สอง Master Skills ในแอป Gemini และตรวจ ZIP ฉบับสุดท้ายก่อนส่งมอบ
+ตรวจใน `COMPANY_SOURCE`: `node tools/verify.cjs`, `node tools/test.cjs` (**190/190 tests**), `node tools/build.cjs`, `node tools/benchmark.cjs`; hash Human Core และ `AGENTS.md` ห้ามเปลี่ยนโดยไม่มีคำสั่งตรง

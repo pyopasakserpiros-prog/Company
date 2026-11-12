@@ -679,6 +679,7 @@ function request(w,k,hooks,options={}){
     required:reqMinutes,
     workerId:null,
     partsConsumed:false,
+    createdAt:w.clock.absoluteMinute,
     diagnosedFaultTh:'ตรวจรับเครื่องจักร ตั้งศูนย์ และทดสอบเดินเครื่องปลอดภัย (Commissioning)'
   });
   log(w,'equipmentPurchased',`จัดหา ${spec.nameTh} (${mode}) รอช่างติดตั้ง`,{machineId:k,cost:effectiveCost,acquisitionMode:mode});
@@ -688,82 +689,89 @@ function request(w,k,hooks,options={}){
 function maintain(w,hooks){
   const x=ensure(w),minute=w.clock.absoluteMinute;if(minute%5)return;
   const busy=new Set();
-  const task=x.maintenance.find(t=>t.progress<t.required);if(!task)return;
-  const m=x.machines[task.machineId],spec=SPECS[m.id];
-  if(task.type==='install'&&minute<(m.availableAt||0)){
-    x.decisionTh=`รอส่งมอบ ${spec.nameTh} วันที่ ${Math.floor(m.availableAt/1440)+1}`;
-    return;
-  }
-  if(Object.keys(m.slots).length)return;
+  const tasks=x.maintenance.filter(t=>t.progress<t.required);if(!tasks.length)return;
   const hasDiagKit=Boolean(x.machines.diagnostic_kit&&x.machines.diagnostic_kit.status==='ready'&&x.machines.diagnostic_kit.condition>=25);
-  const candidates=w.people.filter(p=>p.employed&&p.atWork&&!busy.has(p.id)&&!p.path.length&&!(p.breakUntil>minute)&&!['eating','sleeping','resting'].includes(p.activity)&&repairSubject(p,m.id)>=spec.level);
-  candidates.sort((a,b)=>technicianCapability(b,m.id,hasDiagKit).speed-technicianCapability(a,m.id,hasDiagKit).speed);
-  const p=candidates[0];
-  if(!p){
-    const learner=w.people.find(p=>p.employed&&p.role==='engineer');
-    if(learner&&learner.education&&!learner.education.course)hooks.train?.(learner,'maintenance',spec.level);
-    x.decisionTh=`${spec.nameTh} รอช่างที่รู้ ${spec.subject} / การซ่อมบำรุง`;
-    return;
-  }
-  const cap=technicianCapability(p,m.id,hasDiagKit);
-  if(task.type==='repair'&&!task.diagnosedFaultTh){
-    const fm=m.faultMode||((spec.faultModes&&spec.faultModes[0])||{code:'wear_fault',nameTh:'ชิ้นส่วนหลักสึกหรอ',subsystem:'mechanical',part:repairPart(m.id)});
-    task.diagnosedFaultTh=`${fm.nameTh} (ความแม่นยำวินิจฉัย ${Math.round(cap.diagnosticAccuracy*100)}%)`;
-    if(m.faultMode){m.faultMode.diagnosed=true;m.faultMode.diagnosticScore=round(cap.diagnosticAccuracy*100);}
-  }
-  if(!task.partsConsumed&&task.type==='repair'){
-    const part=repairPart(m.id);
-    if((w.inventory.materials[part]||0)-(w.inventory.reserved[part]||0)<1){
-      x.decisionTh=`ซ่อม ${spec.nameTh} รออะไหล่ ${w.catalog.materials[part].nameTh}`;
+  for(const task of tasks){
+    const m=x.machines[task.machineId],spec=SPECS[m.id];
+    if(task.type==='install'&&minute<(m.availableAt||0)){
+      x.decisionTh=`รอส่งมอบ ${spec.nameTh} วันที่ ${Math.floor(m.availableAt/1440)+1}`;
+      continue;
+    }
+    if(Object.keys(m.slots).length)continue;
+    const candidates=w.people.filter(p=>p.employed&&p.atWork&&!busy.has(p.id)&&!p.path.length&&!(p.breakUntil>minute)&&!['eating','sleeping','resting'].includes(p.activity)&&repairSubject(p,m.id)>=spec.level);
+    candidates.sort((a,b)=>technicianCapability(b,m.id,hasDiagKit).speed-technicianCapability(a,m.id,hasDiagKit).speed);
+    const p=candidates[0];
+    if(!p){
+      const learner=w.people.find(p=>p.employed&&p.role==='engineer');
+      if(learner&&learner.education&&!learner.education.course)hooks.train?.(learner,'maintenance',spec.level);
+      x.decisionTh=`${spec.nameTh} รอช่างที่รู้ ${spec.subject} / การซ่อมบำรุง`;
+      continue;
+    }
+    const cap=technicianCapability(p,m.id,hasDiagKit);
+    if(task.type==='repair'&&!task.diagnosedFaultTh){
+      const fm=m.faultMode||((spec.faultModes&&spec.faultModes[0])||{code:'wear_fault',nameTh:'ชิ้นส่วนหลักสึกหรอ',subsystem:'mechanical',part:repairPart(m.id)});
+      task.diagnosedFaultTh=`${fm.nameTh} (ความแม่นยำวินิจฉัย ${Math.round(cap.diagnosticAccuracy*100)}%)`;
+      if(m.faultMode){m.faultMode.diagnosed=true;m.faultMode.diagnosticScore=round(cap.diagnosticAccuracy*100);}
+    }
+    if(!task.partsConsumed&&task.type==='repair'){
+      const part=repairPart(m.id);
+      if((w.inventory.materials[part]||0)-(w.inventory.reserved[part]||0)<1&&(w.inventory.materials[part]||0)>=1){
+        hooks.unreservePartForRepair?.(part);
+      }
+      if((w.inventory.materials[part]||0)-(w.inventory.reserved[part]||0)<1){
+        x.decisionTh=`ซ่อม ${spec.nameTh} รออะไหล่ ${w.catalog.materials[part].nameTh}`;
+        continue;
+      }
+      w.inventory.materials[part]--;
+      w.inventory.consumed[part]++;
+      x.partsConsumed=x.partsConsumed||{};
+      x.partsConsumed[part]=(x.partsConsumed[part]||0)+1;
+      task.partsConsumed=true;
+      task.partId=part;
+    }
+    task.workerId=p.id;
+    busy.add(p.id);
+    p.activity='working';
+    p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};
+    const station=Object.values(w.layout.stations).find(s=>s.kind==='assembly');
+    if(station&&(p.position.x!==station.access.x||p.position.y!==station.access.y)){
+      hooks.walk(p,station);
       return;
     }
-    w.inventory.materials[part]--;
-    w.inventory.consumed[part]++;
-    x.partsConsumed=x.partsConsumed||{};
-    x.partsConsumed[part]=(x.partsConsumed[part]||0)+1;
-    task.partsConsumed=true;
-    task.partId=part;
-  }
-  task.workerId=p.id;
-  p.activity='working';
-  p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};
-  const station=Object.values(w.layout.stations).find(s=>s.kind==='assembly');
-  if(station&&(p.position.x!==station.access.x||p.position.y!==station.access.y)){
-    hooks.walk(p,station);
+    task.progress=Math.min(task.required,task.progress+5*cap.speed);
+    const ratio=task.progress/task.required;
+    task.phase=ratio<0.25?'diagnosis':ratio<0.85?'repair_execution':'return_to_service_test';
+    hooks.claim?.(p);
+    p.activity='working';
+    p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};
+    p.plantTaskAt=minute;
+    hooks.learn?.(p,5);
+    if(task.progress>=task.required){
+      m.condition=task.type==='install'?(m.acquisitionMode==='used_refurbished'?85:100):Math.min(100,round(cap.postCondition));
+      m.subsystems=defaultSubsystems(m.condition);
+      m.faultMode=null;
+      m.status='ready';
+      m.lastPreventiveAt=minute;
+      if(m.heldSlots){m.slots=m.heldSlots;delete m.heldSlots;}
+      const rec={
+        at:minute,
+        machineId:m.id,
+        machineNameTh:spec.nameTh,
+        type:task.type,
+        workerId:p.id,
+        workerName:p.name,
+        partId:task.partId||null,
+        diagnosedFaultTh:task.diagnosedFaultTh||'บำรุงรักษาตามเกณฑ์สภาพ',
+        postCondition:m.condition,
+        returnToServiceTest:'passed'
+      };
+      x.serviceRecords=x.serviceRecords||[];
+      x.serviceRecords.unshift(rec);
+      if(x.serviceRecords.length>60)x.serviceRecords.pop();
+      log(w,'equipmentMaintained',`${p.name} ${task.type==='install'?'ติดตั้งและทดสอบเดินเครื่อง':'วินิจฉัย/ซ่อมบำรุงและทดสอบความปลอดภัย'} ${spec.nameTh} เสร็จ (${m.condition.toFixed(1)}%)`,{machineId:m.id,workerId:p.id,postCondition:m.condition});
+      x.maintenance=x.maintenance.filter(t=>t!==task);
+    }
     return;
-  }
-  task.progress=Math.min(task.required,task.progress+5*cap.speed);
-  const ratio=task.progress/task.required;
-  task.phase=ratio<0.25?'diagnosis':ratio<0.85?'repair_execution':'return_to_service_test';
-  hooks.claim?.(p);
-  p.activity='working';
-  p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};
-  p.plantTaskAt=minute;
-  hooks.learn?.(p,5);
-  if(task.progress>=task.required){
-    m.condition=task.type==='install'?(m.acquisitionMode==='used_refurbished'?85:100):Math.min(100,round(cap.postCondition));
-    m.subsystems=defaultSubsystems(m.condition);
-    m.faultMode=null;
-    m.status='ready';
-    m.lastPreventiveAt=minute;
-    if(m.heldSlots){m.slots=m.heldSlots;delete m.heldSlots;}
-    const rec={
-      at:minute,
-      machineId:m.id,
-      machineNameTh:spec.nameTh,
-      type:task.type,
-      workerId:p.id,
-      workerName:p.name,
-      partId:task.partId||null,
-      diagnosedFaultTh:task.diagnosedFaultTh||'บำรุงรักษาตามเกณฑ์สภาพ',
-      postCondition:m.condition,
-      returnToServiceTest:'passed'
-    };
-    x.serviceRecords=x.serviceRecords||[];
-    x.serviceRecords.unshift(rec);
-    if(x.serviceRecords.length>60)x.serviceRecords.pop();
-    log(w,'equipmentMaintained',`${p.name} ${task.type==='install'?'ติดตั้งและทดสอบเดินเครื่อง':'วินิจฉัย/ซ่อมบำรุงและทดสอบความปลอดภัย'} ${spec.nameTh} เสร็จ (${m.condition.toFixed(1)}%)`,{machineId:m.id,workerId:p.id,postCondition:m.condition});
-    x.maintenance=x.maintenance.filter(t=>t!==task);
   }
 }
 
@@ -788,6 +796,7 @@ function review(w,hooks){
         required:m.condition<25?120:45,
         workerId:null,
         partsConsumed:false,
+        createdAt:w.clock.absoluteMinute,
         diagnosedFaultTh:fm.nameTh
       });
       log(w,'equipmentRepairPlanned',`วางแผนซ่อม ${SPECS[m.id].nameTh} (${fm.nameTh})`,{cost,machineId:m.id,faultCode:fm.code});

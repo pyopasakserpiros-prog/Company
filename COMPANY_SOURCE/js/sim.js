@@ -16,7 +16,7 @@
   function (H, D, L, E, W, P) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.7.0",
+      RELEASE_VERSION = "2.8.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -1004,7 +1004,70 @@
         townhallAwards: [],
         alumniSpinoffs: [],
         parkedVehicles: [],
+        conflicts: [],
+        retentionOffers: [],
+        roleSwitches: [],
       };
+    }
+
+    function freshWatchlist() {
+      return {
+        version: 1,
+        people: [],
+        events: [],
+        threads: [],
+        bottlenecks: [],
+        notes: [],
+      };
+    }
+
+    function ensureWatchlist(w) {
+      if (!w.watchlist || typeof w.watchlist !== "object") {
+        w.watchlist = freshWatchlist();
+      }
+      if (!int(w.watchlist.version, 1)) w.watchlist.version = 1;
+      for (const k of ["people", "events", "threads", "bottlenecks", "notes"]) {
+        if (!Array.isArray(w.watchlist[k])) w.watchlist[k] = [];
+      }
+      return w.watchlist;
+    }
+
+    function toggleWatchlist(w, targetType, targetId, labelTh = "") {
+      const wl = ensureWatchlist(w);
+      const mapKey = {
+        person: "people",
+        people: "people",
+        event: "events",
+        events: "events",
+        thread: "threads",
+        threads: "threads",
+        bottleneck: "bottlenecks",
+        bottlenecks: "bottlenecks",
+      }[targetType];
+      if (!mapKey || typeof targetId !== "string" || !targetId.trim()) {
+        return { ok: false, code: "invalidWatchlistTarget", message: "เป้าหมายการติดดาวไม่ถูกต้อง" };
+      }
+      const list = wl[mapKey];
+      const idx = list.indexOf(targetId);
+      let starred = false;
+      if (idx >= 0) {
+        list.splice(idx, 1);
+      } else {
+        list.unshift(targetId);
+        if (list.length > 60) list.pop();
+        starred = true;
+      }
+      if (labelTh && starred) {
+        wl.notes.unshift({
+          at: now(w),
+          day: day(w),
+          targetType: mapKey,
+          targetId,
+          labelTh: String(labelTh).slice(0, 120),
+        });
+        if (wl.notes.length > 40) wl.notes.pop();
+      }
+      return { ok: true, targetType: mapKey, targetId, starred, count: list.length };
     }
 
     function freshGeopolitics(seedStr = "company") {
@@ -1482,6 +1545,64 @@
           p.career.dutyTh = step?.dutyTh || deptSpec.coreDutiesTh;
         }
       }
+      if (typeof p.career.promotionGrievance !== "number" || !Number.isFinite(p.career.promotionGrievance)) {
+        p.career.promotionGrievance = 0;
+      }
+      if (!Array.isArray(p.memories)) p.memories = [];
+      if (!Array.isArray(p.historyLog)) p.historyLog = [];
+      if (!p.aspiration || typeof p.aspiration !== "object") {
+        const per = p.profile?.personality || {};
+        const val = p.profile?.values || {};
+        let code = "financial_security";
+        let titleTh = "สร้างความมั่นคงทางการเงินและดูแลครอบครัว";
+        if (p.role === "coordinator" || (per.ambition ?? 50) >= 68 && (val.influence ?? 50) >= 62) {
+          code = "executive_leader";
+          titleTh = "ก้าวขึ้นเป็นผู้นำบริหารและนำพาองค์กรเติบโต";
+        } else if ((per.ambition ?? 50) >= 62 && (val.autonomy ?? 50) >= 60) {
+          code = "independent_founder";
+          titleTh = "สั่งสมฝีมือและทุนเพื่อแยกตัวเปิดกิจการของตนเอง (Spin-off)";
+        } else if ((val.craftsmanship ?? 50) >= 65 || (per.openness ?? 50) >= 66) {
+          code = "master_specialist";
+          titleTh = "บรรลุความเชี่ยวชาญเฉพาะทางระดับปรมาจารย์ในสายวิชาชีพ";
+        } else if ((val.care ?? 50) >= 65 || (per.agreeableness ?? 50) >= 65) {
+          code = "mentor_builder";
+          titleTh = "เป็นเสาหลักถ่ายทอดวิชาและสร้างทีมที่อบอุ่นไว้วางใจกัน";
+        } else if ((per.conscientiousness ?? 50) >= 66) {
+          code = "craft_perfectionist";
+          titleTh = "รักษามาตรฐานคุณภาพสูงสุดและส่งมอบงานไร้ข้อผิดพลาด";
+        }
+        p.aspiration = {
+          id: code,
+          code,
+          titleTh,
+          progressPct: 15,
+          updatedDay: w ? day(w) : 1,
+        };
+      }
+    }
+
+    function recordPersonMemory(w, p, type, textTh, delta = {}) {
+      if (!p) return null;
+      ensurePersonExtensions(w, p);
+      const rec = {
+        at: w ? now(w) : 540,
+        day: w ? day(w) : 1,
+        type: String(type || "experience"),
+        textTh: String(textTh || ""),
+        moraleDelta: Number(delta.morale || 0),
+        trustDelta: Number(delta.trust || 0),
+        otherPersonId: delta.otherPersonId ? String(delta.otherPersonId) : null,
+      };
+      p.memories.unshift(rec);
+      if (p.memories.length > 24) p.memories.pop();
+      p.historyLog.unshift({
+        at: rec.at,
+        day: rec.day,
+        type: rec.type,
+        summaryTh: rec.textTh,
+      });
+      if (p.historyLog.length > 40) p.historyLog.pop();
+      return rec;
     }
     function updateSatisfactionAndKpi(w, p, currentDay) {
       ensurePersonExtensions(w, p);
@@ -1513,6 +1634,18 @@
       const helpScore = Math.min(10, ((p.experience.helpMinutes || 0) / 25) * 3 + (p.career.menteesHelped || 0) * 1.2);
       const rawKpi = skillLv * 0.45 + taskScore + workScore + helpScore + (p.state.morale - 50) * 0.1;
       p.career.kpiScore = Math.round(clamp(rawKpi, 10, 100) * 10) / 10;
+      if (p.aspiration && typeof p.aspiration === "object") {
+        const code = p.aspiration.code;
+        let prog = 20;
+        if (code === "executive_leader") prog = clamp((p.career.level || 1) * 14 + (p.career.promotions || 0) * 12, 10, 100);
+        else if (code === "independent_founder") prog = clamp(Math.round(((p.pay.wallet || 0) / 240000) * 55 + (p.career.level || 1) * 12), 10, 100);
+        else if (code === "master_specialist") prog = clamp(Math.round(skillLv * 0.85 + (p.career.tasksCompleted || 0) * 1.5), 10, 100);
+        else if (code === "mentor_builder") prog = clamp(Math.round(25 + ((p.experience.helpMinutes || 0) / 10) + (p.career.menteesHelped || 0) * 8), 10, 100);
+        else if (code === "craft_perfectionist") prog = clamp(Math.round(p.career.kpiScore * 0.9 + (p.career.tasksCompleted || 0)), 10, 100);
+        else prog = clamp(Math.round(((p.pay.wallet || 0) / 300000) * 70 + (p.career.lifeMilestones?.length || 0) * 15), 10, 100);
+        p.aspiration.progressPct = prog;
+        p.aspiration.updatedDay = currentDay;
+      }
     }
 
     function createPerson(w, pid, name, role, wage) {
@@ -1620,8 +1753,9 @@
       person.career.level = 1;
       person.career.badge = step.badge;
       person.career.titleTh = isFirstCEO ? `ผู้บริหารสูงสุด / CEO (${step.titleTh})` : step.titleTh;
-      updateSatisfactionAndKpi(w, person, 1);
       person.education = educationFor(person);
+      ensurePersonExtensions(w, person);
+      updateSatisfactionAndKpi(w, person, 1);
       return person;
     }
 
@@ -1852,6 +1986,43 @@
           wh.materialLots[mId] = lots.filter((l) => l.qty > 0);
         }
       }
+      for (const [pId, totalFin] of Object.entries(w.inventory?.finished || {})) {
+        if (!Array.isArray(wh.finishedLots[pId])) wh.finishedLots[pId] = [];
+        const fLots = wh.finishedLots[pId];
+        const fSum = fLots.reduce((a, l) => a + (l.qty || 0), 0);
+        if (fSum < totalFin) {
+          const diff = totalFin - fSum;
+          const prod = w.catalog?.products?.[pId];
+          const isFoodProd = prod?.industry === "food" || prod?.industry === "biomed";
+          const bomCost = prod
+            ? Object.entries(prod.bom || {}).reduce((acc, [m, q]) => acc + (w.catalog?.materials?.[m]?.unitCost || 1000) * q, 0)
+            : 5000;
+          fLots.push({
+            lotId: `flot-${pId}-d${day(w)}-${fLots.length + 1}`,
+            productId: pId,
+            qty: diff,
+            unitCostSatang: bomCost,
+            createdDay: day(w),
+            ageDays: 0,
+            expiresDay: isFoodProd ? day(w) + (coldOk ? 8 : 4) : null,
+            coldChainProtected: isFoodProd ? coldOk : false,
+            status: "ready",
+          });
+        } else if (fSum > totalFin) {
+          let rem = fSum - totalFin;
+          fLots.sort((a, b) => (a.expiresDay ?? 999999) - (b.expiresDay ?? 999999) || a.createdDay - b.createdDay);
+          for (const l of fLots) {
+            if (rem <= 0) break;
+            const take = Math.min(l.qty, rem);
+            l.qty -= take;
+            rem -= take;
+          }
+          wh.finishedLots[pId] = fLots.filter((l) => l.qty > 0);
+        }
+        for (const l of wh.finishedLots[pId]) {
+          l.ageDays = Math.max(0, day(w) - (l.createdDay || day(w)));
+        }
+      }
       const stagedBatches = Object.values(w.plant?.refineryBatches || {}).filter(
         (b) => b.inputsReserved && !b.inputsConsumed && !["released", "cancelled", "scrapped"].includes(b.status),
       );
@@ -1901,6 +2072,11 @@
         const lots = w.warehouse.materialLots?.[mId] || [];
         const sum = lots.reduce((a, l) => a + (l.qty || 0), 0);
         if (sum !== totalStock) errors.push(`warehouse lot mismatch ${mId}: ${sum} !== ${totalStock}`);
+      }
+      for (const [pId, totalFin] of Object.entries(w.inventory?.finished || {})) {
+        const fLots = w.warehouse.finishedLots?.[pId] || [];
+        const sum = fLots.reduce((a, l) => a + (l.qty || 0), 0);
+        if (sum !== totalFin) errors.push(`warehouse finished lot mismatch ${pId}: ${sum} !== ${totalFin}`);
       }
       return errors;
     }
@@ -6293,6 +6469,7 @@
         companyProgression: freshCompanyProgression(),
         utilities: freshUtilities(),
         culture: freshCulture(),
+        watchlist: freshWatchlist(),
         reputation: 45,
         policies: {
           autoBuy: true,
@@ -6332,6 +6509,8 @@
       if (int(options.initialHeadcount, 9, 500)) {
         scaleCompany(w, options.initialHeadcount, { freeGrant: true });
       }
+      for (const p of w.people) ensurePersonExtensions(w, p);
+      ensureWatchlist(w);
       return w;
     }
 
@@ -6399,6 +6578,16 @@
         if(previous&&previous.status!=="paid"){
           if(now(w)>previous.deadline+14*1440&&!previous.materialConsumed){
             terminateCommercialContract(w,contract.id,"ไม่สามารถจัดหาวัตถุดิบส่งมอบทันกำหนดเกิน 14 วัน");
+          } else if(
+            now(w)>previous.deadline-1440&&
+            contract.quantity>(contract.ordered||1)&&
+            (contract.renegotiatedCount||0)<2
+          ){
+            const readyUnits=Object.values(w.units).filter(u=>u.orderId===previous.id&&u.stage==="ready").length;
+            if(readyUnits<Math.ceil(previous.quantity*0.5)){
+              renegotiateCommercialContract(w,contract.id);
+              c.decisionTh=`เจรจาเลื่อนกำหนดและปรับลดภาระสัญญา ${contract.customerName} เหลือ ${contract.quantity} ชิ้น คืนเงินกันส่วนต่างให้ผู้ซื้อ`;
+            }
           }
           continue;
         }
@@ -6418,14 +6607,18 @@
         if(gap&&learner){plantHooks(w).train(learner,gap.id,gap.level);c.decisionTh=`เตรียมทีมก่อนเสนอขายรัฐ: ${learner.name} เรียน ${SUBJECTS[learner.education.course]||learner.education.course}`;commerceLog(w,"publicProcurementPreparation",c.decisionTh,{personId:learner.id,subjectId:learner.education.course});}
       }
       // Sell real free warehouse goods first. No income is booked until the normal shipment/invoice pipeline runs.
-      if(activeOrders(w).length<2){
-        const stock=productionView(w).find(x=>x.stock>=2);
-        if(stock){const product=w.catalog.products[stock.id],buyer=Object.values(w.externalWorld.corporations).find(b=>(b.buysProducts||[]).includes(product.id));
-          if(buyer){const qty=Math.min(stock.stock,20),unitPrice=Math.round(product.priceMin*.98),contractId=id(w,"warehouseSale");
-            if(W.reserveCommercial(w,contractId,'firm',buyer.id,qty*unitPrice)){
-              const contract=c.contracts[contractId]={id:contractId,productId:product.id,buyerId:buyer.id,buyerType:'firm',customerName:buyer.nameTh,quantity:qty,ordered:0,delivered:0,paidSatang:0,unitPrice,installmentQty:qty,intervalDays:1,deliveryWindowDays:5,nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:'warehouse',createdDay:today};
-              commerceLog(w,"warehouseStockOffered",`ฝ่ายขายเสนอคลัง ${product.nameTh} ${qty} ชิ้น ให้ ${buyer.nameTh} ผู้ซื้อกันเงินจริงแล้ว`,{contractId:contract.id});
-            }
+      const stock=productionView(w).sort((a,b)=>b.stock-a.stock).find(x=>x.stock>=2);
+      if(stock&&(activeOrders(w).length<3||stock.stock>=6)){
+        const product=w.catalog.products[stock.id],buyer=Object.values(w.externalWorld.corporations).find(b=>(b.buysProducts||[]).includes(product.id));
+        if(buyer&&!Object.values(c.contracts).some(x=>x.kind==="warehouse"&&x.status==="awarded"&&x.productId===product.id)){
+          const fLots=w.warehouse?.finishedLots?.[product.id]||[];
+          const maxAge=fLots.reduce((m,l)=>Math.max(m,l.ageDays||0),0);
+          const discountMult=stock.stock>=8||maxAge>=3?0.92:0.98;
+          const qty=Math.min(stock.stock,20),unitPrice=Math.max(1,Math.round(product.priceMin*discountMult)),contractId=id(w,"warehouseSale");
+          if(W.reserveCommercial(w,contractId,'firm',buyer.id,qty*unitPrice)){
+            const contract=c.contracts[contractId]={id:contractId,productId:product.id,buyerId:buyer.id,buyerType:'firm',customerName:buyer.nameTh,quantity:qty,ordered:0,delivered:0,paidSatang:0,unitPrice,installmentQty:qty,intervalDays:1,deliveryWindowDays:5,nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:'warehouse',createdDay:today,clearanceDiscountPct:Math.round((1-discountMult)*100)};
+            c.decisionTh=`ฝ่ายขายจัดดีลระบายสต็อก ${product.nameTh} ${qty} ชิ้น ให้ ${buyer.nameTh} (ส่วนลด ${Math.round((1-discountMult)*100)}%)`;
+            commerceLog(w,"warehouseStockOffered",`ฝ่ายขายเสนอคลัง ${product.nameTh} ${qty} ชิ้น ให้ ${buyer.nameTh} ผู้ซื้อกันเงินจริงแล้ว`,{contractId:contract.id,discountPct:Math.round((1-discountMult)*100)});
           }
         }
       }
@@ -6473,7 +6666,16 @@
       }return errors;
     }
     function productionSteps(product) { return P.route(product).map(s=>s.nameTh); }
-    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),learnSubject:(p,subj,minutes)=>learnSubject(p,subj,minutes,false),consumeInput:(inMat,qty)=>safeDeductMaterial(w,inMat,qty),releaseBatch:b=>completeRefineryBatch(w,b),warehouseAvailable:addSlots=>warehouseUsed(w)+addSlots<=warehouseCapacity(w),isMaterialReady:matId=>materialReady(w,matId),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
+    function unreservePartForRepair(w, partId) {
+      for (const u of Object.values(w.units || {})) {
+        if (u.reserved && !u.materialConsumed && w.catalog.products[u.productId]?.bom?.[partId]) {
+          unreserve(w, u);
+          return true;
+        }
+      }
+      return false;
+    }
+    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),learnSubject:(p,subj,minutes)=>learnSubject(p,subj,minutes,false),consumeInput:(inMat,qty)=>safeDeductMaterial(w,inMat,qty),releaseBatch:b=>completeRefineryBatch(w,b),warehouseAvailable:addSlots=>warehouseUsed(w)+addSlots<=warehouseCapacity(w),isMaterialReady:matId=>materialReady(w,matId),unreservePartForRepair:part=>unreservePartForRepair(w,part),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
     function warehouseUsed(w){return Object.values(w.units).filter(u=>u.stage==="ready").reduce((a,u)=>a+P.storageSize(w.catalog.products[u.productId]),0);}
     function warehouseCapacity(w){return 120*facilityLevel(w,"warehouse")+((w.facilities?.constructedPlots||[]).includes("warehouseAnnex")?240:0);}
     function productionView(w) {
@@ -7008,30 +7210,50 @@
         w.policies.wellbeingDaily * employed.length;
       const runwayDays = burn > 0 ? w.finance.cash / burn : 999;
       const openJobs = Object.values(w.jobs).filter((j) => !j.assignee);
+      const maintQueue = w.plant?.maintenance?.filter((t) => t.progress < t.required) || [];
+      const needMaintSpecialist = maintQueue.some((t) => {
+        const spec = P.SPECS[t.machineId];
+        return spec && !employed.some((p) => ["engineer", "assembler", "inspector", "logistics"].includes(p.role) && subjectLevel(p, spec.subject) >= spec.level);
+      });
+      const latestBoard = w.executiveBoard?.decisionLedger?.[0] || null;
+      const needBoardStaff = Boolean(latestBoard && latestBoard.resolution === "deferred_missing_staff" && runwayDays > 18);
       const overloaded =
         options.force ||
+        needMaintSpecialist ||
+        needBoardStaff ||
         (openJobs.length >= Math.max(4, employed.length) &&
           runwayDays > 30 &&
           w.finance.cash >= w.catalog.rules.hireFee + burn * 30);
       if (!overloaded || w.finance.cash < w.catalog.rules.hireFee) return false;
       const list = candidates(w);
       if (!list.length) return false;
+      const targetSubject =
+        options.subjectId ||
+        (needMaintSpecialist && maintQueue[0] && P.SPECS[maintQueue[0].machineId]?.subject) ||
+        null;
       const preferredRole =
         options.role ||
-        (openJobs.some((j) => j.kind === "assembly" || j.kind === "rework")
-          ? "assembler"
-          : openJobs.some((j) => j.kind === "qa")
-            ? "inspector"
-            : openJobs.some((j) => j.kind === "packing" || j.kind === "shipping")
+        (needMaintSpecialist
+          ? "engineer"
+          : needBoardStaff && latestBoard?.category === "software"
+            ? "engineer"
+            : needBoardStaff && latestBoard?.category === "fleet"
               ? "logistics"
-              : "assembler");
+              : openJobs.some((j) => j.kind === "assembly" || j.kind === "rework")
+                ? "assembler"
+                : openJobs.some((j) => j.kind === "qa")
+                  ? "inspector"
+                  : openJobs.some((j) => j.kind === "packing" || j.kind === "shipping")
+                    ? "logistics"
+                    : "assembler");
       const role = own(w.catalog.roles, preferredRole);
       const skillSpec = role && own(w.catalog.skills, role.skill);
       if (!skillSpec) return false;
       const scored = list.map((candidate) => {
         const skill = H.createSkill(candidate.profile, skillSpec);
         const ability = H.evaluateAbility(candidate.profile, H.createState(candidate.profile), skill, skillSpec);
-        const score = ability.aptitudeFit * 0.55 + skill.level * 0.25 +
+        const subjBonus = targetSubject ? (candidate.education?.subjects?.[targetSubject] || 0) * 0.45 : 0;
+        const score = ability.aptitudeFit * 0.55 + skill.level * 0.25 + subjBonus +
           candidate.profile.personality.conscientiousness * 0.08 +
           candidate.profile.personality.integrity * 0.06 -
           (ceo.profile.personality.prudence ?? 50) * candidate.dailyWage / 1000000;
@@ -7043,11 +7265,28 @@
         candidateId: pick.candidate.id,
         role: preferredRole,
       });
-      if (res.ok) event(w, "recruitmentDecision", `${ceo.name} เลือก ${pick.candidate.name} เข้าร่วมทีม`, {
-        personId: ceo.id, candidateId: res.personId, role: preferredRole,
-        score: Math.round(pick.score * 10) / 10,
-        reason: "ประเมินความถนัด ทักษะ นิสัย และค่าจ้างตามตำแหน่งที่ขาด",
-      });
+      if (res.ok) {
+        if (targetSubject) {
+          const hired = w.people.find((p) => p.id === res.personId);
+          if (hired) {
+            ensureKnowledge(w);
+            const reqLv = Math.max(45, options.subjectLevel || (maintQueue[0] && P.SPECS[maintQueue[0].machineId]?.level) || 45);
+            hired.education.subjects[targetSubject] = Math.max(hired.education.subjects[targetSubject] || 0, reqLv);
+            if (SUBJECT_PREREQUISITES[targetSubject]) {
+              const pre = SUBJECT_PREREQUISITES[targetSubject];
+              hired.education.subjects[pre] = Math.max(hired.education.subjects[pre] || 0, prerequisiteLevel(targetSubject));
+            }
+          }
+        }
+        event(w, "recruitmentDecision", `${ceo.name} เลือก ${pick.candidate.name} เข้าร่วมทีม${targetSubject ? ` (เสริมผู้รู้วิชา${SUBJECTS[targetSubject] || targetSubject})` : ""}`, {
+          personId: ceo.id, candidateId: res.personId, role: preferredRole,
+          targetSubject: targetSubject || null,
+          score: Math.round(pick.score * 10) / 10,
+          reason: targetSubject
+            ? `ว่าจ้างผู้เชี่ยวชาญเฉพาะทางวิชา${SUBJECTS[targetSubject] || targetSubject} เพื่อปลดล็อกคอขวดเครื่องจักร/สายธุรกิจ`
+            : "ประเมินความถนัด ทักษะ นิสัย และค่าจ้างตามตำแหน่งที่ขาด",
+        });
+      }
       return res.ok ? true : false;
     }
 
@@ -7300,6 +7539,192 @@
       );
     }
 
+    function contractOemMaintenance(w, machineId, options = {}) {
+      const x = P.ensure(w);
+      const m = x.machines[machineId];
+      const spec = P.SPECS[machineId];
+      if (!m || !spec) {
+        return { ok: false, code: "unknownMachine", message: "ไม่พบเครื่องจักรที่ระบุ" };
+      }
+      const task = x.maintenance.find((t) => t.machineId === machineId && t.progress < t.required);
+      if (!task && !options.force) {
+        return { ok: false, code: "noActiveMaintenance", message: "เครื่องจักรนี้ไม่มีใบงานซ่อมหรือติดตั้งค้างอยู่" };
+      }
+      const kind = task ? task.kind : m.status === "installing" ? "install" : "repair";
+      const serviceFee = Math.max(15000, Math.round(spec.cost * (kind === "install" ? 0.035 : 0.045)));
+      if (w.finance.cash < serviceFee) {
+        return { ok: false, code: "insufficientCash", message: "เงินสดไม่พอจ่ายค่าจ้างทีมช่าง OEM ภายนอก" };
+      }
+      if (kind === "repair") {
+        const part = P.repairPart(machineId);
+        if ((w.inventory.materials[part] - w.inventory.reserved[part]) < 1 && (w.inventory.materials[part] || 0) >= 1) {
+          unreservePartForRepair(w, part);
+        }
+        if ((w.inventory.materials[part] - w.inventory.reserved[part]) < 1) {
+          return {
+            ok: false,
+            code: "missingSparePart",
+            partId: part,
+            partNameTh: w.catalog.materials[part]?.nameTh || part,
+            message: `ยังขาดอะไหล่ซ่อมจริง (${w.catalog.materials[part]?.nameTh || part}) ในคลัง`,
+          };
+        }
+        if (!task || !task.partConsumed) {
+          w.inventory.materials[part] -= 1;
+          w.inventory.consumed[part] += 1;
+          x.partsConsumed[part] = (x.partsConsumed[part] || 0) + 1;
+          if (task) task.partConsumed = true;
+        }
+      }
+      post(w, "equipment", -serviceFee, `oem_maint:${machineId}:${now(w)}`);
+      if (task) {
+        task.progress = task.required;
+        task.technicianId = "oem_contractor";
+        x.maintenance = x.maintenance.filter((t) => t.progress < t.required);
+      }
+      m.condition = kind === "install" ? 96 : 92;
+      m.status = "ready";
+      m.faultReason = null;
+      m.subsystemFault = null;
+      if (m.subsystems && typeof m.subsystems === "object") {
+        for (const subKey of Object.keys(m.subsystems)) {
+          m.subsystems[subKey] = Math.max(m.subsystems[subKey] || 90, 92);
+        }
+      }
+      event(
+        w,
+        "oemMaintenanceContracted",
+        `🛠️ ว่าจ้างทีมวิศวกร OEM ภายนอกเข้า${kind === "install" ? "ติดตั้งและตั้งค่า" : "ซ่อมบำรุง"} ${spec.nameTh} สำเร็จ (ค่าบริการ ฿${(serviceFee / 100).toLocaleString("th-TH")})`,
+        {
+          machineId,
+          kind,
+          serviceFeeSatang: serviceFee,
+          condition: m.condition,
+        },
+      );
+      return { ok: true, machineId, kind, serviceFeeSatang: serviceFee, condition: m.condition };
+    }
+
+    function evaluateOperationalCrisesAndBottlenecks(w) {
+      const x = P.ensure(w);
+      const actions = [];
+      const employed = w.people.filter((p) => p.employed);
+      const ceo = employed.find((p) => p.role === "coordinator") || employed[0] || null;
+      const risk = ceo?.profile?.personality?.riskTaking ?? 50;
+      const prudence = ceo?.profile?.personality?.prudence ?? 50;
+
+      // 1. Check broken or installing plant machines stuck in maintenance queue
+      for (const task of x.maintenance.filter((t) => t.progress < t.required)) {
+        const spec = P.SPECS[task.machineId];
+        const m = x.machines[task.machineId];
+        if (!spec || !m) continue;
+        if (m.status === "ordered" && m.deliveryMinute > now(w)) continue;
+        const waitedMinutes = Math.max(0, now(w) - (task.createdAt || 0));
+        const hasTech = employed.some(
+          (p) =>
+            ["engineer", "assembler", "inspector", "logistics"].includes(p.role) &&
+            subjectLevel(p, spec.subject) >= spec.level,
+        );
+        if (task.kind === "repair" && !task.partConsumed) {
+          const part = P.repairPart(task.machineId);
+          if ((w.inventory.materials[part] - w.inventory.reserved[part]) < 1 && (w.inventory.materials[part] || 0) >= 1) {
+            if (unreservePartForRepair(w, part)) {
+              actions.push({ type: "unreservedRepairPart", machineId: task.machineId, partId: part });
+            }
+          }
+          const inTransit = Object.values(w.purchases).some((po) => po.materialId === part && po.status === "transit");
+          if ((w.inventory.materials[part] - w.inventory.reserved[part]) < 1 && !inTransit && w.policies.autoBuy) {
+            const po = placePurchase(w, part, 2);
+            if (po) {
+              actions.push({ type: "orderedSparePart", machineId: task.machineId, partId: part, purchaseId: po.id });
+            }
+          }
+        }
+        if (!hasTech) {
+          // Assign a staff member to study the required subject if not already studying
+          const learner = employed
+            .filter((p) => ["engineer", "assembler", "inspector", "logistics"].includes(p.role))
+            .sort((a, b) => subjectLevel(b, spec.subject) - subjectLevel(a, spec.subject))[0];
+          if (learner) {
+            ensureKnowledge(w);
+            if (!learner.education.course) {
+              let course = spec.subject;
+              let desired = spec.level;
+              const seen = new Set();
+              while (
+                SUBJECT_PREREQUISITES[course] &&
+                subjectLevel(learner, SUBJECT_PREREQUISITES[course]) < prerequisiteLevel(course) &&
+                !seen.has(course)
+              ) {
+                seen.add(course);
+                desired = prerequisiteLevel(course);
+                course = SUBJECT_PREREQUISITES[course];
+              }
+              learner.education.course = course;
+              learner.education.courseLevel = desired;
+              actions.push({ type: "assignedSpecialistStudy", personId: learner.id, subjectId: course, targetLevel: desired });
+            }
+          }
+          // If cash-rich or waiting a long time, hire a specialist or contract OEM maintenance
+          const pools = computeFinancialPools(w);
+          const canHire = w.finance.cash >= pools.survivalReserveSatang + w.catalog.rules.hireFee * 2;
+          if (canHire && waitedMinutes >= (risk >= 60 ? 60 : 180) && employed.length < w.catalog.rules.maxPeople) {
+            const hired = evaluateAutonomousHiring(w, {
+              force: true,
+              role: "engineer",
+              subjectId: spec.subject,
+              subjectLevel: spec.level,
+            });
+            if (hired) {
+              actions.push({ type: "hiredSpecialist", machineId: task.machineId, subjectId: spec.subject });
+              continue;
+            }
+          }
+          const oemWaitThreshold = prudence >= 65 ? 180 : 300;
+          if (waitedMinutes >= oemWaitThreshold && w.finance.cash >= pools.survivalReserveSatang + Math.round(spec.cost * 0.08)) {
+            const oemRes = contractOemMaintenance(w, task.machineId);
+            if (oemRes.ok) {
+              actions.push({ type: "contractedOemMaintenance", machineId: task.machineId, feeSatang: oemRes.serviceFeeSatang });
+            }
+          }
+        } else if (waitedMinutes >= 480) {
+          // Even with a technician, if everyone is overloaded with production for >8 hours, contract OEM
+          const pools = computeFinancialPools(w);
+          if (w.finance.cash >= pools.survivalReserveSatang + Math.round(spec.cost * 0.08)) {
+            const oemRes = contractOemMaintenance(w, task.machineId);
+            if (oemRes.ok) {
+              actions.push({ type: "contractedOemMaintenance", machineId: task.machineId, feeSatang: oemRes.serviceFeeSatang });
+            }
+          }
+        }
+      }
+
+      // 2. Check executive board deferred_missing_staff
+      const latestBoard = w.executiveBoard?.decisionLedger?.[0] || null;
+      if (latestBoard && latestBoard.resolution === "deferred_missing_staff") {
+        const opKind =
+          latestBoard.category === "software"
+            ? "software"
+            : latestBoard.category === "fleet"
+              ? "freight"
+              : null;
+        if (opKind && OPERATIONS_SUBJECTS[opKind]) {
+          const missing = teamCoverage(w, OPERATIONS_SUBJECTS[opKind]).filter((r) => !r.ready);
+          for (const gap of missing.slice(0, 2)) {
+            const learner = employed
+              .filter((p) => !p.education?.course)
+              .sort((a, b) => subjectLevel(b, gap.id) - subjectLevel(a, gap.id))[0];
+            if (learner) {
+              learner.education.course = gap.id;
+              learner.education.courseLevel = gap.level;
+              actions.push({ type: "assignedBoardSkillStudy", personId: learner.id, subjectId: gap.id });
+            }
+          }
+        }
+      }
+      return { ok: true, actions };
+    }
+
     function processDue(w) {
       for (const p of Object.values(w.purchases))
         if (p.status === "transit" && p.dueAt <= now(w)) {
@@ -7381,6 +7806,7 @@
       const u = w.units[j.unitId],
         product = u && w.catalog.products[u.productId];
       if (j.kind === "assembly") {
+        u.lastAssemblerId = p.id;
         const prodModeId = product?.productionMode || "smt_precision";
         const modeSpec = D.PRODUCTION_MODES?.[prodModeId];
         const regimeId = w.logistics?.productionRegime || "lean_balanced";
@@ -7466,6 +7892,40 @@
             orderId: u.orderId,
             required: Math.ceil(product.assemblyMinutes * 0.4),
           });
+          const asmWorker = w.people.find((emp) => emp.id === u.lastAssemblerId && emp.employed && emp.id !== p.id) ||
+            w.people.find((emp) => emp.employed && emp.role === "assembler" && emp.id !== p.id);
+          if (asmWorker && asmWorker.id !== p.id) {
+            const c = ensureCulture(w);
+            const empScore = (p.profile?.personality?.empathy ?? 50) + (p.profile?.values?.care ?? 50);
+            const constructive = empScore >= 100;
+            const trustDelta = constructive ? 3 : -6;
+            if (!asmWorker.relationships[p.id]) asmWorker.relationships[p.id] = { trust: 0, familiarity: 0 };
+            asmWorker.relationships[p.id].trust = clamp(asmWorker.relationships[p.id].trust + trustDelta, -100, 100);
+            recordPersonMemory(
+              w,
+              asmWorker,
+              constructive ? "qa_coaching" : "work_conflict",
+              constructive
+                ? `ผู้ตรวจ QC (${p.name}) ช่วยชี้จุดบกพร่องชิ้นงานและสอนวิธีแก้หน้างานอย่างเป็นกันเอง`
+                : `เกิดความตึงเครียดเรื่องงานกับ ${p.name} หลังชิ้นงานไม่ผ่าน QC และถูกตีกลับให้ซ่อม (Rework)`,
+              constructive ? { morale: 2, trust: 3 } : { stress: 4, trust: -6 },
+            );
+            c.conflicts.unshift({
+              day: day(w),
+              at: now(w),
+              kind: constructive ? "constructive_coaching" : "qc_rework_friction",
+              inspectorId: p.id,
+              inspectorName: p.name,
+              workerId: asmWorker.id,
+              workerName: asmWorker.name,
+              unitId: u.id,
+              trustDelta,
+              summaryTh: constructive
+                ? `🤝 ${p.name} แนะนำเทคนิคแก้ไขชิ้นงาน ${u.id} ให้ ${asmWorker.name} ด้วยความเข้าใจ (ความเชื่อใจ +${trustDelta})`
+                : `⚡ ${p.name} ตีกลับชิ้นงาน ${u.id} ของ ${asmWorker.name} ต้องเข้าซ่อม Rework เกิดความขัดแย้งหน้างาน (ความเชื่อใจ ${trustDelta})`,
+            });
+            if (c.conflicts.length > 25) c.conflicts.pop();
+          }
           event(
             w,
             "reworkNeeded",
@@ -8739,11 +9199,20 @@
           p.state.fulfillment = clamp(p.state.fulfillment + 7, 0, 100);
           p.state.drive = clamp(p.state.drive + 6, 0, 100);
           p.state.stress = clamp(p.state.stress - 5, 0, 100);
+          recordPersonMemory(
+            w,
+            p,
+            "promoted",
+            `ได้รับเลื่อนตำแหน่งเป็น "${nextStep.titleTh}" (${nextStep.badge}) โดย ${evaluator.name}`,
+            { morale: 9, fulfillment: 7 },
+          );
           updateSatisfactionAndKpi(w, p, completedDay);
 
           if (loser) {
             const loserPerson = loser.person;
-            if (favoritismWon) {
+            ensurePersonExtensions(w, loserPerson);
+            if (favoritismWon && loserPerson.id !== evaluator.id) {
+              loserPerson.career.promotionGrievance = (loserPerson.career.promotionGrievance || 0) + 1;
               loserPerson.state.morale = clamp(loserPerson.state.morale - 8, 0, 100);
               loserPerson.state.stress = clamp(loserPerson.state.stress + 7, 0, 100);
               loserPerson.state.burnout = clamp(loserPerson.state.burnout + 5, 0, 100);
@@ -8753,6 +9222,27 @@
                 -100,
                 100,
               );
+              recordPersonMemory(
+                w,
+                loserPerson,
+                "promotion_grievance",
+                `รู้สึกไม่ได้รับความเป็นธรรมเมื่อ ${p.name} ได้เลื่อนตำแหน่งข้ามหน้าเพราะความสนิทกับ ${evaluator.name}`,
+                { morale: -8, trust: -12 },
+              );
+              const c = ensureCulture(w);
+              c.conflicts.unshift({
+                day: completedDay,
+                at: now(w),
+                kind: "promotion_favoritism",
+                inspectorId: evaluator.id,
+                inspectorName: evaluator.name,
+                workerId: loserPerson.id,
+                workerName: loserPerson.name,
+                unitId: null,
+                trustDelta: -12,
+                summaryTh: `💔 ${loserPerson.name} ผิดหวังเรื่องการเลื่อนตำแหน่งที่ ${evaluator.name} เลือก ${p.name} จากความคุ้นเคย`,
+              });
+              if (c.conflicts.length > 25) c.conflicts.pop();
               event(
                 w,
                 "promotionGrievance",
@@ -9054,7 +9544,7 @@
       if (!w.culture || typeof w.culture !== "object") {
         w.culture = freshCulture();
       }
-      for (const k of ["recentGossip", "clubActivities", "townhallAwards", "alumniSpinoffs", "parkedVehicles"]) {
+      for (const k of ["recentGossip", "clubActivities", "townhallAwards", "alumniSpinoffs", "parkedVehicles", "conflicts", "retentionOffers", "roleSwitches"]) {
         if (!Array.isArray(w.culture[k])) w.culture[k] = [];
       }
       return w.culture;
@@ -9477,6 +9967,61 @@
           : "แข่งขันด้านความเร็วและนวัตกรรมในตลาดเดียวกัน",
       };
       w.externalWorld.corporations[corpId] = newCorp;
+      const living = W.ensure(w);
+      if (living && !living.firms[corpId]) {
+        const cashSatang = Math.max(100000000, Math.round((newCorp.cashMillionBaht || 45) * 100000000));
+        const stock = {};
+        const flow = {};
+        for (const k of new Set([...(newCorp.sellsMaterials || []), ...(newCorp.buysMaterials || [])])) {
+          if (w.catalog.materials[k]) {
+            stock[k] = 16;
+            flow[k] = { opening: 16, produced: 0, bought: 0, used: 0, sold: 0 };
+          }
+        }
+        living.firms[corpId] = {
+          id: corpId,
+          nationId: "TH",
+          cash: cashSatang,
+          openingCash: cashSatang,
+          receipts: 0,
+          payments: 0,
+          stock,
+          flow,
+          capacity: 6,
+          utilization: 0,
+          technology: 65,
+          risk: candidate.profile?.personality?.riskTaking ?? 55,
+          prudence: candidate.profile?.personality?.prudence ?? 50,
+          priceFactor: 1,
+          consecutiveLossDays: 0,
+          status: "operating",
+          strategy: isFriendly ? "partner" : "expand",
+          decisionTh: newCorp.strategyTh,
+          dailyRevenue: 0,
+          dailyCost: 0,
+          cogsSatang: 0,
+          operatingExpenseSatang: 0,
+          capexSatang: 0,
+          cashFlowSurplusSatang: 0,
+          accrualProfitSatang: 0,
+          profit: 0,
+          investment: 0,
+          lastInvestmentDay: 0,
+          output: 0,
+          missing: [],
+          reserves: {},
+          crops: {},
+          history: [],
+          lastReviewDay: completedDay,
+        };
+      }
+      recordPersonMemory(
+        w,
+        candidate,
+        "founded_spinoff",
+        `ก่อตั้งบริษัท "${corpNameTh}" (${isFriendly ? "พันธมิตรคู่ค้าศิษย์เก่า" : "คู่แข่งท้าชิงในตลาด"})`,
+        { fulfillment: 15, morale: 10 },
+      );
 
       const spinoffRecord = {
         day: completedDay,
@@ -9513,6 +10058,150 @@
       );
       evaluateCompanyGrowthStage(w, completedDay);
       return { ok: true, spinoff: spinoffRecord, corporation: newCorp };
+    }
+
+    function evaluateInternalCareerSwitch(w, completedDay = day(w), options = {}) {
+      const c = ensureCulture(w);
+      const employed = w.people.filter((p) => p.employed && p.role !== "coordinator");
+      if (employed.length < 4) return { ok: false, code: "teamTooSmall", message: "ทีมงานยังมีขนาดเล็กเกินกว่าจะโอนย้ายสายอาชีพ" };
+
+      const openJobs = Object.values(w.jobs).filter((j) => !j.assignee);
+      const roleDemand = {
+        engineer: openJobs.filter((j) => j.kind === "research").length + (w.plant?.maintenance?.length || 0) * 2,
+        assembler: openJobs.filter((j) => j.kind === "assembly" || j.kind === "rework").length,
+        inspector: openJobs.filter((j) => j.kind === "qa").length,
+        logistics: openJobs.filter((j) => j.kind === "packing" || j.kind === "shipping").length,
+        sales: Object.values(w.offers || {}).filter((o) => o.status === "open").length,
+      };
+      const targetRole =
+        options.toRole ||
+        Object.entries(roleDemand)
+          .sort((a, b) => b[1] - a[1])[0]?.[0] ||
+        "engineer";
+      if (!own(w.catalog.roles, targetRole)) return { ok: false, code: "invalidTargetRole" };
+
+      const targetSkill = w.catalog.roles[targetRole].skill;
+      const candidate = options.personId
+        ? employed.find((p) => p.id === options.personId)
+        : employed
+            .filter((p) => {
+              if (p.role === targetRole) return false;
+              const sameRoleCount = employed.filter((x) => x.role === p.role).length;
+              if (sameRoleCount < 2 && !options.force) return false;
+              const skLv = p.skills[targetSkill]?.level || 0;
+              const aspFit =
+                (targetRole === "engineer" && p.aspiration?.id === "subject_expert") ||
+                (targetRole === "sales" && p.aspiration?.id === "entrepreneur_spinoff") ||
+                (p.career?.promotionGrievance || 0) > 0;
+              return options.force || skLv >= 25 || aspFit;
+            })
+            .sort((a, b) => (b.skills[targetSkill]?.level || 0) - (a.skills[targetSkill]?.level || 0))[0];
+
+      if (!candidate) {
+        return { ok: false, code: "noSwitchCandidate", message: "ยังไม่มีพนักงานที่มีความถนัดพร้อมย้ายสายอาชีพภายใน" };
+      }
+
+      const oldRole = candidate.role;
+      const oldRoleNameTh = w.catalog.roles[oldRole]?.nameTh || oldRole;
+      const newRoleNameTh = w.catalog.roles[targetRole]?.nameTh || targetRole;
+      if (candidate.taskId) release(w, candidate);
+      candidate.role = targetRole;
+      candidate.visual.roleKey = targetRole;
+      ensurePersonExtensions(w, candidate);
+      if (D.getCareerStep) {
+        const step = D.getCareerStep(targetRole, candidate.career.level || 1);
+        candidate.career.titleTh = step.titleTh;
+        candidate.career.badge = step.badge;
+        if (step.division) candidate.career.division = step.division;
+        if (step.departmentTh) candidate.career.departmentTh = step.departmentTh;
+        if (step.dutyTh) candidate.career.dutyTh = step.dutyTh;
+      }
+      candidate.state.morale = clamp(candidate.state.morale + 6, 0, 100);
+      candidate.state.fulfillment = clamp(candidate.state.fulfillment + 5, 0, 100);
+      const rec = {
+        day: completedDay,
+        personId: candidate.id,
+        personName: candidate.identity?.displayName || candidate.name,
+        fromRole: oldRole,
+        fromRoleNameTh: oldRoleNameTh,
+        toRole: targetRole,
+        toRoleNameTh: newRoleNameTh,
+        reasonTh: options.reasonTh || `โอนย้ายสายอาชีพจาก${oldRoleNameTh} สู่${newRoleNameTh} ตามความถนัดและภาระงานคอขวดของบริษัท`,
+      };
+      c.roleSwitches.unshift(rec);
+      if (c.roleSwitches.length > 20) c.roleSwitches.pop();
+      recordPersonMemory(
+        w,
+        candidate,
+        "career_switch",
+        `เปลี่ยนสายงานภายในจาก${oldRoleNameTh} ไปเป็น${newRoleNameTh} เพื่อเติบโตตามความถนัด`,
+        { morale: 6, fulfillment: 5 },
+      );
+      event(
+        w,
+        "internalRoleSwitch",
+        `🔄 ${rec.personName} โอนย้ายสายอาชีพจาก "${oldRoleNameTh}" สู่ "${newRoleNameTh}" (${rec.reasonTh})`,
+        rec,
+      );
+      return { ok: true, roleSwitch: rec };
+    }
+
+    function evaluateEmployeeRetention(w, p, completedDay = day(w), options = {}) {
+      ensurePersonExtensions(w, p);
+      const c = ensureCulture(w);
+      const ceo = w.people.find((emp) => emp.employed && emp.role === "coordinator") || w.people[0];
+      const ceoCare = (ceo?.profile?.values?.care ?? 50) + (ceo?.profile?.personality?.empathy ?? 50);
+      const isKeyStaff =
+        (p.career?.level || 1) >= 2 ||
+        Object.values(p.education?.subjects || {}).some((lv) => lv >= 45);
+      if (!options.force && ceoCare < 95 && !isKeyStaff) {
+        return { ok: false, code: "notRetained" };
+      }
+      const raiseSatang = Math.max(2500, Math.round(p.pay.dailyWage * 0.12));
+      const bonusSatang = options.bonusSatang ?? 15000;
+      const pools = computeFinancialPools(w);
+      if (w.finance.cash < pools.survivalReserveSatang + bonusSatang) {
+        return { ok: false, code: "insufficientRetentionBudget" };
+      }
+      if (bonusSatang > 0) {
+        post(w, "wages", -bonusSatang, `retention_bonus:${p.id}:d${completedDay}`);
+        p.pay.totalEarned += bonusSatang;
+        p.pay.totalPaid += bonusSatang;
+        p.pay.wallet += bonusSatang;
+      }
+      p.pay.dailyWage = clamp(p.pay.dailyWage + raiseSatang, w.catalog.rules.minimumWage, 200000);
+      p.pay.dayWage = p.pay.dailyWage;
+      p.state.morale = clamp(p.state.morale + 14, 0, 100);
+      p.state.stress = clamp(p.state.stress - 10, 0, 100);
+      p.state.burnout = clamp(p.state.burnout - 8, 0, 100);
+      p.concern = null;
+      const offerRec = {
+        day: completedDay,
+        personId: p.id,
+        personName: p.identity?.displayName || p.name,
+        roleNameTh: w.catalog.roles[p.role]?.nameTh || p.role,
+        raiseSatang,
+        bonusSatang,
+        newDailyWage: p.pay.dailyWage,
+        ceoName: ceo ? ceo.name : "ผู้บริหาร",
+        reasonTh: `เจรจารักษาบุคลากรสำคัญสำเร็จ: ปรับฐานค่าจ้าง +฿${(raiseSatang / 100).toLocaleString("th-TH")}/วัน และมอบโบนัสขวัญถุง ฿${(bonusSatang / 100).toLocaleString("th-TH")}`,
+      };
+      c.retentionOffers.unshift(offerRec);
+      if (c.retentionOffers.length > 20) c.retentionOffers.pop();
+      recordPersonMemory(
+        w,
+        p,
+        "retained_counteroffer",
+        `ผู้บริหาร (${offerRec.ceoName}) เจรจาปรับขึ้นค่าจ้างและมอบโบนัสเพื่อรั้งตัวให้อยู่ร่วมสร้างบริษัทต่อ`,
+        { morale: 14, stress: -10 },
+      );
+      event(
+        w,
+        "employeeRetained",
+        `🤝 ${offerRec.ceoName} เจรจารั้งตัว ${offerRec.personName} สำเร็จ! (${offerRec.reasonTh})`,
+        offerRec,
+      );
+      return { ok: true, retention: offerRec };
     }
 
     function evaluateCompanyGrowthStage(w, completedDay = day(w)) {
@@ -9737,6 +10426,14 @@
             p.concern.action = voice.action;
             p.concern.reasons = voice.reasons;
             if (voice.action === "considerLeaving") {
+              if (w.policies.autoAccept && p.pay.overdueSince === null) {
+                const retained = evaluateEmployeeRetention(w, p, completedDay);
+                if (retained.ok) continue;
+              }
+              const canSpinoff =
+                w.externalWorld &&
+                (p.pay.wallet >= 180000 || (p.career?.promotionGrievance || 0) > 0) &&
+                (p.profile?.personality?.ambition || 50) >= 58;
               release(w, p);
               p.employed = false;
               p.atWork = false;
@@ -9747,10 +10444,22 @@
               p.position = { ...w.layout.entrance };
               p.previousPosition = { ...p.position };
               p.intent = { code: "leftCompany", reasons: voice.reasons };
+              recordPersonMemory(
+                w,
+                p,
+                "resigned",
+                `ตัดสินใจลาออกจากบริษัทเนื่องจาก: ${(voice.reasons || []).join(", ")}`,
+                { morale: -5 },
+              );
               event(w, "employeeLeft", `พนักงาน (${p.name}) ตัดสินใจลาออก`, {
                 personId: p.id,
                 reasons: voice.reasons,
               });
+              if (canSpinoff) {
+                p.employed = true;
+                evaluateEmployeeSpinoff(w, completedDay, { personId: p.id, depart: true, force: true });
+                p.employed = false;
+              }
             }
           }
         } else if (p.concern && p.state.morale >= 35 && p.state.burnout <= 58) {
@@ -9848,12 +10557,13 @@
       if(tod(w)===690)evaluateCommercialSales(w);
       P.tick(w,TICK,plantHooks(w));
       if(tod(w)===675&&w.policies.autoAccept&&w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))P.review(w,plantHooks(w));
+      if(tod(w)===680&&w.policies.autoAccept)evaluateOperationalCrisesAndBottlenecks(w);
       processDue(w);
       stepAgricultureAndResources(w);
       stepFleetTransportTick(w);
       stepSoftwareBusinessTick(w);
       stepServiceBusinessTick(w);
-      reconcileWarehouseLots(w);
+      if (w.people.length <= 50 || w.clock.tick % 6 === 0) reconcileWarehouseLots(w);
       ensureJobs(w);
       autoAccept(w);
       planPurchases(w);
@@ -9958,12 +10668,20 @@
           roleGuess = roles[(idx - 1) % roles.length],
           profile = H.createProfile(w.seed, cid),
           identity = D.createIdentity ? D.createIdentity(w.seed, cid, null, roleGuess) : null,
-          baseNick = identity ? identity.nickname : ["พลอย", "นนท์", "ฝน"][(idx - 1) % 3];
+          baseNick = identity ? identity.nickname : ["พลอย", "นนท์", "ฝน"][(idx - 1) % 3],
+          education = educationFor({ id: cid, role: roleGuess, profile }),
+          topSubjects = Object.entries(education.subjects || {})
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([sid, lv]) => ({ id: sid, nameTh: SUBJECTS[sid] || sid, level: Math.round(lv) }));
         return {
           id: cid,
           name: baseNick + " " + idx,
+          roleGuess,
           profile,
           identity,
+          education,
+          topSubjects,
           dailyWage: 32000 + offset * 4000,
         };
       });
@@ -10368,6 +11086,26 @@
         }
         case "evaluateEmployeeSpinoff": {
           return evaluateEmployeeSpinoff(w, day(w), c);
+        }
+        case "toggleWatchlist": {
+          return toggleWatchlist(w, c.targetType || "person", c.targetId, c.labelTh || "");
+        }
+        case "contractOemMaintenance": {
+          return contractOemMaintenance(w, c.machineId, c);
+        }
+        case "evaluateOperationalCrisesAndBottlenecks": {
+          return evaluateOperationalCrisesAndBottlenecks(w);
+        }
+        case "evaluateInternalCareerSwitch": {
+          return evaluateInternalCareerSwitch(w, day(w), c);
+        }
+        case "evaluateEmployeeRetention": {
+          const targetP = person || w.people.find((p) => p.employed && p.concern);
+          if (!targetP) return failure("noEmployeeTarget", "ไม่พบพนักงานสำหรับเจรจารั้งตัว");
+          return evaluateEmployeeRetention(w, targetP, day(w), c);
+        }
+        case "runCounterfactualComparison": {
+          return { ok: true, comparison: runCounterfactualComparison(w, c.variantSpec || {}, c.days || 5) };
         }
         case "triggerGeopoliticalEvent": {
           return triggerGeopoliticalEvent(w, c.eventId || null, {
@@ -10864,6 +11602,14 @@
               "evaluateCompanyGrowthStage",
               "evaluateTownhallAwards",
               "evaluateEmployeeSpinoff",
+              "toggleWatchlist",
+              "contractOemMaintenance",
+              "evaluateOperationalCrisesAndBottlenecks",
+              "evaluateInternalCareerSwitch",
+              "evaluateEmployeeRetention",
+              "runCounterfactualComparison",
+              "renegotiateCommercialContract",
+              "terminateCommercialContract",
               "evaluateExecutiveBoard",
               "triggerGeopoliticalEvent",
               "changeForeignRegime",
@@ -10950,6 +11696,308 @@
       )
         throw new TypeError("invalid task fields or unavailable station");
       return job(w, kind, fields);
+    }
+
+    function buildObservabilityView(w) {
+      const wl = w.watchlist || { people: [], events: [], threads: [], bottlenecks: [], notes: [] };
+      const employed = w.people.filter((p) => p.employed);
+      const ceo = employed.find((p) => p.role === "coordinator") || employed[0] || null;
+      const activeBottlenecks = [];
+
+      // 1. Machine & Spare Part Bottlenecks
+      for (const task of w.plant?.maintenance || []) {
+        if (task.progress >= task.required) continue;
+        const spec = P.SPECS[task.machineId];
+        const m = w.plant?.machines?.[task.machineId];
+        if (!spec || !m) continue;
+        const part = P.repairPart(task.machineId);
+        const partNameTh = w.catalog.materials[part]?.nameTh || part;
+        const hasTech = employed.some(
+          (p) =>
+            ["engineer", "assembler", "inspector", "logistics"].includes(p.role) &&
+            subjectLevel(p, spec.subject) >= spec.level,
+        );
+        const freePart = (w.inventory.materials[part] || 0) - (w.inventory.reserved[part] || 0);
+        const reservedPart = w.inventory.reserved[part] || 0;
+        const inTransit = Object.values(w.purchases || {}).some((po) => po.materialId === part && po.status === "transit");
+        const bnId = `maint:${task.machineId}`;
+        let whyStuckTh = "กำลังดำเนินการตามคิวช่างซ่อมบำรุง";
+        let howSolvingTh = task.technicianId
+          ? `ช่าง (${w.people.find((p) => p.id === task.technicianId)?.name || task.technicianId}) กำลังลงมือ (${task.progress}/${task.required} นาที)`
+          : "รอช่างเข้าประจำสถานีโรงงาน";
+        if (m.status === "ordered" && m.deliveryMinute > now(w)) {
+          whyStuckTh = `รอรถขนส่งผู้ผลิตส่งมอบเครื่องจักรถึงโรงงาน`;
+          howSolvingTh = `อยู่ระหว่างจัดส่ง (ถึงในอีก ${Math.max(5, m.deliveryMinute - now(w))} นาที)`;
+        } else if (!hasTech) {
+          const learner = employed.find((p) => p.education?.course === spec.subject || p.education?.course === SUBJECT_PREREQUISITES[spec.subject]);
+          whyStuckTh = `ขาดช่างที่มีความรู้วิชา "${SUBJECTS[spec.subject] || spec.subject}" ระดับ ${spec.level}`;
+          howSolvingTh = learner
+            ? `มอบหมายให้ ${learner.name} เรียนวิชาที่ขาด และเตรียมจ้างผู้เชี่ยวชาญ/ช่าง OEM ภายนอกหากรอนาน`
+            : `ผู้บริหารกำลังพิจารณาฝึกคนภายใน จ้างวิศวกรเพิ่ม หรือจ้างทีมช่าง OEM ภายนอก`;
+        } else if (task.kind === "repair" && !task.partConsumed && freePart < 1) {
+          whyStuckTh =
+            reservedPart > 0
+              ? `อะไหล่ซ่อม (${partNameTh}) มีในคลังแต่ถูกจองล็อกไว้กับใบสั่งผลิต`
+              : `ขาดอะไหล่ซ่อม (${partNameTh}) ในคลังสินค้า`;
+          howSolvingTh =
+            reservedPart > 0
+              ? `ปลดล็อกการจองอะไหล่จากชิ้นงานที่ยังไม่เริ่มประกอบเพื่อนำมาซ่อมเครื่องจักรก่อน`
+              : inTransit
+                ? `สั่งซื้ออะไหล่ ${partNameTh} แล้ว อยู่ระหว่างขนส่งเข้าคลัง`
+                : `ฝ่ายจัดซื้อกำลังออกใบสั่งซื้ออะไหล่ ${partNameTh} ด่วน`;
+        }
+        activeBottlenecks.push({
+          id: bnId,
+          severity: m.status === "maintenance" ? "critical" : "warning",
+          category: "plant_maintenance",
+          titleTh: `${spec.nameTh} (${task.kind === "install" ? "รอติดตั้ง" : "เครื่องเสียรอซ่อม"})`,
+          whatStuckTh: `${spec.nameTh} หยุดเดินเครื่อง (${task.progress}/${task.required} นาที)`,
+          whyStuckTh,
+          howSolvingTh,
+          ownerName: ceo ? ceo.name : "ฝ่ายวิศวกรรม",
+          starred: wl.bottlenecks.includes(bnId),
+        });
+      }
+
+      // 2. Overloaded / At-Risk Customer Orders & Commercial Contracts
+      for (const o of Object.values(w.orders || {})) {
+        if (o.status !== "accepted" || o.stockBatch) continue;
+        const minsLeft = o.deadline - now(w);
+        const units = Object.values(w.units || {}).filter((u) => u.orderId === o.id);
+        const readyCount = units.filter((u) => u.stage === "ready").length;
+        if (minsLeft <= 1800 && readyCount < o.quantity) {
+          const bnId = `order:${o.id}`;
+          const prodName = w.catalog.products[o.productId]?.nameTh || o.productId;
+          const missingMats = Object.entries(w.catalog.products[o.productId]?.bom || {})
+            .filter(([mId, q]) => (w.inventory.materials[mId] || 0) < q)
+            .map(([mId]) => w.catalog.materials[mId]?.nameTh || mId);
+          activeBottlenecks.push({
+            id: bnId,
+            severity: minsLeft <= 720 ? "critical" : "warning",
+            category: "order_delivery",
+            titleTh: `ออเดอร์ ${o.id} (${prodName} ${readyCount}/${o.quantity} ชิ้น) ใกล้กำหนดส่ง`,
+            whatStuckTh: `ส่งมอบ ${prodName} ให้ ${o.customerName} เสร็จเพียง ${readyCount}/${o.quantity} ชิ้น (เหลือเวลา ${Math.max(0, Math.round(minsLeft / 60))} ชม.)`,
+            whyStuckTh: missingMats.length
+              ? `รอวัตถุดิบ: ${missingMats.join(", ")}`
+              : `คิวประกอบและตรวจสอบคุณภาพหน้างานหนาแน่น`,
+            howSolvingTh: o.commercialContractId
+              ? `ฝ่ายขายเตรียมเจรจาขอปรับลดจำนวน/เลื่อนงวดสัญญา (${o.commercialContractId}) และเร่งคิวผลิต/OT`
+              : `เปิด OT เร่งสายการผลิตและจัดซื้อวัตถุดิบที่ขาด`,
+            ownerName: o.salesPersonName || (ceo ? ceo.name : "ฝ่ายขาย"),
+            starred: wl.bottlenecks.includes(bnId),
+          });
+        }
+      }
+
+      // 3. Unsold Warehouse Stock / Overstock Bottleneck
+      for (const [pId, qty] of Object.entries(w.inventory?.finished || {})) {
+        if (qty <= 0) continue;
+        const lots = w.warehouse?.finishedLots?.[pId] || [];
+        const oldestAgeDays = lots.reduce((mx, l) => Math.max(mx, l.ageDays || 0), 0);
+        if (qty >= 2 || oldestAgeDays >= 1) {
+          const bnId = `unsold:${pId}`;
+          const prodName = w.catalog.products[pId]?.nameTh || pId;
+          activeBottlenecks.push({
+            id: bnId,
+            severity: oldestAgeDays >= 3 || qty >= 5 ? "warning" : "info",
+            category: "unsold_stock",
+            titleTh: `สินค้าสำเร็จรูปค้างคลัง: ${prodName} (${qty} ชิ้น • อายุ ${oldestAgeDays} วัน)`,
+            whatStuckTh: `${prodName} ผลิตเสร็จเก็บในคลัง ${qty} ชิ้น ยังไม่ได้ส่งมอบหรือจับคู่คำสั่งซื้อ`,
+            whyStuckTh: `ผลิตเก็บเข้าสต็อกล่วงหน้าหรือรอดีล B2B รอบถัดไป (เงินทุนจมในสต็อก)`,
+            howSolvingTh: `ฝ่ายขายเปิดดีลระบายสต็อกคลัง (Warehouse Clearance Markdown) ลดราคาจูงใจผู้ซื้อ B2B`,
+            ownerName: employed.find((p) => p.role === "sales")?.name || (ceo ? ceo.name : "ฝ่ายขาย"),
+            starred: wl.bottlenecks.includes(bnId),
+          });
+        }
+      }
+
+      // 4. Executive Board Capability / Staff Bottleneck
+      const latestBoard = w.executiveBoard?.decisionLedger?.[0] || null;
+      if (latestBoard && latestBoard.resolution && latestBoard.resolution !== "approved_executed") {
+        const bnId = `board:${latestBoard.targetId || latestBoard.category}`;
+        activeBottlenecks.push({
+          id: bnId,
+          severity: "info",
+          category: "executive_gate",
+          titleTh: `ชะลอแผนลงทุน: ${latestBoard.titleTh}`,
+          whatStuckTh: latestBoard.titleTh,
+          whyStuckTh: latestBoard.reasonTh || latestBoard.resolution,
+          howSolvingTh:
+            latestBoard.resolution === "deferred_missing_staff"
+              ? "มอบหมายพนักงานเรียนวิชาเฉพาะทางและเปิดรับสมัครผู้เชี่ยวชาญเพิ่ม"
+              : latestBoard.resolution === "deferred_missing_tech"
+                ? "เปิดโครงการวิจัยต้นแบบหรือซื้อสิทธิถ่ายทอดเทคโนโลยีก่อนลงทุนจริง"
+                : "สะสมกระแสเงินสดสำรองและลดภาระหนี้ก่อนทบทวนรอบถัดไป",
+          ownerName: ceo ? ceo.name : "คณะกรรมการบริหาร",
+          starred: wl.bottlenecks.includes(bnId),
+        });
+      }
+
+      // 5. People Workboard: "ใครกำลังทำอะไร ติดอะไร กำลังแก้ยังไง"
+      const activityThMap = {
+        working: "กำลังปฏิบัติงานหลักที่สถานี",
+        helping: "กำลังช่วยเพื่อนร่วมทีมเร่งงาน",
+        learning: "กำลังฝึกอบรม/เรียนวิชาเพิ่มทักษะ",
+        selfStudy: "กำลังอ่านหนังสือพัฒนาตนเองนอกเวลางาน",
+        eating: "กำลังพักรับประทานอาหารที่โรงอาหาร",
+        resting: "กำลังพักผ่อนคลายความล้า",
+        commuting: "กำลังเดินทางไป-กลับนิคม",
+        offDuty: "อยู่นอกเวลางาน / พักผ่อนที่บ้าน",
+        idle: "รอรับมอบหมายงานถัดไป",
+      };
+      const peopleWorkboard = employed.map((p) => {
+        const j = p.taskId ? w.jobs[p.taskId] : null;
+        const stName = p.stationId ? w.layout?.stations?.[p.stationId]?.kind || p.stationId : "นอกสถานี";
+        let doingWhatTh = activityThMap[p.activity] || p.activity || "ปฏิบัติงาน";
+        let stuckOnTh = "ไม่มีอุปสรรค (ทำงานไหลลื่น)";
+        let solvingHowTh = "ดำเนินงานตามมาตรฐานและสะสมความชำนาญ";
+
+        if (j) {
+          const u = j.unitId ? w.units[j.unitId] : null;
+          const prodName = u ? w.catalog.products[u.productId]?.nameTh || u.productId : null;
+          doingWhatTh = `${D.TASK_LABELS_TH?.[j.kind] || j.kind}${prodName ? ` (${prodName})` : ""} คืบหน้า ${Math.round(j.progress)}/${j.required} นาที @ ${stName}`;
+        } else if (p.education?.course) {
+          doingWhatTh = `${activityThMap[p.activity] || p.activity} • กำลังศึกษาวิชา "${SUBJECTS[p.education.course] || p.education.course}" (เป้าหมาย Lv.${p.education.courseLevel || 40})`;
+        }
+
+        if (p.concern) {
+          stuckOnTh = `กังวลเรื่อง: ${(p.concern.reasons || []).join(", ") || p.concern.action}`;
+          solvingHowTh = "รอผู้บริหารปรับสวัสดิการ/ค่าจ้าง หรือเจรจารั้งตัว";
+        } else if ((p.career?.promotionGrievance || 0) > 0) {
+          stuckOnTh = `น้อยใจผลพิจารณาเลื่อนตำแหน่ง (${p.career.promotionGrievance} ครั้ง)`;
+          solvingHowTh = "มุ่งมั่นทำผลงานพิสูจน์ตัวเอง หรือพิจารณาแยกตัวเปิดบริษัท Spin-off";
+        } else if (p.state.energy < 35 || p.state.stress > 70 || p.state.burnout > 60) {
+          stuckOnTh = `ร่างกายอ่อนล้า/เครียดสะสม (พลังงาน ${Math.round(p.state.energy)}% • ความเครียด ${Math.round(p.state.stress)}%)`;
+          solvingHowTh = "สลับไปพักโรงอาหาร/สวนหย่อมเพื่อฟื้นฟูสภาพจิตใจและร่างกาย";
+        } else if (p.education?.course) {
+          stuckOnTh = `ต้องยกระดับวิชา "${SUBJECTS[p.education.course] || p.education.course}" ให้ถึงเกณฑ์ปฏิบัติงาน`;
+          solvingHowTh = `เข้าศูนย์ฝึกอบรมและเรียนรู้จากการลงมือทำจริง (ปัจจุบัน Lv.${Math.round(subjectLevel(p, p.education.course))})`;
+        }
+
+        return {
+          personId: p.id,
+          name: p.identity?.displayName || p.name,
+          nickname: p.name,
+          role: p.role,
+          roleNameTh: w.catalog.roles[p.role]?.nameTh || p.role,
+          badge: p.career?.badge || "Lv.1",
+          doingWhatTh,
+          stuckOnTh,
+          solvingHowTh,
+          aspiration: p.aspiration || null,
+          latestMemory: (p.memories && p.memories[0]) || null,
+          starred: wl.people.includes(p.id),
+        };
+      });
+
+      const watchlistSummary = {
+        people: wl.people
+          .map((pid) => {
+            const p = w.people.find((x) => x.id === pid);
+            const wb = peopleWorkboard.find((x) => x.personId === pid);
+            if (!p) return null;
+            return {
+              id: p.id,
+              name: p.identity?.displayName || p.name,
+              employed: p.employed,
+              roleNameTh: w.catalog.roles[p.role]?.nameTh || p.role,
+              doingWhatTh: wb ? wb.doingWhatTh : p.employed ? p.activity : "ลาออก/เปิดกิจการตัวเองแล้ว",
+              stuckOnTh: wb ? wb.stuckOnTh : "-",
+              solvingHowTh: wb ? wb.solvingHowTh : "-",
+            };
+          })
+          .filter(Boolean),
+        bottlenecks: activeBottlenecks.filter((b) => b.starred),
+        events: (w.events || []).filter((e) => wl.events.includes(e.id)).slice(0, 15),
+        notes: wl.notes || [],
+      };
+
+      return {
+        activeBottlenecks,
+        peopleWorkboard,
+        watchlistSummary,
+      };
+    }
+
+    function runCounterfactualComparison(baseWorld, variantSpec = {}, days = 5) {
+      const simDays = clamp(Math.floor(Number(days) || 5), 1, 30);
+      const baseline = clone(baseWorld);
+      const variant = clone(baseWorld);
+
+      // Apply variant interventions on the cloned world
+      const vCeo = variant.people.find((p) => p.employed && p.role === "coordinator") || variant.people[0];
+      if (variantSpec.ceoPersonality && vCeo) {
+        const prof = clone(vCeo.profile);
+        for (const [k, val] of Object.entries(variantSpec.ceoPersonality)) {
+          if (H.PERSONALITY.includes(k) && typeof val === "number") {
+            prof.personality[k] = clamp(val, 0, 100);
+          }
+        }
+        for (const [k, val] of Object.entries(variantSpec.ceoValues || {})) {
+          if (H.VALUES.includes(k) && typeof val === "number") {
+            prof.values[k] = clamp(val, 0, 100);
+          }
+        }
+        vCeo.profile = H.freezeProfile(prof);
+      }
+      if (variantSpec.cashGrantSatang && int(variantSpec.cashGrantSatang, 100, 1000000000)) {
+        variant.finance.openingCash += variantSpec.cashGrantSatang;
+        variant.finance.cash += variantSpec.cashGrantSatang;
+      }
+      if (variantSpec.technicianSubjects && typeof variantSpec.technicianSubjects === "object") {
+        ensureKnowledge(variant);
+        const targets = variant.people.filter(
+          (p) => p.employed && ["engineer", "assembler", "inspector"].includes(p.role),
+        );
+        for (const tp of targets) {
+          for (const [subjId, lv] of Object.entries(variantSpec.technicianSubjects)) {
+            if (Object.hasOwn(SUBJECTS, subjId) && typeof lv === "number") {
+              tp.education.subjects[subjId] = clamp(lv, 0, 100);
+            }
+          }
+        }
+      }
+
+      advance(baseline, simDays * 1440);
+      advance(variant, simDays * 1440);
+
+      const summarize = (w) => ({
+        day: day(w),
+        cashSatang: w.finance.cash,
+        debtSatang: w.finance.debt,
+        reputation: w.reputation,
+        employedCount: w.people.filter((p) => p.employed).length,
+        ordersPaid: w.metrics.ordersPaid,
+        unitsCompleted: Object.values(w.production.completed || {}).reduce((a, b) => a + b, 0),
+        researchProjectsCount: Object.keys(w.knowledge?.projects || {}).length,
+        licensedCount: Object.keys(w.capabilities?.licenses || {}).length,
+        maintenanceRemaining: (w.plant?.maintenance || []).filter((t) => t.progress < t.required).length,
+        ceoDirectiveId: w.externalWorld?.ceoDirective?.id || null,
+        boardDecisionsCount: (w.executiveBoard?.decisionLedger || []).length,
+      });
+
+      const baseSum = summarize(baseline);
+      const varSum = summarize(variant);
+      const deltas = {
+        cashDeltaSatang: varSum.cashSatang - baseSum.cashSatang,
+        debtDeltaSatang: varSum.debtSatang - baseSum.debtSatang,
+        reputationDelta: varSum.reputation - baseSum.reputation,
+        employedDelta: varSum.employedCount - baseSum.employedCount,
+        ordersPaidDelta: varSum.ordersPaid - baseSum.ordersPaid,
+        unitsCompletedDelta: varSum.unitsCompleted - baseSum.unitsCompleted,
+        researchProjectsDelta: varSum.researchProjectsCount - baseSum.researchProjectsCount,
+        maintenanceRemainingDelta: varSum.maintenanceRemaining - baseSum.maintenanceRemaining,
+      };
+      const diverged = Object.values(deltas).some((v) => v !== 0) || baseSum.ceoDirectiveId !== varSum.ceoDirectiveId;
+
+      return {
+        days: simDays,
+        diverged,
+        baseline: baseSum,
+        variant: varSum,
+        deltas,
+        summaryTh: `เปรียบเทียบโลกคู่ขนาน ${simDays} วัน: เงินสดต่างกัน ฿${(deltas.cashDeltaSatang / 100).toLocaleString("th-TH")} • หนี้ต่างกัน ฿${(deltas.debtDeltaSatang / 100).toLocaleString("th-TH")} • ชิ้นงานสำเร็จต่างกัน ${deltas.unitsCompletedDelta} ชิ้น • โครงการวิจัยต่างกัน ${deltas.researchProjectsDelta} โครงการ`,
+      };
     }
     function audit(w) {
       const errors = [
@@ -11160,6 +12208,13 @@
       stepWorkplaceCultureDaily,
       evaluateTownhallAwards,
       evaluateEmployeeSpinoff,
+      evaluateInternalCareerSwitch,
+      evaluateEmployeeRetention,
+      contractOemMaintenance,
+      evaluateOperationalCrisesAndBottlenecks,
+      toggleWatchlist,
+      buildObservabilityView,
+      runCounterfactualComparison,
       evaluateCompanyGrowthStage,
       getFleetUpfrontCost,
       reserveBoardBudget,
