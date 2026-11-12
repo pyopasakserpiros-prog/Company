@@ -7,8 +7,8 @@ const Save = require("../js/save.js");
 const API = require("../js/api.js");
 
 test("v2.0.0 Era 2.0 Living Global Geopolitics: 8 Sovereign Nations & Foreign Government Regime Shifts directly change material prices, FX rate, B2B sell revenue, and World Chronicle", () => {
-  assert.strictEqual(D.RELEASE_VERSION, "2.6.0");
-  assert.strictEqual(S.RELEASE_VERSION, "2.6.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.7.0");
+  assert.strictEqual(S.RELEASE_VERSION, "2.7.0");
   assert.strictEqual(Object.keys(D.GLOBAL_NATIONS).length, 12, "Must have 8 sovereign nations/blocs");
   assert.strictEqual(Object.keys(D.GEOPOLITICAL_EVENTS).length, 16, "Must have 12 global geopolitical events");
 
@@ -100,7 +100,7 @@ test("v2.0.0 Era 2.0 Wars, Maritime Blockades & International Treaties: Red Sea 
   const app = API.create("v200-api-check", { autonomous: true });
   app.dispatch({ type: "triggerGeopoliticalEvent", eventId: "global_green_supercycle_election" });
   const snap = app.snapshot();
-  assert.strictEqual(snap.releaseVersion, "2.6.0");
+  assert.strictEqual(snap.releaseVersion, "2.7.0");
   assert.strictEqual(snap.catalog.globalNations.length, 12);
   assert.strictEqual(snap.catalog.geopoliticalEvents.length, 16);
   assert.ok(snap.chronicle.some((c) => c.category === "WORLD_GEOPOLITICS"), "Chronicle includes WORLD_GEOPOLITICS entries");

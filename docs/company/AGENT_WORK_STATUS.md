@@ -1,51 +1,35 @@
 # สถานะงานร่วมระหว่างเอเจนต์
 
-อัปเดต: 12 พฤศจิกายน 2026 (หลังตรวจแพตช์ v2.4.0) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
+อัปเดต: 12 พฤศจิกายน 2026 (หลังพัฒนาและตรวจแพตช์ v2.7.0) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
 
 ## งานแพตช์ที่ดำเนินการเสร็จในรอบนี้ (พร้อมรวมเข้า main)
 
 | Task ID | ผู้พัฒนา | ขอบเขต | สถานะ/หลักฐาน |
 |---|---|---|---|
-| `sme-living-progression-and-holistic-realism-2026-11` | Gemini ผ่านแอปแชต (ต่อยอดจาก v2.1.0) | ยกระดับเกมโดยรวมสู่รุ่นพร้อมเล่น v2.2.0: บันไดการเติบโต SME 6 ระยะ & 12 ก้าวสำคัญ (`w.companyProgression`), มิเตอร์ค่าไฟ-น้ำ/โซลาร์/ไฟตก Brownout (`w.utilities`), วัฒนธรรมองค์กร/ข่าวลือตู้กดน้ำ/ชมรมหลังเลิกงาน/รางวัล Townhall/ลานจอดรถพนักงานบน Canvas/บริษัท Spin-off ศิษย์เก่า (`w.culture`), บริการ B2B ครบ 10 แบบ (`wholesale_distribution`, `toll_smelting_extrusion`), สินค้า 42 ชนิด และ Edit Hub แยกเติมเงินบาทบริษัท/กระเป๋าส่วนตัวพนักงาน (`grantPersonWallet`) | **completed in v2.2.0 package**; `npm test` ผ่าน 140/140, `npm run check` ผ่าน, `npm run build` ผ่าน (`1,455,926` bytes), benchmark `0.987 ms/tick`; หลักฐานใน [รายงาน v2.2.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.2.0.md) |
-| `business-world-metals-entry-audit-2026-11` | Gemini ผ่านแอปแชต (ฐาน `6182e0a662bf1dfe47360e64e20e635ea07abeae`) | แก้บั๊ก evaluator/งบเปิดธุรกิจ NPC ครบ 7 จุด (เวลางาน 10:45 น., `leaseDepositSatang`, แยก `committedBudgetSatang` กับ `paidCapitalTotalSatang`, ทางเข้าบริษัทเล็ก <10 คน, `remainingUncommitted` สำหรับบริการ, จัดอันดับบริการ/ลูกค้าตามความพร้อม, บังคับใช้ `nextReviewDay`/cooldown); เพิ่มสายโลหะขั้นบันได (วัตถุดิบ 6 ชนิดรวม 64, สูตร 5 สูตรรวม 40, สินค้า 4 ชนิดรวม 40, บำบัดกากแร่ `treatMineralSlag`), บริการ B2B 2 แบบ (`energy_epc_install`, `b2b_technical_academy` รวม 8 แบบ), 4 ประเทศใหม่ (`ID`, `AU`, `IN`, `SG` รวม 12 ประเทศ), 4 เหตุการณ์โลก (รวม 16 เหตุการณ์), 4 บริษัทต่างชาติ (รวม 22 แห่ง), เส้นทางขนส่ง 2 สาย (รวม 6 สาย) และทางเดินการค้าภูมิภาค 4 สาย (`D.TRADE_CORRIDORS`) | **completed in v2.1.0 package**; `npm test` ผ่าน 136/136, `npm run check` ผ่าน, `npm run build` ผ่าน (`1,378,080` bytes), benchmark `0.776 ms/tick`; หลักฐานใน [รายงาน v2.1.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.1.0.md) |
+| `process-driven-realism-overhaul-v270` | Gemini ผ่านแอปแชต (ต่อยอดจาก `bbc22e4ce61c002b49c2346841af3c4f3e9d0919` / v2.6.0) | ยกระดับความสมจริงเชิงกระบวนการครบทั้ง 8 Workstreams สู่รุ่น **v2.7.0**: (1) คิวแปรรูปวัตถุดิบและสินค้าขั้นกลางตามเวลาจริงทั้ง 40 สูตร (`w.plant.refineryBatches`), (2) ขนส่งและบริการ B2B 10 แบบตามเวลาจริง/ผลวัดเทคนิค/ชั่วโมงห้องเย็น (ยกเลิก `completeAllSteps: true` ในลูปอัตโนมัติ), (3) ซอฟต์แวร์/QA/ปรับขอบเขตงาน/โทษ SLA จากบั๊กค้างที่ผูกกับชั่วโมงนักพัฒนาจริง, (4) วิศวกรรมการผลิต 42 สินค้า + เกณฑ์ `safetyCritical` + ตัวกันคูณค่าไฟ/ความร้อนซ้ำเมื่อแชร์เครื่อง, (5) ระบบย่อยเครื่องจักร 5 ด้าน (`subsystems`), อาการเสีย (`faultModes`), โหมดจัดหา `purchased_new`/`used_refurbished`/`leased` และ `P.technicianCapability`, (6) คลังสินค้าล็อต/FIFO-FEFO/โซ่ความเย็น (`w.warehouse`), (7) ประมูลภาครัฐแข่งขัน (`w.commerce.tenders`), เจรจาปรับสัญญา (`renegotiateCommercialContract`), ยุติสัญญา (`terminateCommercialContract`) และ `W.payFromCounterparty`, (8) วงจรชีวภาพปศุสัตว์ 180 นาที (`feedLivestockHerd` แยกจาก `milkLivestockHerd`) และแยก `cogsSatang`/`accrualProfitSatang` ของกิจการภายนอก | **completed in v2.7.0 package (`Company-v2.7.0.zip`)**; `npm test` ผ่าน **186/186** (รวม `test/process-realism-v270.test.cjs`), `npm run check` ผ่าน, `npm run build` ผ่าน (`1,695,923` bytes), benchmark 500 NPCs `1.056 ms/tick`; ซิงก์ Master Skills ในแอป Gemini แล้ว; หลักฐานใน [รายงาน v2.7.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) และ [รับช่วง v2.7.0](PROCESS_REALISM_V270_HANDOFF.md) |
 
 ## งานแพตช์ที่รวมแล้วก่อนหน้า
 
 | Task ID | ผู้พัฒนา | ขอบเขต | สถานะ/หลักฐาน |
 |---|---|---|---|
-| `business-depth-npc-2026-11` | Gemini ผ่านแอปแชต | Product families, วัตถุดิบต้นน้ำ/ซัพพลายเชน, ธุรกิจบริการ, เงินทุน/ความสามารถและการตัดสินใจผู้บริหาร NPC | **integrated** ใน main; source/report v1.3.0 เข้ามาใน `ef56aa2`; หลักฐานและ tests อยู่ใน [รายงาน v1.3.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V1.3.0.md) |
-| `living-geopolitics-v200` | Gemini ผ่านแอปแชต | โลกภายนอกยุค 2.0.0, รัฐบาล/เหตุการณ์โลก/ราคา/พงศาวดาร และ Master Skill | **integrated** ใน main โดย `e02465c`; รายงาน [v2.0.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.0.0.md) |
-| `status-ideas-reconciliation-v200` | Codex | รวมสถานะทุกแพตช์และลบส่วน ideas ที่ทำแล้ว | **integrated** จากฐาน `06ee226`; รายงาน [การรวมสถานะ/ideas](PATCH_REPORTS/UPDATE_REPORT_2026-11-11_V2_STATUS_IDEA_RECONCILIATION.md) |
+| `plant-and-commercial-v260` | Codex (ฐาน `c2609be`) | เครื่องจักร 20 ชนิด, route สินค้า 42 รายการ, งานช่างและสัญญาส่งมอบเป็นงวดพร้อม `commercialEscrows` | **integrated** ใน `bbc22e4`; `177/177` tests, `12/12` browser; [รายงาน v2.6.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md) |
+| `time-and-stock-batch-v250` | Codex | เวลา 1× (2 นาทีจำลอง/วินาทีจริง), เดิน 8 ช่อง/tick และผลิตเข้าคลัง `stockBatch` | **integrated** ใน `c2609be`; [รายงาน v2.5.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.5.0.md) |
+| `living-world-v240` | Codex (ฐาน `a511b3e`) | ยกเครื่องรัฐบาล/ประเทศ/บริษัทภายนอกและ UI โลก 6 หมวด | **integrated**; `166/166` tests, `11/11` browser; [รายงาน v2.4.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md) |
+| `npc-knowledge-company-and-zoom-v230` | Codex (ฐาน `359bace`) | ซูมมือถือ, หน้าบริษัท/ความรู้ตัวละคร 170 วิชา, R&D/ซื้อเทคโนโลยี, เซฟเดิม | **integrated**; [รายงาน v2.3.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md) |
+| `sme-living-progression-and-holistic-realism-2026-11` | Gemini ผ่านแอปแชต | บันไดการเติบโต SME 6 ระยะ & 12 ก้าวสำคัญ, มิเตอร์ค่าไฟ-น้ำ/โซลาร์/ไฟตก, วัฒนธรรมองค์กร/ลานจอดรถ/Spin-off, บริการ B2B 10 แบบ, สินค้า 42 ชนิด | **integrated** (v2.2.0); [รายงาน v2.2.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.2.0.md) |
+| `business-world-metals-entry-audit-2026-11` | Gemini ผ่านแอปแชต | แก้บั๊ก evaluator/งบเปิดธุรกิจ NPC 7 จุด, สายโลหะขั้นบันได, 12 ประเทศ, 4 ทางเดินการค้า | **integrated** (v2.1.0); [รายงาน v2.1.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.1.0.md) |
+| `living-geopolitics-v200` | Gemini ผ่านแอปแชต | โลกภายนอกยุค 2.0.0 และ Master Skills | **integrated** ใน `e02465c`; [รายงาน v2.0.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.0.0.md) |
+| `business-depth-npc-2026-11` | Gemini ผ่านแอปแชต | Product families, วัตถุดิบต้นน้ำ, ธุรกิจบริการ, บอร์ดผู้บริหาร NPC | **integrated** ใน `ef56aa2`; [รายงาน v1.3.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V1.3.0.md) |
 | `agy-active-work` | Agy | ไม่มีรายละเอียดงานที่ยืนยันได้ในบันทึก repo ปัจจุบัน | ไม่ทราบสถานะ; ตรวจตาราง/branch ล่าสุดก่อนแก้ไฟล์ร่วม |
 
 ## งานเอกสารวิจัยที่จัดเก็บแล้ว (ไม่ใช่แพตช์เกม)
 
 | งาน | สิ่งที่จัดทำ | สถานะ/ขอบเขต |
 |---|---|---|
-| `business-expansion-nine-pdf-synthesis-2026-11` | จัดเก็บ PDF 9 ฉบับ (190 หน้า) และสังเคราะห์เป็น [ideas/company บท 35](../../ideas/company/35_business_expansion_nine_pdfs_synthesis.md) โดยเทียบกับ main v2.2.0 | **เอกสารเสร็จแล้ว**; ไม่มีการแก้ source, ไม่ถือว่า Gemini ได้รับไฟล์ และข้อเสนอไม่ใช่ความสามารถในเกม |
+| `business-expansion-nine-pdf-synthesis-2026-11` | จัดเก็บ PDF 9 ฉบับ (190 หน้า) และสังเคราะห์เป็น [ideas/company บท 35](../../ideas/company/35_business_expansion_nine_pdfs_synthesis.md) | **เอกสารเสร็จแล้ว**; ส่วนที่ทำจริงใน v2.7.0 ย้ายเข้า status แล้ว |
 
-## สิ่งที่ยังต้องระวังในการส่งต่องาน
+## สิ่งที่ต้องระวังในการส่งต่องานหลัง v2.7.0
 
-- แพ็กเกจ `Company-v2.1.0.zip` พัฒนาจากฐาน commit `6182e0a662bf1dfe47360e64e20e635ea07abeae` และอัปเดตทั้ง source, tests (`136/136`), standalone HTML, เอกสารสถานะ, คลัง ideas และสกิลใน `.agents/skills/` พร้อมซิงก์ Master Skill (`company-evolution-dev` และ `company-for-every-patch`) ในระบบสกิลของแอป Gemini แล้ว
-- ในคอนเทนเนอร์ออฟไลน์ของ Gemini ไม่มีแพ็กเกจ npm `playwright` ติดตั้งไว้ล่วงหน้า จึงรันยืนยัน `npm test` (136/136), `npm run check`, `npm run build` และ `node tools/benchmark.cjs` ครบทุกตัว ส่วน `npm run test:browser` ให้รันซ้ำบนเครื่องที่มี Playwright เมื่อรวมเข้า branch `main`
-- แนวทางต่อยอดสำหรับแพตช์ถัดไป (v2.2.0+) สรุปไว้ใน [GEMINI_NEXT_PATCH_HANDOFF_V210.md](GEMINI_NEXT_PATCH_HANDOFF_V210.md)
-
-## งาน Codex — วิชาและความพร้อมธุรกิจ v2.3.0
-
-| Task ID | เจ้าของ / ฐาน | ขอบเขต | สถานะและหลักฐาน |
-|---|---|---|---|
-| `npc-knowledge-company-and-zoom-v230` | Codex / main `359bace` | ซูมมือถือ, หน้าบริษัท/ความรู้ตัวละคร, 170 วิชาและแกนมนุษย์, R&D/ซื้อเทคโนโลยี, เซฟเดิม, แหล่งหลักและเทมเพลตวิชา | ตรวจแล้วและส่งขึ้น main ใน changeset v2.3.0; [รายงาน](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md), [รับช่วง](GEMINI_NEXT_PATCH_HANDOFF_V230.md) — ไม่อ้างว่าซิงก์สกิลส่วนตัวในแอป Gemini แล้ว |
-
-## งานปัจจุบัน 12 พฤศจิกายน 2026
-
-- Codex: `living-world-v240` ฐาน `a511b3e` — ผู้ใช้มอบหมายยกเครื่องรัฐบาล/ประเทศ/บริษัทภายนอกและ UI โลก พัฒนาและตรวจแล้ว:166/166 tests,11/11 browser; รายงานใน PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md และคู่มือ LIVING_WORLD_SYSTEM.md ไม่แก้ AGENTS.md หรือ Human Core
-
-Codex v2.5.0: เวลาและฐานผลิตเข้าคลังทำแล้ว ส่วนเครื่องเฉพาะ/ล็อตใหญ่/ขายเชิงรุก/รัฐยังอยู่ในขอบเขตงานที่ต้องต่อ ดูรายงานv2.5.0
-
-## ผลงานล่าสุด12พฤศจิกายน2026 — v2.6.0
-
-Codex ต่อจากc2609be: เครื่อง20ชนิด/route42สินค้า งานช่างและงวดขายจริง ทำและตรวจแล้ว177tests/12browser อ่านรายงานv2.6.0และPLANT_AND_COMMERCIAL_SYSTEMก่อนรับช่วง ไม่มีการเริ่มแพตช์ใหม่จากข้อเสนอในhandoff
-
-## Gemini process-realism assignment — 12 November 2026
-
-User authorized an English implementation brief covering all eight audited realism gaps. Codex prepared root ACTIVE_PROMPT.md against gameplay baseline bbc22e4 (v2.6.0). Status: **brief prepared in repository; implementation pending Gemini**. No claim that the brief/ZIP has been delivered to or imported by the Gemini app. Gameplay remainsv2.6.0; no simulation changes in this documentation update. Gemini/Codex/Agy must update ownership and progress when work actually starts.
+- แพ็กเกจ `Company-v2.7.0.zip` พัฒนาต่อจากฐาน `bbc22e4ce61c002b49c2346841af3c4f3e9d0919` (v2.6.0) อัปเดตทั้งซอร์สโค้ด, ชุดทดสอบ (`186/186`), standalone HTML (`1,695,923` bytes), เอกสารสถานะ และสกิลใน `.agents/skills/` พร้อมซิงก์ Master Skill (`company-evolution-dev` และ `company-for-every-patch`) ในแอป Gemini แล้ว
+- ในคอนเทนเนอร์ออฟไลน์ของ Gemini ไม่มีแพ็กเกจ npm `playwright` ติดตั้งไว้ล่วงหน้า จึงรันยืนยัน `npm test` (`186/186`), `npm run check`, `npm run build` และ `node tools/benchmark.cjs` ครบทุกตัว ส่วน `npm run test:browser` ให้รันซ้ำบนเครื่องที่มี Playwright เมื่อรวมเข้า branch `main`
+- แนวทางส่งต่องานหลัง v2.7.0 สรุปไว้ใน [PROCESS_REALISM_V270_HANDOFF.md](PROCESS_REALISM_V270_HANDOFF.md)

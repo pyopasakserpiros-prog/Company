@@ -268,6 +268,9 @@
       if (p.activity === "helping") return "กำลังช่วยเพื่อนร่วมงานเร่งงานด่วน";
       if (code === "selfStudy") return "กำลังศึกษาพัฒนาทักษะในสายงานตัวเอง";
       if(code === "equipmentMaintenance")return "กำลังติดตั้ง/ซ่อมบำรุงเครื่องมือ: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "freightDispatch")return "กำลังขับรถขนส่งสินค้าตามสัญญา: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "softwareDevelopment")return "กำลังพัฒนาและทดสอบซอฟต์แวร์: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "serviceOrderExecution")return "กำลังปฏิบัติงานบริการวิศวกรรม B2B: "+(p.intent.reasons||[]).join(" • ");
       if(code === "equipmentUnavailable")return "รอเครื่องจักรพร้อมใช้งาน: "+(p.intent.reasons||[]).join(" • ");
       if (code === "waitingForWorkOrMaterials")
         return "รอวัตถุดิบจากคลังเพื่อเริ่มผลิต";
@@ -1156,6 +1159,7 @@
           manufacturing: S.productionView(w),
           plant: S.plantView(w),
           commerce: S.commerceView(w),
+          warehouse: w.warehouse || null,
           warehouseCapacity: S.warehouseCapacity(w),
           warehouseUsed: S.warehouseUsed(w),
           executiveBoard: w.executiveBoard || null,

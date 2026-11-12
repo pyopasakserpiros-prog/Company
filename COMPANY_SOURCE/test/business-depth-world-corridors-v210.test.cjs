@@ -9,9 +9,9 @@ const API = require("../js/api.js");
 
 test("v2.1.0 Executive Board Bug Fixes: Daytime CEO Authority, Leased Fleet Deposit (No NaN), Committed Budget Reservation Lifecycle (No Double Deduction), and Topic Cooldowns", () => {
   const w = S.create("v210-board-fixes", { autonomous: true });
-  assert.strictEqual(D.VERSION, "2.6.0");
-  assert.strictEqual(D.RELEASE_VERSION, "2.6.0");
-  assert.strictEqual(S.RELEASE_VERSION, "2.6.0");
+  assert.strictEqual(D.VERSION, "2.7.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.7.0");
+  assert.strictEqual(S.RELEASE_VERSION, "2.7.0");
 
   // 1. Verify FLEET_VEHICLES all have integer leaseDepositSatang = dailyLeaseCost * 5
   for (const [vid, spec] of Object.entries(D.FLEET_VEHICLES)) {
@@ -75,24 +75,30 @@ test("v2.1.0 Metals & Aluminum Value Chain (Bauxite -> Alumina Billet -> Extrusi
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "wire_harness", quantity: 4 });
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "pack_carton", quantity: 4 });
 
-  // 1. Smelt bauxite_ore + coke_reducing_flux + raw_water_m3 -> alumina_billet + mineral_slag_mud (red mud byproduct)
+  // 1. Smelt bauxite_ore + coke_reducing_flux + raw_water_m3 -> alumina_billet + mineral_slag_mud (timed refinery batch)
+  const alumBefore = w.inventory.materials.alumina_billet;
   const alumRes = S.command(w, { type: "craftMaterial", materialId: "alumina_billet", batches: 2 });
-  assert.strictEqual(alumRes.ok, true, "Bauxite ore refines into alumina_billet");
+  assert.strictEqual(alumRes.ok, true, "Bauxite ore queues timed refinery batch for alumina_billet");
+  assert.strictEqual(w.inventory.materials.alumina_billet, alumBefore, "Timed refinery batch does not yield output at tick +0");
+  S.advance(w, 60);
   assert.ok(w.inventory.materials.alumina_billet >= 6);
   assert.ok(w.inventory.materials.mineral_slag_mud >= 2, "Bayer/Hall-Héroult refining generates mineral_slag_mud byproduct");
 
   // 2. Smelt iron_ore + coke_reducing_flux -> structural_steel_plate + mineral_slag_mud
   const steelRes = S.command(w, { type: "craftMaterial", materialId: "structural_steel_plate", batches: 2 });
-  assert.strictEqual(steelRes.ok, true, "Iron ore refines into structural_steel_plate");
+  assert.strictEqual(steelRes.ok, true, "Iron ore queues timed refinery batch for structural_steel_plate");
+  S.advance(w, 60);
   assert.ok(w.inventory.materials.structural_steel_plate >= 6);
 
   // 3. Smelt nickel_cobalt_matte and extrude aluminum_extrusion_profile
   const matteRes = S.command(w, { type: "craftMaterial", materialId: "nickel_cobalt_matte", batches: 1 });
   assert.strictEqual(matteRes.ok, true);
+  S.advance(w, 60);
   assert.ok(w.inventory.materials.nickel_cobalt_matte >= 2);
 
   const extRes = S.command(w, { type: "craftMaterial", materialId: "aluminum_extrusion_profile", batches: 2 });
-  assert.strictEqual(extRes.ok, true, "Alumina billet extrudes into aluminum_extrusion_profile");
+  assert.strictEqual(extRes.ok, true, "Alumina billet queues timed extrusion into aluminum_extrusion_profile");
+  S.advance(w, 60);
   assert.ok(w.inventory.materials.aluminum_extrusion_profile >= 6);
 
   // 4. Treat mineral_slag_mud byproduct -> recovers organic_compost and coke_reducing_flux while conserving inventory
@@ -150,7 +156,7 @@ test("v2.1.0 Living External World Expansion: 12 Nations (ID, AU, IN, SG), 16 Ge
 
   const app = API.create("v210-api-corridors", { autonomous: true });
   const snap = app.snapshot();
-  assert.strictEqual(snap.releaseVersion, "2.6.0");
+  assert.strictEqual(snap.releaseVersion, "2.7.0");
   assert.strictEqual(snap.catalog.tradeCorridors.length, 4);
   assert.strictEqual(snap.catalog.globalNations.length, 12);
   assert.strictEqual(snap.catalog.geopoliticalEvents.length, 16);

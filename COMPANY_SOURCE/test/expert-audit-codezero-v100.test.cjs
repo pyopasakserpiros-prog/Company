@@ -49,7 +49,8 @@ test("7-Expert Audit #2: Corporate Strategist & Economist — ceoDirective (6 mo
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "silica_bauxite_ore", quantity: 12 });
   const batchRes = S.command(w, { type: "batchCraftAll", batches: 2 });
   assert.equal(batchRes.ok, true);
-  assert.ok(batchRes.unitsProduced >= 4, "batchCraftAll must cascade craft across unlocked recipes");
+  S.advance(w, 90);
+  assert.ok(w.externalWorld.assetPortfolio.totalRefinedUnits >= 4, "batchCraftAll must cascade timed refining across unlocked recipes");
 
   // 3. Test Endless Corporate Empire continuation when status === 'won'
   if (w.finance.debt > 0) S.command(w, { type: "repayDebt", amount: w.finance.debt });

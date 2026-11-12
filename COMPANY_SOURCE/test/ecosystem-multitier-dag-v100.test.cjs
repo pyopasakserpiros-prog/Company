@@ -16,7 +16,7 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
   assert.equal(mats.length, 64, "Catalog must contain 51 materials across True T0, Bio Seeds, Cultivated Crops, and Tiers 1-3");
   assert.equal(prods.length, 42, "Catalog must contain 28 finished products (Tier 4)");
   assert.equal(Object.keys(D.MATERIAL_RECIPES).length, 40, "All 32 craftable Tier 1-3 materials must have multi-stage recipes");
-  assert.equal(D.RELEASE_VERSION, "2.6.0");
+  assert.equal(D.RELEASE_VERSION, "2.7.0");
 
   const tier0 = mats.filter((m) => m.tier === 0);
   const tier1 = mats.filter((m) => m.tier === 1);
@@ -61,17 +61,24 @@ test("v1.0.0+ 5-Tier Material & Product Value Chain DAG (True Natural T0 -> Cult
   prepare(w,{materials:["metallurgical_silicon","silicon_wafer","microchip"],subjects:["embedded_iot"]});
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "silica_bauxite_ore", quantity: 10 });
 
+  // Prevent background auto-buy/refining from altering exact intermediate counts during the step-by-step DAG check
+  w.policies.autoBuy = false;
+  w.policies.autoAccept = false;
   const step1 = S.command(w, { type: "craftMaterial", materialId: "metallurgical_silicon", batches: 3 });
-  assert.equal(step1.ok, true, "Step 1 (T0 -> T1): Smelt quartz sand into metallurgical silicon");
+  assert.equal(step1.ok, true, "Step 1 (T0 -> T1): Queue quartz sand smelting into metallurgical silicon");
+  assert.equal(w.inventory.materials.metallurgical_silicon, 0, "Output not released before timed smelting finishes");
+  S.advance(w, 60);
   assert.equal(w.inventory.materials.metallurgical_silicon, 6);
 
   const step2 = S.command(w, { type: "craftMaterial", materialId: "silicon_wafer", batches: 2 });
-  assert.equal(step2.ok, true, "Step 2 (T1 -> T2): Convert metallurgical silicon into silicon wafer");
+  assert.equal(step2.ok, true, "Step 2 (T1 -> T2): Queue metallurgical silicon conversion into silicon wafer");
+  S.advance(w, 60);
   assert.equal(w.inventory.materials.metallurgical_silicon, 2);
   assert.equal(w.inventory.materials.silicon_wafer, 14);
 
   const step3 = S.command(w, { type: "craftMaterial", materialId: "microchip", batches: 3 });
-  assert.equal(step3.ok, true, "Step 3 (T2 -> T3): Fabricate microchip in-house once R&D threshold is met");
+  assert.equal(step3.ok, true, "Step 3 (T2 -> T3): Queue microchip fabrication in-house once R&D threshold is met");
+  S.advance(w, 60);
   assert.equal(w.inventory.materials.microchip, 6);
 
   assert.deepEqual(S.audit(w), []);
@@ -97,7 +104,9 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
 
   const doughBefore = w.inventory.materials.bakery_dough_butter || 0;
   const doughRes = S.command(w, { type: "craftMaterial", materialId: "bakery_dough_butter", batches: 2 });
-  assert.equal(doughRes.ok, true, "Craft Tier 2 bakery_dough_butter from Tier 1 flour + palm oil");
+  assert.equal(doughRes.ok, true, "Queue Tier 2 bakery_dough_butter from Tier 1 flour + palm oil");
+  assert.equal(w.inventory.materials.bakery_dough_butter, doughBefore, "Output waits for timed mixing/proofing batch release");
+  S.advance(w, 60);
   assert.equal(w.inventory.materials.bakery_dough_butter, doughBefore + 4);
 
   const cashBefore = w.finance.cash;
@@ -124,7 +133,7 @@ test("v1.0.0+ B2B Intermediate Material Selling & Living Off-Site Corporate Ecos
 
   const app = API.create("v100-api-snap", { autonomous: true });
   const snap = app.snapshot();
-  assert.equal(snap.releaseVersion, "2.6.0");
+  assert.equal(snap.releaseVersion, "2.7.0");
   assert.equal(snap.catalog.materialTiers.length, 5);
   assert.equal(snap.catalog.materialRecipes.length, 40);
   assert.equal(snap.catalog.materials.length, 64);

@@ -87,11 +87,13 @@ test("v1.1.0 Chapter 23 True Upstream & 8-Stage Agricultural Cycle: 2+ consecuti
 
   // 5. Milling & Grinding Chain: paddy_grain -> milled_rice + rice_bran_husk -> artisan_flour -> organic_compost
   const millRes = S.command(w, { type: "craftMaterial", materialId: "milled_rice", batches: 2 });
-  assert.equal(millRes.ok, true, "Milling paddy_grain produces milled_rice and rice_bran_husk");
+  assert.equal(millRes.ok, true, "Milling paddy_grain queues timed batch for milled_rice and rice_bran_husk");
+  S.advance(w, 60);
   assert.ok(w.inventory.materials.rice_bran_husk >= 2);
 
   const compostRes = S.command(w, { type: "craftMaterial", materialId: "organic_compost", batches: 1 });
-  assert.equal(compostRes.ok, true, "Rice bran/husk + raw water ferments into organic_compost");
+  assert.equal(compostRes.ok, true, "Rice bran/husk + raw water queues fermentation into organic_compost");
+  S.advance(w, 60);
 
   assert.deepEqual(S.audit(w), []);
   assert.deepEqual(Save.validate(w), []);
@@ -171,10 +173,16 @@ test("v1.1.0 Chapter 19 Fleet Freight Transport Business: round-trip fuel & empt
   assert.equal(doubleBookAttempt.ok, false, "Cannot double-book the same truck on two overlapping jobs");
   assert.equal(doubleBookAttempt.code, "vehicleBusy");
 
-  // 4. Step through outbound -> delivered -> invoiced/paid, and verify truck is in `returning` status until backhaul completes!
+  // 4. Step through outbound -> delivered -> invoiced/paid over elapsed simulation time, and verify truck is in `returning` status until backhaul completes!
   S.command(w, { type: "advanceFreightContract", contractId: cid }); // reserved -> outbound
   assert.equal(w.fleetTransport.contracts[cid].status, "outbound");
 
+  // Attempting to deliver at the exact same timestamp as dispatch must be rejected!
+  const sameTickDeliver = S.command(w, { type: "advanceFreightContract", contractId: cid });
+  assert.equal(sameTickDeliver.ok, false, "Freight contract cannot finish outbound travel at the same timestamp as dispatch");
+  assert.equal(sameTickDeliver.code, "elapsedTimeRequired");
+
+  w.clock.absoluteMinute += 5; w.clock.tick++;
   S.command(w, { type: "advanceFreightContract", contractId: cid }); // outbound -> delivered (truck enters returning)
   assert.equal(w.fleetTransport.contracts[cid].status, "delivered");
   assert.equal(w.fleetTransport.vehicles["truck-1"].status, "returning");
@@ -183,12 +191,17 @@ test("v1.1.0 Chapter 19 Fleet Freight Transport Business: round-trip fuel & empt
   assert.equal(w.fleetTransport.contracts[cid].status, "paid");
   assert.equal(w.fleetTransport.vehicles["truck-1"].status, "returning", "Paid contract must NOT make truck idle before empty backhaul finishes");
 
-  // Repeat billing/payment call must be idempotent (never double-credits cash!)
+  // Repeat billing/payment call at same timestamp must be idempotent (never double-credits cash!)
   const cashAfterFirstPay = w.finance.cash;
   S.command(w, { type: "advanceFreightContract", contractId: cid });
   assert.equal(w.finance.cash, cashAfterFirstPay, "Duplicate advanceFreightContract must never double-pay invoice");
 
-  // Finish empty backhaul return -> truck becomes idle
+  // Attempting to finish return leg at the exact same timestamp as delivery must be rejected!
+  const sameTickReturn = S.command(w, { type: "advanceFreightContract", contractId: cid, finishReturn: true });
+  assert.equal(sameTickReturn.ok, false, "Return travel cannot complete at the same timestamp as customer delivery");
+
+  // Advance clock and finish empty backhaul return -> truck becomes idle
+  w.clock.absoluteMinute += 5; w.clock.tick++;
   S.command(w, { type: "advanceFreightContract", contractId: cid, finishReturn: true });
   assert.equal(w.fleetTransport.vehicles["truck-1"].status, "idle", "Truck becomes idle after completing empty backhaul return");
 
@@ -300,7 +313,7 @@ test("v1.1.0 Chapter 20 Software & SaaS App Business: 30/40/30 milestone account
 
 test("8. Factory Sector Process Models (Food Spoilage -> Compost, Electronics RMA, Automotive Tooling Changeover, Biomed Sterile COA) & Industrial B2B Services (Calibration, Field SLA, Eco Recycling) preserve 100% audit invariants", () => {
   const w = S.create("sector-and-service-v120", { autonomous: true });
-  assert.strictEqual(D.RELEASE_VERSION, "2.6.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.7.0");
   assert.strictEqual(D.BUSINESS_PROCESS_MODELS.length, 8);
   assert.strictEqual(Object.keys(D.SECTOR_PROCESS_MODELS).length, 4);
   assert.strictEqual(Object.keys(D.INDUSTRIAL_SERVICES).length, 10);
@@ -363,11 +376,14 @@ test("8. Factory Sector Process Models (Food Spoilage -> Compost, Electronics RM
   assert.strictEqual(bioPass.status, "certified");
   assert.strictEqual(w.sectorProcesses.biomedSterile.clinicalCertificatesIssued >= 1, true);
 
-  // 8E. Model 5B & 5C (Dairy Livestock Feeding/Milking & Mine Vein Survey)
+  // 8E. Model 5B & 5C (Dairy Livestock Biological Feeding/Digestion/Milking & Mine Vein Survey)
   const milkBefore = w.inventory.materials.fresh_milk_soy;
   const herdRes = S.command(w, { type: "feedLivestockHerd", assetId: "dairy_soy_farm" });
   assert.strictEqual(herdRes.ok, true);
-  assert.ok(w.inventory.materials.fresh_milk_soy > milkBefore, "Dairy herd feeding produces fresh_milk_soy");
+  assert.strictEqual(herdRes.milkingStage, "digesting", "Feeding initiates biological digestion/lactation cycle");
+  assert.strictEqual(w.inventory.materials.fresh_milk_soy, milkBefore, "Feeding is an input activity, not instant milk generation");
+  S.advance(w, 180);
+  assert.ok(w.inventory.materials.fresh_milk_soy > milkBefore, "Dairy herd yields fresh_milk_soy after 180-minute biological cycle");
 
   const surveyRes = S.command(w, { type: "surveyNewMineVein", assetId: "copper_bauxite_mine" });
   assert.strictEqual(surveyRes.ok, true);
@@ -378,12 +394,14 @@ test("8. Factory Sector Process Models (Food Spoilage -> Compost, Electronics RM
   if (quoteId) {
     const acc = S.command(w, { type: "acceptFreightContract", quoteId });
     assert.strictEqual(acc.ok, true);
-    // Advance to delivered (vehicle is now returning)
+    // Advance to outbound, wait 1 tick, then deliver (vehicle is now returning)
     S.command(w, { type: "advanceFreightContract", contractId: acc.contractId, completeAllSteps: false });
+    S.advance(w, 5);
     S.command(w, { type: "advanceFreightContract", contractId: acc.contractId, completeAllSteps: false });
     const backhaulRes = S.command(w, { type: "matchBackhaulCargo", contractId: acc.contractId });
     assert.strictEqual(backhaulRes.ok, true, "Backhaul cargo matched while vehicle is returning");
-    S.command(w, { type: "advanceFreightContract", contractId: acc.contractId, completeAllSteps: true, finishReturn: true });
+    S.advance(w, 5);
+    S.command(w, { type: "advanceFreightContract", contractId: acc.contractId, completeAllSteps: false, finishReturn: true });
   }
 
   // 8G. Model 8 (Industrial B2B Services: Calibration Lab Custody, Field Maintenance SLA, Industrial Recycling Material Recovery)

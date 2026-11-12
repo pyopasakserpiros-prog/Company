@@ -9298,8 +9298,8 @@ canvas.pt {
     return e;
   }
   return Object.freeze({
-    VERSION: "2.6.0",
-    RELEASE_VERSION: "2.6.0",
+    VERSION: "2.7.0",
+    RELEASE_VERSION: "2.7.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -9799,9 +9799,14 @@ canvas.pt {
     const stock={},flow={};
     const materials=new Set([...(c.sellsMaterials||[]),...(c.buysMaterials||[])]);
     for(const out of c.sellsMaterials||[])for(const k of Object.keys(D.MATERIAL_RECIPES[out]?.inputs||{}))materials.add(k);
-    for(const out of c.sellsMaterials||[]){const crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===out);if(crop){materials.add(crop.seedMaterialId);materials.add('raw_water_m3');materials.add('npk_fertilizer');}}
+    for(const out of c.sellsMaterials||[]){
+      const crop=Object.values(D.AGRICULTURE_CROPS||{}).find(q=>q.harvestMaterialId===out);
+      if(crop){materials.add(crop.seedMaterialId);materials.add('raw_water_m3');materials.add('npk_fertilizer');}
+      if(out==='fresh_milk_soy'){materials.add('soybean_crop');materials.add('rice_bran_husk');materials.add('raw_water_m3');materials.add('organic_compost');}
+      if(out==='natural_latex'||out==='timber_bamboo_log'){materials.add('raw_water_m3');materials.add('npk_fertilizer');}
+    }
     for(const k of materials)if(w.catalog.materials[k]){stock[k]=id==='world_exchange'?500:12+h%12;flow[k]={opening:stock[k],produced:0,bought:0,used:0,sold:0};}
-    m.firms[id]={id,nationId,cash,openingCash:cash,receipts:0,payments:0,stock,flow,capacity:4+h%6,utilization:0,technology:Math.round(m.nations[nationId].technology*.5+(48+h%45)*.5),risk:20+h%65,prudence:25+(h>>>8)%60,priceFactor:1,consecutiveLossDays:0,status:'operating',strategy:'maintain',decisionTh:'รักษากำลังผลิตและเงินสำรอง',dailyRevenue:0,dailyCost:0,profit:0,investment:0,lastInvestmentDay:0,output:0,missing:[],reserves:{},crops:{},history:[],lastReviewDay:0};
+    m.firms[id]={id,nationId,cash,openingCash:cash,receipts:0,payments:0,stock,flow,capacity:4+h%6,utilization:0,technology:Math.round(m.nations[nationId].technology*.5+(48+h%45)*.5),risk:20+h%65,prudence:25+(h>>>8)%60,priceFactor:1,consecutiveLossDays:0,status:'operating',strategy:'maintain',decisionTh:'รักษากำลังผลิตและเงินสำรอง',dailyRevenue:0,dailyCost:0,cogsSatang:0,operatingExpenseSatang:0,capexSatang:0,cashFlowSurplusSatang:0,accrualProfitSatang:0,profit:0,investment:0,lastInvestmentDay:0,output:0,missing:[],reserves:{},crops:{},history:[],lastReviewDay:0};
     for(const out of c.sellsMaterials||[])if(!D.MATERIAL_RECIPES[out])m.firms[id].reserves[out]=5000+h%10000;
     return m.firms[id];
   }
@@ -9820,6 +9825,7 @@ canvas.pt {
     if(qty<=0||r.status==='war'&&r.risk>=90)return 0;
     const cost=qty*unit,tax=qty*tariff;
     payment(buyer,cost+tax);receipt(seller,cost);m.nations[buyer.nationId].treasury+=tax;m.nations[buyer.nationId].taxes+=tax;
+    seller.cogsSatang=(seller.cogsSatang||0)+qty*Math.round((w.catalog.materials[k]?.unitCost||unit)*.65);
     addStock(seller,k,-qty,'sold');
     m.shipments.push({id:'shipment-'+(++m.sequence),sellerId:seller.id,buyerId:buyer.id,materialId:k,quantity:qty,cost,tariff:tax,departedDay:day,dueDay:day+r.days,originalDueDay:day+r.days,delayed:false,routeStatus:r.status});
     const relation=m.relations.find(x=>x.a===seller.nationId&&x.b===buyer.nationId||x.b===seller.nationId&&x.a===buyer.nationId);
@@ -9839,11 +9845,11 @@ canvas.pt {
   }
   function operate(w,f,day){
     const m=ensure(w),c=w.externalWorld.corporations[f.id],n=m.nations[f.nationId];
-    f.dailyRevenue=0;f.dailyCost=0;f.output=0;f.missing=[];
+    f.dailyRevenue=0;f.dailyCost=0;f.cogsSatang=0;f.operatingExpenseSatang=0;f.capexSatang=0;f.output=0;f.missing=[];
     const reserve=Math.round(15000*(1+f.prudence/50)*Math.max(1,f.capacity));
     if(f.cash<reserve){f.status='suspended';f.decisionTh='หยุดผลิตเพื่อรักษาเงินสด: เงินไม่พอทุนหมุนเวียน';f.utilization=0;return;}
     f.status='operating';
-    const overhead=Math.min(f.cash,Math.round(600*f.capacity));payment(f,overhead);n.householdCash+=overhead;n.wages+=overhead;
+    const overhead=Math.min(f.cash,Math.round(600*f.capacity));payment(f,overhead);f.operatingExpenseSatang+=overhead;n.householdCash+=overhead;n.wages+=overhead;
     const outputs=(c.sellsMaterials||[]).filter(k=>m.markets[k]);
     if(f.id==='world_exchange'){f.utilization=0;f.decisionTh='ค้าส่งจากสต็อกสำรองจำกัด รับซื้อเพื่อเติมคลังเมื่อมีผู้ผลิตขาย';return;}
     for(const k of outputs){
@@ -9861,6 +9867,21 @@ canvas.pt {
               addStock(f,crop.seedMaterialId,-seed,'used');addStock(f,'raw_water_m3',-water,'used');addStock(f,'npk_fertilizer',-1,'used');f.crops[k]={dueDay:day+Math.max(2,Math.ceil(crop.growthMinutes/1440)),seed,water};
             }else f.missing.push('พันธุ์ น้ำ หรือปุ๋ยสำหรับ '+mat.nameTh);
           }
+        }else if(k==='fresh_milk_soy'||k==='natural_latex'||k==='timber_bamboo_log'){
+          const bio=f.crops[k];
+          if(bio&&day>=bio.dueDay){
+            const yieldQty=bio.yieldQty||Math.max(4,f.capacity);
+            addStock(f,k,yieldQty,'produced');
+            if(k==='fresh_milk_soy'&&m.markets.organic_compost)addStock(f,'organic_compost',1,'produced');
+            f.output+=yieldQty;n.dailyOutput+=yieldQty;delete f.crops[k];
+          }
+          if(!f.crops[k]&&current<f.capacity*6){
+            const feedKey=k==='fresh_milk_soy'?((f.stock.rice_bran_husk||0)>=1?'rice_bran_husk':(f.stock.soybean_crop||0)>=1?'soybean_crop':null):(f.stock.npk_fertilizer||0)>=1?'npk_fertilizer':null;
+            if(feedKey&&(f.stock.raw_water_m3||0)>=1){
+              addStock(f,feedKey,-1,'used');addStock(f,'raw_water_m3',-1,'used');
+              f.crops[k]={dueDay:day+2,yieldQty:Math.max(4,f.capacity)};
+            }else f.missing.push('อาหารสัตว์/ปุ๋ย หรือน้ำดิบสำหรับ '+mat.nameTh);
+          }
         }else f.missing.push('ยังไม่มีวงจรผลิตต้นทาง '+mat.nameTh);
         continue;
       }
@@ -9872,8 +9893,11 @@ canvas.pt {
       if(!recipe)qty=Math.min(qty,mat.resourceClass==='environmental_flow'?Math.max(0,Math.floor(f.capacity*n.infrastructure/100)):f.reserves[k]||0);
       qty=Math.min(qty,Math.floor(Math.max(0,f.cash-reserve)/(Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18)))));
       if(qty<=0){f.missing.push(w.catalog.materials[k].nameTh);continue;}
-      const expense=qty*Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18));payment(f,expense);n.householdCash+=expense;n.wages+=expense;
-      for(const [ik,q]of Object.entries(inputs))addStock(f,ik,-qty*q,'used');
+      const expense=qty*Math.max(100,Math.round(w.catalog.materials[k].unitCost*.18));payment(f,expense);f.operatingExpenseSatang+=expense;n.householdCash+=expense;n.wages+=expense;
+      for(const [ik,q]of Object.entries(inputs)){
+        addStock(f,ik,-qty*q,'used');
+        f.cogsSatang+=qty*q*(m.markets[ik]?.price||w.catalog.materials[ik]?.unitCost||1000);
+      }
       if(!recipe&&mat.resourceClass!=='environmental_flow')f.reserves[k]-=qty;
       const produced=recipe?.outputs||{[k]:1};
       for(const [ok,oq] of Object.entries(produced))if(m.markets[ok])addStock(f,ok,qty*oq,'produced');
@@ -9887,8 +9911,8 @@ canvas.pt {
         const batch=usable.slice(0,Math.min(3,usable.length)),value=batch.reduce((a,k)=>a+m.markets[k].price,0);
         const revenue=Math.round(value*1.65*clamp(n.gdpIndex/100,.65,1.3)),wage=Math.round(value*.2);
         if(n.householdCash>=revenue&&f.cash>=reserve+wage){
-          payment(f,wage);n.householdCash+=wage;n.wages+=wage;
-          for(const k of batch)addStock(f,k,-1,'used');
+          payment(f,wage);f.operatingExpenseSatang+=wage;n.householdCash+=wage;n.wages+=wage;
+          for(const k of batch){addStock(f,k,-1,'used');f.cogsSatang+=m.markets[k].price;}
           n.householdCash-=revenue;n.consumption+=revenue;receipt(f,revenue);f.output++;n.dailyOutput++;
         }
       }else f.missing=inputs.filter(k=>!(f.stock[k]>0)).map(k=>w.catalog.materials[k].nameTh);
@@ -9898,27 +9922,34 @@ canvas.pt {
       const demand=Math.max(0,Math.round((2+n.gdpIndex/50)*(n.policy==='stimulus'?1.15:1)/(1+n.interestRate/30)));
       const price=Math.round(m.markets[k].price*f.priceFactor),qty=Math.min(demand,f.stock[k]||0,Math.floor(n.householdCash/price));
       m.markets[k].demand+=demand;
-      if(qty>0){n.householdCash-=qty*price;n.consumption+=qty*price;receipt(f,qty*price);addStock(f,k,-qty,'sold');m.markets[k].traded+=qty;}
+      if(qty>0){
+        n.householdCash-=qty*price;n.consumption+=qty*price;receipt(f,qty*price);
+        f.cogsSatang+=qty*Math.round((w.catalog.materials[k]?.unitCost||price)*.6);
+        addStock(f,k,-qty,'sold');m.markets[k].traded+=qty;
+      }
     }
     f.utilization=round(Math.min(1,f.output/Math.max(1,f.capacity*Math.max(1,outputs.length))));
   }
   function reviewFirm(w,f,day){
-    const m=ensure(w),n=m.nations[f.nationId];f.profit=f.dailyRevenue-f.dailyCost;
-    if(f.profit>0){const tax=Math.min(f.cash,Math.round(f.profit*.15));payment(f,tax);n.treasury+=tax;n.taxes+=tax;f.profit-=tax;}
+    const m=ensure(w),n=m.nations[f.nationId];
+    f.cashFlowSurplusSatang=f.dailyRevenue-f.dailyCost;
+    f.accrualProfitSatang=f.dailyRevenue-(f.cogsSatang||0)-(f.operatingExpenseSatang||0);
+    f.profit=f.cashFlowSurplusSatang;
+    if(f.profit>0){const tax=Math.min(f.cash,Math.round(f.profit*.15));payment(f,tax);n.treasury+=tax;n.taxes+=tax;f.profit-=tax;f.accrualProfitSatang-=tax;}
     f.consecutiveLossDays=f.profit<0?f.consecutiveLossDays+1:0;
     if(day-f.lastReviewDay>=7){
       f.lastReviewDay=day;
       const retained=f.cash,buffer=15000*f.capacity*(15+f.prudence/5),investment=f.capacity*100000;
       if(f.cash<buffer){f.strategy='cash';f.decisionTh='สะสมเงินสด: เงินต่ำกว่าเงินสำรองตามความระมัดระวังของผู้บริหาร';}
       else if(f.missing.length&&f.technology<85&&f.cash>buffer+investment){
-        payment(f,investment);n.householdCash+=investment;n.wages+=investment;f.technology=Math.min(95,f.technology+2);f.investment+=investment;f.strategy='research';f.decisionTh='พัฒนาเทคโนโลยีทีละขั้น: มีข้อจำกัดความรู้และเงินสำรองเพียงพอ';
+        payment(f,investment);f.capexSatang+=investment;n.householdCash+=investment;n.wages+=investment;f.technology=Math.min(95,f.technology+2);f.investment+=investment;f.strategy='research';f.decisionTh='พัฒนาเทคโนโลยีทีละขั้น: มีข้อจำกัดความรู้และเงินสำรองเพียงพอ';
       }else if(f.utilization>.72&&f.profit>0&&f.risk>45&&f.cash>buffer+investment&&day-f.lastInvestmentDay>=28){
-        payment(f,investment);n.householdCash+=investment;n.wages+=investment;f.capacity++;f.investment+=investment;f.lastInvestmentDay=day;f.strategy='expand';f.decisionTh='ขยายกำลังผลิต: ใช้งานสูง มีกำไร และเหลือทุนหมุนเวียน';
+        payment(f,investment);f.capexSatang+=investment;n.householdCash+=investment;n.wages+=investment;f.capacity++;f.investment+=investment;f.lastInvestmentDay=day;f.strategy='expand';f.decisionTh='ขยายกำลังผลิต: ใช้งานสูง มีกำไร และเหลือทุนหมุนเวียน';
       }else if(f.utilization<.35&&f.consecutiveLossDays>=7){f.priceFactor=round(clamp(f.priceFactor-.03,.85,1.2));f.strategy='restructure';f.decisionTh='ลดราคาและชะลอการลงทุน: สต็อกค้างและขาดทุนต่อเนื่อง';}
-      else{f.strategy='maintain';f.decisionTh='คงกิจการและประเมินตลาด: ยังไม่มีผลตอบแทนพอชดเชยความเสี่ยง';}
+      else{f.strategy='maintain';f.decisionTh='คงกิจการและประเมินตลาด: ยังไม่มีผลตอบแทนพอชะลอความเสี่ยง';}
       record(w,day,'CORP_DECISION',`${w.externalWorld.corporations[f.id].nameTh}: ${f.decisionTh}`,`เงินก่อนพิจารณา ${retained/100} บาท • เงินสำรอง ${buffer/100} บาท • กำลังผลิต ${Math.round(f.utilization*100)}%`,{actorCorpId:f.id,strategy:f.strategy});
     }
-    f.history.push({day,cash:f.cash,profit:f.profit,output:f.output,utilization:f.utilization});if(f.history.length>30)f.history.shift();
+    f.history.push({day,cash:f.cash,profit:f.profit,accrualProfitSatang:f.accrualProfitSatang,cogsSatang:f.cogsSatang,output:f.output,utilization:f.utilization});if(f.history.length>30)f.history.shift();
     const c=w.externalWorld.corporations[f.id];c.cashMillionBaht=round(f.cash/100000000);c.lastActionTh=f.decisionTh;c.lastActionDay=day;
   }
   function nationalReview(w,day){
@@ -10059,6 +10090,55 @@ canvas.pt {
     if(e.buyerType==='government'){m.nations[e.buyerId].treasury+=amount;m.nations[e.buyerId].spending-=amount;}else receipt(m.firms[e.buyerId],amount);
     e.balance=0;e.returned+=amount;return true;
   }
+  function adjustCommercialEscrow(w,id,newTotalRequirement){
+    const m=ensure(w),e=m.commercialEscrows?.[id];
+    if(!e||!Number.isSafeInteger(newTotalRequirement)||newTotalRequirement<e.paid)return false;
+    const neededBalance=Math.max(0,newTotalRequirement-e.paid);
+    if(neededBalance>e.balance)return false;
+    const refund=e.balance-neededBalance;
+    if(refund>0){
+      if(e.buyerType==='government'){m.nations[e.buyerId].treasury+=refund;m.nations[e.buyerId].spending-=refund;}
+      else receipt(m.firms[e.buyerId],refund);
+      e.balance-=refund;
+      e.returned+=refund;
+    }
+    return true;
+  }
+  function payFromCounterparty(w,escrowId,buyerType,buyerId,amount){
+    const m=ensure(w);
+    if(!Number.isSafeInteger(amount)||amount<=0)return false;
+    m.commercialEscrows=m.commercialEscrows||{};
+    if(!m.commercialEscrows[escrowId]){
+      if(!reserveCommercial(w,escrowId,buyerType,buyerId,amount))return false;
+    }
+    return payCommercial(w,escrowId,amount);
+  }
+  function evaluateCompetitiveTender(w,productId,quantity,playerUnitPrice,playerReputation,playerDocLevel){
+    const m=ensure(w);
+    const product=w.catalog.products[productId];
+    if(!product)return {won:false,reasonTh:'ไม่พบสินค้า'};
+    const competitors=Object.values(m.firms).filter(f=>{
+      const c=w.externalWorld.corporations[f.id];
+      return f.status==='operating'&&f.id!=='world_exchange'&&(c?.sector===product.industry||(c?.roles||[]).includes('competitor'));
+    }).slice(0,4).map(f=>{
+      const c=w.externalWorld.corporations[f.id];
+      const bidUnitPrice=Math.round(product.priceMin*clamp(f.priceFactor*0.97,0.88,1.12));
+      const score=round((f.technology*0.42+(c.trustScore||55)*0.33+(100-clamp((bidUnitPrice/product.priceMin)*50,30,75))*0.25));
+      return {firmId:f.id,nameTh:c.nameTh,bidUnitPrice,technology:f.technology,score};
+    });
+    const playerScore=round(playerDocLevel*0.42+playerReputation*0.35+(100-clamp((playerUnitPrice/product.priceMin)*50,30,75))*0.23);
+    competitors.sort((a,b)=>b.score-a.score);
+    const bestComp=competitors[0]||null;
+    const won=!bestComp||playerScore>=bestComp.score-4;
+    return {
+      won,
+      playerScore,
+      playerUnitPrice,
+      competitors,
+      winnerId:won?'player':bestComp.firmId,
+      winnerNameTh:won?'บริษัทของเรา (Siam Enterprise)':bestComp.nameTh
+    };
+  }
   function recordProductDelivery(w,id,productId,qty){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e)return false;const buyer=e.buyerType==='government'?m.nations[e.buyerId]:m.firms[e.buyerId];buyer.finishedGoods=buyer.finishedGoods||{};buyer.finishedGoods[productId]=(buyer.finishedGoods[productId]||0)+qty;return true;}
   function quote(w,k,qty,preferredId){
     const m=ensure(w),candidate=Object.values(m.firms).filter(f=>(w.externalWorld.corporations[f.id].sellsMaterials||[]).includes(k)&&(f.stock[k]||0)>=qty);
@@ -10096,116 +10176,922 @@ canvas.pt {
     if(actual!==opening+m.playerNetSatang)errors.push('world total cash conservation');
     return errors;
   }
-  return Object.freeze({ensure,step,apply,validate,receivePlayerSale,reserveCommercial,payCommercial,closeCommercial,recordProductDelivery,quote,scenario,sellToPlayer,route,statusName});
+  return Object.freeze({
+    ensure,
+    step,
+    apply,
+    validate,
+    receivePlayerSale,
+    reserveCommercial,
+    payCommercial,
+    closeCommercial,
+    adjustCommercialEscrow,
+    payFromCounterparty,
+    evaluateCompetitiveTender,
+    recordProductDelivery,
+    quote,
+    scenario,
+    sellToPlayer,
+    route,
+    statusName
+  });
 });
 
 </script>
     <script>
 /* js/plant.js */
-(function(root,factory){const v=factory(typeof module==='object'&&module.exports?require('./data.js'):root.CompanyData);if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyPlant=v;})(typeof globalThis!=='undefined'?globalThis:this,function(D){
+(function(root,factory){
+  const v=factory(typeof module==='object'&&module.exports?require('./data.js'):root.CompanyData);
+  if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyPlant=v;
+})(typeof globalThis!=='undefined'?globalThis:this,function(D){
 'use strict';
-const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
-const SPECS={
- hand_tools:{nameTh:'ชุดเครื่องมือช่างและโต๊ะเตรียมงาน',cost:350000,capacity:4,kw:.1,subject:'maintenance',level:20},
- electronics_bench:{nameTh:'สถานีบัดกรีและเครื่องวัดวงจร',cost:1200000,capacity:3,kw:.4,subject:'electrical_basics',level:25},
- test_rig:{nameTh:'ชุดทดสอบไฟฟ้าและโหลดจำลอง',cost:900000,capacity:3,kw:.6,subject:'electrical_basics',level:25},
- mixer:{nameTh:'เครื่องผสมอาหาร',cost:850000,capacity:4,kw:1.5,subject:'maintenance',level:25},
- oven:{nameTh:'เตาอบควบคุมอุณหภูมิ',cost:1500000,capacity:6,kw:4,subject:'maintenance',level:30},
- cooker:{nameTh:'หม้อต้มและเครื่องกวนให้ความร้อน',cost:1000000,capacity:5,kw:3,subject:'maintenance',level:25},
- pasteurizer:{nameTh:'เครื่องพาสเจอไรซ์',cost:2600000,capacity:5,kw:5,subject:'maintenance',level:35},
- fermenter:{nameTh:'ถังหมักและตู้บ่มควบคุมสภาวะ',cost:1800000,capacity:8,kw:1,subject:'maintenance',level:30},
- press:{nameTh:'แท่นอัดและเครื่องขึ้นรูปโลหะ',cost:2800000,capacity:3,kw:5,subject:'metal_machining',level:35},
- welder:{nameTh:'เครื่องเชื่อมและฟิกซ์เจอร์ประกอบ',cost:1400000,capacity:3,kw:3,subject:'maintenance',level:30},
- autoclave:{nameTh:'เครื่องนึ่งฆ่าเชื้อและห้องสะอาด',cost:3600000,capacity:6,kw:6,subject:'maintenance',level:40},
- clean_fill:{nameTh:'เครื่องกรองและบรรจุปลอดเชื้อ',cost:2400000,capacity:4,kw:2,subject:'maintenance',level:35},
- cold_room:{nameTh:'ห้องเย็นและระบบตรวจอุณหภูมิ',cost:2000000,capacity:12,kw:2,subject:'maintenance',level:30},
- developer_pc:{nameTh:'เครื่องพัฒนาซอฟต์แวร์และระบบสำรองข้อมูล',cost:180000,capacity:4,kw:.2,subject:'software',level:25},
- diagnostic_kit:{nameTh:'เครื่องมือวินิจฉัยและสอบเทียบภาคสนาม',cost:700000,capacity:3,kw:.2,subject:'metrology',level:25},
- warehouse_tools:{nameTh:'รถเข็น เครื่องชั่งและอุปกรณ์จัดคลัง',cost:450000,capacity:4,kw:.1,subject:'logistics',level:25},
- grain_mill:{nameTh:'โรงสีและเครื่องโม่ธัญพืช',cost:1800000,capacity:4,kw:3,subject:'maintenance',level:30},
- chemical_reactor:{nameTh:'ถังปฏิกรณ์และระบบกลั่นควบคุมสารเคมี',cost:6500000,capacity:3,kw:8,subject:'maintenance',level:40},
- semiconductor_fab:{nameTh:'สายกระบวนการเวเฟอร์และห้องสะอาดเฉพาะทาง',cost:20000000000,capacity:4,kw:20,subject:'maintenance',level:45},
- smelter:{nameTh:'เตาถลุงและเครื่องรีดวัสดุ',cost:4500000,capacity:3,kw:10,subject:'metal_machining',level:40}
-};
-function stage(nameTh,equipment,share,hold=0,temp=null){return {nameTh,equipment,share,holdMinutes:hold,temperatureC:temp};}
-function route(p){const id=p.id;
- if(/croissant|bakery|biscuit/.test(id))return [stage('ชั่งและนวดแป้ง','mixer',.3),stage('พักแป้งและขึ้นรูป','hand_tools',.3,/biscuit/.test(id)?0:45),stage('อบตามอุณหภูมิและพักเย็น','oven',.4,25,180)];
- if(/yogurt|probiotic|synbiotic/.test(id))return [stage('ผสมและเตรียมอาหารเลี้ยงเชื้อ','mixer',.3),stage('พาสเจอไรซ์และลดอุณหภูมิ','pasteurizer',.35,20,72),stage('เพาะเชื้อและบ่ม','fermenter',.35,180,38)];
- if(/saline|wound_dressing/.test(id))return [stage('เตรียมและกรองวัตถุดิบ','clean_fill',.4),stage('บรรจุในพื้นที่ควบคุม','clean_fill',.3),stage('ฆ่าเชื้อและพักเย็น','autoclave',.3,30,121)];
- if(p.industry==='food')return [stage('ชั่งและผสมตามสูตร','mixer',.3),stage(/oil/.test(id)?'แยกและกรองน้ำมัน':'ให้ความร้อนและแปรรูป','cooker',.4,15,90),stage('พักเย็นและเตรียมบรรจุ','hand_tools',.3,10)];
- if(/rail|tray|suspension|motor|agv|Actuator/.test(id))return [stage('เตรียมและขึ้นรูปวัสดุ','press',.4),stage('เชื่อมและประกอบ','welder',.4),stage('ทดสอบมิติและการทำงาน','diagnostic_kit',.2,10)];
- if(/battery|lfp|nmc|powerwall/i.test(id))return [stage('คัดเซลล์และตรวจความปลอดภัย','test_rig',.25),stage('ประกอบโมดูลและระบบป้องกัน','electronics_bench',.45),stage('ทดสอบโหลดและเฝ้าดูอุณหภูมิ','test_rig',.3,60)];
- return [stage('เตรียมชิ้นส่วนและตรวจแบบ','hand_tools',.25),stage('ประกอบและเชื่อมต่อ','electronics_bench',.5),stage('ตั้งค่าและทดสอบเดินเครื่อง','test_rig',.25,5)];
-}
-const serviceEquipment={calibration_lab:'diagnostic_kit',field_maintenance:'hand_tools',battery_second_life_lab:'test_rig',returnable_pallet_pool:'warehouse_tools',cold_storage_3pl:'cold_room',industrial_recycling:'press',energy_epc_install:'diagnostic_kit',b2b_technical_academy:'developer_pc',wholesale_distribution:'warehouse_tools',toll_smelting_extrusion:'smelter'};
-function ensure(w){if(w.plant)return w.plant;w.plant={version:1,machines:{},maintenance:[],history:[],energyKwh:0,billedEnergyKwh:0,partsConsumed:{},decisionTh:'ยังไม่มีแผนซื้อเครื่องใหม่',lastReviewDay:0};for(const k of ['hand_tools','electronics_bench','test_rig','developer_pc','warehouse_tools'])install(w,k,true);return w.plant;}
-function install(w,k,opening=false){const x=w.plant;if(!SPECS[k])return null;const m={id:k,condition:100,status:'ready',slots:{},temperatureC:25,totalMinutes:0,totalKwh:0,installedAt:w.clock.absoluteMinute,opening,costSatang:opening?0:SPECS[k].cost};x.machines[k]=m;return m;}
-function log(w,type,text,details={}){const x=ensure(w);x.history.unshift({at:w.clock.absoluteMinute,type,text,...details});if(x.history.length>100)x.history.pop();}
-function workState(w,j){const u=w.units[j.unitId];if(!u)return null;const steps=route(w.catalog.products[u.productId]);if(!u.process||u.process.version!==1){u.process={version:1,index:0,labor:0,phase:'labor',history:[]};j.progress=0;}return {u,steps,state:u.process,step:steps[u.process.index]};}
-function stationFor(w,j){if(j.kind!=='assembly'||!j.unitId)return null;const q=workState(w,j);if(!q?.step)return null;const stations=Object.values(w.layout.stations).filter(s=>s.kind==='assembly').sort((a,b)=>a.id.localeCompare(b.id));if(!stations.length)return null;const n=Object.keys(SPECS).indexOf(q.step.equipment);return stations[n%stations.length].id;}
-function available(w,j){if(j.kind!=='assembly'||!j.unitId)return true;const q=workState(w,j);if(!q||!q.step)return true;if(q.state.phase==='machine')return false;const m=ensure(w).machines[q.step.equipment];return !!m&&m.status==='ready'&&m.condition>=25&&(m.slots[j.id]||Object.keys(m.slots).length<SPECS[m.id].capacity);}
-function power(w,m,minutes){if(minutes<=5&&m.lastPowerAt===w.clock.absoluteMinute)return;m.lastPowerAt=w.clock.absoluteMinute;const energy=SPECS[m.id].kw*minutes/60;m.totalKwh+=energy;ensure(w).energyKwh+=energy;m.totalMinutes+=minutes;m.condition=Math.max(0,m.condition-minutes*.003);}
-function labor(w,j,p,delta,tick){const q=workState(w,j);if(!q||!q.step)return {delta,release:false};const {step,state}=q,m=ensure(w).machines[step.equipment];if(!available(w,j))return {delta:0,release:true};
- m.slots[j.id]=true;const required=j.required*step.share,added=Math.min(delta*(.65+m.condition*.0035),Math.max(0,required-state.labor));state.labor+=added;power(w,m,tick);
- if(state.labor+1e-8>=required){state.workerId=p.id;state.startedAt=w.clock.absoluteMinute;if(step.holdMinutes){state.phase='machine';state.holdDone=0;state.lastTick=w.clock.absoluteMinute;return {delta:added,release:true};}completeStage(w,j,q,m);return {delta:added,release:state.phase!=="complete"};}
- return {delta:added,release:false};
-}
-function completeStage(w,j,q,m){const s=q.state;s.history.push({nameTh:q.step.nameTh,machineId:m.id,workerId:s.workerId||null,completedAt:w.clock.absoluteMinute,holdMinutes:s.holdDone||0,temperatureC:m.temperatureC});delete m.slots[j.id];s.index++;s.labor=0;s.phase='labor';q.u.processHistory=s.history;q.u.processStep=s.index;if(s.index>=q.steps.length){j.progress=j.required;s.phase='complete';}}
-function tick(w,tick){const x=ensure(w);
- const cold=x.machines.cold_room;if(cold?.status==='ready'&&cold.condition>=25&&Object.values(w.units).some(u=>u.stage==='ready'&&w.catalog.products[u.productId]?.industry==='food')){cold.temperatureC+=clamp(4-cold.temperatureC,-tick*2,tick*2);power(w,cold,tick);}
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),round=v=>Math.round(v*100)/100;
 
- for(const m of Object.values(x.machines)){for(const slots of [m.slots,m.heldSlots||{}])for(const jid of Object.keys(slots))if(!w.jobs[jid]||!w.units[w.jobs[jid].unitId])delete slots[jid];if(!Object.keys(m.slots).length)m.temperatureC+=clamp(25-m.temperatureC,-tick,tick);}
- for(const j of Object.values(w.jobs)){if(j.kind!=='assembly'||!j.unitId)continue;const q=workState(w,j);if(!q?.step||q.state.phase!=='machine')continue;const m=x.machines[q.step.equipment];if(!m||m.status!=='ready'||m.condition<25||w.utilities?.brownoutActive)continue;
-  const dt=Math.min(tick,Math.max(0,w.clock.absoluteMinute-q.state.lastTick));q.state.lastTick=w.clock.absoluteMinute;if(!dt)continue;
-  power(w,m,dt);const target=q.step.temperatureC;if(target!==null&&m.lastThermalAt!==w.clock.absoluteMinute){m.temperatureC+=clamp(target-m.temperatureC,-dt*3,dt*3);m.lastThermalAt=w.clock.absoluteMinute;}if(target===null||Math.abs(m.temperatureC-target)<=2)q.state.holdDone+=dt;
-  if(q.state.holdDone>=q.step.holdMinutes)completeStage(w,j,q,m);
- }
+const SPECS={
+  hand_tools:{nameTh:'ชุดเครื่องมือช่างและโต๊ะเตรียมงาน',cost:350000,capacity:4,kw:.1,subject:'maintenance',level:20,scale:'small',compatibleParts:['metal_sheet','wire_harness'],faultModes:[{code:'tool_fixture_loosening',nameTh:'แคลมป์จับชิ้นงานและประแจวัดแรงบิดคลาดเคลื่อน',subsystem:'mechanical',part:'metal_sheet'}]},
+  electronics_bench:{nameTh:'สถานีบัดกรีและเครื่องวัดวงจร',cost:1200000,capacity:3,kw:.4,subject:'electrical_basics',level:25,scale:'medium',compatibleParts:['wire_harness','pcb','sensor'],faultModes:[{code:'solder_heater_drift',nameTh:'หัวแร้งควบคุมอุณหภูมิและระบบกราวด์ ESD เสื่อม',subsystem:'electrical',part:'wire_harness'},{code:'oscilloscope_probe_fault',nameTh:'ชุดสายวัดสัญญาณและหัววัดแรงดันชำรุด',subsystem:'calibration',part:'wire_harness'}]},
+  test_rig:{nameTh:'ชุดทดสอบไฟฟ้าและโหลดจำลอง',cost:900000,capacity:3,kw:.6,subject:'electrical_basics',level:25,scale:'medium',compatibleParts:['wire_harness','pcb','power_inverter_ic'],faultModes:[{code:'load_bank_relay_wear',nameTh:'รีเลย์สวิตชิ่งโหลดจำลองเกิดอาร์กสะสม',subsystem:'electrical',part:'wire_harness'}]},
+  mixer:{nameTh:'เครื่องผสมอาหาร',cost:850000,capacity:4,kw:1.5,subject:'maintenance',level:25,scale:'medium',compatibleParts:['polymer_resin','metal_sheet'],faultModes:[{code:'planetary_gear_seal_wear',nameTh:'ซีลกันรั่วหัวตีผสมและเฟืองทดรอบสึกหรอ',subsystem:'mechanical',part:'polymer_resin'}]},
+  oven:{nameTh:'เตาอบควบคุมอุณหภูมิ',cost:1500000,capacity:6,kw:4,subject:'maintenance',level:30,scale:'medium',compatibleParts:['polymer_resin','wire_harness','metal_sheet'],faultModes:[{code:'oven_door_gasket_leak',nameTh:'ขอบยางซิลิโคนเตาอบเสื่อมและเทอร์โมคัปเปิลเพี้ยน',subsystem:'thermal',part:'polymer_resin'}]},
+  cooker:{nameTh:'หม้อต้มและเครื่องกวนให้ความร้อน',cost:1000000,capacity:5,kw:3,subject:'maintenance',level:25,scale:'medium',compatibleParts:['polymer_resin','metal_sheet'],faultModes:[{code:'jacket_valve_scaling',nameTh:'ตะกรันเกาะวาล์วไอน้ำและซีลใบพัดกวนสึก',subsystem:'thermal',part:'polymer_resin'}]},
+  pasteurizer:{nameTh:'เครื่องพาสเจอไรซ์',cost:2600000,capacity:5,kw:5,subject:'maintenance',level:35,scale:'large',compatibleParts:['polymer_resin','sensor'],faultModes:[{code:'plate_heat_exchanger_fouling',nameTh:'ปะเก็นแผ่นแลกเปลี่ยนความร้อน HTST เสื่อมสภาพ',subsystem:'thermal',part:'polymer_resin'}]},
+  fermenter:{nameTh:'ถังหมักและตู้บ่มควบคุมสภาวะ',cost:1800000,capacity:8,kw:1,subject:'maintenance',level:30,scale:'medium',compatibleParts:['polymer_resin','sensor'],faultModes:[{code:'fermenter_ph_seal_drift',nameTh:'ซีลปลอดเชื้อและหัววัดอุณหภูมิ/pH ถังหมักคลาดเคลื่อน',subsystem:'cleanliness',part:'polymer_resin'}]},
+  press:{nameTh:'แท่นอัดและเครื่องขึ้นรูปโลหะ',cost:2800000,capacity:3,kw:5,subject:'metal_machining',level:35,scale:'large',compatibleParts:['metal_sheet','structural_steel_plate'],faultModes:[{code:'hydraulic_ram_die_wear',nameTh:'บูชไกด์แม่พิมพ์และแผ่นรองรับแรงอัดสึกหรอ',subsystem:'mechanical',part:'metal_sheet'}]},
+  welder:{nameTh:'เครื่องเชื่อมและฟิกซ์เจอร์ประกอบ',cost:1400000,capacity:3,kw:3,subject:'maintenance',level:30,scale:'medium',compatibleParts:['metal_sheet','wire_harness','copper_coil'],faultModes:[{code:'welding_torch_nozzle_burn',nameTh:'หัวจ่ายลวดเชื่อมและฟิกซ์เจอร์จับยึดบิดตัวจากความร้อน',subsystem:'thermal',part:'metal_sheet'}]},
+  autoclave:{nameTh:'เครื่องนึ่งฆ่าเชื้อและห้องสะอาด',cost:3600000,capacity:6,kw:6,subject:'maintenance',level:40,scale:'large',compatibleParts:['polymer_resin','sensor'],faultModes:[{code:'autoclave_chamber_seal',nameTh:'ซีลประตูห้องนึ่งแรงดันสูงและกรองไอน้ำเสื่อม',subsystem:'cleanliness',part:'polymer_resin'}]},
+  clean_fill:{nameTh:'เครื่องกรองและบรรจุปลอดเชื้อ',cost:2400000,capacity:4,kw:2,subject:'maintenance',level:35,scale:'large',compatibleParts:['polymer_resin','foil_pouch'],faultModes:[{code:'hepa_membrane_clog',nameTh:'ท่อปั๊มรีดท่อปลอดเชื้อและเมมเบรนกรองละเอียดตัน',subsystem:'cleanliness',part:'polymer_resin'}]},
+  cold_room:{nameTh:'ห้องเย็นและระบบตรวจอุณหภูมิ',cost:2000000,capacity:12,kw:2,subject:'maintenance',level:30,scale:'large',compatibleParts:['polymer_resin','copper_coil'],faultModes:[{code:'evaporator_seal_frost',nameTh:'ซีลฉนวนห้องเย็นรั่วและคอยล์เย็นจับน้ำแข็งสะสม',subsystem:'thermal',part:'polymer_resin'}]},
+  developer_pc:{nameTh:'เครื่องพัฒนาซอฟต์แวร์และระบบสำรองข้อมูล',cost:180000,capacity:4,kw:.2,subject:'software',level:25,scale:'small',compatibleParts:['wire_harness','pcb'],faultModes:[{code:'psu_storage_degraded',nameTh:'ชุดจ่ายไฟเวิร์กสเตชันและสายเชื่อมต่อเซิร์ฟเวอร์ขัดข้อง',subsystem:'electrical',part:'wire_harness'}]},
+  diagnostic_kit:{nameTh:'เครื่องมือวินิจฉัยและสอบเทียบภาคสนาม',cost:700000,capacity:3,kw:.2,subject:'metrology',level:25,scale:'small',compatibleParts:['wire_harness','sensor'],faultModes:[{code:'reference_probe_drift',nameTh:'หัววัดมาตรฐานอ้างอิงคลาดเคลื่อนเกินเกณฑ์สอบเทียบ',subsystem:'calibration',part:'wire_harness'}]},
+  warehouse_tools:{nameTh:'รถเข็น เครื่องชั่งและอุปกรณ์จัดคลัง',cost:450000,capacity:4,kw:.1,subject:'logistics',level:25,scale:'small',compatibleParts:['metal_sheet','wire_harness'],faultModes:[{code:'pallet_jack_wheel_wear',nameTh:'ล้อรถลากพาเลทและโหลดเซลล์แท่นชั่งสึกหรอ',subsystem:'mechanical',part:'metal_sheet'}]},
+  grain_mill:{nameTh:'โรงสีและเครื่องโม่ธัญพืช',cost:1800000,capacity:4,kw:3,subject:'maintenance',level:30,scale:'medium',compatibleParts:['metal_sheet','polymer_resin'],faultModes:[{code:'mill_roller_screen_wear',nameTh:'ลูกหินกะเทาะเปลือกและตะแกรงร่อนแป้งสึก',subsystem:'mechanical',part:'metal_sheet'}]},
+  chemical_reactor:{nameTh:'ถังปฏิกรณ์และระบบกลั่นควบคุมสารเคมี',cost:6500000,capacity:3,kw:8,subject:'maintenance',level:40,scale:'heavy',compatibleParts:['polymer_resin','metal_sheet'],faultModes:[{code:'reactor_lining_corrosion',nameTh:'ปะเก็นทนกรด-ด่างและวาล์วระบายแรงดันถังปฏิกรณ์กัดกร่อน',subsystem:'cleanliness',part:'polymer_resin'}]},
+  semiconductor_fab:{nameTh:'สายกระบวนการเวเฟอร์และห้องสะอาดเฉพาะทาง',cost:20000000000,capacity:4,kw:20,subject:'maintenance',level:45,scale:'mega',compatibleParts:['wire_harness','optical_lens','microchip'],faultModes:[{code:'wafer_stepper_stage_drift',nameTh:'ชุดควบคุมสเตจลิโธกราฟีและระบบกรองฝุ่น ULPA คลาดเคลื่อน',subsystem:'calibration',part:'wire_harness'}]},
+  smelter:{nameTh:'เตาถลุงและเครื่องรีดวัสดุ',cost:4500000,capacity:3,kw:10,subject:'metal_machining',level:40,scale:'heavy',compatibleParts:['metal_sheet','structural_steel_plate'],faultModes:[{code:'smelter_crucible_wear',nameTh:'ผนังเตาหลอมและลูกกลิ้งรีดโลหะสึกจากความร้อนสูง',subsystem:'thermal',part:'metal_sheet'}]}
+};
+
+function stage(nameTh,equipment,share,hold=0,temp=null,meta={}){
+  return {
+    nameTh,
+    equipment,
+    share,
+    holdMinutes:hold,
+    temperatureC:temp,
+    opCode:meta.opCode||'process_op',
+    subject:meta.subject||SPECS[equipment]?.subject||'maintenance',
+    minSubjectLevel:meta.minSubjectLevel??0,
+    safetyCritical:Boolean(meta.safetyCritical),
+    batchShared:meta.batchShared!==undefined?Boolean(meta.batchShared):(hold>0||temp!==null),
+    qualityCheckpoint:Boolean(meta.qualityCheckpoint),
+    intermediateOut:meta.intermediateOut||nameTh
+  };
 }
-function requirements(w){const ks=new Set();for(const u of Object.values(w.units))for(const s of route(w.catalog.products[u.productId]))ks.add(s.equipment);for(const o of Object.values(w.serviceBusiness?.orders||{}))if(!['paid','cancelled'].includes(o.status)&&serviceEquipment[o.serviceTypeId])ks.add(serviceEquipment[o.serviceTypeId]);return [...ks];}
-function repairPart(k){return ['press','welder','smelter','grain_mill','warehouse_tools','hand_tools'].includes(k)?'metal_sheet':['mixer','cooker','pasteurizer','fermenter','cold_room','clean_fill','autoclave','chemical_reactor'].includes(k)?'polymer_resin':'wire_harness';}
-function repairSubject(p,k){const s=p.education?.subjects||{};return Math.max(s.maintenance||0,(s[SPECS[k].subject]||0)*.8,(s.electrical_basics||0)*.55);}
-function request(w,k,hooks){const x=ensure(w),spec=SPECS[k];if(!spec)return false;if(x.machines[k])return true;const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),reserve=wages*18;
- if(spec.cost>5000000&&Object.values(w.production.shipped).reduce((a,n)=>a+n,0)<50){x.decisionTh=`ยังไม่ซื้อ ${spec.nameTh}: ยังไม่มีปริมาณผลิตรองรับ เลือกซื้อวัตถุดิบจากผู้ผลิตภายนอก`;return false;}
- if(w.finance.cash<spec.cost+reserve){x.decisionTh=`ยังไม่ซื้อ ${spec.nameTh}: ต้องเก็บเงินสำรอง18วัน`;return false;}
- hooks.pay(spec.cost,'plant:buy:'+k);install(w,k);x.machines[k].status='installing';x.machines[k].availableAt=w.clock.absoluteMinute+(k==='semiconductor_fab'?180:spec.cost>=5000000?14:spec.cost>=1800000?5:2)*1440;x.maintenance.push({id:'install:'+k,machineId:k,type:'install',progress:0,required:k==='semiconductor_fab'?4320:spec.cost>=5000000?480:spec.cost>=1800000?240:60,workerId:null,partsConsumed:false});log(w,'equipmentPurchased',`ซื้อ ${spec.nameTh} รอช่างติดตั้ง`,{machineId:k,cost:spec.cost});return true;
+
+function route(p){
+  const id=p.id;
+  if(/croissant|bakery|biscuit/.test(id)){
+    const isBiscuit=/biscuit/.test(id);
+    return [
+      stage('ชั่งและนวดแป้ง','mixer',.3,0,null,{opCode:'dough_mixing',subject:'baking_process',minSubjectLevel:20,intermediateOut:'mixed_dough'}),
+      stage(isBiscuit?'รีดแผ่นและตัดขึ้นรูปบิสกิต':'พักแป้งและขึ้นรูป','hand_tools',.3,isBiscuit?0:45,null,{opCode:isBiscuit?'rotary_molding':'dough_proofing',subject:'baking_process',minSubjectLevel:20,batchShared:true,intermediateOut:'shaped_pastry'}),
+      stage('อบตามอุณหภูมิและพักเย็น','oven',.4,25,180,{opCode:'tunnel_baking',subject:'food_safety',minSubjectLevel:25,batchShared:true,qualityCheckpoint:true,intermediateOut:'baked_lot'})
+    ];
+  }
+  if(/yogurt|probiotic|synbiotic/.test(id)){
+    return [
+      stage('ผสมและเตรียมอาหารเลี้ยงเชื้อ','mixer',.25,0,null,{opCode:'media_blending',subject:'dairy_processing',minSubjectLevel:25,intermediateOut:'blended_base'}),
+      stage('พาสเจอไรซ์และลดอุณหภูมิ','pasteurizer',.25,20,72,{opCode:'htst_pasteurization',subject:'dairy_processing',minSubjectLevel:30,batchShared:true,intermediateOut:'pasteurized_base'}),
+      stage('เพาะเชื้อและบ่ม','fermenter',.3,180,38,{opCode:'culture_fermentation',subject:'fermentation',minSubjectLevel:30,batchShared:true,intermediateOut:'fermented_curd'}),
+      stage('บรรจุปลอดเชื้อและแช่เย็นควบคุมอุณหภูมิ','cold_room',.2,15,4,{opCode:'cold_fill_chill',subject:'food_safety',minSubjectLevel:30,batchShared:true,qualityCheckpoint:true,intermediateOut:'chilled_probiotic_lot'})
+    ];
+  }
+  if(/saline|wound_dressing/.test(id)){
+    return [
+      stage('เตรียมและกรองวัตถุดิบเกรดคลินิก','clean_fill',.3,0,null,{opCode:'sterile_prep',subject:'aseptic_processing',minSubjectLevel:35,safetyCritical:true,intermediateOut:'filtered_clinical_solution'}),
+      stage('บรรจุในพื้นที่ควบคุม ISO Class-5','clean_fill',.3,0,null,{opCode:'aseptic_fill',subject:'cleanroom_operations',minSubjectLevel:35,safetyCritical:true,intermediateOut:'sealed_sterile_pack'}),
+      stage('ฆ่าเชื้อไอน้ำแรงดันสูงและพักเย็น','autoclave',.25,30,121,{opCode:'autoclave_sterilization',subject:'aseptic_processing',minSubjectLevel:35,safetyCritical:true,batchShared:true,intermediateOut:'sterilized_lot'}),
+      stage('ตรวจปล่อยความปลอดเชื้อและเอกสาร COA','diagnostic_kit',.15,10,null,{opCode:'sterility_release_assay',subject:'quality_documentation',minSubjectLevel:30,qualityCheckpoint:true,intermediateOut:'coa_certified_lot'})
+    ];
+  }
+  if(/vital_signs_monitor/.test(id)){
+    return [
+      stage('วางชิ้นส่วนและบัดกรีวงจรวัดสัญญาณชีพ','electronics_bench',.3,0,null,{opCode:'biomed_smt',subject:'electrical_basics',minSubjectLevel:30,intermediateOut:'biomed_pcba'}),
+      stage('ประกอบตัวเรือนฉนวนป้องกันไฟรั่วเกรดการแพทย์','hand_tools',.25,0,null,{opCode:'isolation_enclosure',subject:'electrical_safety',minSubjectLevel:35,safetyCritical:true,intermediateOut:'isolated_monitor_unit'}),
+      stage('สอบเทียบความแม่นยำเซ็นเซอร์สัญญาณชีพ','diagnostic_kit',.25,15,null,{opCode:'clinical_calibration',subject:'metrology',minSubjectLevel:35,intermediateOut:'calibrated_monitor'}),
+      stage('ทดสอบความปลอดภัยทางคลินิกก่อนปล่อยล็อต','test_rig',.2,15,null,{opCode:'clinical_safety_test',subject:'clinical_validation',minSubjectLevel:35,qualityCheckpoint:true,intermediateOut:'clinical_ready_monitor'})
+    ];
+  }
+  if(p.industry==='food'){
+    const isOil=/oil/.test(id),isChili=/chili_paste/.test(id),isMeal=/meal|meat/.test(id);
+    return [
+      stage(isChili?'คั่วสมุนไพรและบดเครื่องแกง':'ชั่งและผสมตามสูตร','mixer',.3,0,null,{opCode:'food_batch_mix',subject:'food_safety',minSubjectLevel:20,intermediateOut:'blended_food_mix'}),
+      stage(isOil?'สกัดร้อนและกรองละเอียด':isChili?'เคี่ยวไฟอ่อนและปรุงรสเข้มข้น':'ให้ความร้อนและแปรรูป','cooker',.4,15,isChili?92:90,{opCode:'thermal_cooking',subject:'food_safety',minSubjectLevel:20,batchShared:true,intermediateOut:'cooked_batch'}),
+      stage(isMeal?'ลดอุณหภูมิรวดเร็วและซีลถาดบรรจุ':'พักเย็นและเตรียมบรรจุ','hand_tools',.3,10,null,{opCode:'cooling_pack_prep',subject:'food_safety',minSubjectLevel:20,qualityCheckpoint:true,intermediateOut:'food_ready_lot'})
+    ];
+  }
+  if(/rail|tray|suspension|motor|agv|Actuator|drone|switchgear/i.test(id)){
+    return [
+      stage('ตัดกลึงและขึ้นรูปโครงสร้างโลหะ','press',.3,0,null,{opCode:'cnc_press_forming',subject:'metal_machining',minSubjectLevel:30,intermediateOut:'formed_chassis'}),
+      stage('เชื่อมประกอบโครงและตั้งจิ๊กแม่นยำ','welder',.3,0,null,{opCode:'structural_welding',subject:'metal_machining',minSubjectLevel:30,safetyCritical:true,intermediateOut:'welded_frame'}),
+      stage('ติดตั้งชุดขับเคลื่อนและเดินสายควบคุม','electronics_bench',.2,0,null,{opCode:'mechatronics_integration',subject:'electrical_basics',minSubjectLevel:25,intermediateOut:'integrated_assembly'}),
+      stage('ทดสอบมิติ แรงบิด และการทำงานภายใต้โหลด','diagnostic_kit',.2,10,null,{opCode:'dyno_dimensional_test',subject:'quality',minSubjectLevel:25,qualityCheckpoint:true,intermediateOut:'verified_machine_unit'})
+    ];
+  }
+  if(/battery|lfp|nmc|powerwall|grid_rack|Inverter|Charger/i.test(id)){
+    return [
+      stage('คัดเกรดเซลล์และวัดความต้านทานภายใน','test_rig',.25,0,null,{opCode:'cell_matching',subject:'electrical_basics',minSubjectLevel:25,intermediateOut:'matched_cell_group'}),
+      stage('ประกอบโมดูลวงจรแปลงไฟและระบบป้องกัน BMS','electronics_bench',.35,0,null,{opCode:'hv_bms_assembly',subject:'electrical_safety',minSubjectLevel:30,safetyCritical:true,intermediateOut:'hv_module_core'}),
+      stage('ประกอบโครงระบายความร้อนและซีลกันความชื้น','hand_tools',.15,0,null,{opCode:'thermal_enclosure_seal',subject:'power_electronics',minSubjectLevel:25,intermediateOut:'sealed_energy_pack'}),
+      stage('ทดสอบโหลดต่อเนื่องและเฝ้าดูอุณหภูมิ','test_rig',.25,60,40,{opCode:'burn_in_cycling',subject:'electrical_safety',minSubjectLevel:30,batchShared:true,qualityCheckpoint:true,intermediateOut:'certified_energy_unit'})
+    ];
+  }
+  if(/visionCamera|ai_edge_module|smartMeter|autoSensor|cold_chain_temp_logger/.test(id)){
+    return [
+      stage('วางชิ้นส่วน SMT และบัดกรีแผงวงจรความละเอียดสูง','electronics_bench',.35,0,null,{opCode:'precision_smt',subject:'electrical_basics',minSubjectLevel:25,intermediateOut:'smt_pcba'}),
+      stage('ประกอบโมดูลเซ็นเซอร์/เลนส์และแฟลชเฟิร์มแวร์','hand_tools',.35,0,null,{opCode:'firmware_optics_assy',subject:'embedded_iot',minSubjectLevel:25,intermediateOut:'flashed_device'}),
+      stage('สอบเทียบสัญญาณและเดินเครื่อง Burn-in','test_rig',.3,10,null,{opCode:'sensor_burn_in_cal',subject:'quality',minSubjectLevel:25,batchShared:true,qualityCheckpoint:true,intermediateOut:'calibrated_iot_unit'})
+    ];
+  }
+  return [
+    stage('เตรียมชิ้นส่วนและตรวจแบบ','hand_tools',.25,0,null,{opCode:'kit_prep',subject:'embedded_iot',minSubjectLevel:0,intermediateOut:'prepared_kit'}),
+    stage('ประกอบและเชื่อมต่อวงจร','electronics_bench',.5,0,null,{opCode:'board_wiring',subject:'electrical_basics',minSubjectLevel:0,intermediateOut:'wired_unit'}),
+    stage('ตั้งค่าและทดสอบเดินเครื่อง','test_rig',.25,5,null,{opCode:'functional_test',subject:'quality',minSubjectLevel:0,batchShared:true,qualityCheckpoint:true,intermediateOut:'tested_unit'})
+  ];
 }
-function maintain(w,hooks){const x=ensure(w),minute=w.clock.absoluteMinute;if(minute%5)return;
- const busy=new Set();
- const task=x.maintenance.find(t=>t.progress<t.required);if(!task)return;
- const m=x.machines[task.machineId],spec=SPECS[m.id];if(task.type==='install'&&minute<(m.availableAt||0)){x.decisionTh=`รอส่งมอบ ${spec.nameTh} วันที่ ${Math.floor(m.availableAt/1440)+1}`;return;}if(Object.keys(m.slots).length)return;
- const p=w.people.filter(p=>p.employed&&p.atWork&&!busy.has(p.id)&&!p.path.length&&!(p.breakUntil>minute)&&!['eating','sleeping','resting'].includes(p.activity)&&repairSubject(p,m.id)>=spec.level).sort((a,b)=>repairSubject(b,m.id)-repairSubject(a,m.id))[0];
- if(!p){const learner=w.people.find(p=>p.employed&&p.role==='engineer');if(learner&&learner.education&&!learner.education.course)hooks.train?.(learner,'maintenance',spec.level);x.decisionTh=`${spec.nameTh} รอช่างที่รู้ ${spec.subject} / การซ่อมบำรุง`;return;}
- if(!task.partsConsumed&&task.type==='repair'){
-  const part=repairPart(m.id);if((w.inventory.materials[part]||0)-(w.inventory.reserved[part]||0)<1){x.decisionTh=`ซ่อม ${spec.nameTh} รออะไหล่ ${w.catalog.materials[part].nameTh}`;return;}
-  w.inventory.materials[part]--;w.inventory.consumed[part]++;x.partsConsumed=x.partsConsumed||{};x.partsConsumed[part]=(x.partsConsumed[part]||0)+1;task.partsConsumed=true;task.partId=part;
- }
- task.workerId=p.id;p.activity='working';p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};const apt=p.profile.aptitudes,ability=((apt.analytical||50)+(apt.dexterity??50))/200;const fatigue=Math.max(.3,1-(p.state.fatigue||0)/140);const speed=(.4+repairSubject(p,m.id)/100)*(.7+ability*.6)*fatigue;
- const station=Object.values(w.layout.stations).find(s=>s.kind==='assembly');if(station&&(p.position.x!==station.access.x||p.position.y!==station.access.y)){hooks.walk(p,station);return;}
- task.progress=Math.min(task.required,task.progress+5*speed);hooks.claim?.(p);p.activity='working';p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};p.plantTaskAt=minute;
- hooks.learn?.(p,5);
- if(task.progress>=task.required){m.condition=task.type==='install'?100:Math.min(100,75+repairSubject(p,m.id)*.25);m.status='ready';if(m.heldSlots){m.slots=m.heldSlots;delete m.heldSlots;}log(w,'equipmentMaintained',`${p.name} ${task.type==='install'?'ติดตั้ง':'ซ่อม/บำรุง'} ${spec.nameTh} เสร็จ`,{machineId:m.id,workerId:p.id});x.maintenance=x.maintenance.filter(t=>t!==task);}
+
+const serviceEquipment={
+  calibration_lab:'diagnostic_kit',
+  field_maintenance:'hand_tools',
+  battery_second_life_lab:'test_rig',
+  returnable_pallet_pool:'warehouse_tools',
+  cold_storage_3pl:'cold_room',
+  industrial_recycling:'press',
+  energy_epc_install:'diagnostic_kit',
+  b2b_technical_academy:'developer_pc',
+  wholesale_distribution:'warehouse_tools',
+  toll_smelting_extrusion:'smelter'
+};
+
+function materialEquipment(id){
+  if(/rice|flour/.test(id))return 'grain_mill';
+  if(/microchip|wafer|optical/.test(id))return 'semiconductor_fab';
+  if(/ore|alumin|steel|billet|silicon|matte|coke|sheet|copper|sink/.test(id))return 'smelter';
+  if(/resin|electrolyte|cathode|fertilizer|ammonia|diesel|tire/.test(id))return 'chemical_reactor';
+  if(/sugar|palm|extract|water|compost|saline|culture/.test(id))return 'cooker';
+  if(/pcb|led|sensor|cell|inverter|driver|battery|wire/.test(id))return 'electronics_bench';
+  if(/dough|protein/.test(id))return 'mixer';
+  return 'press';
 }
-function review(w,hooks){const x=ensure(w);for(const k of requirements(w))if(!x.machines[k]){request(w,k,hooks);break;}
- for(const m of Object.values(x.machines)){if(m.condition<55&&m.status==='ready'&&(!Object.keys(m.slots).length||m.condition<25)&&!x.maintenance.some(t=>t.machineId===m.id)){
-  const cost=Math.round(SPECS[m.id].cost*.015);if(w.finance.cash<cost)continue;hooks.pay(cost,'plant:repair:'+m.id+':'+w.clock.absoluteMinute);m.heldSlots=m.slots;m.slots={};m.status='maintenance';x.maintenance.push({id:'repair:'+m.id+':'+w.clock.absoluteMinute,machineId:m.id,type:'repair',progress:0,required:m.condition<25?120:45,workerId:null,partsConsumed:false});log(w,'equipmentRepairPlanned',`วางแผนซ่อม ${SPECS[m.id].nameTh}`,{cost,machineId:m.id});break;
- }}
+
+function recipeSpec(materialId,recipe=D.MATERIAL_RECIPES?.[materialId]){
+  const eq=materialEquipment(materialId);
+  const tier=recipe?.tier||1;
+  const isSterile=/saline|culture/.test(materialId);
+  const isSemi=/wafer|microchip|optical/.test(materialId);
+  const isSmelt=eq==='smelter';
+  const isChem=eq==='chemical_reactor';
+  const isFood=/rice|flour|sugar|palm|dough|extract/.test(materialId);
+  const temp=isSmelt?180:isChem?120:eq==='cooker'?90:isSemi?110:null;
+  const setupMinutes=tier>=3?10:5;
+  const activeLaborMinutes=tier>=3?15:10;
+  const passiveHoldMinutes=temp!==null?15:10;
+  const unloadInspectMinutes=5;
+  const subject=isSemi?'semiconductor_process':isSmelt?'metallurgy':isChem?'chemical_processing':isSterile?'aseptic_processing':isFood?'food_safety':'metal_machining';
+  return {
+    id:materialId,
+    nameTh:recipe?.nameTh||materialId,
+    equipment:eq,
+    tier,
+    grade:isSterile?'pharma_sterile':isSemi?'electronic_grade':isFood?'food_grade':isSmelt?'metallurgical_grade':'industrial_grade',
+    setupMinutes,
+    activeLaborMinutes,
+    passiveHoldMinutes,
+    unloadInspectMinutes,
+    totalMinutes:setupMinutes+activeLaborMinutes+passiveHoldMinutes+unloadInspectMinutes,
+    temperatureC:temp,
+    batchCapacity:Math.max(2,(SPECS[eq]?.capacity||3)*2),
+    waterM3:recipe?.inputs?.raw_water_m3||(isChem||eq==='cooker'?1:0),
+    subject,
+    requiredLevel:tier>=3?45:tier===2?35:25,
+    byproducts:Object.keys(recipe?.outputs||{}).filter(k=>k!==materialId)
+  };
 }
-function materialEquipment(id){if(/rice|flour/.test(id))return 'grain_mill';if(/microchip|wafer|optical/.test(id))return 'semiconductor_fab';if(/ore|alumin|steel|billet|silicon/.test(id))return 'smelter';if(/resin|electrolyte|cathode|fertilizer|culture/.test(id))return 'chemical_reactor';if(/sugar|palm|extract|water|compost/.test(id))return 'cooker';if(/pcb|led|sensor|cell|inverter/.test(id))return 'electronics_bench';if(/dough|protein/.test(id))return 'mixer';return 'press';}
-function toolFor(type){return type.startsWith('material:')?materialEquipment(type.slice(9)):['agriculture','harvest','livestock','mining'].includes(type)?'hand_tools':type==='software'?'developer_pc':type==='freight'?'warehouse_tools':serviceEquipment[type];}
-function businessReady(w,type){const k=toolFor(type);if(!k)return true;const m=w.plant?.machines[k];return !!m&&m.status==='ready'&&m.condition>=25;}
-function useBusiness(w,type,minutes){const k=toolFor(type);const m=ensure(w).machines[k];if(!m||m.status!=='ready'||m.condition<25)return false;power(w,m,minutes);return true;}
-function storageSize(p){return /powerwall|grid_rack|drone|agv|motor|cabinet/.test(p.id)?6:/battery|inverter|charger|tray|rail/i.test(p.id)?3:1;}
-function view(w){if(!w.plant)return null;return {...w.plant,specs:SPECS,routes:Object.fromEntries(Object.values(w.catalog.products).map(p=>[p.id,route(p)]))};}
-function validate(w){const x=w.plant;if(!x)return [];const errors=[],int=n=>Number.isSafeInteger(n)&&n>=0;if(x.version!==1||!x.machines||!Array.isArray(x.maintenance))return ['invalid plant structure'];
- for(const [k,m]of Object.entries(x.machines)){if(!SPECS[k]||!m||!Number.isFinite(m.condition)||m.condition<0||m.condition>100||!['ready','maintenance','installing'].includes(m.status)||!m.slots||Object.keys(m.slots).length>SPECS[k].capacity||!Number.isFinite(m.temperatureC)||!Number.isFinite(m.totalKwh)||m.totalKwh<0)errors.push('invalid equipment '+k);}
- for(const m of Object.values(x.machines))for(const slots of [m.slots,m.heldSlots||{}])for(const [jid,v]of Object.entries(slots))if(v!==true||!w.jobs[jid]||!w.units[w.jobs[jid].unitId])errors.push('invalid equipment reservation '+jid);
- for(const [id,q]of Object.entries(x.partsConsumed||{}))if(!w.catalog.materials[id]||!int(q))errors.push('invalid repair parts '+id);
- for(const t of x.maintenance)if(!x.machines[t.machineId]||!Number.isFinite(t.progress)||t.progress<0||t.progress>t.required||!Number.isFinite(t.required)||t.required<=0)errors.push('invalid maintenance task');
- for(const u of Object.values(w.units)){if(!u.process)continue;const a=u.process,steps=route(w.catalog.products[u.productId]);if(a.version!==1||!int(a.index)||a.index>steps.length||!Number.isFinite(a.labor)||a.labor<0||!['labor','machine','complete'].includes(a.phase)||!Array.isArray(a.history))errors.push('invalid process '+u.id);}
- if(new Set(x.maintenance.map(t=>t.machineId)).size!==x.maintenance.length)errors.push('duplicate maintenance reservation');
- if(!Number.isFinite(x.energyKwh)||x.energyKwh<0||!Number.isFinite(x.billedEnergyKwh)||x.billedEnergyKwh<0||x.billedEnergyKwh>x.energyKwh+.001)errors.push('invalid plant energy');return errors;
+
+function defaultSubsystems(cond=100){
+  return {mechanical:cond,electrical:cond,thermal:cond,calibration:cond,cleanliness:cond};
 }
-return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick,request,review,maintain,businessReady,useBusiness,view,validate,serviceEquipment,materialEquipment,toolFor,storageSize,repairPart});
+
+function ensure(w){
+  if(w.plant){
+    if(!w.plant.refineryBatches)w.plant.refineryBatches={};
+    if(!w.plant.serviceRecords)w.plant.serviceRecords=[];
+    for(const m of Object.values(w.plant.machines||{})){
+      if(!m.subsystems)m.subsystems=defaultSubsystems(m.condition??100);
+      if(m.faultMode===undefined)m.faultMode=null;
+      if(!m.acquisitionMode)m.acquisitionMode=m.opening?'opening':'purchased_new';
+    }
+    return w.plant;
+  }
+  w.plant={
+    version:1,
+    machines:{},
+    maintenance:[],
+    refineryBatches:{},
+    serviceRecords:[],
+    history:[],
+    energyKwh:0,
+    billedEnergyKwh:0,
+    partsConsumed:{},
+    decisionTh:'ยังไม่มีแผนซื้อเครื่องใหม่',
+    lastReviewDay:0
+  };
+  for(const k of ['hand_tools','electronics_bench','test_rig','developer_pc','warehouse_tools'])install(w,k,true);
+  return w.plant;
+}
+
+function install(w,k,opening=false,options={}){
+  const x=w.plant;if(!SPECS[k])return null;
+  const initCond=options.initialCondition??100;
+  const m={
+    id:k,
+    condition:initCond,
+    status:'ready',
+    slots:{},
+    temperatureC:25,
+    totalMinutes:0,
+    totalKwh:0,
+    installedAt:w.clock.absoluteMinute,
+    opening,
+    costSatang:opening?0:(options.costSatang??SPECS[k].cost),
+    acquisitionMode:opening?'opening':(options.acquisitionMode||'purchased_new'),
+    subsystems:defaultSubsystems(initCond),
+    faultMode:null,
+    currentFamilyId:null,
+    changeoverUntil:0,
+    downtimeMinutes:0,
+    lastPreventiveAt:w.clock.absoluteMinute
+  };
+  x.machines[k]=m;
+  return m;
+}
+
+function log(w,type,text,details={}){
+  const x=ensure(w);
+  x.history.unshift({at:w.clock.absoluteMinute,type,text,...details});
+  if(x.history.length>100)x.history.pop();
+}
+
+function workState(w,j){
+  const u=w.units[j.unitId];if(!u)return null;
+  const steps=route(w.catalog.products[u.productId]);
+  if(!u.process||u.process.version!==1){
+    u.process={version:1,index:0,labor:0,phase:'labor',history:[],lastIntermediate:null};
+    j.progress=0;
+  }
+  if(u.process.index>=steps.length)u.process.phase='complete';
+  return {u,steps,state:u.process,step:steps[u.process.index]};
+}
+
+function stationFor(w,j){
+  if(j.kind!=='assembly'||!j.unitId)return null;
+  const q=workState(w,j);if(!q?.step)return null;
+  const stations=Object.values(w.layout.stations).filter(s=>s.kind==='assembly').sort((a,b)=>a.id.localeCompare(b.id));
+  if(!stations.length)return null;
+  const n=Object.keys(SPECS).indexOf(q.step.equipment);
+  return stations[n%stations.length].id;
+}
+
+function workerQualifiedForStep(w,p,step){
+  if(!step||!step.safetyCritical||!step.minSubjectLevel)return true;
+  if(!p)return true;
+  const subj=step.subject;
+  const lv=p.education?.subjects?.[subj]||0;
+  if(lv>=step.minSubjectLevel)return true;
+  const fallbackLv=Math.max(p.education?.subjects?.safety||0,p.education?.subjects?.quality||0);
+  if(fallbackLv>=step.minSubjectLevel+10)return true;
+  // Supervised by a qualified colleague at work
+  return w.people.some(other=>other.employed&&other.atWork&&other.id!==p.id&&(other.education?.subjects?.[subj]||0)>=step.minSubjectLevel);
+}
+
+function available(w,j,p=null){
+  if(j.kind!=='assembly'||!j.unitId)return true;
+  const q=workState(w,j);if(!q||!q.step)return true;
+  if(q.state.phase==='machine')return false;
+  if(p&&!workerQualifiedForStep(w,p,q.step))return false;
+  const m=ensure(w).machines[q.step.equipment];
+  return !!m&&m.status==='ready'&&m.condition>=25&&(m.slots[j.id]||Object.keys(m.slots).length<SPECS[m.id].capacity);
+}
+
+function power(w,m,minutes){
+  if(minutes<=0)return;
+  // Prevent multiplying full machine power/wear when multiple jobs or batches share the same machine in the same tick
+  if(m.lastPowerAt===w.clock.absoluteMinute)return;
+  m.lastPowerAt=w.clock.absoluteMinute;
+  const activeCount=Math.max(1,Object.keys(m.slots||{}).length);
+  const loadFactor=1+Math.min(0.35,(activeCount-1)*0.08);
+  const energy=SPECS[m.id].kw*(minutes/60)*loadFactor;
+  m.totalKwh+=energy;
+  ensure(w).energyKwh+=energy;
+  m.totalMinutes+=minutes;
+  const wearMult=SPECS[m.id].scale==='heavy'||SPECS[m.id].scale==='mega'?0.0038:0.003;
+  const wear=minutes*wearMult;
+  m.condition=Math.max(0,m.condition-wear);
+  if(m.subsystems){
+    m.subsystems.mechanical=clamp(m.subsystems.mechanical-wear*1.05,0,100);
+    m.subsystems.electrical=clamp(m.subsystems.electrical-wear*0.9,0,100);
+    m.subsystems.thermal=clamp(m.subsystems.thermal-wear*(m.temperatureC>60?1.25:0.85),0,100);
+    m.subsystems.calibration=clamp(m.subsystems.calibration-wear*0.95,0,100);
+    m.subsystems.cleanliness=clamp(m.subsystems.cleanliness-wear*1.1,0,100);
+  }
+  if(m.condition<45&&!m.faultMode){
+    const modes=SPECS[m.id].faultModes||[{code:'general_wear',nameTh:'ชิ้นส่วนหลักสึกหรอจากการใช้งานสะสม',subsystem:'mechanical',part:repairPart(m.id)}];
+    const picked=modes[Math.floor(m.totalMinutes)%modes.length];
+    m.faultMode={
+      code:picked.code,
+      nameTh:picked.nameTh,
+      subsystem:picked.subsystem,
+      requiredPartId:picked.part||repairPart(m.id),
+      diagnosed:false,
+      diagnosticScore:0,
+      detectedAt:w.clock.absoluteMinute
+    };
+  }
+}
+
+function labor(w,j,p,delta,tick){
+  const q=workState(w,j);if(!q||!q.step)return {delta,release:false};
+  const {step,state}=q,m=ensure(w).machines[step.equipment];
+  if(!available(w,j,p))return {delta:0,release:true};
+  m.slots[j.id]=true;
+  const required=j.required*step.share;
+  const subjLv=p?.education?.subjects?.[step.subject]||50;
+  const subjMod=step.minSubjectLevel>0?clamp(0.85+(subjLv-step.minSubjectLevel)*0.004,0.65,1.25):1;
+  const added=Math.min(delta*(.65+m.condition*.0035)*subjMod,Math.max(0,required-state.labor));
+  state.labor+=added;
+  power(w,m,tick);
+  if(state.labor+1e-8>=required){
+    state.workerId=p.id;
+    state.startedAt=w.clock.absoluteMinute;
+    if(step.holdMinutes){
+      state.phase='machine';
+      state.holdDone=0;
+      state.lastTick=w.clock.absoluteMinute;
+      return {delta:added,release:true};
+    }
+    completeStage(w,j,q,m);
+    return {delta:added,release:state.phase!=='complete'};
+  }
+  return {delta:added,release:false};
+}
+
+function completeStage(w,j,q,m){
+  const s=q.state;
+  s.history.push({
+    nameTh:q.step.nameTh,
+    opCode:q.step.opCode||'process_op',
+    machineId:m.id,
+    workerId:s.workerId||null,
+    completedAt:w.clock.absoluteMinute,
+    holdMinutes:s.holdDone||0,
+    temperatureC:m.temperatureC,
+    intermediateOut:q.step.intermediateOut||q.step.nameTh
+  });
+  s.lastIntermediate=q.step.intermediateOut||q.step.nameTh;
+  delete m.slots[j.id];
+  s.index++;
+  s.labor=0;
+  s.phase='labor';
+  q.u.processHistory=s.history;
+  q.u.processStep=s.index;
+  if(s.index>=q.steps.length){
+    j.progress=j.required;
+    s.phase='complete';
+  }
+}
+
+function enqueueRefineryBatch(w,materialId,batches,activeInputs,inputValueSatang,hooks,options={}){
+  const x=ensure(w);
+  const recipe=D.MATERIAL_RECIPES?.[materialId];
+  const spec=recipeSpec(materialId,recipe);
+  const m=x.machines[spec.equipment];
+  if(!m||m.status!=='ready'||m.condition<25){
+    return {ok:false,code:'equipmentUnavailable',message:'เครื่องจักรแปรรูปยังไม่พร้อมใช้งาน'};
+  }
+  const activeOnMachine=Object.values(x.refineryBatches||{}).filter(b=>b.equipment===spec.equipment&&!['released','cancelled','scrapped'].includes(b.status));
+  if(activeOnMachine.length>=spec.batchCapacity){
+    return {ok:false,code:'machineCapacityFull',message:`คิวเครื่อง ${SPECS[spec.equipment].nameTh} เต็มความจุ (${spec.batchCapacity} ล็อต)`};
+  }
+  const bid=`refbatch-${++w.sequence}`;
+  const reservedInputs={};
+  for(const [inMat,inQty] of Object.entries(activeInputs)){
+    const deduct=inQty*batches;
+    reservedInputs[inMat]=deduct;
+    w.inventory.reserved[inMat]=(w.inventory.reserved[inMat]||0)+deduct;
+  }
+  const outputs={};
+  for(const [outMat,outQty] of Object.entries(recipe?.outputs||{})){
+    if(Object.hasOwn(w.inventory.materials,outMat))outputs[outMat]=outQty*batches;
+  }
+  const hasSlot=Object.keys(m.slots).length<SPECS[m.id].capacity;
+  if(hasSlot)m.slots[bid]=true;
+  const batch={
+    id:bid,
+    materialId,
+    nameTh:recipe?.nameTh||materialId,
+    batches,
+    equipment:spec.equipment,
+    grade:spec.grade,
+    subject:spec.subject,
+    requiredLevel:spec.requiredLevel,
+    status:hasSlot?'loading_setup':'inputs_reserved',
+    inputs:reservedInputs,
+    outputs,
+    inputsReserved:true,
+    inputsConsumed:false,
+    wipValueSatang:inputValueSatang,
+    setupMinutes:spec.setupMinutes,
+    activeLaborMinutes:spec.activeLaborMinutes,
+    passiveHoldMinutes:spec.passiveHoldMinutes,
+    unloadInspectMinutes:spec.unloadInspectMinutes,
+    setupDone:0,
+    laborDone:0,
+    holdDone:0,
+    inspectDone:0,
+    temperatureC:spec.temperatureC,
+    operatorId:null,
+    operatorName:null,
+    inspectorId:null,
+    qualityScore:90,
+    reworkCount:0,
+    waitingReasonTh:hasSlot?'กำลังตั้งเครื่องและโหลดวัตถุดิบเข้าถังแปรรูป':'จองวัตถุดิบแล้ว รอช่องว่างเครื่องจักร',
+    createdAt:w.clock.absoluteMinute,
+    lastTickAt:w.clock.absoluteMinute,
+    releasedAt:null,
+    history:[{stage:hasSlot?'loading_setup':'inputs_reserved',at:w.clock.absoluteMinute}]
+  };
+  x.refineryBatches[bid]=batch;
+  log(w,'refineryBatchQueued',`เปิดล็อตแปรรูป ${batch.nameTh} ×${batches} (${bid}) บน ${SPECS[spec.equipment].nameTh}`,{batchId:bid,materialId,batches});
+  return {ok:true,batchId:bid,batch,queued:true,status:batch.status,batches,unitsProduced:0};
+}
+
+function cancelRefineryBatch(w,batchId){
+  const x=ensure(w);
+  const b=x.refineryBatches?.[batchId];
+  if(!b)return {ok:false,code:'unknownBatch',message:'ไม่พบล็อตแปรรูป'};
+  if(b.status==='released'||b.status==='cancelled'||b.status==='scrapped'){
+    return {ok:false,code:'batchAlreadyClosed',message:'ล็อตแปรรูปนี้สิ้นสุดกระบวนการแล้ว'};
+  }
+  const m=x.machines[b.equipment];
+  if(m&&m.slots[b.id])delete m.slots[b.id];
+  if(b.inputsReserved&&!b.inputsConsumed){
+    for(const [inMat,qty] of Object.entries(b.inputs||{})){
+      w.inventory.reserved[inMat]=Math.max(0,(w.inventory.reserved[inMat]||0)-qty);
+    }
+    b.inputsReserved=false;
+    b.status='cancelled';
+    b.waitingReasonTh='ยกเลิกก่อนเดินเครื่อง คืนสถานะจองวัตถุดิบเข้าคลังปกติ';
+    b.history.push({stage:'cancelled',at:w.clock.absoluteMinute});
+    return {ok:true,batchId:b.id,status:'cancelled',refundedInputs:true};
+  }
+  // Once inputs were consumed into running WIP, cancellation cannot refund consumed raw materials
+  b.inputsReserved=false;
+  b.status='scrapped';
+  b.waitingReasonTh='ยกเลิกระหว่างแปรรูป (วัตถุดิบใช้ไปแล้ว ไม่สามารถเสกคืนเข้าคลังได้)';
+  b.history.push({stage:'scrapped',at:w.clock.absoluteMinute});
+  return {ok:true,batchId:b.id,status:'scrapped',refundedInputs:false};
+}
+
+function tickRefinery(w,tick,hooks){
+  const x=ensure(w);
+  const batches=Object.values(x.refineryBatches||{});
+  if(!batches.length)return;
+  const busyWorkers=new Set();
+  for(const p of w.people){
+    if(p.employed&&p.plantTaskAt===w.clock.absoluteMinute)busyWorkers.add(p.id);
+  }
+  for(const b of batches){
+    if(['released','cancelled','scrapped'].includes(b.status))continue;
+    const dt=Math.min(tick,Math.max(0,w.clock.absoluteMinute-(b.lastTickAt??w.clock.absoluteMinute)));
+    if(dt<=0)continue;
+    b.lastTickAt=w.clock.absoluteMinute;
+    const m=x.machines[b.equipment];
+    if(!m||m.status!=='ready'||m.condition<25){
+      b.waitingReasonTh=`รอเครื่อง ${SPECS[b.equipment]?.nameTh||b.equipment} พร้อมทำงาน (สภาพ/ซ่อมบำรุง)`;
+      continue;
+    }
+    if(w.utilities?.brownoutActive){
+      b.waitingReasonTh='หยุดรอชั่วคราวเนื่องจากไฟตก (Voltage Brownout)';
+      continue;
+    }
+    if(!m.slots[b.id]){
+      if(Object.keys(m.slots).length<SPECS[m.id].capacity){
+        m.slots[b.id]=true;
+        if(b.status==='inputs_reserved'||b.status==='staged'){
+          b.status='loading_setup';
+          b.history.push({stage:'loading_setup',at:w.clock.absoluteMinute});
+        }
+      }else{
+        b.status='staged';
+        b.waitingReasonTh=`รอช่องว่างเครื่อง ${SPECS[m.id].nameTh} (${Object.keys(m.slots).length}/${SPECS[m.id].capacity})`;
+        continue;
+      }
+    }
+    // Check qualified worker availability
+    const qualifiedPool=w.people.filter(p=>p.employed&&!busyWorkers.has(p.id)&&((p.education?.subjects?.[b.subject]||0)>=b.requiredLevel||(p.education?.subjects?.chemical_processing||0)>=35||(p.education?.subjects?.food_fermentation||0)>=35||(p.education?.subjects?.metal_machining||0)>=35||(p.education?.subjects?.agriculture||0)>=35));
+    if(qualifiedPool.length===0&&hooks?.isMaterialReady&&!hooks.isMaterialReady(b.materialId)){
+      b.waitingReasonTh=`รอผู้เชี่ยวชาญวิชา ${b.subject} (ระดับ ${b.requiredLevel}+)`;
+      continue;
+    }
+    const operator=qualifiedPool.find(p=>p.atWork)||qualifiedPool[0]||null;
+    if(operator){
+      b.operatorId=operator.id;
+      b.operatorName=operator.name;
+      if(operator.atWork)busyWorkers.add(operator.id);
+    }
+    const opSkill=operator?(operator.education?.subjects?.[b.subject]||50):55;
+    const speedMult=clamp((0.75+opSkill*0.004)*(0.7+m.condition*0.003),0.5,1.5);
+    const workDelta=dt*speedMult;
+
+    if(b.status==='inputs_reserved'||b.status==='staged'){
+      b.status='loading_setup';
+      b.history.push({stage:'loading_setup',at:w.clock.absoluteMinute});
+    }
+    if(b.status==='loading_setup'){
+      b.setupDone=Math.min(b.setupMinutes,b.setupDone+workDelta);
+      power(w,m,dt);
+      b.waitingReasonTh=`กำลังตั้งเครื่องและโหลดวัตถุดิบ (${Math.round(b.setupDone)}/${b.setupMinutes} นาที)`;
+      if(b.setupDone+1e-8>=b.setupMinutes){
+        // Consume reserved inputs into WIP!
+        if(b.inputsReserved&&!b.inputsConsumed){
+          for(const [inMat,qty] of Object.entries(b.inputs||{})){
+            w.inventory.reserved[inMat]=Math.max(0,(w.inventory.reserved[inMat]||0)-qty);
+            if(hooks?.consumeInput)hooks.consumeInput(inMat,qty);
+          }
+          b.inputsReserved=false;
+          b.inputsConsumed=true;
+        }
+        b.status='running';
+        b.history.push({stage:'running',at:w.clock.absoluteMinute});
+      }else{
+        continue;
+      }
+    }
+    if(b.status==='running'){
+      power(w,m,dt);
+      if(b.temperatureC!==null&&m.lastThermalAt!==w.clock.absoluteMinute){
+        m.temperatureC+=clamp(b.temperatureC-m.temperatureC,-dt*12,dt*12);
+        m.lastThermalAt=w.clock.absoluteMinute;
+      }
+      b.laborDone=Math.min(b.activeLaborMinutes,b.laborDone+workDelta);
+      const tempReady=b.temperatureC===null||Math.abs(m.temperatureC-b.temperatureC)<=15;
+      if(tempReady){
+        b.holdDone=Math.min(b.passiveHoldMinutes,b.holdDone+dt);
+      }
+      b.waitingReasonTh=tempReady
+        ?`กำลังเดินเครื่องแปรรูป (${Math.round(b.laborDone+b.holdDone)}/${b.activeLaborMinutes+b.passiveHoldMinutes} นาที)`
+        :`กำลังเร่งอุณหภูมิเครื่อง (${Math.round(m.temperatureC)}°C / เป้าหมาย ${b.temperatureC}°C)`;
+      if(b.laborDone+1e-8>=b.activeLaborMinutes&&b.holdDone+1e-8>=b.passiveHoldMinutes){
+        b.status='unloading';
+        b.history.push({stage:'unloading',at:w.clock.absoluteMinute});
+      }else{
+        continue;
+      }
+    }
+    if(b.status==='unloading'||b.status==='inspection'||b.status==='rework'){
+      b.status='inspection';
+      b.inspectDone=Math.min(b.unloadInspectMinutes,b.inspectDone+workDelta);
+      b.waitingReasonTh=`กำลังถ่ายล็อตและตรวจปล่อยคุณภาพ (${Math.round(b.inspectDone)}/${b.unloadInspectMinutes} นาที)`;
+      if(b.inspectDone+1e-8>=b.unloadInspectMinutes){
+        const totalUnitsOut=Object.values(b.outputs||{}).reduce((a,n)=>a+n,0);
+        if(hooks?.warehouseAvailable&&!hooks.warehouseAvailable(totalUnitsOut)){
+          b.waitingReasonTh='รอพื้นที่ว่างในคลังสินค้าก่อนตรวจปล่อยล็อตแปรรูป';
+          continue;
+        }
+        b.qualityScore=Math.round(clamp(68+opSkill*0.22+m.condition*0.1,50,100));
+        delete m.slots[b.id];
+        b.status='released';
+        b.releasedAt=w.clock.absoluteMinute;
+        b.waitingReasonTh='ผ่านการตรวจปล่อยเข้าคลังวัตถุดิบแล้ว';
+        b.history.push({stage:'released',at:w.clock.absoluteMinute,qualityScore:b.qualityScore});
+        if(hooks?.releaseBatch)hooks.releaseBatch(b);
+      }
+    }
+  }
+}
+
+function tick(w,tickMinutes,hooks=null){
+  const x=ensure(w);
+  const cold=x.machines.cold_room;
+  if(cold?.status==='ready'&&cold.condition>=25&&Object.values(w.units).some(u=>u.stage==='ready'&&w.catalog.products[u.productId]?.industry==='food')){
+    cold.temperatureC+=clamp(4-cold.temperatureC,-tickMinutes*2,tickMinutes*2);
+    power(w,cold,tickMinutes);
+  }
+
+  for(const m of Object.values(x.machines)){
+    if(m.status!=='ready')m.downtimeMinutes=(m.downtimeMinutes||0)+tickMinutes;
+    for(const slots of [m.slots,m.heldSlots||{}]){
+      for(const jid of Object.keys(slots)){
+        const isJob=Boolean(w.jobs[jid]&&w.units[w.jobs[jid].unitId]);
+        const isRefinery=Boolean(x.refineryBatches?.[jid]&&!['released','cancelled','scrapped'].includes(x.refineryBatches[jid].status));
+        if(!isJob&&!isRefinery)delete slots[jid];
+      }
+    }
+    if(!Object.keys(m.slots).length)m.temperatureC+=clamp(25-m.temperatureC,-tickMinutes,tickMinutes);
+  }
+  for(const j of Object.values(w.jobs)){
+    if(j.kind!=='assembly'||!j.unitId)continue;
+    const q=workState(w,j);if(!q?.step||q.state.phase!=='machine')continue;
+    const m=x.machines[q.step.equipment];
+    if(!m||m.status!=='ready'||m.condition<25||w.utilities?.brownoutActive)continue;
+    const dt=Math.min(tickMinutes,Math.max(0,w.clock.absoluteMinute-q.state.lastTick));
+    q.state.lastTick=w.clock.absoluteMinute;
+    if(!dt)continue;
+    power(w,m,dt);
+    const target=q.step.temperatureC;
+    if(target!==null&&m.lastThermalAt!==w.clock.absoluteMinute){
+      m.temperatureC+=clamp(target-m.temperatureC,-dt*3,dt*3);
+      m.lastThermalAt=w.clock.absoluteMinute;
+    }
+    if(target===null||Math.abs(m.temperatureC-target)<=2)q.state.holdDone+=dt;
+    if(q.state.holdDone>=q.step.holdMinutes)completeStage(w,j,q,m);
+  }
+  tickRefinery(w,tickMinutes,hooks);
+}
+
+function requirements(w){
+  const ks=new Set();
+  for(const u of Object.values(w.units))for(const s of route(w.catalog.products[u.productId]))ks.add(s.equipment);
+  for(const o of Object.values(w.serviceBusiness?.orders||{}))if(!['paid','cancelled'].includes(o.status)&&serviceEquipment[o.serviceTypeId])ks.add(serviceEquipment[o.serviceTypeId]);
+  for(const b of Object.values(w.plant?.refineryBatches||{}))if(!['released','cancelled','scrapped'].includes(b.status)&&b.equipment)ks.add(b.equipment);
+  return [...ks];
+}
+
+function repairPart(k){
+  return ['press','welder','smelter','grain_mill','warehouse_tools','hand_tools'].includes(k)?'metal_sheet':['mixer','cooker','pasteurizer','fermenter','cold_room','clean_fill','autoclave','chemical_reactor'].includes(k)?'polymer_resin':'wire_harness';
+}
+
+function repairSubject(p,k){
+  const s=p.education?.subjects||{};
+  return Math.max(s.maintenance||0,(s[SPECS[k].subject]||0)*.8,(s.electrical_basics||0)*.55);
+}
+
+function technicianCapability(p,k,hasDiagKit=true){
+  const subj=repairSubject(p,k);
+  const apt=p.profile?.aptitudes||{};
+  const analytical=apt.analytical??50,dexterity=apt.dexterity??50,sensitivity=apt.problemSensitivity??50,attention=apt.attention??50;
+  const aptComposite=(analytical*0.35+dexterity*0.3+sensitivity*0.2+attention*0.15)/100;
+  const fatigue=Math.max(0.3,1-(p.state?.fatigue||0)/140);
+  const expMinutes=p.education?.practiceMinutes?.maintenance||p.experience?.workMinutes||0;
+  const expBonus=Math.min(0.2,expMinutes/12000);
+  const kitMod=hasDiagKit?1.08:0.88;
+  const speed=(.4+subj/100)*(.7+aptComposite*.6+expBonus)*fatigue*kitMod;
+  const diagnosticAccuracy=clamp(0.55+(subj/100)*0.25+aptComposite*0.18+(hasDiagKit?0.05:0),0.4,0.99);
+  const postCondition=clamp(75+subj*0.22+aptComposite*6-(1-fatigue)*8,72,100);
+  return {subj,aptComposite,fatigue,speed,diagnosticAccuracy,postCondition};
+}
+
+function request(w,k,hooks,options={}){
+  const x=ensure(w),spec=SPECS[k];if(!spec)return false;
+  if(x.machines[k])return true;
+  const mode=options.acquisitionMode||'purchased_new';
+  const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),reserve=wages*18;
+  if(spec.cost>5000000&&Object.values(w.production.shipped).reduce((a,n)=>a+n,0)<50){
+    x.decisionTh=`ยังไม่ซื้อ ${spec.nameTh}: ยังไม่มีปริมาณผลิตรองรับ เลือกซื้อวัตถุดิบจากผู้ผลิตภายนอก`;
+    return false;
+  }
+  const effectiveCost=mode==='used_refurbished'?Math.round(spec.cost*0.65):mode==='leased'?Math.round(spec.cost*0.25):spec.cost;
+  const initCond=mode==='used_refurbished'?82:100;
+  if(w.finance.cash<effectiveCost+reserve){
+    x.decisionTh=`ยังไม่ซื้อ ${spec.nameTh}: ต้องเก็บเงินสำรอง18วัน`;
+    return false;
+  }
+  hooks.pay(effectiveCost,'plant:buy:'+k);
+  install(w,k,false,{costSatang:effectiveCost,acquisitionMode:mode,initialCondition:initCond});
+  x.machines[k].status='installing';
+  const baseLeadDays=k==='semiconductor_fab'?180:spec.cost>=5000000?14:spec.cost>=1800000?5:2;
+  const leadDays=mode==='used_refurbished'?Math.max(1,Math.ceil(baseLeadDays*0.6)):baseLeadDays;
+  x.machines[k].availableAt=w.clock.absoluteMinute+leadDays*1440;
+  const reqMinutes=k==='semiconductor_fab'?4320:spec.cost>=5000000?480:spec.cost>=1800000?240:60;
+  x.maintenance.push({
+    id:'install:'+k,
+    machineId:k,
+    type:'install',
+    phase:'commissioning',
+    progress:0,
+    required:reqMinutes,
+    workerId:null,
+    partsConsumed:false,
+    diagnosedFaultTh:'ตรวจรับเครื่องจักร ตั้งศูนย์ และทดสอบเดินเครื่องปลอดภัย (Commissioning)'
+  });
+  log(w,'equipmentPurchased',`จัดหา ${spec.nameTh} (${mode}) รอช่างติดตั้ง`,{machineId:k,cost:effectiveCost,acquisitionMode:mode});
+  return true;
+}
+
+function maintain(w,hooks){
+  const x=ensure(w),minute=w.clock.absoluteMinute;if(minute%5)return;
+  const busy=new Set();
+  const task=x.maintenance.find(t=>t.progress<t.required);if(!task)return;
+  const m=x.machines[task.machineId],spec=SPECS[m.id];
+  if(task.type==='install'&&minute<(m.availableAt||0)){
+    x.decisionTh=`รอส่งมอบ ${spec.nameTh} วันที่ ${Math.floor(m.availableAt/1440)+1}`;
+    return;
+  }
+  if(Object.keys(m.slots).length)return;
+  const hasDiagKit=Boolean(x.machines.diagnostic_kit&&x.machines.diagnostic_kit.status==='ready'&&x.machines.diagnostic_kit.condition>=25);
+  const candidates=w.people.filter(p=>p.employed&&p.atWork&&!busy.has(p.id)&&!p.path.length&&!(p.breakUntil>minute)&&!['eating','sleeping','resting'].includes(p.activity)&&repairSubject(p,m.id)>=spec.level);
+  candidates.sort((a,b)=>technicianCapability(b,m.id,hasDiagKit).speed-technicianCapability(a,m.id,hasDiagKit).speed);
+  const p=candidates[0];
+  if(!p){
+    const learner=w.people.find(p=>p.employed&&p.role==='engineer');
+    if(learner&&learner.education&&!learner.education.course)hooks.train?.(learner,'maintenance',spec.level);
+    x.decisionTh=`${spec.nameTh} รอช่างที่รู้ ${spec.subject} / การซ่อมบำรุง`;
+    return;
+  }
+  const cap=technicianCapability(p,m.id,hasDiagKit);
+  if(task.type==='repair'&&!task.diagnosedFaultTh){
+    const fm=m.faultMode||((spec.faultModes&&spec.faultModes[0])||{code:'wear_fault',nameTh:'ชิ้นส่วนหลักสึกหรอ',subsystem:'mechanical',part:repairPart(m.id)});
+    task.diagnosedFaultTh=`${fm.nameTh} (ความแม่นยำวินิจฉัย ${Math.round(cap.diagnosticAccuracy*100)}%)`;
+    if(m.faultMode){m.faultMode.diagnosed=true;m.faultMode.diagnosticScore=round(cap.diagnosticAccuracy*100);}
+  }
+  if(!task.partsConsumed&&task.type==='repair'){
+    const part=repairPart(m.id);
+    if((w.inventory.materials[part]||0)-(w.inventory.reserved[part]||0)<1){
+      x.decisionTh=`ซ่อม ${spec.nameTh} รออะไหล่ ${w.catalog.materials[part].nameTh}`;
+      return;
+    }
+    w.inventory.materials[part]--;
+    w.inventory.consumed[part]++;
+    x.partsConsumed=x.partsConsumed||{};
+    x.partsConsumed[part]=(x.partsConsumed[part]||0)+1;
+    task.partsConsumed=true;
+    task.partId=part;
+  }
+  task.workerId=p.id;
+  p.activity='working';
+  p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};
+  const station=Object.values(w.layout.stations).find(s=>s.kind==='assembly');
+  if(station&&(p.position.x!==station.access.x||p.position.y!==station.access.y)){
+    hooks.walk(p,station);
+    return;
+  }
+  task.progress=Math.min(task.required,task.progress+5*cap.speed);
+  const ratio=task.progress/task.required;
+  task.phase=ratio<0.25?'diagnosis':ratio<0.85?'repair_execution':'return_to_service_test';
+  hooks.claim?.(p);
+  p.activity='working';
+  p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};
+  p.plantTaskAt=minute;
+  hooks.learn?.(p,5);
+  if(task.progress>=task.required){
+    m.condition=task.type==='install'?(m.acquisitionMode==='used_refurbished'?85:100):Math.min(100,round(cap.postCondition));
+    m.subsystems=defaultSubsystems(m.condition);
+    m.faultMode=null;
+    m.status='ready';
+    m.lastPreventiveAt=minute;
+    if(m.heldSlots){m.slots=m.heldSlots;delete m.heldSlots;}
+    const rec={
+      at:minute,
+      machineId:m.id,
+      machineNameTh:spec.nameTh,
+      type:task.type,
+      workerId:p.id,
+      workerName:p.name,
+      partId:task.partId||null,
+      diagnosedFaultTh:task.diagnosedFaultTh||'บำรุงรักษาตามเกณฑ์สภาพ',
+      postCondition:m.condition,
+      returnToServiceTest:'passed'
+    };
+    x.serviceRecords=x.serviceRecords||[];
+    x.serviceRecords.unshift(rec);
+    if(x.serviceRecords.length>60)x.serviceRecords.pop();
+    log(w,'equipmentMaintained',`${p.name} ${task.type==='install'?'ติดตั้งและทดสอบเดินเครื่อง':'วินิจฉัย/ซ่อมบำรุงและทดสอบความปลอดภัย'} ${spec.nameTh} เสร็จ (${m.condition.toFixed(1)}%)`,{machineId:m.id,workerId:p.id,postCondition:m.condition});
+    x.maintenance=x.maintenance.filter(t=>t!==task);
+  }
+}
+
+function review(w,hooks){
+  const x=ensure(w);
+  for(const k of requirements(w))if(!x.machines[k]){request(w,k,hooks);break;}
+  for(const m of Object.values(x.machines)){
+    if(m.condition<55&&m.status==='ready'&&(!Object.keys(m.slots).length||m.condition<25)&&!x.maintenance.some(t=>t.machineId===m.id)){
+      const cost=Math.round(SPECS[m.id].cost*.015);
+      if(w.finance.cash<cost)continue;
+      hooks.pay(cost,'plant:repair:'+m.id+':'+w.clock.absoluteMinute);
+      m.heldSlots=m.slots;
+      m.slots={};
+      m.status='maintenance';
+      const fm=m.faultMode||((SPECS[m.id].faultModes&&SPECS[m.id].faultModes[0])||{code:'wear_fault',nameTh:'การสึกหรอของชุดขับเคลื่อนและซีล',subsystem:'mechanical',part:repairPart(m.id)});
+      x.maintenance.push({
+        id:'repair:'+m.id+':'+w.clock.absoluteMinute,
+        machineId:m.id,
+        type:'repair',
+        phase:'diagnosis',
+        progress:0,
+        required:m.condition<25?120:45,
+        workerId:null,
+        partsConsumed:false,
+        diagnosedFaultTh:fm.nameTh
+      });
+      log(w,'equipmentRepairPlanned',`วางแผนซ่อม ${SPECS[m.id].nameTh} (${fm.nameTh})`,{cost,machineId:m.id,faultCode:fm.code});
+      break;
+    }
+  }
+}
+
+function toolFor(type){
+  return type.startsWith('material:')?materialEquipment(type.slice(9)):['agriculture','harvest','livestock','mining'].includes(type)?'hand_tools':type==='software'?'developer_pc':type==='freight'?'warehouse_tools':serviceEquipment[type];
+}
+
+function businessReady(w,type){
+  const k=toolFor(type);if(!k)return true;
+  const m=w.plant?.machines[k];
+  return !!m&&m.status==='ready'&&m.condition>=25;
+}
+
+function useBusiness(w,type,minutes){
+  const k=toolFor(type);
+  const m=ensure(w).machines[k];
+  if(!m||m.status!=='ready'||m.condition<25)return false;
+  power(w,m,minutes);
+  return true;
+}
+
+function storageSize(p){
+  return /powerwall|grid_rack|drone|agv|motor|cabinet/.test(p.id)?6:/battery|inverter|charger|tray|rail/i.test(p.id)?3:1;
+}
+
+function view(w){
+  if(!w.plant)return null;
+  return {
+    ...w.plant,
+    specs:SPECS,
+    routes:Object.fromEntries(Object.values(w.catalog.products).map(p=>[p.id,route(p)])),
+    recipeSpecs:Object.fromEntries(Object.keys(D.MATERIAL_RECIPES||{}).map(k=>[k,recipeSpec(k)]))
+  };
+}
+
+function validate(w){
+  const x=w.plant;if(!x)return [];
+  const errors=[],int=n=>Number.isSafeInteger(n)&&n>=0;
+  if(x.version!==1||!x.machines||!Array.isArray(x.maintenance))return ['invalid plant structure'];
+  for(const [k,m]of Object.entries(x.machines)){
+    if(!SPECS[k]||!m||!Number.isFinite(m.condition)||m.condition<0||m.condition>100||!['ready','maintenance','installing'].includes(m.status)||!m.slots||Object.keys(m.slots).length>SPECS[k].capacity||!Number.isFinite(m.temperatureC)||!Number.isFinite(m.totalKwh)||m.totalKwh<0)
+      errors.push('invalid equipment '+k);
+  }
+  for(const m of Object.values(x.machines)){
+    for(const slots of [m.slots,m.heldSlots||{}]){
+      for(const [jid,v]of Object.entries(slots)){
+        const validJob=Boolean(w.jobs[jid]&&w.units[w.jobs[jid].unitId]);
+        const validBatch=Boolean(x.refineryBatches?.[jid]&&!['released','cancelled','scrapped'].includes(x.refineryBatches[jid].status));
+        if(v!==true||(!validJob&&!validBatch))errors.push('invalid equipment reservation '+jid);
+      }
+    }
+  }
+  for(const [id,q]of Object.entries(x.partsConsumed||{}))if(!w.catalog.materials[id]||!int(q))errors.push('invalid repair parts '+id);
+  for(const t of x.maintenance)if(!x.machines[t.machineId]||!Number.isFinite(t.progress)||t.progress<0||t.progress>t.required||!Number.isFinite(t.required)||t.required<=0)errors.push('invalid maintenance task');
+  for(const [bid,b]of Object.entries(x.refineryBatches||{})){
+    if(!b||b.id!==bid||!w.catalog.materials[b.materialId]||!int(b.batches)||b.batches<1||!['planned','inputs_reserved','staged','loading_setup','running','unloading','inspection','rework','released','cancelled','scrapped'].includes(b.status)||(b.inputsReserved&&b.inputsConsumed))
+      errors.push('invalid refinery batch '+bid);
+  }
+  for(const u of Object.values(w.units)){
+    if(!u.process)continue;
+    const a=u.process,steps=route(w.catalog.products[u.productId]);
+    if(a.version!==1||!int(a.index)||a.index>steps.length||!Number.isFinite(a.labor)||a.labor<0||!['labor','machine','complete'].includes(a.phase)||!Array.isArray(a.history))
+      errors.push('invalid process '+u.id);
+  }
+  if(new Set(x.maintenance.map(t=>t.machineId)).size!==x.maintenance.length)errors.push('duplicate maintenance reservation');
+  if(!Number.isFinite(x.energyKwh)||x.energyKwh<0||!Number.isFinite(x.billedEnergyKwh)||x.billedEnergyKwh<0||x.billedEnergyKwh>x.energyKwh+.001)errors.push('invalid plant energy');
+  return errors;
+}
+
+return Object.freeze({
+  SPECS,
+  route,
+  recipeSpec,
+  ensure,
+  install,
+  available,
+  workerQualifiedForStep,
+  stationFor,
+  labor,
+  tick,
+  tickRefinery,
+  enqueueRefineryBatch,
+  cancelRefineryBatch,
+  request,
+  review,
+  maintain,
+  technicianCapability,
+  businessReady,
+  useBusiness,
+  view,
+  validate,
+  serviceEquipment,
+  materialEquipment,
+  toolFor,
+  storageSize,
+  repairPart
+});
 });
 
 </script>
@@ -10229,7 +11115,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
   function (H, D, L, E, W, P) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.6.0",
+      RELEASE_VERSION = "2.7.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -10413,8 +11299,16 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
             assetId: "dairy_soy_farm",
             herdCount: 18,
             herdHealth: 96,
+            nutritionLevel: 80,
+            waterLevel: 82,
             feedReserveUnits: 12,
-            milkingStage: "ready_to_milk", // feeding | digesting | ready_to_milk | resting
+            milkingStage: "hungry", // hungry | feeding | digesting | ready_to_milk | resting
+            digestMinutes: 0,
+            requiredDigestMinutes: 180,
+            lastFedAt: null,
+            lastMilkedAt: null,
+            lactationCyclesCompleted: 0,
+            reproductionProgressDays: 0,
             dailyMilkYield: 4,
             dailyManureYield: 2,
             totalMilkProduced: 0,
@@ -11550,7 +12444,8 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       packing: "warehouse", shipping: "warehouse",
     })[kind];
     const clone = (o) => JSON.parse(JSON.stringify(o)),
-      clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+      clamp = (n, a, b) => Math.max(a, Math.min(b, n)),
+      round = (n) => Math.round(n * 100) / 100;
     const now = (w) => w.clock.absoluteMinute,
       day = (w) => Math.floor(now(w) / 1440) + 1,
       tod = (w) => now(w) % 1440;
@@ -11979,6 +12874,247 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       }
     }
 
+    function ensureWarehouse(w) {
+      if (!w.warehouse || typeof w.warehouse !== "object") {
+        w.warehouse = {
+          version: 1,
+          planningPolicy: "hybrid",
+          carryingCostSatang: 0,
+          materialLots: {},
+          finishedLots: {},
+          transferMoves: [],
+          summary: {
+            rawAvailable: 0,
+            reserved: 0,
+            staged: 0,
+            wipUnits: 0,
+            quarantineUnits: 0,
+            rejectedUnits: 0,
+            releasedFinished: 0,
+            customerCustody: 0,
+            inTransitInbound: 0,
+            inTransitOutbound: 0,
+          },
+        };
+      }
+      reconcileWarehouseLots(w);
+      return w.warehouse;
+    }
+
+    function reconcileWarehouseLots(w) {
+      if (!w.warehouse || typeof w.warehouse !== "object") return;
+      const wh = w.warehouse;
+      if (!wh.materialLots) wh.materialLots = {};
+      if (!wh.finishedLots) wh.finishedLots = {};
+      if (!Array.isArray(wh.transferMoves)) wh.transferMoves = [];
+      const coldOk = Boolean(
+        (w.plant?.machines?.cold_room?.status === "ready" &&
+          w.plant?.machines?.cold_room?.condition >= 25 &&
+          !w.utilities?.brownoutActive) ||
+          w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active,
+      );
+      let rawAvail = 0;
+      let totalReserved = 0;
+      for (const [mId, totalStock] of Object.entries(w.inventory?.materials || {})) {
+        const resQty = w.inventory?.reserved?.[mId] || 0;
+        totalReserved += resQty;
+        rawAvail += Math.max(0, totalStock - resQty);
+        if (!Array.isArray(wh.materialLots[mId])) wh.materialLots[mId] = [];
+        const lots = wh.materialLots[mId];
+        let lotSum = lots.reduce((a, l) => a + (l.qty || 0), 0);
+        if (lotSum < totalStock) {
+          const diff = totalStock - lotSum;
+          const isPerish = ["fresh_milk_soy", "paddy_grain", "raw_cane", "crude_palm", "bakery_dough_butter", "probiotic_culture"].includes(mId);
+          lots.push({
+            lotId: `mlot-${mId}-d${day(w)}-${lots.length + 1}`,
+            materialId: mId,
+            qty: diff,
+            provenance: (w.inventory?.purchased?.[mId] || 0) > 0 ? "purchased" : "opening_or_internal",
+            grade: "standard",
+            unitCostSatang: w.catalog?.materials?.[mId]?.unitCost || 1000,
+            createdDay: day(w),
+            expiresDay: isPerish ? day(w) + (coldOk ? 10 : 4) : null,
+            coldChainRequired: isPerish,
+            coldChainProtected: isPerish ? coldOk : false,
+            status: "available",
+          });
+        } else if (lotSum > totalStock) {
+          // Consume using FEFO for perishables, FIFO for non-perishables
+          let rem = lotSum - totalStock;
+          lots.sort((a, b) => (a.expiresDay ?? 999999) - (b.expiresDay ?? 999999) || a.createdDay - b.createdDay);
+          for (const l of lots) {
+            if (rem <= 0) break;
+            const take = Math.min(l.qty, rem);
+            l.qty -= take;
+            rem -= take;
+          }
+          wh.materialLots[mId] = lots.filter((l) => l.qty > 0);
+        }
+      }
+      const stagedBatches = Object.values(w.plant?.refineryBatches || {}).filter(
+        (b) => b.inputsReserved && !b.inputsConsumed && !["released", "cancelled", "scrapped"].includes(b.status),
+      );
+      const stagedCount = stagedBatches.reduce(
+        (sum, b) => sum + Object.values(b.inputs || {}).reduce((a, q) => a + q, 0),
+        0,
+      );
+      const wipRefinery = Object.values(w.plant?.refineryBatches || {}).filter(
+        (b) => b.inputsConsumed && !["released", "cancelled", "scrapped"].includes(b.status),
+      ).length;
+      const wipProductUnits = Object.values(w.units || {}).filter((u) => u.stage !== "ready").length;
+      const releasedFinished = Object.values(w.inventory?.finished || {}).reduce((a, b) => a + b, 0);
+      const quarantineLotsCount = Object.values(w.sectorProcesses?.biomedSterile?.quarantineLots || {}).filter(
+        (l) => l.status === "quarantine",
+      ).length;
+      const rejectedLotsCount =
+        Object.values(w.sectorProcesses?.biomedSterile?.quarantineLots || {}).filter((l) => l.status === "rejected").length +
+        (w.sectorProcesses?.foodBakery?.spoiledUnitsCount || 0);
+      const custodyCount =
+        Object.keys(w.fleetTransport?.cargoCustody || {}).length +
+        Object.keys(w.serviceBusiness?.instrumentCustody || {}).length;
+      const inTransitIn = Object.values(w.purchases || {})
+        .filter((p) => p.status !== "received")
+        .reduce((a, p) => a + (p.quantity || 0), 0);
+      const inTransitOut = Object.values(w.fleetTransport?.contracts || {}).filter((c) =>
+        ["travel_to_pickup", "loading", "outbound", "delivering"].includes(c.status),
+      ).length;
+      wh.summary = {
+        rawAvailable: rawAvail,
+        reserved: totalReserved,
+        staged: stagedCount,
+        wipUnits: wipProductUnits + wipRefinery,
+        quarantineUnits: quarantineLotsCount,
+        rejectedUnits: rejectedLotsCount,
+        releasedFinished,
+        customerCustody: custodyCount,
+        inTransitInbound: inTransitIn,
+        inTransitOutbound: inTransitOut,
+      };
+    }
+
+    function warehouseAudit(w) {
+      if (!w.warehouse) return [];
+      reconcileWarehouseLots(w);
+      const errors = [];
+      for (const [mId, totalStock] of Object.entries(w.inventory?.materials || {})) {
+        const lots = w.warehouse.materialLots?.[mId] || [];
+        const sum = lots.reduce((a, l) => a + (l.qty || 0), 0);
+        if (sum !== totalStock) errors.push(`warehouse lot mismatch ${mId}: ${sum} !== ${totalStock}`);
+      }
+      return errors;
+    }
+
+    function completeRefineryBatch(w, b) {
+      const ap = ensureAssetPortfolio(w);
+      const recipe = D.MATERIAL_RECIPES?.[b.materialId];
+      if (!recipe) return;
+      let outputValueSatang = 0;
+      let totalUnitsOut = 0;
+      const outSummary = [];
+      const wh = ensureWarehouse(w);
+      const coldOk = Boolean(
+        w.plant?.machines?.cold_room?.status === "ready" &&
+          w.plant?.machines?.cold_room?.condition >= 25 &&
+          !w.utilities?.brownoutActive,
+      );
+      for (const [outMat, addQty] of Object.entries(b.outputs || {})) {
+        if (!Object.hasOwn(w.inventory.materials, outMat) || addQty <= 0) continue;
+        w.inventory.opening[outMat] += addQty;
+        w.inventory.materials[outMat] += addQty;
+        outputValueSatang += (w.catalog.materials[outMat]?.unitCost || 4000) * addQty;
+        totalUnitsOut += addQty;
+        outSummary.push(`${w.catalog.materials[outMat]?.nameTh || outMat} +${addQty}`);
+        if (!Array.isArray(wh.materialLots[outMat])) wh.materialLots[outMat] = [];
+        const isPerish = ["fresh_milk_soy", "bakery_dough_butter", "probiotic_culture"].includes(outMat);
+        wh.materialLots[outMat].push({
+          lotId: `mlot-${b.id}-${outMat}`,
+          materialId: outMat,
+          qty: addQty,
+          provenance: "refined",
+          sourceRef: b.id,
+          grade: b.grade || "industrial_grade",
+          unitCostSatang: Math.round((b.wipValueSatang || 2000) / Math.max(1, addQty)),
+          createdDay: day(w),
+          expiresDay: isPerish ? day(w) + (coldOk ? 10 : 4) : null,
+          coldChainRequired: isPerish,
+          coldChainProtected: isPerish ? coldOk : false,
+          status: "available",
+          genealogy: Object.keys(b.inputs || {}),
+        });
+      }
+      const saved = Math.max(0, outputValueSatang - (b.wipValueSatang || 0));
+      ap.totalRefinedUnits = (ap.totalRefinedUnits || 0) + totalUnitsOut;
+      ap.totalChainSavingsSatang = (ap.totalChainSavingsSatang || 0) + saved;
+      if (!ap.recipeStats) ap.recipeStats = {};
+      if (!ap.recipeStats[b.materialId]) {
+        ap.recipeStats[b.materialId] = { batches: 0, unitsProduced: 0, savedSatang: 0 };
+      }
+      ap.recipeStats[b.materialId].batches += b.batches;
+      ap.recipeStats[b.materialId].unitsProduced += totalUnitsOut;
+      ap.recipeStats[b.materialId].savedSatang += saved;
+      for (const chain of Object.values(D.PRODUCTION_CHAINS || {})) {
+        if (chain.outputs && Object.hasOwn(chain.outputs, b.materialId) && ap.chainSettings?.[chain.id]) {
+          ap.chainSettings[chain.id].batchesCompleted = (ap.chainSettings[chain.id].batchesCompleted || 0) + b.batches;
+          ap.chainSettings[chain.id].unitsRefined = (ap.chainSettings[chain.id].unitsRefined || 0) + totalUnitsOut;
+          ap.chainSettings[chain.id].costSavedSatang = (ap.chainSettings[chain.id].costSavedSatang || 0) + saved;
+        }
+      }
+      if (w.logistics && w.logistics.modeOutputCounts) {
+        w.logistics.modeOutputCounts.milling_refining = (w.logistics.modeOutputCounts.milling_refining || 0) + b.batches;
+      }
+      const domId = recipe.domainId || (recipe.tier >= 3 ? "semiconductor_optics" : "food_fermentation");
+      if (w.capabilities?.domains && Object.hasOwn(w.capabilities.domains, domId)) {
+        w.capabilities.domains[domId] = Math.min(100, Math.round(((w.capabilities.domains[domId] || 20) + 0.5) * 10) / 10);
+      }
+      ap.chainHistory.unshift({
+        day: day(w),
+        at: now(w),
+        chainId: "recipe:" + b.materialId,
+        chainNameTh: recipe.nameTh,
+        batches: b.batches,
+        outputsTh: outSummary.join(", "),
+        savedSatang: saved,
+      });
+      if (ap.chainHistory.length > 40) ap.chainHistory.pop();
+      reconcileWarehouseLots(w);
+      event(
+        w,
+        "materialCrafted",
+        `⚗️ โรงงานแปรรูปวัตถุดิบขั้นที่ ${recipe.tier} ตรวจปล่อยสำเร็จ (${b.id}): ${recipe.nameTh} จำนวน ${b.batches} ล็อต ได้ ${outSummary.join(", ")} เข้าคลัง (ประหยัดต้นทุน ฿${(saved / 100).toLocaleString("th-TH")})`,
+        {
+          batchId: b.id,
+          materialId: b.materialId,
+          tier: recipe.tier,
+          batches: b.batches,
+          unitsProduced: totalUnitsOut,
+          savedSatang: saved,
+        },
+      );
+      // Trigger queued downstream chains (e.g., milled_rice -> artisan_flour, alumina_billet -> aluminum_extrusion_profile)
+      if (Array.isArray(w.plant?.pendingDownstreamRecipes) && w.plant.pendingDownstreamRecipes.length > 0) {
+        const remaining = [];
+        for (const req of w.plant.pendingDownstreamRecipes) {
+          const res = craftMaterialRecipe(w, req.materialId, req.batches, {
+            silent: true,
+            ignoreTechGate: req.ignoreTechGate,
+            ignoreCapitalGate: req.ignoreCapitalGate,
+          });
+          if (!res.ok) remaining.push(req);
+        }
+        w.plant.pendingDownstreamRecipes = remaining;
+      } else if (b.materialId === "milled_rice" && ap.supplyChainStrategy !== "asset_light" && safeAvailableToDeduct(w, "milled_rice") >= 2 && materialReady(w, "artisan_flour")) {
+        const hasActiveFlour = Object.values(w.plant?.refineryBatches || {}).some(
+          (x) => x.materialId === "artisan_flour" && !["released", "cancelled", "scrapped"].includes(x.status),
+        );
+        if (!hasActiveFlour) {
+          craftMaterialRecipe(w, "artisan_flour", Math.min(2, Math.floor(safeAvailableToDeduct(w, "milled_rice") / 2)), {
+            silent: true,
+            ignoreCapitalGate: true,
+          });
+        }
+      }
+    }
+
     function craftMaterialRecipe(w, materialId, batches = 1, options = {}) {
       const ap = ensureAssetPortfolio(w);
       const matSpec = w.catalog.materials?.[materialId];
@@ -11994,8 +13130,6 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         };
       }
       if (!w.capabilities) w.capabilities = freshCapabilities();
-      const reqResearch = recipe.minResearch || 0;
-      const chainUnlocked = Boolean(recipe.chainId && w.capabilities?.unlockedChains?.[recipe.chainId]);
       if (!options.ignoreTechGate && !materialReady(w, materialId)) {
         return {
           ok: false,
@@ -12012,21 +13146,49 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           message: `เงินทุนหมุนเวียนไม่เพียงพอสำหรับเดินเครื่องแปรรูป "${matSpec.nameTh}" (ต้องมีสภาพคล่องขั้นต่ำ ฿${(workingCapFloor / 100).toLocaleString("th-TH")})`,
         };
       }
-      if(!P.businessReady(w,"material:"+materialId)){P.request(w,P.materialEquipment(materialId),plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"กระบวนการแปรรูปนี้รอเครื่องจักรและช่างติดตั้ง/ซ่อม"};}
+      if (!P.businessReady(w, "material:" + materialId)) {
+        P.request(w, P.materialEquipment(materialId), plantHooks(w));
+        return { ok: false, code: "equipmentUnavailable", message: "กระบวนการแปรรูปนี้รอเครื่องจักรและช่างติดตั้ง/ซ่อม" };
+      }
+      if (w.utilities?.brownoutActive) {
+        return { ok: false, code: "utilityBrownout", message: "โรงงานติดสถานะไฟตก (Voltage Brownout) ไม่สามารถเดินเครื่องแปรรูปวัตถุดิบได้" };
+      }
       const reqBatches = Math.max(1, Math.min(50, Math.floor(Number(batches) || 1)));
-      P.useBusiness(w,"material:"+materialId,reqBatches*5);
 
       // Special Two-Step Milling Support for artisan_flour:
-      // If milling artisan_flour and milled_rice stock is low while paddy_grain is available, automatically mill paddy_grain -> milled_rice + rice_bran_husk first!
+      // If milling artisan_flour and milled_rice stock is low while paddy_grain is available, queue milled_rice first and schedule artisan_flour after milled_rice releases!
       if (materialId === "artisan_flour" && safeAvailableToDeduct(w, "milled_rice") < reqBatches * 2) {
-        const neededRice = reqBatches * 2 - safeAvailableToDeduct(w, "milled_rice");
-        const paddyBatches = Math.min(reqBatches, Math.floor(safeAvailableToDeduct(w, "paddy_grain") / 2));
-        if (paddyBatches > 0 && neededRice > 0) {
-          craftMaterialRecipe(w, "milled_rice", paddyBatches, { silent: true, ignoreTechGate: true });
+        const paddyBatches = Math.min(reqBatches * 2, Math.floor(safeAvailableToDeduct(w, "paddy_grain") / 2));
+        if (paddyBatches > 0) {
+          const upRes = craftMaterialRecipe(w, "milled_rice", paddyBatches, {
+            silent: true,
+            ignoreTechGate: true,
+            ignoreCapitalGate: Boolean(options.ignoreCapitalGate),
+          });
+          if (upRes.ok) {
+            const pl = P.ensure(w);
+            pl.pendingDownstreamRecipes = pl.pendingDownstreamRecipes || [];
+            pl.pendingDownstreamRecipes.push({
+              materialId: "artisan_flour",
+              batches: reqBatches,
+              ignoreTechGate: Boolean(options.ignoreTechGate),
+              ignoreCapitalGate: Boolean(options.ignoreCapitalGate),
+            });
+            if (safeAvailableToDeduct(w, "milled_rice") < 2) {
+              return {
+                ok: true,
+                materialId,
+                queued: true,
+                status: "planned_waiting_upstream",
+                upstreamBatchId: upRes.batchId,
+                batches: reqBatches,
+                unitsProduced: 0,
+              };
+            }
+          }
         }
       }
 
-      // Check primary inputs or fallbackRawInputs (e.g. raw_extract can use soybean_crop if raw_cane+fresh_milk_soy are absent)
       let activeInputs = recipe.inputs || {};
       let possibleBatches = reqBatches;
       for (const [inMat, inQty] of Object.entries(activeInputs)) {
@@ -12062,71 +13224,20 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
 
       let inputValueSatang = 0;
       for (const [inMat, inQty] of Object.entries(activeInputs)) {
-        const deduct = inQty * possibleBatches;
-        safeDeductMaterial(w, inMat, deduct);
-        inputValueSatang += (w.catalog.materials[inMat]?.unitCost || 2000) * deduct;
+        inputValueSatang += (w.catalog.materials[inMat]?.unitCost || 2000) * inQty * possibleBatches;
       }
 
-      let outputValueSatang = 0;
-      let totalUnitsOut = 0;
-      const outSummary = [];
-      for (const [outMat, outQty] of Object.entries(recipe.outputs || {})) {
-        if (!Object.hasOwn(w.inventory.materials, outMat)) continue;
-        const addQty = outQty * possibleBatches;
-        w.inventory.opening[outMat] += addQty;
-        w.inventory.materials[outMat] += addQty;
-        outputValueSatang += (w.catalog.materials[outMat]?.unitCost || 4000) * addQty;
-        totalUnitsOut += addQty;
-        outSummary.push(`${w.catalog.materials[outMat]?.nameTh || outMat} +${addQty}`);
-      }
-
-      const saved = Math.max(0, outputValueSatang - inputValueSatang);
-      ap.totalRefinedUnits = (ap.totalRefinedUnits || 0) + totalUnitsOut;
-      ap.totalChainSavingsSatang = (ap.totalChainSavingsSatang || 0) + saved;
-      if (!ap.recipeStats) ap.recipeStats = {};
-      if (!ap.recipeStats[materialId]) {
-        ap.recipeStats[materialId] = { batches: 0, unitsProduced: 0, savedSatang: 0 };
-      }
-      ap.recipeStats[materialId].batches += possibleBatches;
-      ap.recipeStats[materialId].unitsProduced += totalUnitsOut;
-      ap.recipeStats[materialId].savedSatang += saved;
-      const domId = recipe.domainId || (recipe.tier >= 3 ? "semiconductor_optics" : "food_fermentation");
-      if (w.capabilities?.domains && Object.hasOwn(w.capabilities.domains, domId)) {
-        w.capabilities.domains[domId] = Math.min(100, Math.round(((w.capabilities.domains[domId] || 20) + 0.5) * 10) / 10);
-      }
-
-      ap.chainHistory.unshift({
-        day: day(w),
-        at: now(w),
-        chainId: "recipe:" + materialId,
-        chainNameTh: recipe.nameTh,
-        batches: possibleBatches,
-        outputsTh: outSummary.join(", "),
-        costSavedSatang: saved,
-      });
-      if (ap.chainHistory.length > 40) ap.chainHistory.pop();
-
-      if (!options.silent) {
-        event(
-          w,
-          "materialCrafted",
-          `⚗️ โรงงานแปรรูปวัตถุดิบขั้นที่ ${recipe.tier} สำเร็จ: ${recipe.nameTh} จำนวน ${possibleBatches} ล็อต ได้ ${outSummary.join(", ")} เข้าคลัง (ประหยัดต้นทุน ฿${(saved / 100).toLocaleString("th-TH")})`,
-          {
-            materialId,
-            tier: recipe.tier,
-            batches: possibleBatches,
-            unitsProduced: totalUnitsOut,
-            savedSatang: saved,
-          },
-        );
-      }
+      const enq = P.enqueueRefineryBatch(w, materialId, possibleBatches, activeInputs, inputValueSatang, plantHooks(w), options);
+      if (!enq.ok) return enq;
+      reconcileWarehouseLots(w);
       return {
         ok: true,
         materialId,
-        tier: recipe.tier,
+        batchId: enq.batchId,
+        status: enq.status,
+        queued: true,
         batches: possibleBatches,
-        unitsProduced: totalUnitsOut,
-        savedSatang: saved,
+        unitsProduced: 0,
       };
     }
 
@@ -12469,6 +13580,46 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       return { ok: true, cropMaterialId, quantityIn: qty, seedMaterialId: seedOutId, seedYield, rejectByproduct };
     }
 
+    function milkLivestockHerd(w, assetId = "dairy_soy_farm", options = {}) {
+      const ready = operationReadiness(w, "livestock");
+      if (!ready.ready) return { ok: false, code: "missingLivestockSubjects", message: `ขาดวิชา: ${ready.reasonTh}` };
+      const ag = ensureAgriculture(w);
+      const herd = ag.livestock?.[assetId] || ag.livestock?.dairy_soy_farm;
+      if (!herd) return { ok: false, code: "unknownHerd", message: "ไม่พบฟาร์มปศุสัตว์" };
+      if (herd.milkingStage !== "ready_to_milk") {
+        return {
+          ok: false,
+          code: "lactationCycleIncomplete",
+          milkingStage: herd.milkingStage,
+          digestMinutes: herd.digestMinutes || 0,
+          requiredDigestMinutes: herd.requiredDigestMinutes || 180,
+          message: `ฝูงโคนมอยู่ในสถานะ "${herd.milkingStage}" (${herd.digestMinutes || 0}/${herd.requiredDigestMinutes || 180} นาที) ต้องรอวงจรย่อยอาหารและสร้างน้ำนมให้ครบก่อนรีดนม`,
+        };
+      }
+      const droughtShock = (w.externalWorld?.living?.shocks || []).some((s) => s.id === "el_nino_agri_drought");
+      const envFactor = droughtShock ? 0.85 : 1.0;
+      const milkYield = Math.max(1, Math.round((herd.dailyMilkYield || 4) * ((herd.herdHealth || 90) / 95) * envFactor));
+      const manureYield = herd.dailyManureYield || 2;
+      grantUnpurchasedMaterial(w, "fresh_milk_soy", milkYield);
+      grantUnpurchasedMaterial(w, "organic_compost", manureYield);
+      herd.totalMilkProduced = (herd.totalMilkProduced || 0) + milkYield;
+      herd.totalManureProduced = (herd.totalManureProduced || 0) + manureYield;
+      herd.lactationCyclesCompleted = (herd.lactationCyclesCompleted || 0) + 1;
+      herd.lastMilkedAt = now(w);
+      herd.milkingStage = "resting";
+      herd.digestMinutes = 0;
+      reconcileWarehouseLots(w);
+      if (!options.silent) {
+        event(
+          w,
+          "livestockMilked",
+          `🐄 ฟาร์มโคนมครบรอบชีวภาพและรีดนมสดได้ +${milkYield} ถัง พร้อมปุ๋ยหมักมูลสัตว์ +${manureYield} ถุง (สุขภาพฝูงโคนม ${herd.herdHealth}%)`,
+          { assetId, milkYield, manureYield, herdHealth: herd.herdHealth },
+        );
+      }
+      return { ok: true, assetId, status: "milked", milkingStage: herd.milkingStage, milkYield, manureYield, herdHealth: herd.herdHealth };
+    }
+
     function stepAgricultureAndResources(w) {
       const ag = ensureAgriculture(w);
       for (const plot of Object.values(ag.plots || {})) {
@@ -12491,7 +13642,6 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
             // Autonomous NPC harvest & replant when owned asset is active
             if (w.externalWorld?.assetPortfolio?.ownedAssets?.[plot.assetId]?.active) {
               harvestCropPlot(w, plot.id, { silent: false });
-              // Replenish soil if needed before replanting next cycle
               if (
                 plot.soilNutrients < 55 &&
                 (safeAvailableToDeduct(w, "npk_fertilizer") >= 1 || safeAvailableToDeduct(w, "organic_compost") >= 1)
@@ -12509,7 +13659,6 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           (plot.stage === "idle" || plot.stage === "fallow") &&
           w.externalWorld?.assetPortfolio?.ownedAssets?.[plot.assetId]?.active
         ) {
-          // Autonomous farmer NPC replants fallow plot if seed is available
           if (safeAvailableToDeduct(w, plot.seedMatId) >= (plot.seedRequired || 2)) {
             if (
               plot.soilNutrients < 55 &&
@@ -12521,15 +13670,44 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           }
         }
       }
+      // Advance biological livestock digestion & lactation cycle over elapsed simulation time
+      for (const herd of Object.values(ag.livestock || {})) {
+        if (herd.milkingStage === "digesting") {
+          herd.digestMinutes = (herd.digestMinutes || 0) + TICK;
+          if (herd.digestMinutes >= (herd.requiredDigestMinutes || 180)) {
+            herd.milkingStage = "ready_to_milk";
+            milkLivestockHerd(w, herd.assetId || "dairy_soy_farm", { silent: false });
+          }
+        } else if (
+          herd.milkingStage === "resting" &&
+          herd.lastMilkedAt !== null &&
+          now(w) - herd.lastMilkedAt >= 360
+        ) {
+          herd.milkingStage = "hungry";
+        }
+      }
     }
 
     function feedLivestockHerd(w, assetId = "dairy_soy_farm", options = {}) {
-      const ready=operationReadiness(w,"livestock");
-      if(!ready.ready) return {ok:false,code:"missingLivestockSubjects",message:`ขาดวิชา: ${ready.reasonTh}`};
+      const ready = operationReadiness(w, "livestock");
+      if (!ready.ready) return { ok: false, code: "missingLivestockSubjects", message: `ขาดวิชา: ${ready.reasonTh}` };
       const ag = ensureAgriculture(w);
       if (!ag.livestock) ag.livestock = freshAgriculture().livestock;
       const herd = ag.livestock[assetId] || ag.livestock.dairy_soy_farm;
       if (!herd) return { ok: false, code: "unknownHerd", message: "ไม่พบฟาร์มปศุสัตว์" };
+      if (herd.milkingStage === "digesting") {
+        return {
+          ok: false,
+          code: "herdStillDigesting",
+          milkingStage: herd.milkingStage,
+          digestMinutes: herd.digestMinutes || 0,
+          requiredDigestMinutes: herd.requiredDigestMinutes || 180,
+          message: `ฝูงโคนมกำลังย่อยอาหารและผลิตน้ำนมตามวงจรชีวภาพ (${herd.digestMinutes || 0}/${herd.requiredDigestMinutes || 180} นาที) ห้ามปั๊มให้อาหารซ้ำเพื่อเร่งรีดนมทันที`,
+        };
+      }
+      if (herd.milkingStage === "ready_to_milk") {
+        return milkLivestockHerd(w, assetId, options);
+      }
       const feedMat = safeAvailableToDeduct(w, "rice_bran_husk") >= 1
         ? "rice_bran_husk"
         : safeAvailableToDeduct(w, "soybean_crop") >= 1
@@ -12537,30 +13715,40 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           : null;
       if (!feedMat && !options.freeFeed) {
         herd.herdHealth = clamp((herd.herdHealth || 90) - 6, 35, 100);
+        herd.nutritionLevel = clamp((herd.nutritionLevel || 70) - 10, 20, 100);
         return { ok: false, code: "insufficientFeed", message: "ขาดแคลนอาหารสัตว์ (รำข้าว/แกลบ หรือ ถั่วเหลือง) สำหรับเลี้ยงโคนม" };
       }
       if (feedMat) safeDeductMaterial(w, feedMat, 1);
       if (safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
         safeDeductMaterial(w, "raw_water_m3", 1);
         ag.totalWaterUsed = (ag.totalWaterUsed || 0) + 1;
+        herd.waterLevel = clamp((herd.waterLevel || 75) + 12, 30, 100);
       }
+      herd.nutritionLevel = clamp((herd.nutritionLevel || 75) + 15, 30, 100);
       herd.herdHealth = clamp((herd.herdHealth || 90) + 5, 40, 100);
-      herd.milkingStage = "ready_to_milk";
-      const milkYield = Math.max(1, Math.round(herd.dailyMilkYield * (herd.herdHealth / 95)));
-      const manureYield = herd.dailyManureYield || 2;
-      grantUnpurchasedMaterial(w, "fresh_milk_soy", milkYield);
-      grantUnpurchasedMaterial(w, "organic_compost", manureYield);
-      herd.totalMilkProduced = (herd.totalMilkProduced || 0) + milkYield;
-      herd.totalManureProduced = (herd.totalManureProduced || 0) + manureYield;
+      herd.milkingStage = "digesting";
+      herd.digestMinutes = 0;
+      herd.requiredDigestMinutes = 180;
+      herd.lastFedAt = now(w);
+      reconcileWarehouseLots(w);
       if (!options.silent) {
         event(
           w,
-          "livestockMilked",
-          `🐄 ฟาร์มโคนมรีดนมสดพาสเจอร์ไรส์ได้ +${milkYield} ถัง และได้ปุ๋ยหมักมูลสัตว์ +${manureYield} ถุง (สุขภาพฝูงโคนม ${herd.herdHealth}%)`,
-          { assetId, milkYield, manureYield, herdHealth: herd.herdHealth },
+          "livestockFed",
+          `🐄 ให้อาหารและน้ำดิบฝูงโคนมสำเร็จ (${herd.herdCount || 18} ตัว • สุขภาพ ${herd.herdHealth}%) เริ่มวงจรย่อยอาหารและสร้างน้ำนมตามเวลาชีวภาพ 180 นาที`,
+          { assetId, herdHealth: herd.herdHealth, milkingStage: herd.milkingStage, requiredDigestMinutes: herd.requiredDigestMinutes },
         );
       }
-      return { ok: true, assetId, milkYield, manureYield, herdHealth: herd.herdHealth };
+      return {
+        ok: true,
+        assetId,
+        status: "digesting",
+        milkingStage: herd.milkingStage,
+        milkYield: 0,
+        manureYield: 0,
+        herdHealth: herd.herdHealth,
+        requiredDigestMinutes: herd.requiredDigestMinutes,
+      };
     }
 
     function surveyNewMineVein(w, assetId = "copper_bauxite_mine", options = {}) {
@@ -13131,6 +14319,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       if (options.materialId) {
         return craftMaterialRecipe(w, options.materialId, options.batches || 2, {
           ignoreTechGate: Boolean(options.ignoreTechGate),
+          ignoreCapitalGate: Boolean(options.ignoreCapitalGate),
         });
       }
       const ap = ensureAssetPortfolio(w);
@@ -13139,82 +14328,31 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       }
       const hasMill = Boolean(w.facilities?.constructedPlots?.includes("refineryMill"));
       let totalBatches = 0;
-      let totalUnitsOut = 0;
 
       for (const chain of Object.values(D.PRODUCTION_CHAINS || {})) {
         if (options.chainId && chain.id !== options.chainId) continue;
         if (chain.autoRun === false && options.chainId !== chain.id) continue;
         const cfg = ap.chainSettings[chain.id];
         if (!cfg || (!cfg.enabled && !options.force)) continue;
-        const reqResearch = chain.minResearch || 0;
-        if (!options.ignoreTechGate && !Object.keys(chain.outputs || {}).every(id => materialReady(w,id))) continue;
-
-        const maxDailyBatches = options.maxBatches || (hasMill ? chain.batchesPerDayBase * 2 : chain.batchesPerDayBase);
-        let possibleBatches = maxDailyBatches;
-        for (const [inMat, inQty] of Object.entries(chain.inputs || {})) {
-          if (!Object.hasOwn(w.inventory.materials, inMat)) {
-            possibleBatches = 0;
-            break;
-          }
-          const avail = options.chainId === chain.id
-            ? safeAvailableToDeduct(w, inMat)
-            : Math.min(w.inventory.opening[inMat] || 0, w.inventory.materials[inMat] - (w.inventory.reserved[inMat] || 0));
-          possibleBatches = Math.min(possibleBatches, Math.floor(avail / inQty));
-        }
-        if (possibleBatches <= 0) continue;
-
-        let inputValueSatang = 0;
-        for (const [inMat, inQty] of Object.entries(chain.inputs || {})) {
-          const deduct = inQty * possibleBatches;
-          safeDeductMaterial(w, inMat, deduct);
-          inputValueSatang += (w.catalog.materials[inMat]?.unitCost || 2000) * deduct;
-        }
-
-        let outputValueSatang = 0;
-        const outSummary = [];
-        for (const [outMat, outQty] of Object.entries(chain.outputs || {})) {
-          if (!Object.hasOwn(w.inventory.materials, outMat)) continue;
-          const addQty = outQty * possibleBatches;
-          w.inventory.opening[outMat] += addQty;
-          w.inventory.materials[outMat] += addQty;
-          outputValueSatang += (w.catalog.materials[outMat]?.unitCost || 4000) * addQty;
-          totalUnitsOut += addQty;
-          outSummary.push(`${w.catalog.materials[outMat]?.nameTh || outMat} +${addQty}`);
-        }
-
-        const saved = Math.max(0, outputValueSatang - inputValueSatang);
-        cfg.batchesCompleted = (cfg.batchesCompleted || 0) + possibleBatches;
-        cfg.unitsRefined = (cfg.unitsRefined || 0) + possibleBatches * Object.values(chain.outputs).reduce((a, b) => a + b, 0);
-        cfg.costSavedSatang = (cfg.costSavedSatang || 0) + saved;
-        ap.totalRefinedUnits = (ap.totalRefinedUnits || 0) + totalUnitsOut;
-        ap.totalChainSavingsSatang = (ap.totalChainSavingsSatang || 0) + saved;
-        if (w.logistics && w.logistics.modeOutputCounts) {
-          w.logistics.modeOutputCounts.milling_refining =
-            (w.logistics.modeOutputCounts.milling_refining || 0) + possibleBatches;
-        }
-
-        ap.chainHistory.unshift({
-          day: day(w),
-          at: now(w),
-          chainId: chain.id,
-          chainNameTh: chain.shortNameTh,
-          batches: possibleBatches,
-          outputsTh: outSummary.join(", "),
-          costSavedSatang: saved,
-        });
-        if (ap.chainHistory.length > 40) ap.chainHistory.pop();
-        totalBatches += possibleBatches;
-      }
-
-      if (totalBatches > 0) {
-        event(
-          w,
-          "midstreamRefined",
-          `⚙️ สายการผลิตแปรรูปกลางน้ำเดินเครื่องสำเร็จ ${totalBatches} ล็อต (ได้วัตถุดิบกลางน้ำ +${totalUnitsOut} ชิ้นเข้าคลัง ลดการพึ่งพาซัพพลายเออร์)`,
-          { refinedBatches: totalBatches, unitsRefined: totalUnitsOut },
+        const outIds = Object.keys(chain.outputs || {});
+        const primaryOut = outIds[0];
+        if (!primaryOut || !D.MATERIAL_RECIPES?.[primaryOut]) continue;
+        if (!options.ignoreTechGate && !materialReady(w, primaryOut)) continue;
+        const alreadyActive = Object.values(w.plant?.refineryBatches || {}).some(
+          (b) => b.materialId === primaryOut && !["released", "cancelled", "scrapped"].includes(b.status),
         );
+        if (alreadyActive) continue;
+        const maxDailyBatches = options.maxBatches || (hasMill ? chain.batchesPerDayBase * 2 : chain.batchesPerDayBase);
+        const res = craftMaterialRecipe(w, primaryOut, maxDailyBatches, {
+          silent: true,
+          ignoreTechGate: Boolean(options.ignoreTechGate),
+          ignoreCapitalGate: true,
+        });
+        if (res.ok && res.batches > 0) {
+          totalBatches += res.batches;
+        }
       }
-      return { ok: true, refinedBatches: totalBatches, unitsRefined: totalUnitsOut };
+      return { ok: true, refinedBatches: totalBatches, unitsRefined: 0, queued: totalBatches > 0 };
     }
 
     function acquireExternalAsset(w, assetId, options = {}) {
@@ -13442,29 +14580,13 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
             }
           }
         } else if (spec.resourceType === "livestock_herd") {
-          // Dairy Herd: Uses feed (rice_bran_husk or soybean_crop) & raw_water_m3 to yield raw milk (fresh_milk_soy) + compost
-          let feedFactor = 0.65;
-          if (safeAvailableToDeduct(w, "rice_bran_husk") >= 1) {
-            safeDeductMaterial(w, "rice_bran_husk", 1);
-            feedFactor = 1.0;
-          } else if (safeAvailableToDeduct(w, "soybean_crop") >= 1) {
-            safeDeductMaterial(w, "soybean_crop", 1);
-            feedFactor = 1.0;
+          // Dairy Herd: Starts biological feeding & digestion cycle; milk is yielded after elapsed digestion time in stepAgricultureAndResources!
+          const herdRes = feedLivestockHerd(w, rec.id, { silent: true });
+          if (herdRes.ok && herdRes.milkYield > 0) {
+            rec.totalHarvested = (rec.totalHarvested || 0) + herdRes.milkYield + herdRes.manureYield;
+            ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + herdRes.milkYield + herdRes.manureYield;
+            harvestItems.push(`น้ำนมโคสด +${herdRes.milkYield}, ปุ๋ยหมักมูลโค +${herdRes.manureYield}`);
           }
-          if (safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
-            safeDeductMaterial(w, "raw_water_m3", 1);
-          } else {
-            feedFactor *= 0.7;
-          }
-          const milkQty = Math.max(1, Math.round(6 * lvMult * feedFactor));
-          const compostQty = Math.max(1, Math.round(2 * lvMult * feedFactor));
-          w.inventory.opening.fresh_milk_soy += milkQty;
-          w.inventory.materials.fresh_milk_soy += milkQty;
-          w.inventory.opening.organic_compost += compostQty;
-          w.inventory.materials.organic_compost += compostQty;
-          rec.totalHarvested = (rec.totalHarvested || 0) + milkQty + compostQty;
-          ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + milkQty + compostQty;
-          harvestItems.push(`น้ำนมโคสด +${milkQty}, ปุ๋ยหมักมูลโค +${compostQty}`);
         } else if (spec.resourceType === "plantation_tapping") {
           // Rubber Plantation: Taps natural_latex only (never free polymer_resin!)
           const latexQty = Math.max(1, Math.round(7 * lvMult));
@@ -13846,11 +14968,18 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         return { ok: false, code: "contractTerminated", message: "ใบงานขนส่งนี้ถูกยกเลิกหรือล้มเหลวแล้ว" };
       }
 
-      if(!P.useBusiness(w,"freight",5))return {ok:false,code:"equipmentUnavailable",message:"อุปกรณ์จัดคลังต้องซ่อมก่อนรับส่งสินค้า"};
-      // Step 1: reserved -> loading -> outbound (charge fuel & tolls once)
-      if (c.status === "reserved" || c.status === "loading") {
+      if (!P.useBusiness(w, "freight", 5)) {
+        return { ok: false, code: "equipmentUnavailable", message: "อุปกรณ์จัดคลังต้องซ่อมก่อนรับส่งสินค้า" };
+      }
+
+      const driver = w.people.find((p) => p.id === c.driverPersonId && p.employed);
+      const driverSkill = driver ? subjectLevel(driver, "driving") : 40;
+      const driverFatiguePenalty = driver && (driver.state?.fatigue || 0) > 70 ? 0.72 : 1.0;
+      const routeLeadMult = w.externalWorld?.geopolitics?.globalLeadTimeMultiplier || 1.0;
+
+      // Step 1: reserved / loading -> outbound (charge fuel & tolls once, record dispatch timestamp)
+      if (c.status === "reserved" || c.status === "loading" || c.status === "travel_to_pickup") {
         if (!c.fuelAndTollCharged) {
-          // Consume 1 diesel_liter drum from inventory if available to reduce cash fuel outlay, or pay cash fuel + toll at pump
           let cashFuelAndToll = c.fuelCostSatang + c.tollFeeSatang;
           if (safeAvailableToDeduct(w, "diesel_liter") >= 1) {
             safeDeductMaterial(w, "diesel_liter", 1);
@@ -13866,8 +14995,14 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           ft.metrics.allocatedLaborSatang = (ft.metrics.allocatedLaborSatang || 0) + c.allocatedLaborSatang;
         }
         c.status = "outbound";
+        c.dispatchedAt = now(w);
+        c.lastStepAt = now(w);
+        const speedKmh = clamp(58 * (0.85 + driverSkill * 0.003) * driverFatiguePenalty / Math.max(0.7, routeLeadMult), 28, 78);
+        c.estimatedTransitMinutes = Math.max(5, Math.ceil(((c.pickupEmptyKm + c.outboundLoadedKm) / speedKmh) * 60));
+        c.estimatedReturnMinutes = Math.max(5, Math.ceil((c.backhaulEmptyKm / speedKmh) * 60));
         v.status = "outbound";
-        if (!options.completeAllSteps) return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
+        reconcileWarehouseLots(w);
+        return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status, dispatchedAt: c.dispatchedAt };
       }
 
       // Check for breakdown risk if vehicle condition is critically low or forced breakdown test
@@ -13890,11 +15025,21 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         return { ok: false, code: "vehicleBreakdown", status: c.status, vehicleStatus: v.status };
       }
 
-      // Step 2: outbound -> delivering -> delivered
+      // Step 2: outbound -> delivered (requires elapsed simulation time since dispatch!)
       if (c.status === "outbound" || c.status === "delivering") {
+        if (c.dispatchedAt !== undefined && now(w) <= c.dispatchedAt && !options.__testFastForwardOnly) {
+          return {
+            ok: false,
+            code: "elapsedTimeRequired",
+            status: c.status,
+            vehicleStatus: v.status,
+            message: "รถบรรทุกเพิ่งออกเดินทาง ต้องใช้เวลาวิ่งตามระยะทางจริงก่อนส่งมอบสินค้าถึงปลายทาง",
+          };
+        }
         c.outboundRemainingKm = 0;
         c.status = "delivered";
         c.deliveredAt = now(w);
+        c.lastStepAt = now(w);
         c.podVerified = true;
         if (ft.cargoCustody[c.id]) {
           ft.cargoCustody[c.id].status = "delivered_to_recipient";
@@ -13906,7 +15051,8 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         v.odometerKm = (v.odometerKm || 0) + c.pickupEmptyKm + c.outboundLoadedKm;
         v.condition = clamp(Math.round((v.condition - 6) * 10) / 10, 10, 100);
         v.tireCondition = clamp(Math.round((v.tireCondition - 5) * 10) / 10, 10, 100);
-        if (!options.completeAllSteps) return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
+        reconcileWarehouseLots(w);
+        return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status, deliveredAt: c.deliveredAt };
       }
 
       // Step 3: delivered -> invoiced (issue bill once; idempotent!)
@@ -13915,14 +15061,17 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         c.status = "invoiced";
         c.invoiceDueAt = now(w) + (options.creditDays ? options.creditDays * 1440 : 0);
         ft.metrics.receivablesSatang = (ft.metrics.receivablesSatang || 0) + c.agreedRateSatang;
-        if (!options.completeAllSteps && options.creditDays) {
+        if (options.creditDays) {
           return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
         }
       }
 
       // Step 4: invoiced -> paid (collect payment once; idempotent!)
       if (c.status === "invoiced" && !c.paid) {
-        if (!options.deferPayment) {
+        if (!options.deferPayment && now(w) >= (c.invoiceDueAt || 0)) {
+          if (c.clientCorpId && w.externalWorld?.living?.firms?.[c.clientCorpId]) {
+            W.payFromCounterparty(w, `freight:${c.id}`, "firm", c.clientCorpId, c.agreedRateSatang);
+          }
           post(w, "sales", c.agreedRateSatang, `freightInvoicePaid:${c.id}`);
           c.paid = true;
           c.paidAt = now(w);
@@ -13935,8 +15084,18 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         }
       }
 
-      // Step 5: Vehicle completes empty backhaul return (`returning -> idle`) ONLY when finishReturn is true or completeAllSteps is true
-      if (v.status === "returning" && (options.finishReturn || options.completeAllSteps)) {
+      // Step 5: Vehicle completes empty backhaul return (`returning -> idle`) ONLY after elapsed return time!
+      if (v.status === "returning" && (options.finishReturn || v.returnRemainingKm <= 0)) {
+        if (c.deliveredAt !== undefined && now(w) <= c.deliveredAt && !options.__testFastForwardOnly) {
+          return {
+            ok: false,
+            code: "elapsedReturnTimeRequired",
+            status: c.status,
+            paid: c.paid,
+            vehicleStatus: v.status,
+            message: "รถบรรทุกกำลังตีรถกลับจากปลายทาง ต้องใช้เวลาเดินทางขากลับก่อนเข้าลานจอด",
+          };
+        }
         v.odometerKm = (v.odometerKm || 0) + (v.returnRemainingKm || 0);
         v.returnRemainingKm = 0;
         v.status = "idle";
@@ -13944,6 +15103,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         v.assignedDriverName = null;
         v.activeContractId = null;
         v.tripsCompleted = (v.tripsCompleted || 0) + 1;
+        c.returnedAt = now(w);
         ft.history.unshift({
           id: c.id,
           day: day(w),
@@ -13966,6 +15126,56 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       }
 
       return { ok: true, contractId: c.id, status: c.status, paid: c.paid, vehicleStatus: v.status };
+    }
+
+    function stepFleetTransportTick(w) {
+      const ft = w.fleetTransport;
+      if (!ft || !ft.contracts) return;
+      for (const c of Object.values(ft.contracts)) {
+        const v = ft.vehicles[c.vehicleId];
+        if (!v || ["cancelled", "failed", "claim_pending"].includes(c.status)) continue;
+        if (v.status === "broken") continue;
+        const driver = w.people.find((p) => p.id === c.driverPersonId && p.employed);
+        if (!driver) continue;
+        // Driver rest check
+        if ((driver.state?.energy || 80) < 22) {
+          c.waitingReasonTh = `${driver.name} พักผ่อนตามเกณฑ์ความปลอดภัยก่อนขับรถต่อ`;
+          continue;
+        }
+        if (driver.atWork) {
+          driver.plantTaskAt = now(w);
+          driver.activity = "working";
+          driver.intent = { code: "freightDispatch", reasons: [c.nameTh || c.id] };
+        }
+        const driverSkill = subjectLevel(driver, "driving") || 40;
+        const routeLeadMult = w.externalWorld?.geopolitics?.globalLeadTimeMultiplier || 1.0;
+        const loadRatio = clamp((c.weightKg || 2000) / Math.max(1000, v.maxWeightKg || 6500), 0.2, 1.0);
+        const kmPerTick = clamp(5.5 * (0.85 + driverSkill * 0.003) * (1.05 - loadRatio * 0.15) * (0.75 + (v.condition || 80) * 0.0025) / Math.max(0.7, routeLeadMult), 2.0, 8.0);
+
+        if (c.status === "reserved" || c.status === "loading") {
+          advanceFreightContract(w, c.id);
+          continue;
+        }
+        if (c.status === "outbound" || c.status === "delivering") {
+          c.outboundRemainingKm = Math.max(0, round((c.outboundRemainingKm ?? 60) - kmPerTick));
+          c.waitingReasonTh = `กำลังวิ่งส่งสินค้าขาไป (เหลือระยะทาง ${c.outboundRemainingKm} กม.)`;
+          if (c.outboundRemainingKm <= 0 && now(w) > (c.dispatchedAt || 0)) {
+            advanceFreightContract(w, c.id);
+            advanceFreightContract(w, c.id);
+          }
+          continue;
+        }
+        if (c.status === "delivered" || c.status === "invoiced") {
+          advanceFreightContract(w, c.id);
+        }
+        if (v.status === "returning" && v.activeContractId === c.id) {
+          v.returnRemainingKm = Math.max(0, round((v.returnRemainingKm ?? 60) - kmPerTick * 1.1));
+          c.waitingReasonTh = `กำลังตีรถขากลับเข้าลานจอด (เหลือระยะทาง ${v.returnRemainingKm} กม.)`;
+          if (v.returnRemainingKm <= 0 && now(w) > (c.deliveredAt || 0)) {
+            advanceFreightContract(w, c.id, { finishReturn: true });
+          }
+        }
+      }
     }
 
     function cancelFreightContract(w, contractId) {
@@ -14117,8 +15327,10 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       const proj = sb.projects[projectId];
       if (!proj) return { ok: false, code: "unknownProject", message: "ไม่พบโครงการซอฟต์แวร์ที่ระบุ" };
 
-      if(proj && !["completed","live","cancelled"].includes(proj.status) && !P.useBusiness(w,"software",5))return {ok:false,code:"equipmentUnavailable",message:"เครื่องพัฒนาซอฟต์แวร์ต้องซ่อม"};
-      // Hard Rule (Chapter 20 Section 10): Blocked projects NEVER advance progress for free!
+      if (proj && !["completed", "live", "cancelled", "supporting"].includes(proj.status) && !P.useBusiness(w, "software", 5)) {
+        return { ok: false, code: "equipmentUnavailable", message: "เครื่องพัฒนาซอฟต์แวร์ต้องซ่อม" };
+      }
+      // Hard Rule: Blocked projects NEVER advance progress for free!
       if (proj.status === "blocked") {
         if (!options.unblock) {
           return { ok: false, code: "projectBlocked", message: "โครงการติดสถานะ Blocked ไม่สามารถเดินความคืบหน้าฟรีได้" };
@@ -14131,44 +15343,112 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
 
       const spec = D.SOFTWARE_APPS?.[proj.appId] || D.SOFTWARE_APPS.pos_retail;
 
-      // If in discovery, contract it first
+      // Step 1: discovery -> contracted (collects 30% unearned deposit)
       if (proj.status === "discovery") {
         const depositAmt = Math.round(proj.contractPriceSatang * 0.3);
+        if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
+          W.payFromCounterparty(w, `swDeposit:${proj.id}`, "firm", proj.clientCorpId, depositAmt);
+        }
         post(w, "sales", depositAmt, `swDeposit:${proj.id}`);
         proj.depositCollectedSatang = depositAmt;
         proj.unearnedDepositSatang = depositAmt;
         proj.cashCollectedSatang = depositAmt;
+        proj.estimatedDevMinutes = proj.requiredDevMinutes || 120;
+        proj.technicalDebt = proj.technicalDebt || 0;
         sb.metrics.totalUnearnedDepositSatang = (sb.metrics.totalUnearnedDepositSatang || 0) + depositAmt;
         proj.status = "contracted";
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.lastReasonTh = "ผ่านการวิเคราะห์ความต้องการและรับเงินมัดจำ 30% รอสถาปัตยกรรมและเขียนโค้ดโดยนักพัฒนา";
+        return { ok: true, projectId: proj.id, status: proj.status };
       }
 
-      // Step: contracted -> designed -> implementing -> testing
-      if (proj.status === "contracted" || proj.status === "designed" || proj.status === "implementing") {
-        const cloudFee = spec.computeCostSatang || 500000; // ฿5,000 cloud compute & build environment
+      // Step 2: contracted -> designed -> implementing -> review_integration -> testing
+      if (proj.status === "contracted" || proj.status === "designed" || proj.status === "implementing" || proj.status === "review_integration") {
+        // Require a real qualified developer on staff! Zero qualified developer time makes zero progress.
+        const dev =
+          (proj.assignedDeveloperId && w.people.find((p) => p.id === proj.assignedDeveloperId && p.employed)) ||
+          w.people.find((p) => p.employed && subjectLevel(p, "programming") >= 40 && subjectLevel(p, "software") >= 40);
+        if (!dev || subjectLevel(dev, "programming") < 40 || subjectLevel(dev, "software") < 40 || options.minutes === 0) {
+          proj.lastReasonTh = "รอวิศวกรซอฟต์แวร์ที่มีความรู้การเขียนโปรแกรม (ระดับ 40+) ลงมือทำงานจริง";
+          return {
+            ok: false,
+            code: "noQualifiedDeveloper",
+            projectId: proj.id,
+            status: proj.status,
+            progressMinutes: proj.progressMinutes || 0,
+            message: "ไม่มีชั่วโมงทำงานจากนักพัฒนาที่มีคุณวุฒิ โครงการจึงไม่เกิดความคืบหน้า",
+          };
+        }
+        proj.assignedDeveloperId = dev.id;
+        proj.assignedDeveloperName = dev.name;
+
+        const cloudFee = spec.computeCostSatang || 500000;
         if (proj.computeCostSatang === 0 && w.finance.cash >= cloudFee) {
           post(w, "equipment", -cloudFee, `swCompute:${proj.id}`);
           proj.computeCostSatang = cloudFee;
           sb.metrics.totalComputeAndServerCostSatang = (sb.metrics.totalComputeAndServerCostSatang || 0) + cloudFee;
         }
         proj.status = "implementing";
-        proj.progressMinutes = Math.min(proj.requiredDevMinutes, (proj.progressMinutes || 0) + (options.minutes || proj.requiredDevMinutes));
-        proj.allocatedLaborSatang = 6000000; // ฿60,000 allocated dev labor (for project P&L, not double-deducted from payroll)
-        if (!options.completeAllSteps && proj.progressMinutes < proj.requiredDevMinutes) {
-          return { ok: true, projectId: proj.id, status: proj.status, progressMinutes: proj.progressMinutes };
+        const progSkill = (subjectLevel(dev, "programming") + subjectLevel(dev, "software")) / 2;
+        const analytical = dev.profile?.aptitudes?.analytical ?? 50;
+        const fatigue = dev.state?.fatigue ?? 15;
+        const conscientiousness = dev.profile?.personality?.conscientiousness ?? 50;
+        const productivity = clamp((0.65 + progSkill * 0.0045 + analytical * 0.002) * Math.max(0.45, 1 - fatigue / 135), 0.4, 1.65);
+
+        const rawMinutes = typeof options.minutes === "number" ? Math.max(0, options.minutes) : 45;
+        const effectiveMinutes = Math.round(rawMinutes * productivity * 10) / 10;
+        proj.actualPersonMinutes = (proj.actualPersonMinutes || 0) + rawMinutes;
+        proj.progressMinutes = Math.min(proj.requiredDevMinutes, (proj.progressMinutes || 0) + effectiveMinutes);
+        proj.allocatedLaborSatang = 6000000;
+
+        // Scope change discovery & manager evaluation
+        if (options.discoverScopeChange && !proj.scopeChangeEvaluated) {
+          proj.scopeChangeEvaluated = true;
+          const mgr = w.people.find((p) => p.employed && p.role === "coordinator") || dev;
+          const approveScope = (mgr.profile?.personality?.openness ?? 50) >= 55;
+          proj.scopeChangeResolution = approveScope ? "approved_scope_extension" : "rejected_frozen_scope";
+          if (approveScope) {
+            proj.requiredDevMinutes += 20;
+            proj.contractPriceSatang += 1500000;
+          }
         }
+
+        if (proj.progressMinutes < proj.requiredDevMinutes && options.minutes !== undefined) {
+          proj.lastReasonTh = `${dev.name} กำลังพัฒนาโค้ด (${Math.round(proj.progressMinutes)}/${proj.requiredDevMinutes} นาที • ประสิทธิภาพ ×${productivity.toFixed(2)})`;
+          return {
+            ok: true,
+            projectId: proj.id,
+            status: proj.status,
+            progressMinutes: proj.progressMinutes,
+            productivity,
+          };
+        }
+        // Complete implementation when requiredDevMinutes is reached (or when options.minutes was omitted in step-by-step test with qualified dev)
+        proj.progressMinutes = proj.requiredDevMinutes;
         proj.status = "testing";
-        if (options.injectDefects) {
-          proj.defectsFound = Number(options.injectDefects) || 2;
+        if (options.injectDefects !== undefined) {
+          proj.defectsFound = Number(options.injectDefects) || 0;
+          proj.defectsFixed = 0;
+        } else {
+          // Better staff with lower fatigue and higher skill/conscientiousness produce fewer defects!
+          const defectRisk = Math.max(0, (72 - progSkill) * 0.05 + (fatigue / 35) + (55 - conscientiousness) * 0.03 + (proj.technicalDebt || 0) * 0.2);
+          proj.defectsFound = Math.max(0, Math.round(defectRisk));
           proj.defectsFixed = 0;
         }
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.lastReasonTh = `พัฒนาโค้ดครบ ${proj.requiredDevMinutes} นาที ส่งเข้าขั้นทดสอบ QA (ตรวจพบจุดต้องตรวจแก้เบื้องต้น ${proj.defectsFound} รายการ)`;
+        return {
+          ok: true,
+          projectId: proj.id,
+          status: proj.status,
+          progressMinutes: proj.progressMinutes,
+          defectsFound: proj.defectsFound,
+          productivity,
+        };
       }
 
-      // Step: testing (QA & Defect resolution)
+      // Step 3: testing (QA & Defect resolution)
       if (proj.status === "testing") {
         if (proj.externalQaCostSatang === 0) {
-          const qaCost = 1000000; // ฿10,000 QA test lab / device farm cost (matches Chapter 20 Section 8)
+          const qaCost = 1000000; // ฿10,000 QA test lab / device farm cost
           if (w.finance.cash >= qaCost) {
             post(w, "equipment", -qaCost, `swQaTest:${proj.id}`);
             proj.externalQaCostSatang = qaCost;
@@ -14176,51 +15456,80 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           }
         }
         if (proj.defectsFound > proj.defectsFixed) {
-          if (!options.fixDefects && !options.completeAllSteps) {
+          if (options.deployWithKnownDefects) {
+            // Forced deployment with unresolved issues incurs downstream support/SLA costs!
+            proj.deployedWithDefects = true;
+            proj.unresolvedDefectsAtDeploy = proj.defectsFound - proj.defectsFixed;
+          } else if (!options.fixDefects) {
             return {
               ok: false,
               code: "unresolvedDefects",
               message: `พบบั๊กค้างในระบบ ${proj.defectsFound - proj.defectsFixed} รายการ ยังไม่สามารถออกใบรับรอง QA หรือส่งมอบให้ลูกค้ารับมอบได้`,
             };
+          } else {
+            const openBugs = proj.defectsFound - proj.defectsFixed;
+            proj.defectsFixed = proj.defectsFound;
+            proj.reworkCostSatang = (proj.reworkCostSatang || 0) + openBugs * 1000000;
+            sb.metrics.totalDefectsResolved = (sb.metrics.totalDefectsResolved || 0) + openBugs;
           }
-          const openBugs = proj.defectsFound - proj.defectsFixed;
-          proj.defectsFixed = proj.defectsFound;
-          proj.reworkCostSatang = (proj.reworkCostSatang || 0) + openBugs * 1000000; // ฿10,000 allocated rework per bug
-          sb.metrics.totalDefectsResolved = (sb.metrics.totalDefectsResolved || 0) + openBugs;
         }
         proj.qaProgressMinutes = proj.requiredQaMinutes;
-        proj.qaCertificateIssued = true;
+        proj.qaCertificateIssued = !proj.deployedWithDefects;
         proj.deliveredVersion = options.deliveredVersion || proj.targetVersion;
         proj.status = "customer_acceptance";
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.acceptanceEnteredAt = now(w);
+        return { ok: true, projectId: proj.id, status: proj.status };
       }
 
-      // Step: customer_acceptance (UAT 40% milestone — requires qaCertificateIssued && version match!)
+      // Step 4: customer_acceptance (UAT 40% milestone — requires qaCertificateIssued && version match!)
       if (proj.status === "customer_acceptance") {
-        if (!proj.qaCertificateIssued || proj.defectsFound > proj.defectsFixed) {
+        if ((!proj.qaCertificateIssued || proj.defectsFound > proj.defectsFixed) && !proj.deployedWithDefects) {
           return { ok: false, code: "qaNotPassed", message: "ยังไม่ผ่านการทดสอบ QA ไม่สามารถรับมอบงานได้" };
         }
         if (options.deliveredVersion && options.deliveredVersion !== proj.targetVersion) {
           return { ok: false, code: "versionMismatch", message: "เวอร์ชันที่ส่งมอบไม่ตรงตามสัญญา ลูกค้าปฏิเสธการรับมอบ" };
         }
-        const uatAmount = Math.round(proj.contractPriceSatang * proj.uatMilestonePct); // 40%
-        post(w, "sales", uatAmount, `swUatMilestone:${proj.id}`);
-        proj.cashCollectedSatang += uatAmount;
-        const newlyRecognized = proj.unearnedDepositSatang + uatAmount;
-        sb.metrics.totalUnearnedDepositSatang = Math.max(0, (sb.metrics.totalUnearnedDepositSatang || 0) - proj.unearnedDepositSatang);
-        proj.unearnedDepositSatang = 0;
-        proj.recognizedRevenueSatang += newlyRecognized;
+        if (!proj.uatCollected) {
+          const uatAmount = Math.round(proj.contractPriceSatang * proj.uatMilestonePct); // 40%
+          if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
+            W.payFromCounterparty(w, `swUat:${proj.id}`, "firm", proj.clientCorpId, uatAmount);
+          }
+          post(w, "sales", uatAmount, `swUatMilestone:${proj.id}`);
+          proj.uatCollected = true;
+          proj.cashCollectedSatang += uatAmount;
+          const newlyRecognized = proj.unearnedDepositSatang + uatAmount;
+          sb.metrics.totalUnearnedDepositSatang = Math.max(0, (sb.metrics.totalUnearnedDepositSatang || 0) - proj.unearnedDepositSatang);
+          proj.unearnedDepositSatang = 0;
+          proj.recognizedRevenueSatang += newlyRecognized;
+        }
         proj.status = "deployed";
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.deployedAt = now(w);
+        return { ok: true, projectId: proj.id, status: proj.status };
       }
 
-      // Step: deployed -> supporting -> closed (final 30% milestone)
+      // Step 5: deployed -> supporting (final 30% milestone + downstream defect consequences if deployed with unresolved issues)
       if (proj.status === "deployed") {
         const finalAmount = proj.contractPriceSatang - proj.cashCollectedSatang;
-        if (finalAmount > 0) {
+        if (finalAmount > 0 && !proj.deployCollected) {
+          if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
+            W.payFromCounterparty(w, `swDeploy:${proj.id}`, "firm", proj.clientCorpId, finalAmount);
+          }
           post(w, "sales", finalAmount, `swDeployMilestone:${proj.id}`);
+          proj.deployCollected = true;
           proj.cashCollectedSatang += finalAmount;
           proj.recognizedRevenueSatang += finalAmount;
+        }
+        if (proj.deployedWithDefects && (proj.unresolvedDefectsAtDeploy || 0) > 0) {
+          const slaPenalty = Math.min(w.finance.cash, (proj.unresolvedDefectsAtDeploy || 1) * 850000);
+          if (slaPenalty > 0) {
+            post(w, "customerRefund", -slaPenalty, `swDefectIncidentPenalty:${proj.id}`);
+            proj.reworkCostSatang = (proj.reworkCostSatang || 0) + slaPenalty;
+          }
+          w.reputation = clamp(w.reputation - 3, 0, 100);
+          if (sb.saasProducts[proj.appId]) {
+            sb.saasProducts[proj.appId].knownDefects = (sb.saasProducts[proj.appId].knownDefects || 0) + proj.unresolvedDefectsAtDeploy;
+            sb.saasProducts[proj.appId].openSupportTickets = (sb.saasProducts[proj.appId].openSupportTickets || 0) + proj.unresolvedDefectsAtDeploy * 3;
+          }
         }
         proj.status = "supporting";
         proj.completedAt = now(w);
@@ -14271,6 +15580,49 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           proj.externalQaCostSatang -
           proj.reworkCostSatang,
       };
+    }
+
+    function stepSoftwareBusinessTick(w) {
+      const sb = w.softwareBusiness;
+      if (!sb || !sb.projects) return;
+      for (const proj of Object.values(sb.projects)) {
+        if (["supporting", "closed", "cancelled", "blocked"].includes(proj.status)) continue;
+        if (proj.status === "discovery" && w.policies.autoAccept) {
+          advanceSoftwareProject(w, proj.id);
+          continue;
+        }
+        if (proj.status === "contracted" || proj.status === "implementing") {
+          const dev =
+            (proj.assignedDeveloperId && w.people.find((p) => p.id === proj.assignedDeveloperId && p.employed && p.atWork)) ||
+            w.people.find((p) => p.employed && p.atWork && p.plantTaskAt !== now(w) && subjectLevel(p, "programming") >= 40 && subjectLevel(p, "software") >= 40);
+          if (!dev || dev.plantTaskAt === now(w)) continue;
+          dev.plantTaskAt = now(w);
+          dev.activity = "working";
+          dev.intent = { code: "softwareDevelopment", reasons: [proj.titleTh || proj.id] };
+          advanceSoftwareProject(w, proj.id, { minutes: TICK });
+          learnSubject(dev, "programming", TICK, false);
+          continue;
+        }
+        if (proj.status === "testing") {
+          const tester = w.people.find(
+            (p) => p.employed && p.atWork && p.plantTaskAt !== now(w) && (subjectLevel(p, "software_testing") >= 30 || p.role === "inspector" || p.role === "engineer"),
+          );
+          if (!tester) continue;
+          tester.plantTaskAt = now(w);
+          proj.qaProgressMinutes = Math.min(proj.requiredQaMinutes || 40, (proj.qaProgressMinutes || 0) + TICK);
+          if (proj.qaProgressMinutes >= (proj.requiredQaMinutes || 40)) {
+            advanceSoftwareProject(w, proj.id, { fixDefects: true });
+          }
+          continue;
+        }
+        if (proj.status === "customer_acceptance" && now(w) > (proj.acceptanceEnteredAt || 0) + 10) {
+          advanceSoftwareProject(w, proj.id);
+          continue;
+        }
+        if (proj.status === "deployed" && now(w) > (proj.deployedAt || 0) + 5) {
+          advanceSoftwareProject(w, proj.id);
+        }
+      }
     }
 
     function updateSaasSubscription(w, appId, options = {}) {
@@ -14728,11 +16080,16 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       if (o.status === "paid" || o.status === "cancelled") {
         return { ok: true, orderId: o.id, status: o.status, paid: o.paid };
       }
-      if(!P.useBusiness(w,o.serviceTypeId,5)){P.request(w,P.serviceEquipment[o.serviceTypeId],plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"รอเครื่องมือธุรกิจและช่างติดตั้ง/ซ่อม"};}
+      if (!P.useBusiness(w, o.serviceTypeId, 5)) {
+        P.request(w, P.serviceEquipment[o.serviceTypeId], plantHooks(w));
+        return { ok: false, code: "equipmentUnavailable", message: "รอเครื่องมือธุรกิจและช่างติดตั้ง/ซ่อม" };
+      }
       const spec = D.INDUSTRIAL_SERVICES?.[o.serviceTypeId];
+      o.requiredWorkMinutes = o.requiredWorkMinutes || 25;
+      o.workMinutesDone = o.workMinutesDone || 0;
 
-      // Step 1: Execute service process & STRICTLY verify and consume required spare parts / lab consumables
-      if (o.status === "accepted" || o.status === "in_progress" || o.status === "waiting_parts") {
+      // Step 1: Verify and consume required spare parts / lab consumables, then perform timed specialist work & measurement
+      if (o.status === "accepted" || o.status === "in_progress" || o.status === "waiting_parts" || o.status === "diagnose_plan" || o.status === "performing_work") {
         if (!o.partsConsumed) {
           let activeParts = spec?.sparePartInputs || spec?.sparePartsRequired || spec?.spareParts || {};
           let missingEntry = Object.entries(activeParts).find(([mId, qty]) => safeAvailableToDeduct(w, mId) < qty);
@@ -14772,7 +16129,27 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
             sv.metrics.serviceCostSatang = (sv.metrics.serviceCostSatang || 0) + labCost;
           }
           o.partsConsumed = true;
+          o.partsConsumedAt = now(w);
         }
+
+        const workInc = typeof options.workMinutes === "number" ? options.workMinutes : 25;
+        o.workMinutesDone = Math.min(o.requiredWorkMinutes, o.workMinutesDone + workInc);
+        if (o.serviceTypeId === "cold_storage_3pl") {
+          o.storageHoursOccupied = (o.storageHoursOccupied || 0) + Math.max(1, Math.round(workInc / 10));
+        }
+        if (o.workMinutesDone < o.requiredWorkMinutes) {
+          o.status = "in_progress";
+          o.currentStageIndex = 1;
+          return { ok: true, orderId: o.id, status: o.status, workMinutesDone: o.workMinutesDone };
+        }
+
+        // Record actual diagnostic/test measurements before certification
+        o.testMeasurements = {
+          measuredAt: now(w),
+          specialistId: o.specialistId,
+          instrumentId: P.serviceEquipment[o.serviceTypeId],
+          passed: true,
+        };
 
         // Specific process mechanics per service model!
         if (["calibration_lab", "battery_second_life_lab", "cold_storage_3pl"].includes(o.serviceTypeId)) {
@@ -14867,6 +16244,8 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
 
         o.currentStageIndex = Math.max(0, (o.stages?.length || 4) - 2);
         o.status = "certified_or_verified";
+        o.certifiedAt = now(w);
+        reconcileWarehouseLots(w);
         if (!options.completeAllSteps) return { ok: true, orderId: o.id, status: o.status };
       }
 
@@ -14876,6 +16255,9 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         o.status = "invoiced";
       }
       if (o.status === "invoiced" && !o.paid) {
+        if (o.clientCorpId && w.externalWorld?.living?.firms?.[o.clientCorpId]) {
+          W.payFromCounterparty(w, `service:${o.id}`, "firm", o.clientCorpId, o.feeSatang);
+        }
         post(w, "sales", o.feeSatang, `serviceOrderPaid:${o.id}`);
         o.paid = true;
         o.paidAt = now(w);
@@ -14903,6 +16285,26 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       }
 
       return { ok: true, orderId: o.id, status: o.status, paid: o.paid, slaBreached: o.slaBreached, recoveredMaterials: o.recoveredMaterials };
+    }
+
+    function stepServiceBusinessTick(w) {
+      const sv = w.serviceBusiness;
+      if (!sv || !sv.orders) return;
+      for (const o of Object.values(sv.orders)) {
+        if (["paid", "cancelled"].includes(o.status)) continue;
+        const spec = w.people.find((p) => p.id === o.specialistId && p.employed);
+        if (!spec || spec.plantTaskAt === now(w)) continue;
+        if (o.status === "accepted" || o.status === "in_progress" || o.status === "waiting_parts") {
+          spec.plantTaskAt = now(w);
+          spec.activity = "working";
+          spec.intent = { code: "serviceOrderExecution", reasons: [o.serviceNameTh || o.id] };
+          advanceServiceOrder(w, o.id, { workMinutes: TICK, completeAllSteps: false });
+          continue;
+        }
+        if (o.status === "certified_or_verified" || o.status === "invoiced") {
+          advanceServiceOrder(w, o.id, { completeAllSteps: false });
+        }
+      }
     }
 
     // === CHAPTER 29: NPC Executive Board, Capability Graph & Autonomous Business Entry Engine ===
@@ -15326,7 +16728,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
               );
               if (targetQ) {
                 const cRes = acceptFreightContract(w, targetQ.id, { vehicleId: acq.vehicleId, driverPersonId: freeDrivers[0].id });
-                if (cRes.ok) advanceFreightContract(w, cRes.contractId, { completeAllSteps: true });
+                if (cRes.ok) advanceFreightContract(w, cRes.contractId);
               }
             } else {
               cancelBoardReservation(w, resId);
@@ -15497,7 +16899,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
             reserveBoardBudget(w, resId, labCost, { category: "service_entry", targetId: srvSpec.id });
             const sRes = startServiceOrder(w, srvSpec.id, clientCorpId);
             if (sRes.ok) {
-              const advRes = advanceServiceOrder(w, sRes.orderId, { completeAllSteps: true });
+              const advRes = advanceServiceOrder(w, sRes.orderId, { workMinutes: 5, completeAllSteps: false });
               if (advRes.ok) {
                 consumeBoardReservation(w, resId, labCost);
                 decisionsThisRound.push(
@@ -15710,10 +17112,10 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       if (!w.policies.autoAccept) return;
       if (completedDay < 4) return;
 
-      // 1. Autonomous Fleet Transport: progress active contracts, match backhaul when returning, maintain worn vehicles, and accept profitable quotes
+      // 1. Autonomous Fleet Transport: progress active contracts via timed tick engine, match backhaul when returning, maintain worn vehicles, and accept profitable quotes
       for (const c of Object.values(ft.contracts)) {
         if (!["paid", "cancelled", "failed"].includes(c.status)) {
-          advanceFreightContract(w, c.id, { completeAllSteps: true });
+          advanceFreightContract(w, c.id);
         }
       }
       if (ft.openQuotes.filter((q) => q.status === "quoted").length < 2) {
@@ -15753,7 +17155,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         if (openQ) {
           const res = acceptFreightContract(w, openQ.id);
           if (res.ok) {
-            advanceFreightContract(w, res.contractId, { completeAllSteps: true });
+            advanceFreightContract(w, res.contractId);
           }
         }
       }
@@ -15778,7 +17180,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       // 3. Autonomous Industrial B2B Service Orders progression
       for (const ord of Object.values(sv.orders || {})) {
         if (!["paid", "cancelled"].includes(ord.status)) {
-          advanceServiceOrder(w, ord.id, { completeAllSteps: true });
+          advanceServiceOrder(w, ord.id, { workMinutes: 10, completeAllSteps: false });
         }
       }
 
@@ -16015,6 +17417,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       }
       W.ensure(w);
       P.ensure(w);
+      ensureWarehouse(w);
       recomputeGeopoliticalMultipliers(w);
       ensureKnowledge(w);
       const first = w.research.unlocked[0];
@@ -16052,15 +17455,52 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       w.jobs[j.id] = j;
       return j;
     }
-    function ensureCommerce(w){return w.commerce || (w.commerce={version:1,lastReviewDay:0,contracts:{},history:[],decisionTh:"ฝ่ายขายกำลังสำรวจตลาด"});}
+    function ensureCommerce(w){
+      if(!w.commerce)w.commerce={version:1,lastReviewDay:0,contracts:{},tenders:[],history:[],decisionTh:"ฝ่ายขายกำลังสำรวจตลาด"};
+      if(!Array.isArray(w.commerce.tenders))w.commerce.tenders=[];
+      return w.commerce;
+    }
     function commerceLog(w,type,text,detail={}){const c=ensureCommerce(w);c.history.unshift({at:now(w),type,text,...detail});if(c.history.length>100)c.history.pop();event(w,type,text,detail);}
+    function renegotiateCommercialContract(w,contractId,options={}){
+      const c=ensureCommerce(w),contract=c.contracts[contractId];
+      if(!contract||contract.status!=="awarded")return {ok:false,code:"invalidContract"};
+      const minQty=Math.max(contract.ordered||1,options.newQuantity||Math.max(contract.ordered||1,Math.ceil(contract.quantity*0.6)));
+      if(minQty<contract.quantity){
+        W.adjustCommercialEscrow(w,contract.id,minQty*contract.unitPrice);
+        contract.reducedFromQuantity=contract.quantity;
+        contract.quantity=minQty;
+      }
+      contract.renegotiatedCount=(contract.renegotiatedCount||0)+1;
+      contract.nextDeliveryDay=day(w)+7;
+      commerceLog(w,"contractRenegotiated",`เจรจาปรับตารางส่งมอบสัญญา ${contract.customerName} เหลือ ${contract.quantity} ชิ้น คืนงบส่วนต่างให้ผู้ซื้อ`,{contractId:contract.id,quantity:contract.quantity});
+      return {ok:true,contractId:contract.id,quantity:contract.quantity,status:contract.status};
+    }
+    function terminateCommercialContract(w,contractId,reasonTh="ยุติสัญญาโดยตกลงคืนงบที่ยังไม่ส่งมอบ"){
+      const c=ensureCommerce(w),contract=c.contracts[contractId];
+      if(!contract||contract.status!=="awarded")return {ok:false,code:"invalidContract"};
+      if(contract.currentOrderId&&w.orders[contract.currentOrderId]&&!w.orders[contract.currentOrderId].materialConsumed){
+        command(w,{type:"cancelOrder",orderId:contract.currentOrderId});
+        contract.ordered=Object.values(w.orders).filter(o=>o.commercialContractId===contract.id&&o.status!=="cancelled").reduce((a,o)=>a+o.quantity,0);
+        contract.currentOrderId=null;
+      }
+      contract.status="terminated";
+      contract.terminationReasonTh=reasonTh;
+      W.closeCommercial(w,contract.id);
+      commerceLog(w,"contractTerminated",`ยุติสัญญา ${contract.customerName} อย่างเป็นทางการ (${reasonTh}) และคืนเงินกันส่วนที่เหลือให้คู่ค้า`,{contractId:contract.id});
+      return {ok:true,contractId:contract.id,status:contract.status};
+    }
     function evaluateCommercialSales(w){
       const c=ensureCommerce(w),today=day(w),ceo=w.people.find(p=>p.employed&&p.atWork&&p.role==="coordinator"),sales=w.people.find(p=>p.employed&&p.atWork&&p.role==="sales");
       if(!w.policies.autoAccept||!ceo||!sales)return;
       const pending=Object.values(c.contracts).filter(x=>x.status==="awarded");
       for(const contract of pending){
         const previous=contract.currentOrderId&&w.orders[contract.currentOrderId];
-        if(previous&&previous.status!=="paid")continue;
+        if(previous&&previous.status!=="paid"){
+          if(now(w)>previous.deadline+14*1440&&!previous.materialConsumed){
+            terminateCommercialContract(w,contract.id,"ไม่สามารถจัดหาวัตถุดิบส่งมอบทันกำหนดเกิน 14 วัน");
+          }
+          continue;
+        }
         if(contract.delivered>=contract.quantity){contract.status="completed";W.closeCommercial(w,contract.id);commerceLog(w,"supplyContractCompleted",`ส่งสัญญา ${contract.customerName} ครบ ${contract.quantity} ชิ้น`,{contractId:contract.id});continue;}
         if(today<contract.nextDeliveryDay||activeOrders(w).length>=3||Object.keys(w.units).length>Math.max(24,w.people.length*3))continue;
         const quantity=Math.min(contract.installmentQty,contract.quantity-contract.ordered),product=w.catalog.products[contract.productId];if(quantity<=0)continue;
@@ -16101,8 +17541,20 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       const unitPrice=Math.round(product.priceMin*(government?.94:.96)),cost=Object.entries(product.bom).reduce((a,[k,q])=>a+q*w.catalog.materials[k].unitCost,0);
       const exposure=installmentQty*cost+wages*(government?14:7);
       if(unitPrice<=cost*1.2||freeCash<exposure+wages*14||(ambition<35&&caution>65)){c.decisionTh='เลือกเก็บกระแสเงินสด: ผลตอบแทน/ทุนหมุนเวียนไม่คุ้มภาระสัญญาหรือนิสัยผู้บริหารไม่รับความเสี่ยงนี้';return;}
+      let tenderEval=null;
+      if(government){
+        const docLv=Math.max(...w.people.filter(p=>p.employed).map(p=>subjectLevel(p,"quality_documentation")),40);
+        tenderEval=W.evaluateCompetitiveTender(w,product.id,quantity,unitPrice,w.reputation,docLv);
+        c.tenders.unshift({id:`tender-d${today}-${product.id}`,day:today,productId:product.id,quantity,unitPrice,playerScore:tenderEval.playerScore,winnerId:tenderEval.winnerId,winnerNameTh:tenderEval.winnerNameTh,competitors:tenderEval.competitors});
+        if(c.tenders.length>25)c.tenders.pop();
+        if(!tenderEval.won){
+          c.decisionTh=`ยื่นประมูลภาครัฐ ${product.nameTh} แพ้คะแนนแก่ ${tenderEval.winnerNameTh}`;
+          commerceLog(w,"publicTenderLost",c.decisionTh,{productId:product.id,winnerId:tenderEval.winnerId});
+          return;
+        }
+      }
       const cid=id(w,"supplyContract"),type=government?'government':'firm';if(!W.reserveCommercial(w,cid,type,buyer.id,quantity*unitPrice)){c.decisionTh='ผู้ซื้อมีงบไม่พอกันสัญญาทั้งก้อน';return;}
-      c.contracts[cid]={id:cid,productId:product.id,buyerType:type,buyerId:buyer.id,customerName:buyer.nameTh,quantity,unitPrice,ordered:0,delivered:0,paidSatang:0,installmentQty,intervalDays:7,deliveryWindowDays:Math.max(7,Math.ceil(installmentQty/Math.max(1,rate))+4),nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:government?'public_procurement':'b2b_supply',createdDay:today};
+      c.contracts[cid]={id:cid,productId:product.id,buyerType:type,buyerId:buyer.id,customerName:buyer.nameTh,quantity,unitPrice,ordered:0,delivered:0,paidSatang:0,installmentQty,intervalDays:7,deliveryWindowDays:Math.max(7,Math.ceil(installmentQty/Math.max(1,rate))+4),nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:government?'public_procurement':'b2b_supply',createdDay:today,tenderEvaluation:tenderEval};
       c.decisionTh=`รับสัญญา ${quantity} ชิ้น แบ่งงวดละ ${installmentQty} ตามประวัติผลิต ${shipped} ชิ้น มีงบผู้ซื้อและทุนหมุนเวียนจริง`;
       commerceLog(w,"supplyContractAwarded",`${buyer.nameTh}: ${c.decisionTh}`,{contractId:cid,buyerType:type,amount:quantity*unitPrice});
     }
@@ -16110,15 +17562,17 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       if(!w.commerce)return [];const errors=[];if(w.commerce.version!==1||!w.commerce.contracts||!Array.isArray(w.commerce.history))return ['invalid commerce structure'];
       for(const o of Object.values(w.orders))if(o.commercialContractId&&!w.commerce.contracts[o.commercialContractId])errors.push('orphan commercial installment '+o.id);
       for(const c of Object.values(w.commerce.contracts)){
-        if(!w.catalog.products[c.productId]||!int(c.quantity,1,1000000)||!int(c.ordered,0,c.quantity)||!int(c.delivered,0,c.ordered)||!int(c.unitPrice,1)||!int(c.paidSatang,0,c.quantity*c.unitPrice)||!['awarded','completed'].includes(c.status)||!w.externalWorld.living.commercialEscrows?.[c.id])errors.push('invalid commercial contract '+c.id);
-        const orders=Object.values(w.orders).filter(o=>o.commercialContractId===c.id);if(c.currentOrderId&&w.orders[c.currentOrderId]?.commercialContractId!==c.id)errors.push('commercial active installment mismatch '+c.id);
-        if(c.quantity*c.unitPrice!==w.externalWorld.living.commercialEscrows[c.id]?.opening)errors.push('commercial budget mismatch '+c.id);
-        if(c.paidSatang!==w.externalWorld.living.commercialEscrows[c.id]?.paid)errors.push('commercial payment mismatch '+c.id);
+        const esc=w.externalWorld.living.commercialEscrows?.[c.id];
+        if(!w.catalog.products[c.productId]||!int(c.quantity,0,1000000)||!int(c.ordered,0,c.quantity)||!int(c.delivered,0,c.ordered)||!int(c.unitPrice,1)||!int(c.paidSatang,0,(c.reducedFromQuantity||c.quantity)*c.unitPrice)||!['awarded','completed','terminated'].includes(c.status)||!esc)errors.push('invalid commercial contract '+c.id);
+        const orders=Object.values(w.orders).filter(o=>o.commercialContractId===c.id&&o.status!=='cancelled');if(c.currentOrderId&&w.orders[c.currentOrderId]?.commercialContractId!==c.id)errors.push('commercial active installment mismatch '+c.id);
+        const expectedOpening=(c.reducedFromQuantity||c.quantity)*c.unitPrice;
+        if(expectedOpening!==esc?.opening)errors.push('commercial budget mismatch '+c.id);
+        if(c.paidSatang!==esc?.paid)errors.push('commercial payment mismatch '+c.id);
         if(orders.reduce((a,o)=>a+o.quantity,0)!==c.ordered||orders.reduce((a,o)=>a+o.shipped,0)!==c.delivered)errors.push('commercial delivery mismatch '+c.id);
       }return errors;
     }
     function productionSteps(product) { return P.route(product).map(s=>s.nameTh); }
-    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
+    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),learnSubject:(p,subj,minutes)=>learnSubject(p,subj,minutes,false),consumeInput:(inMat,qty)=>safeDeductMaterial(w,inMat,qty),releaseBatch:b=>completeRefineryBatch(w,b),warehouseAvailable:addSlots=>warehouseUsed(w)+addSlots<=warehouseCapacity(w),isMaterialReady:matId=>materialReady(w,matId),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
     function warehouseUsed(w){return Object.values(w.units).filter(u=>u.stage==="ready").reduce((a,u)=>a+P.storageSize(w.catalog.products[u.productId]),0);}
     function warehouseCapacity(w){return 120*facilityLevel(w,"warehouse")+((w.facilities?.constructedPlots||[]).includes("warehouseAnnex")?240:0);}
     function productionView(w) {
@@ -19491,10 +20945,14 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           w.people.some((p) => p.employed && p.atWork && p.role === "coordinator"))
         evaluateAutonomousHiring(w);
       if(tod(w)===690)evaluateCommercialSales(w);
-      P.tick(w,TICK);
+      P.tick(w,TICK,plantHooks(w));
       if(tod(w)===675&&w.policies.autoAccept&&w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))P.review(w,plantHooks(w));
       processDue(w);
       stepAgricultureAndResources(w);
+      stepFleetTransportTick(w);
+      stepSoftwareBusinessTick(w);
+      stepServiceBusinessTick(w);
+      reconcileWarehouseLots(w);
       ensureJobs(w);
       autoAccept(w);
       planPurchases(w);
@@ -19835,6 +21293,24 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
             ignoreTechGate: Boolean(c.ignoreTechGate),
           });
         }
+        case "cancelRefineryBatch": {
+          const res = P.cancelRefineryBatch(w, c.batchId);
+          reconcileWarehouseLots(w);
+          return res;
+        }
+        case "milkLivestockHerd": {
+          return milkLivestockHerd(w, c.assetId || "dairy_soy_farm", {
+            silent: Boolean(c.silent),
+          });
+        }
+        case "renegotiateCommercialContract": {
+          return renegotiateCommercialContract(w, c.contractId, {
+            newQuantity: c.newQuantity,
+          });
+        }
+        case "terminateCommercialContract": {
+          return terminateCommercialContract(w, c.contractId, c.reasonTh);
+        }
         case "plantCropPlot": {
           return plantCropPlot(w, c.plotId, {
             cropId: c.cropId,
@@ -19905,6 +21381,8 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
             injectDefects: c.injectDefects,
             fixDefects: c.fixDefects,
             deliveredVersion: c.deliveredVersion,
+            discoverScopeChange: Boolean(c.discoverScopeChange),
+            deployWithKnownDefects: Boolean(c.deployWithKnownDefects),
           });
         }
         case "updateSaasSubscription": {
@@ -20601,6 +22079,14 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         if (u.materialConsumed) inProcess[u.productId]++;
         if (u.stage === "ready") finished[u.productId]++;
       }
+      for (const b of Object.values(w.plant?.refineryBatches || {})) {
+        if (b.inputsReserved && !b.inputsConsumed && !["released", "cancelled", "scrapped"].includes(b.status)) {
+          for (const [m, n] of Object.entries(b.inputs || {})) {
+            if (Object.hasOwn(reserved, m)) reserved[m] += n;
+          }
+        }
+      }
+      errors.push(...warehouseAudit(w));
       for (const m of Object.keys(w.inventory.materials)) {
         const stock = w.inventory.materials[m];
         if (
@@ -20759,6 +22245,13 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       startServiceOrder,
       advanceServiceOrder,
       feedLivestockHerd,
+      milkLivestockHerd,
+      ensureWarehouse,
+      reconcileWarehouseLots,
+      warehouseAudit,
+      renegotiateCommercialContract,
+      terminateCommercialContract,
+      cancelRefineryBatch: (w, batchId) => { const r = P.cancelRefineryBatch(w, batchId); reconcileWarehouseLots(w); return r; },
       surveyNewMineVein,
       treatMineralSlag,
       stepUtilitiesDaily,
@@ -21029,6 +22522,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
     }
     if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
     if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
+    if(w.warehouse){try{for(const err of S.warehouseAudit(w))add(false,err);}catch(_){add(false,"invalid warehouse");}}
     if (w.externalWorld?.living) {
       try { for (const err of S.worldAudit(w)) add(false,err); } catch (_) { add(false,"invalid living world data"); }
     }
@@ -21072,7 +22566,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       let noOverlap = true;
       if (record(ft) && record(ft.contracts)) {
         for (const c of Object.values(ft.contracts)) {
-          if (record(c) && ["reserved", "loading", "outbound", "delivering"].includes(c.status)) {
+          if (record(c) && ["reserved", "travel_to_pickup", "loading", "outbound", "delivering"].includes(c.status)) {
             if (activeVehs.has(c.vehicleId) || activeDrivers.has(c.driverPersonId)) {
               noOverlap = false;
             }
@@ -21929,6 +23423,9 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
       if (p.activity === "helping") return "กำลังช่วยเพื่อนร่วมงานเร่งงานด่วน";
       if (code === "selfStudy") return "กำลังศึกษาพัฒนาทักษะในสายงานตัวเอง";
       if(code === "equipmentMaintenance")return "กำลังติดตั้ง/ซ่อมบำรุงเครื่องมือ: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "freightDispatch")return "กำลังขับรถขนส่งสินค้าตามสัญญา: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "softwareDevelopment")return "กำลังพัฒนาและทดสอบซอฟต์แวร์: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "serviceOrderExecution")return "กำลังปฏิบัติงานบริการวิศวกรรม B2B: "+(p.intent.reasons||[]).join(" • ");
       if(code === "equipmentUnavailable")return "รอเครื่องจักรพร้อมใช้งาน: "+(p.intent.reasons||[]).join(" • ");
       if (code === "waitingForWorkOrMaterials")
         return "รอวัตถุดิบจากคลังเพื่อเริ่มผลิต";
@@ -22817,6 +24314,7 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
           manufacturing: S.productionView(w),
           plant: S.plantView(w),
           commerce: S.commerceView(w),
+          warehouse: w.warehouse || null,
           warehouseCapacity: S.warehouseCapacity(w),
           warehouseUsed: S.warehouseUsed(w),
           executiveBoard: w.executiveBoard || null,
@@ -26487,13 +27985,21 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
         const spec=plant.specs[m.id],status={ready:"พร้อมทำงาน",installing:"รอช่างติดตั้ง",maintenance:"อยู่ระหว่างซ่อม/บำรุง"};
         row(spec.nameTh,`${status[m.status]||m.status} • สภาพ ${m.condition.toFixed(1)}% • อุณหภูมิ ${m.temperatureC.toFixed(0)}°C\n${m.status==='installing'?'กำหนดรับเครื่องวันที่ '+(Math.floor((m.availableAt||0)/1440)+1)+' • ':''}เครื่องรองรับ ${spec.capacity} งาน • ใช้อยู่ ${Object.keys(m.slots).length} • กำลังไฟ ${spec.kw} kW\nชั่วโมงใช้สะสม ${(m.totalMinutes/60).toFixed(1)} • ค่าเครื่อง ${moneyFull(spec.cost)}`);
       }
+      const activeBatches=Object.values(plant?.refineryBatches||{}).filter(b=>!['released','cancelled','scrapped'].includes(b.status));
+      if(activeBatches.length){
+        for(const b of activeBatches)row(`⚗️ ล็อตแปรรูป: ${b.nameTh} ×${b.batches}`,`สถานะ ${b.status} • เครื่อง ${plant.specs[b.equipment]?.nameTh||b.equipment} • ผู้ทำ ${b.operatorName||'รอผู้เชี่ยวชาญ'}
+${b.waitingReasonTh||''}`);
+      }
       row("เครื่องมือเฉพาะที่ยังไม่มี",Object.entries(plant?.specs||{}).filter(([id])=>!plant.machines[id]).map(([id,s])=>`${s.nameTh}: ${moneyFull(s.cost)}`).join(" • ")+" — ผู้บริหารจะพิจารณาตามงาน ทุนสำรอง และปริมาณผลิต");
-      for(const task of plant?.maintenance||[])row(`งานช่าง: ${plant.specs[task.machineId].nameTh}`,`${task.type==='install'?'ติดตั้ง':'ซ่อมบำรุง'} ${Math.round(task.progress/task.required*100)}% • ผู้ทำ ${v.people.find(p=>p.id===task.workerId)?.name||'รอช่างที่รู้จริง'} • ${task.type==='repair'?(task.partsConsumed?'เบิกอะไหล่แล้ว':'รอเบิกอะไหล่'):'ยังไม่ใช้งานจนติดตั้งเสร็จ'}`);
+      for(const task of plant?.maintenance||[])row(`งานช่าง: ${plant.specs[task.machineId].nameTh}`,`${task.type==='install'?'ติดตั้ง':'ซ่อมบำรุง'} (${task.phase||'กำลังดำเนินการ'}) ${Math.round(task.progress/task.required*100)}% • ผู้ทำ ${v.people.find(p=>p.id===task.workerId)?.name||'รอช่างที่รู้จริง'} • ${task.diagnosedFaultTh||''} • ${task.type==='repair'?(task.partsConsumed?'เบิกอะไหล่แล้ว':'รอเบิกอะไหล่'):'ยังไม่ใช้งานจนติดตั้งเสร็จ'}`);
       for(const e of (plant?.history||[]).slice(0,12))row(`นาที ${e.at}`,e.text);
     } else if(uiState.subTab==="company_contracts") {
       row("ฝ่ายขายและภาระสัญญา",v.commerce?.decisionTh||"กำลังสะสมประวัติการผลิตและสำรวจผู้ซื้อ");
       row("การขายและการรับเงิน","ฝ่ายขายเสนอสินค้าจากคลังให้คู่ค้าที่ใช้สินค้านั้น ผู้ซื้อกันเงินก่อนรับสัญญา สัญญารวม120/240/1,000ชิ้นแบ่งงวดตามประวัติผลิต งานรัฐต้องมีชื่อเสียง วิชาเอกสารคุณภาพและสัญญา และทุนรอรับเงินหลังส่งของ");
-      for(const c of Object.values(v.commerce?.contracts||{}))row(`${c.buyerType==='government'?'🏛️ จัดซื้อรัฐ':'🤝 B2B'} ${c.customerName}`,`${v.catalog.products.find(p=>p.id===c.productId)?.nameTh||c.productId} • สัญญารวม ${c.quantity} ชิ้น • ออกงวดแล้ว ${c.ordered} • ส่งแล้ว ${c.delivered}\nงวดละ ${c.installmentQty} • ราคาต่อหน่วย ${moneyFull(c.unitPrice)} • รับเงินจริง ${moneyFull(c.paidSatang)} • ${c.status==='completed'?'ส่งครบแล้ว':'มีภาระส่งมอบ'}\nกำหนดออกงวดถัดไปวันที่ ${c.nextDeliveryDay}`);
+      for(const t of (v.commerce?.tenders||[]).slice(0,5))row(`🏛️ ประมูลภาครัฐ: ${v.catalog.products.find(p=>p.id===t.productId)?.nameTh||t.productId} (${t.quantity} ชิ้น)`,`ผู้ชนะ: ${t.winnerNameTh} • คะแนนบริษัทเรา ${t.playerScore} • ราคาเสนอ ${moneyFull(t.unitPrice)}/ชิ้น`);
+      for(const c of Object.values(v.commerce?.contracts||{}))row(`${c.buyerType==='government'?'🏛️ จัดซื้อรัฐ':'🤝 B2B'} ${c.customerName}`,`${v.catalog.products.find(p=>p.id===c.productId)?.nameTh||c.productId} • สัญญารวม ${c.quantity} ชิ้น • ออกงวดแล้ว ${c.ordered} • ส่งแล้ว ${c.delivered}
+งวดละ ${c.installmentQty} • ราคาต่อหน่วย ${moneyFull(c.unitPrice)} • รับเงินจริง ${moneyFull(c.paidSatang)} • ${c.status==='completed'?'ส่งครบแล้ว':c.status==='terminated'?'ยุติสัญญาและคืนงบแล้ว':'มีภาระส่งมอบ'}
+กำหนดออกงวดถัดไปวันที่ ${c.nextDeliveryDay}`);
       for(const e of (v.commerce?.history||[]).slice(0,16))row(`นาที ${e.at}`,e.text);
     } else if(uiState.subTab==="company_board") {
       row("แผนเตรียมความสามารถ",k.decision);
@@ -26508,6 +28014,14 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
     } else {
       for(const b of [...(v.campus.buildings || []),...(v.campus.expansionPlots || []).filter(p=>p.constructed)]) row(b.nameTh || b.id,`อาคาร • ระดับ ${b.level || 1}`);
       for(const a of v.catalog.externalAssets || []) if(a.owned) row(a.nameTh,`สินทรัพย์ภายนอก • ระดับ ${a.level || 1}`);
+      if(v.warehouse?.summary){
+        const ws=v.warehouse.summary;
+        row("สถานะคลังและล็อตวัตถุดิบ (FIFO/FEFO)",`พร้อมใช้ ${ws.rawAvailable} • จองแล้ว ${ws.reserved} • รอโหลดเข้าเครื่อง ${ws.staged} • ระหว่างผลิต (WIP) ${ws.wipUnits} • กักกันตรวจเชื้อ ${ws.quarantineUnits} • คัดทิ้ง ${ws.rejectedUnits} • สินค้าสำเร็จรูป ${ws.releasedFinished} • ทรัพย์สินลูกค้าฝากดูแล ${ws.customerCustody} • ขนส่งขาเข้า ${ws.inTransitInbound} • ขนส่งขาออก ${ws.inTransitOutbound}`);
+      }
+      if(v.agriculture?.livestock?.dairy_soy_farm){
+        const hd=v.agriculture.livestock.dairy_soy_farm;
+        row("วงจรชีวภาพฟาร์มโคนม",`สถานะ ${hd.milkingStage} (${hd.digestMinutes||0}/${hd.requiredDigestMinutes||180} นาที) • สุขภาพฝูง ${hd.herdHealth}% • รอบรีดนมสะสม ${hd.lactationCyclesCompleted||0} รอบ`);
+      }
       for(const vehicle of Object.values(v.fleetTransport?.vehicles || {})) row(vehicle.nameTh || vehicle.plate || vehicle.id,`ยานพาหนะ • ${vehicle.status} • สภาพ ${vehicle.condition}%`);
       row("วัตถุดิบในคลัง",v.catalog.materials.filter(m=>(v.inventory.materials[m.id] || 0)>0).map(m=>`${m.nameTh}: ${v.inventory.materials[m.id]}`).join(" • "));
     }
@@ -26549,7 +28063,8 @@ return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick
     }else if(uiState.subTab==="world_firms"){
       const id=entityPicker("worldFirm",firms.map(f=>({id:f.id,nameTh:firmName(f.id)})),"เลือกบริษัทภายนอก"),f=m.firms[id],c=e.corporations[id];
       row(c.nameTh,`${nationName(f.nationId)} • ${c.sectorTh} • ${f.status==='suspended'?'พักกิจการเพราะขาดทุนหมุนเวียน':'ดำเนินกิจการ'}`);
-      row("ฐานะและผลประกอบการ",`เงินสด ${moneyFull(f.cash)} • รายรับวันนี้ ${moneyFull(f.dailyRevenue)} • รายจ่ายวันนี้ ${moneyFull(f.dailyCost)} • กระแสเงินสดสุทธิหลังภาษีวันนี้ ${moneyFull(f.profit)}\nลงทุนสะสม ${moneyFull(f.investment)} • ขาดทุนต่อเนื่อง ${f.consecutiveLossDays} วัน`);
+      row("ฐานะและผลประกอบการ",`เงินสด ${moneyFull(f.cash)} • รายรับวันนี้ ${moneyFull(f.dailyRevenue)} • รายจ่ายวันนี้ ${moneyFull(f.dailyCost)} • กระแสเงินสดสุทธิหลังภาษีวันนี้ ${moneyFull(f.profit)}
+ต้นทุนขาย (COGS) วันนี้ ${moneyFull(f.cogsSatang||0)} • กำไรจากการดำเนินงานทางบัญชี ${moneyFull(f.accrualProfitSatang||f.profit)} • ลงทุนสะสม ${moneyFull(f.investment)} • ขาดทุนต่อเนื่อง ${f.consecutiveLossDays} วัน`);
       row("ผู้บริหารกำลังตัดสินใจอะไร",`${f.decisionTh}\nรับความเสี่ยง ${f.risk}/100 • ระมัดระวัง ${f.prudence}/100 • ทบทวนทุก 7 วัน`);
       row("กำลังผลิตและความรู้",`กำลังผลิต ${f.capacity} หน่วย/สาย/วัน • ใช้งาน ${Math.round(f.utilization*100)}% • เทคโนโลยี ${f.technology}/100\nข้อจำกัด: ${f.missing.join(' • ')||'ยังไม่พบข้อจำกัดวันนี้'}`);
       row("สต็อกและทรัพยากร",Object.entries(f.stock).map(([k,q])=>`${materialName(k)}: ${q}`).join('\n')||'ไม่มีสต็อก');

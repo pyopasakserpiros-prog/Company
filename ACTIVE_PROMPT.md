@@ -1,3 +1,5 @@
+> **STATUS UPDATE (2026-11-12 — COMPLETED IN v2.7.0):** All 8 workstreams and 12 acceptance criteria in this implementation brief have been implemented and verified in **Company Simulation v2.7.0 (`process-driven-realism-overhaul-v270`)** on top of baseline `bbc22e4ce61c002b49c2346841af3c4f3e9d0919` (`186/186` unit & integration tests passing, including `COMPANY_SOURCE/test/process-realism-v270.test.cjs`). See [PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) and [PROCESS_REALISM_V270_HANDOFF.md](docs/company/PROCESS_REALISM_V270_HANDOFF.md).
+
 # GEMINI ACTIVE DEVELOPMENT BRIEF — Process-Driven Realism Overhaul
 
 ## Authorization, baseline, and ownership

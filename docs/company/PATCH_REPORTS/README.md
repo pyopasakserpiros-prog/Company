@@ -19,10 +19,13 @@
 | v2.0.0 | โลกภูมิรัฐศาสตร์มีชีวิตและ Master Skills | [รายงาน v2.0.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.0.0.md) |
 | v2.1.0 | NPC business-entry, โลหะขั้นบันได, ตลาดโลก และระเบียงการค้า | [รายงาน v2.1.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.1.0.md) |
 | v2.2.0 | การเติบโต SME, utilities, วัฒนธรรมองค์กร และบริการ B2B | [รายงาน v2.2.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.2.0.md) |
+| v2.3.0 | วิชา NPC 170 รายการ และเทคโนโลยีเฉพาะธุรกิจ | [รายงาน v2.3.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md) |
+| v2.4.0 | โลกเศรษฐกิจและ UI โลก 6 หมวด | [รายงาน v2.4.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md) |
+| v2.5.0 | เวลาจำลองและฐานการผลิตเข้าคลัง | [รายงาน v2.5.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.5.0.md) |
+| v2.6.0 | เครื่องจักร งานช่าง และสัญญาขายเป็นงวด | [รายงาน v2.6.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md) |
+| v2.7.0 | การยกเครื่องความสมจริงเชิงกระบวนการทั้ง 8 ด้าน (Process-Driven Realism Overhaul) | [รายงาน v2.7.0](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) |
 
 ไม่พบรายงานแยกสำหรับ v0.7–v0.9, v1.1.0 หรือ v1.2.1 ในคลังปัจจุบัน; อ่าน [สถานะโครงการ](../../../project_status_and_ai_onboarding.md) ก่อนสรุปรุ่นเหล่านั้น
-
-- [v2.3.0: วิชา NPC และเทคโนโลยีเฉพาะธุรกิจ](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.3.0.md)
 
 ## รายงานอัปเดตเอกสาร
 
@@ -30,13 +33,6 @@
 - [เผยแพร่ร่าง 14 Company Skills](UPDATE_REPORT_2026-11-11_SKILL_STARTER_PUBLICATION.md)
 - [รวมสถานะ v2.0.0 และย้าย ideas ที่ทำแล้ว](UPDATE_REPORT_2026-11-11_V2_STATUS_IDEA_RECONCILIATION.md)
 - [จัดเก็บและสังเคราะห์ข้อเสนอ PDF 9 ฉบับ](UPDATE_REPORT_2026-11-11_NINE_PDF_IDEA_SYNTHESIS.md)
+- [Process-realism English prompt handoff](PROMPT_HANDOFF_PROCESS_REALISM_2026-11-12.md)
 
-ทะเบียนงานและ workflow: [AGENT_WORK_STATUS.md](../AGENT_WORK_STATUS.md) · [AGENT_COLLABORATION_WORKFLOW.md](../AGENT_COLLABORATION_WORKFLOW.md)
-
-- [v2.4.0 — โลกเศรษฐกิจและ UI โลก](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md)
-
-- [v2.5.0 เวลาและฐานการผลิตเข้าคลัง](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.5.0.md)
-
-- [v2.6.0 เครื่องจักร งานช่าง และสัญญาขายเป็นงวด](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md)
-
-- [Process-realism English prompt handoff (documentation only)](PROMPT_HANDOFF_PROCESS_REALISM_2026-11-12.md)
+ทะเบียนงานและ workflow: [AGENT_WORK_STATUS.md](../AGENT_WORK_STATUS.md) · [AGENT_COLLABORATION_WORKFLOW.md](../AGENT_COLLABORATION_WORKFLOW.md) · [PROCESS_REALISM_V270_HANDOFF.md](../PROCESS_REALISM_V270_HANDOFF.md)

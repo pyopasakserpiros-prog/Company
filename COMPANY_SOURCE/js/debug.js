@@ -1650,13 +1650,21 @@
         const spec=plant.specs[m.id],status={ready:"พร้อมทำงาน",installing:"รอช่างติดตั้ง",maintenance:"อยู่ระหว่างซ่อม/บำรุง"};
         row(spec.nameTh,`${status[m.status]||m.status} • สภาพ ${m.condition.toFixed(1)}% • อุณหภูมิ ${m.temperatureC.toFixed(0)}°C\n${m.status==='installing'?'กำหนดรับเครื่องวันที่ '+(Math.floor((m.availableAt||0)/1440)+1)+' • ':''}เครื่องรองรับ ${spec.capacity} งาน • ใช้อยู่ ${Object.keys(m.slots).length} • กำลังไฟ ${spec.kw} kW\nชั่วโมงใช้สะสม ${(m.totalMinutes/60).toFixed(1)} • ค่าเครื่อง ${moneyFull(spec.cost)}`);
       }
+      const activeBatches=Object.values(plant?.refineryBatches||{}).filter(b=>!['released','cancelled','scrapped'].includes(b.status));
+      if(activeBatches.length){
+        for(const b of activeBatches)row(`⚗️ ล็อตแปรรูป: ${b.nameTh} ×${b.batches}`,`สถานะ ${b.status} • เครื่อง ${plant.specs[b.equipment]?.nameTh||b.equipment} • ผู้ทำ ${b.operatorName||'รอผู้เชี่ยวชาญ'}
+${b.waitingReasonTh||''}`);
+      }
       row("เครื่องมือเฉพาะที่ยังไม่มี",Object.entries(plant?.specs||{}).filter(([id])=>!plant.machines[id]).map(([id,s])=>`${s.nameTh}: ${moneyFull(s.cost)}`).join(" • ")+" — ผู้บริหารจะพิจารณาตามงาน ทุนสำรอง และปริมาณผลิต");
-      for(const task of plant?.maintenance||[])row(`งานช่าง: ${plant.specs[task.machineId].nameTh}`,`${task.type==='install'?'ติดตั้ง':'ซ่อมบำรุง'} ${Math.round(task.progress/task.required*100)}% • ผู้ทำ ${v.people.find(p=>p.id===task.workerId)?.name||'รอช่างที่รู้จริง'} • ${task.type==='repair'?(task.partsConsumed?'เบิกอะไหล่แล้ว':'รอเบิกอะไหล่'):'ยังไม่ใช้งานจนติดตั้งเสร็จ'}`);
+      for(const task of plant?.maintenance||[])row(`งานช่าง: ${plant.specs[task.machineId].nameTh}`,`${task.type==='install'?'ติดตั้ง':'ซ่อมบำรุง'} (${task.phase||'กำลังดำเนินการ'}) ${Math.round(task.progress/task.required*100)}% • ผู้ทำ ${v.people.find(p=>p.id===task.workerId)?.name||'รอช่างที่รู้จริง'} • ${task.diagnosedFaultTh||''} • ${task.type==='repair'?(task.partsConsumed?'เบิกอะไหล่แล้ว':'รอเบิกอะไหล่'):'ยังไม่ใช้งานจนติดตั้งเสร็จ'}`);
       for(const e of (plant?.history||[]).slice(0,12))row(`นาที ${e.at}`,e.text);
     } else if(uiState.subTab==="company_contracts") {
       row("ฝ่ายขายและภาระสัญญา",v.commerce?.decisionTh||"กำลังสะสมประวัติการผลิตและสำรวจผู้ซื้อ");
       row("การขายและการรับเงิน","ฝ่ายขายเสนอสินค้าจากคลังให้คู่ค้าที่ใช้สินค้านั้น ผู้ซื้อกันเงินก่อนรับสัญญา สัญญารวม120/240/1,000ชิ้นแบ่งงวดตามประวัติผลิต งานรัฐต้องมีชื่อเสียง วิชาเอกสารคุณภาพและสัญญา และทุนรอรับเงินหลังส่งของ");
-      for(const c of Object.values(v.commerce?.contracts||{}))row(`${c.buyerType==='government'?'🏛️ จัดซื้อรัฐ':'🤝 B2B'} ${c.customerName}`,`${v.catalog.products.find(p=>p.id===c.productId)?.nameTh||c.productId} • สัญญารวม ${c.quantity} ชิ้น • ออกงวดแล้ว ${c.ordered} • ส่งแล้ว ${c.delivered}\nงวดละ ${c.installmentQty} • ราคาต่อหน่วย ${moneyFull(c.unitPrice)} • รับเงินจริง ${moneyFull(c.paidSatang)} • ${c.status==='completed'?'ส่งครบแล้ว':'มีภาระส่งมอบ'}\nกำหนดออกงวดถัดไปวันที่ ${c.nextDeliveryDay}`);
+      for(const t of (v.commerce?.tenders||[]).slice(0,5))row(`🏛️ ประมูลภาครัฐ: ${v.catalog.products.find(p=>p.id===t.productId)?.nameTh||t.productId} (${t.quantity} ชิ้น)`,`ผู้ชนะ: ${t.winnerNameTh} • คะแนนบริษัทเรา ${t.playerScore} • ราคาเสนอ ${moneyFull(t.unitPrice)}/ชิ้น`);
+      for(const c of Object.values(v.commerce?.contracts||{}))row(`${c.buyerType==='government'?'🏛️ จัดซื้อรัฐ':'🤝 B2B'} ${c.customerName}`,`${v.catalog.products.find(p=>p.id===c.productId)?.nameTh||c.productId} • สัญญารวม ${c.quantity} ชิ้น • ออกงวดแล้ว ${c.ordered} • ส่งแล้ว ${c.delivered}
+งวดละ ${c.installmentQty} • ราคาต่อหน่วย ${moneyFull(c.unitPrice)} • รับเงินจริง ${moneyFull(c.paidSatang)} • ${c.status==='completed'?'ส่งครบแล้ว':c.status==='terminated'?'ยุติสัญญาและคืนงบแล้ว':'มีภาระส่งมอบ'}
+กำหนดออกงวดถัดไปวันที่ ${c.nextDeliveryDay}`);
       for(const e of (v.commerce?.history||[]).slice(0,16))row(`นาที ${e.at}`,e.text);
     } else if(uiState.subTab==="company_board") {
       row("แผนเตรียมความสามารถ",k.decision);
@@ -1671,6 +1679,14 @@
     } else {
       for(const b of [...(v.campus.buildings || []),...(v.campus.expansionPlots || []).filter(p=>p.constructed)]) row(b.nameTh || b.id,`อาคาร • ระดับ ${b.level || 1}`);
       for(const a of v.catalog.externalAssets || []) if(a.owned) row(a.nameTh,`สินทรัพย์ภายนอก • ระดับ ${a.level || 1}`);
+      if(v.warehouse?.summary){
+        const ws=v.warehouse.summary;
+        row("สถานะคลังและล็อตวัตถุดิบ (FIFO/FEFO)",`พร้อมใช้ ${ws.rawAvailable} • จองแล้ว ${ws.reserved} • รอโหลดเข้าเครื่อง ${ws.staged} • ระหว่างผลิต (WIP) ${ws.wipUnits} • กักกันตรวจเชื้อ ${ws.quarantineUnits} • คัดทิ้ง ${ws.rejectedUnits} • สินค้าสำเร็จรูป ${ws.releasedFinished} • ทรัพย์สินลูกค้าฝากดูแล ${ws.customerCustody} • ขนส่งขาเข้า ${ws.inTransitInbound} • ขนส่งขาออก ${ws.inTransitOutbound}`);
+      }
+      if(v.agriculture?.livestock?.dairy_soy_farm){
+        const hd=v.agriculture.livestock.dairy_soy_farm;
+        row("วงจรชีวภาพฟาร์มโคนม",`สถานะ ${hd.milkingStage} (${hd.digestMinutes||0}/${hd.requiredDigestMinutes||180} นาที) • สุขภาพฝูง ${hd.herdHealth}% • รอบรีดนมสะสม ${hd.lactationCyclesCompleted||0} รอบ`);
+      }
       for(const vehicle of Object.values(v.fleetTransport?.vehicles || {})) row(vehicle.nameTh || vehicle.plate || vehicle.id,`ยานพาหนะ • ${vehicle.status} • สภาพ ${vehicle.condition}%`);
       row("วัตถุดิบในคลัง",v.catalog.materials.filter(m=>(v.inventory.materials[m.id] || 0)>0).map(m=>`${m.nameTh}: ${v.inventory.materials[m.id]}`).join(" • "));
     }
@@ -1712,7 +1728,8 @@
     }else if(uiState.subTab==="world_firms"){
       const id=entityPicker("worldFirm",firms.map(f=>({id:f.id,nameTh:firmName(f.id)})),"เลือกบริษัทภายนอก"),f=m.firms[id],c=e.corporations[id];
       row(c.nameTh,`${nationName(f.nationId)} • ${c.sectorTh} • ${f.status==='suspended'?'พักกิจการเพราะขาดทุนหมุนเวียน':'ดำเนินกิจการ'}`);
-      row("ฐานะและผลประกอบการ",`เงินสด ${moneyFull(f.cash)} • รายรับวันนี้ ${moneyFull(f.dailyRevenue)} • รายจ่ายวันนี้ ${moneyFull(f.dailyCost)} • กระแสเงินสดสุทธิหลังภาษีวันนี้ ${moneyFull(f.profit)}\nลงทุนสะสม ${moneyFull(f.investment)} • ขาดทุนต่อเนื่อง ${f.consecutiveLossDays} วัน`);
+      row("ฐานะและผลประกอบการ",`เงินสด ${moneyFull(f.cash)} • รายรับวันนี้ ${moneyFull(f.dailyRevenue)} • รายจ่ายวันนี้ ${moneyFull(f.dailyCost)} • กระแสเงินสดสุทธิหลังภาษีวันนี้ ${moneyFull(f.profit)}
+ต้นทุนขาย (COGS) วันนี้ ${moneyFull(f.cogsSatang||0)} • กำไรจากการดำเนินงานทางบัญชี ${moneyFull(f.accrualProfitSatang||f.profit)} • ลงทุนสะสม ${moneyFull(f.investment)} • ขาดทุนต่อเนื่อง ${f.consecutiveLossDays} วัน`);
       row("ผู้บริหารกำลังตัดสินใจอะไร",`${f.decisionTh}\nรับความเสี่ยง ${f.risk}/100 • ระมัดระวัง ${f.prudence}/100 • ทบทวนทุก 7 วัน`);
       row("กำลังผลิตและความรู้",`กำลังผลิต ${f.capacity} หน่วย/สาย/วัน • ใช้งาน ${Math.round(f.utilization*100)}% • เทคโนโลยี ${f.technology}/100\nข้อจำกัด: ${f.missing.join(' • ')||'ยังไม่พบข้อจำกัดวันนี้'}`);
       row("สต็อกและทรัพยากร",Object.entries(f.stock).map(([k,q])=>`${materialName(k)}: ${q}`).join('\n')||'ไม่มีสต็อก');

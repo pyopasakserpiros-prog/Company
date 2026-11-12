@@ -1,39 +1,38 @@
-# สถานะ Company Simulation — v2.6.0
+# สถานะ Company Simulation — v2.7.0
 
-อัปเดต12พฤศจิกายน2026 ยึดsourceจริงเหนือรายงานเก่า รุ่นเกมD.VERSION/D.RELEASE_VERSION/S.RELEASE_VERSION=2.6.0; save schema/versionและpackageยัง0.1.0 ไม่ใช่เลขแพตช์เกม Human Coreถูกล็อกตามAGENTS.md
+อัปเดต 12 พฤศจิกายน 2026 ยึด source จริงเหนือรายงานเก่า รุ่นเกม `D.VERSION` / `D.RELEASE_VERSION` / `S.RELEASE_VERSION = "2.7.0"`; save schema/version และ `package.json` ยังคง `"0.1.0"` (ไม่ใช่เลขแพตช์เกม) Human Core 1.0.0 ถูกล็อกถาวรตาม `AGENTS.md` (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`)
 
 ## ระบบที่ใช้งานได้
 
-- ผู้เล่นเฝ้าดูNPC/ผู้บริหารตัดสินใจเอง แก้ข้อมูลรายบุคคล/เงิน/ของผ่านEdit Hubเพื่อทดลองผล ไม่ต้องบริหารงานประจำแทนNPC
-- บริษัทบนcampus มีการเดินทาง ทำงาน พัก ความสัมพันธ์ ค่าจ้าง อาชีพ บอร์ด งบลงทุน การขยาย และบัญชีเงิน/สินค้า
-- วิชา170รายการแยกจากHuman Core มีprerequisite/ระดับ/ศักยภาพ/ทักษะใช้งานจริง R&Dและรับถ่ายทอดเทคโนโลยีเฉพาะเป้าหมาย ทีมพร้อมหลายวิชา ต้นแบบและQAจริง
-- catalogวัตถุดิบ64 สูตร40 สินค้า42 บริการB2B10 รวมธุรกิจซอฟต์แวร์/SaaS กองรถ เกษตร/ต้นน้ำ/ทรัพย์สินภายนอกตามเงื่อนไขของแต่ละระบบ
-- โลกภายนอก12ประเทศ/กลุ่ม 28กิจการตั้งต้น มีเงิน/สต็อก/การค้า/ขนส่ง นโยบายรัฐบาลและสัมพันธ์66คู่ ปุ่มโลก6หมวด อ่าน[คู่มือโลก](../docs/company/LIVING_WORLD_SYSTEM.md)
-- เวลา1×ใช้2นาทีจำลองต่อวินาทีจริง (วันเต็ม12นาทีจริง) เดิน8ช่องต่อtick5นาที จากv2.5.0
+- ผู้เล่นเฝ้าดู NPC/ผู้บริหารตัดสินใจเอง แก้ข้อมูลรายบุคคล/เงิน/ของผ่าน Edit Hub เพื่อทดลองผล ไม่ต้องบริหารงานประจำแทน NPC
+- บริษัทบน campus มีการเดินทาง ทำงาน พัก ความสัมพันธ์ ค่าจ้าง อาชีพ บอร์ด งบลงทุน การขยาย และบัญชีเงิน/สินค้า
+- วิชา 170 รายการแยกจาก Human Core มี prerequisite/ระดับ/ศักยภาพ/ทักษะใช้งานจริง R&D และรับถ่ายทอดเทคโนโลยีเฉพาะเป้าหมาย ทีมพร้อมหลายวิชา ต้นแบบและ QA จริง
+- catalog วัตถุดิบ 64 สูตร 40 สินค้า 42 บริการ B2B 10 รวมธุรกิจซอฟต์แวร์/SaaS กองรถ เกษตร/ต้นน้ำ/ทรัพย์สินภายนอกตามเงื่อนไขของแต่ละระบบ
+- โลกภายนอก 12 ประเทศ/กลุ่ม 28 กิจการตั้งต้น มีเงิน/สต็อก/การค้า/ขนส่ง แยกต้นทุนขาย (`cogsSatang`) ค่าใช้จ่ายดำเนินงาน (`operatingExpenseSatang`) กำไรเกณฑ์คงค้าง (`accrualProfitSatang`) และกระแสเงินสดสุทธิ (`cashFlowSurplusSatang`) นโยบายรัฐบาลและสัมพันธ์ 66 คู่ ปุ่มโลก 6 หมวด อ่าน [คู่มือโลก](docs/company/LIVING_WORLD_SYSTEM.md)
+- เวลา 1× ใช้ 2 นาทีจำลองต่อวินาทีจริง (วันเต็ม 12 นาทีจริง) เดิน 8 ช่องต่อ tick 5 นาที จาก v2.5.0
 
-## สิ่งที่เพิ่ม/เชื่อมจริงในv2.6.0
+## สิ่งที่เพิ่มและเชื่อมจริงใน v2.7.0 (Process-Driven Realism Overhaul)
 
-เครื่องมือ20แบบและrouteสินค้า42รายการ แยกเวลาคนกับเวลารอเครื่อง/อุณหภูมิ เครื่องมีcapacity สึกหรอ ค่าไฟ ซื้อจากทุน รอรับ2/5/14วัน (สายเวเฟอร์180วัน) ต้องช่างติดตั้ง มีอะไหล่และวิชาก่อนซ่อม ช่างเรียนรู้ตามprerequisiteและข้อจำกัดHuman Core ใช้เครื่องกับบริการ10แบบ สูตร40วัตถุดิบ ซอฟต์แวร์ กองรถ และเครื่องมือเกษตรพื้นฐาน
+1. **คิวแปรรูปวัตถุดิบและสินค้าขั้นกลางตามเวลาจริง (`w.plant.refineryBatches`):** สูตรวัตถุดิบทั้ง 40 สูตรเดินผ่านสถานะ `inputs_reserved -> staged -> loading_setup -> running -> unloading -> inspection -> released/rework/scrapped/cancelled` ใช้เครื่องจักร ความร้อน เวลาคน/เวลารอเครื่องจริง และตรวจพื้นที่ว่างคลังก่อนปล่อยของ
+2. **การขนส่งกองรถและบริการ B2B 10 แบบตามเวลาจริง:** ยกเลิกทางลัด `completeAllSteps: true` ในลูปอัตโนมัติของ NPC บังคับเวลาเดินทางไป-กลับจริง การพักคนขับ การวัดผลทางเทคนิค (`testMeasurements`), การแยกทรัพย์สินลูกค้า (`instrumentCustody`) และชั่วโมงห้องเย็น (`storageHoursOccupied`)
+3. **วิศวกรรมซอฟต์แวร์/QA/SLA จริง:** ต้องมีนักพัฒนาที่มีความรู้ `programming >= 40` และ `software >= 40` ความเร็วและอัตราเกิดบั๊กคำนวณจากโปรไฟล์ Human Core รองรับการประเมินขยายขอบเขตงาน (`discoverScopeChange`) และโทษปรับ SLA/ชื่อเสียงเมื่อส่งมอบงานที่มีบั๊กค้าง (`deployWithKnownDefects`)
+4. **วิศวกรรมการผลิตเฉพาะตัวสินค้า 42 รายการ & เครื่องจักร 20 ชนิด:** `P.route(product)` มีเกณฑ์วิชาและ `safetyCritical` รายขั้น, ป้องกันการคูณค่าไฟ/ความร้อนซ้ำเมื่อแชร์เครื่องใน tick เดียว, เครื่องจักรมีระบบย่อย 5 ด้าน (`subsystems`), อาการเสีย (`faultModes`), การจัดหา 3 แบบ (`purchased_new`, `used_refurbished`, `leased`) และการตรวจรับหลังซ่อม (`serviceRecords`)
+5. **คลังสินค้าล็อต/FIFO-FEFO/โซ่ความเย็น (`w.warehouse`):** ติดตาม `materialLots`, `finishedLots`, อายุเก็บรักษาตามสถานะห้องเย็น/ไฟตก และบล็อกการรับของเกินความจุคลัง
+6. **ประมูลภาครัฐแข่งขัน เจรจาปรับสัญญา และยุติสัญญา (`w.commerce.tenders`):** ประมูลแข่งกับกิจการภายนอกด้วยคะแนนราคา/คุณภาพ/ชื่อเสียง (`W.evaluateCompetitiveTender`), ปรับลดจำนวนสัญญาระหว่างทางพร้อมคืนเงินกันส่วนต่าง (`renegotiateCommercialContract`), ยุติสัญญาอย่างเป็นทางการ (`terminateCommercialContract`), และผูกการจ่ายเงินของคู่ค้าขนส่ง/บริการ/ซอฟต์แวร์ผ่าน `W.payFromCounterparty`
+7. **วงจรชีวภาพปศุสัตว์ 180 นาที:** แยก `feedLivestockHerd` จาก `milkLivestockHerd` ต้องผ่านเวลาชีวภาพ 180 นาทีจึงให้น้ำนม พร้อมวงจรชีวภาพของกิจการภายนอก (`fresh_milk_soy`, `natural_latex`, `timber_bamboo_log`)
 
-คลังมีขนาดตามอาคาร/ขนาดสินค้า แพ็กต้องจองช่องว่าง ฝ่ายขายเสนอready stockและทำสัญญารวม120/240/1,000ชิ้น แบ่งงวดตามกำลังผลิต ไม่สร้างunitพันตัวพร้อมกัน ผู้ซื้อกันเงินในescrowจริง จ่ายเมื่อตามเงื่อนไข งานรัฐแบบย่อต้องชื่อเสียง65 quality_documentation40/contract_management25และทุนรอจ่าย ไม่มีมัดจำ รอ7วันหลังinvoice
-
-บริษัท→เครื่องจักร/งานช่าง และฝ่ายขาย/สัญญาแสดงเหตุผล สภาพเครื่อง อะไหล่ คิวซ่อม/ติดตั้ง จำนวนสัญญาและยอดส่ง/รับเงินจริง อ่าน[คู่มือโรงงานและสัญญา](../docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md),[รายงานv2.6.0](../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md),[รับช่วง](../docs/company/PLANT_V260_HANDOFF.md)
+อ่าน [คู่มือโรงงานและสัญญา](docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md), [รายงาน v2.7.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md) และ [รับช่วง v2.7.0](docs/company/PROCESS_REALISM_V270_HANDOFF.md)
 
 ## ข้อจำกัดสำคัญ
 
-เครื่องอยู่ตามสถานีในผังเดิม ยังไม่มีภาพ/ห้องเครื่องทุกชนิด routeเป็นระดับกลุ่มไม่ใช่ฟิสิกส์/เคมีโรงงานครบวงจร สูตรวัตถุดิบยังตัดinput/ให้outputแบบbatchAPIหลังมีเครื่อง ไม่ใช่คิวtimedrefineryทุกขั้น งานรัฐเป็นเสนอราคาจัดซื้อแบบย่อ ไม่ใช่ประมูลแข่งขัน/กฎหมายครบ สัญญาตลาด/บริการ/ซอฟต์แวร์/กองรถเดิมบางส่วนยังไม่ผูกงบคู่ค้าโลกทั้งหมด โลกเป็นเศรษฐกิจรวมไม่ใช่ประชากร/รัฐบาลทุกคนและกองทัพจริง
+เครื่องจักรอยู่ตามสถานีในผังเดิม ยังไม่มีภาพแอนิเมชันแยกห้องเครื่องทุกชนิดในมุมมอง 2D; กระบวนการเป็นระดับกลุ่มอุตสาหกรรมของเกม ไม่ใช่จำลองเคมี/ฟิสิกส์ระดับโรงงานจริง; โลกภายนอกเป็นเศรษฐกิจรวม ไม่ใช่ประชากรรายคนหรือกฎหมายภาษีจริง
 
-## ผลตรวจล่าสุด
+## ผลตรวจล่าสุด (v2.7.0)
 
-- npm test177/177; check/buildผ่าน; browser12/12 รวมมือถือและstandalone
-- benchmark500NPCเฉลี่ย 0.654ms/tick,p95 1.031 (Node ไม่ใช่FPSมือถือ)
-- แกนมนุษย์/CORE_LOCK/AGENTSไม่เปลี่ยน
-- ZIPต้องตรวจCRC/แฮชและsourceที่แตกก่อนส่ง ลิงก์artifactและแฮชอยู่ในข้อความส่งมอบ
+- `npm test`: **186/186** ผ่านครบทุกข้อ (รวมชุดทดสอบใหม่ `test/process-realism-v270.test.cjs`); `npm run check` และ `npm run build` (`1,695,923` bytes) ผ่าน
+- `node tools/benchmark.cjs`: 500 NPC เฉลี่ย `1.056 ms/tick`, p95 `1.510 ms` (300 NPC เฉลี่ย `0.586 ms/tick`)
+- แกนมนุษย์ (`human-core.js`), `CORE_LOCK.json` และ `AGENTS.md` ไม่เปลี่ยน
 
 ## เอกสารและงานร่วม
 
-อ่าน[AGENTS.md](../AGENTS.md),[workflow](../docs/company/AGENT_COLLABORATION_WORKFLOW.md),[ทะเบียนงาน](../docs/company/AGENT_WORK_STATUS.md) และ[ดัชนีรายงานทุกแพตช์](../docs/company/PATCH_REPORTS/README.md)ก่อนเริ่มทุกครั้ง ข้อเสนอPDF/ideasเป็นข้อเสนอ ไม่ใช่สิ่งที่ทำแล้ว ตรวจsourceก่อนเริ่มซ้ำ อ่าน[ระบบวิชา](../docs/company/LEARNED_KNOWLEDGE_SYSTEM.md)และ[เทมเพลตวิชา](../docs/company/templates/KNOWLEDGE_SUBJECT_TEMPLATE.md)ก่อนเพิ่มวิชา
-
-## งานที่ได้รับมอบหมายถัดไป
-
-[English brief for Gemini](../ACTIVE_PROMPT.md) covers eight process-realism workstreams. Prepared againstbbc22e4/v2.6.0; implementation pending. This is documentation, not a new game release or a claim of completed features.
+อ่าน [AGENTS.md](AGENTS.md), [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md), [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md) และ [ดัชนีรายงานทุกแพตช์](docs/company/PATCH_REPORTS/README.md) ก่อนเริ่มทุกครั้ง

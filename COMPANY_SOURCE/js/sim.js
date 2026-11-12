@@ -16,7 +16,7 @@
   function (H, D, L, E, W, P) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.6.0",
+      RELEASE_VERSION = "2.7.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -200,8 +200,16 @@
             assetId: "dairy_soy_farm",
             herdCount: 18,
             herdHealth: 96,
+            nutritionLevel: 80,
+            waterLevel: 82,
             feedReserveUnits: 12,
-            milkingStage: "ready_to_milk", // feeding | digesting | ready_to_milk | resting
+            milkingStage: "hungry", // hungry | feeding | digesting | ready_to_milk | resting
+            digestMinutes: 0,
+            requiredDigestMinutes: 180,
+            lastFedAt: null,
+            lastMilkedAt: null,
+            lactationCyclesCompleted: 0,
+            reproductionProgressDays: 0,
             dailyMilkYield: 4,
             dailyManureYield: 2,
             totalMilkProduced: 0,
@@ -1337,7 +1345,8 @@
       packing: "warehouse", shipping: "warehouse",
     })[kind];
     const clone = (o) => JSON.parse(JSON.stringify(o)),
-      clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+      clamp = (n, a, b) => Math.max(a, Math.min(b, n)),
+      round = (n) => Math.round(n * 100) / 100;
     const now = (w) => w.clock.absoluteMinute,
       day = (w) => Math.floor(now(w) / 1440) + 1,
       tod = (w) => now(w) % 1440;
@@ -1766,6 +1775,247 @@
       }
     }
 
+    function ensureWarehouse(w) {
+      if (!w.warehouse || typeof w.warehouse !== "object") {
+        w.warehouse = {
+          version: 1,
+          planningPolicy: "hybrid",
+          carryingCostSatang: 0,
+          materialLots: {},
+          finishedLots: {},
+          transferMoves: [],
+          summary: {
+            rawAvailable: 0,
+            reserved: 0,
+            staged: 0,
+            wipUnits: 0,
+            quarantineUnits: 0,
+            rejectedUnits: 0,
+            releasedFinished: 0,
+            customerCustody: 0,
+            inTransitInbound: 0,
+            inTransitOutbound: 0,
+          },
+        };
+      }
+      reconcileWarehouseLots(w);
+      return w.warehouse;
+    }
+
+    function reconcileWarehouseLots(w) {
+      if (!w.warehouse || typeof w.warehouse !== "object") return;
+      const wh = w.warehouse;
+      if (!wh.materialLots) wh.materialLots = {};
+      if (!wh.finishedLots) wh.finishedLots = {};
+      if (!Array.isArray(wh.transferMoves)) wh.transferMoves = [];
+      const coldOk = Boolean(
+        (w.plant?.machines?.cold_room?.status === "ready" &&
+          w.plant?.machines?.cold_room?.condition >= 25 &&
+          !w.utilities?.brownoutActive) ||
+          w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active,
+      );
+      let rawAvail = 0;
+      let totalReserved = 0;
+      for (const [mId, totalStock] of Object.entries(w.inventory?.materials || {})) {
+        const resQty = w.inventory?.reserved?.[mId] || 0;
+        totalReserved += resQty;
+        rawAvail += Math.max(0, totalStock - resQty);
+        if (!Array.isArray(wh.materialLots[mId])) wh.materialLots[mId] = [];
+        const lots = wh.materialLots[mId];
+        let lotSum = lots.reduce((a, l) => a + (l.qty || 0), 0);
+        if (lotSum < totalStock) {
+          const diff = totalStock - lotSum;
+          const isPerish = ["fresh_milk_soy", "paddy_grain", "raw_cane", "crude_palm", "bakery_dough_butter", "probiotic_culture"].includes(mId);
+          lots.push({
+            lotId: `mlot-${mId}-d${day(w)}-${lots.length + 1}`,
+            materialId: mId,
+            qty: diff,
+            provenance: (w.inventory?.purchased?.[mId] || 0) > 0 ? "purchased" : "opening_or_internal",
+            grade: "standard",
+            unitCostSatang: w.catalog?.materials?.[mId]?.unitCost || 1000,
+            createdDay: day(w),
+            expiresDay: isPerish ? day(w) + (coldOk ? 10 : 4) : null,
+            coldChainRequired: isPerish,
+            coldChainProtected: isPerish ? coldOk : false,
+            status: "available",
+          });
+        } else if (lotSum > totalStock) {
+          // Consume using FEFO for perishables, FIFO for non-perishables
+          let rem = lotSum - totalStock;
+          lots.sort((a, b) => (a.expiresDay ?? 999999) - (b.expiresDay ?? 999999) || a.createdDay - b.createdDay);
+          for (const l of lots) {
+            if (rem <= 0) break;
+            const take = Math.min(l.qty, rem);
+            l.qty -= take;
+            rem -= take;
+          }
+          wh.materialLots[mId] = lots.filter((l) => l.qty > 0);
+        }
+      }
+      const stagedBatches = Object.values(w.plant?.refineryBatches || {}).filter(
+        (b) => b.inputsReserved && !b.inputsConsumed && !["released", "cancelled", "scrapped"].includes(b.status),
+      );
+      const stagedCount = stagedBatches.reduce(
+        (sum, b) => sum + Object.values(b.inputs || {}).reduce((a, q) => a + q, 0),
+        0,
+      );
+      const wipRefinery = Object.values(w.plant?.refineryBatches || {}).filter(
+        (b) => b.inputsConsumed && !["released", "cancelled", "scrapped"].includes(b.status),
+      ).length;
+      const wipProductUnits = Object.values(w.units || {}).filter((u) => u.stage !== "ready").length;
+      const releasedFinished = Object.values(w.inventory?.finished || {}).reduce((a, b) => a + b, 0);
+      const quarantineLotsCount = Object.values(w.sectorProcesses?.biomedSterile?.quarantineLots || {}).filter(
+        (l) => l.status === "quarantine",
+      ).length;
+      const rejectedLotsCount =
+        Object.values(w.sectorProcesses?.biomedSterile?.quarantineLots || {}).filter((l) => l.status === "rejected").length +
+        (w.sectorProcesses?.foodBakery?.spoiledUnitsCount || 0);
+      const custodyCount =
+        Object.keys(w.fleetTransport?.cargoCustody || {}).length +
+        Object.keys(w.serviceBusiness?.instrumentCustody || {}).length;
+      const inTransitIn = Object.values(w.purchases || {})
+        .filter((p) => p.status !== "received")
+        .reduce((a, p) => a + (p.quantity || 0), 0);
+      const inTransitOut = Object.values(w.fleetTransport?.contracts || {}).filter((c) =>
+        ["travel_to_pickup", "loading", "outbound", "delivering"].includes(c.status),
+      ).length;
+      wh.summary = {
+        rawAvailable: rawAvail,
+        reserved: totalReserved,
+        staged: stagedCount,
+        wipUnits: wipProductUnits + wipRefinery,
+        quarantineUnits: quarantineLotsCount,
+        rejectedUnits: rejectedLotsCount,
+        releasedFinished,
+        customerCustody: custodyCount,
+        inTransitInbound: inTransitIn,
+        inTransitOutbound: inTransitOut,
+      };
+    }
+
+    function warehouseAudit(w) {
+      if (!w.warehouse) return [];
+      reconcileWarehouseLots(w);
+      const errors = [];
+      for (const [mId, totalStock] of Object.entries(w.inventory?.materials || {})) {
+        const lots = w.warehouse.materialLots?.[mId] || [];
+        const sum = lots.reduce((a, l) => a + (l.qty || 0), 0);
+        if (sum !== totalStock) errors.push(`warehouse lot mismatch ${mId}: ${sum} !== ${totalStock}`);
+      }
+      return errors;
+    }
+
+    function completeRefineryBatch(w, b) {
+      const ap = ensureAssetPortfolio(w);
+      const recipe = D.MATERIAL_RECIPES?.[b.materialId];
+      if (!recipe) return;
+      let outputValueSatang = 0;
+      let totalUnitsOut = 0;
+      const outSummary = [];
+      const wh = ensureWarehouse(w);
+      const coldOk = Boolean(
+        w.plant?.machines?.cold_room?.status === "ready" &&
+          w.plant?.machines?.cold_room?.condition >= 25 &&
+          !w.utilities?.brownoutActive,
+      );
+      for (const [outMat, addQty] of Object.entries(b.outputs || {})) {
+        if (!Object.hasOwn(w.inventory.materials, outMat) || addQty <= 0) continue;
+        w.inventory.opening[outMat] += addQty;
+        w.inventory.materials[outMat] += addQty;
+        outputValueSatang += (w.catalog.materials[outMat]?.unitCost || 4000) * addQty;
+        totalUnitsOut += addQty;
+        outSummary.push(`${w.catalog.materials[outMat]?.nameTh || outMat} +${addQty}`);
+        if (!Array.isArray(wh.materialLots[outMat])) wh.materialLots[outMat] = [];
+        const isPerish = ["fresh_milk_soy", "bakery_dough_butter", "probiotic_culture"].includes(outMat);
+        wh.materialLots[outMat].push({
+          lotId: `mlot-${b.id}-${outMat}`,
+          materialId: outMat,
+          qty: addQty,
+          provenance: "refined",
+          sourceRef: b.id,
+          grade: b.grade || "industrial_grade",
+          unitCostSatang: Math.round((b.wipValueSatang || 2000) / Math.max(1, addQty)),
+          createdDay: day(w),
+          expiresDay: isPerish ? day(w) + (coldOk ? 10 : 4) : null,
+          coldChainRequired: isPerish,
+          coldChainProtected: isPerish ? coldOk : false,
+          status: "available",
+          genealogy: Object.keys(b.inputs || {}),
+        });
+      }
+      const saved = Math.max(0, outputValueSatang - (b.wipValueSatang || 0));
+      ap.totalRefinedUnits = (ap.totalRefinedUnits || 0) + totalUnitsOut;
+      ap.totalChainSavingsSatang = (ap.totalChainSavingsSatang || 0) + saved;
+      if (!ap.recipeStats) ap.recipeStats = {};
+      if (!ap.recipeStats[b.materialId]) {
+        ap.recipeStats[b.materialId] = { batches: 0, unitsProduced: 0, savedSatang: 0 };
+      }
+      ap.recipeStats[b.materialId].batches += b.batches;
+      ap.recipeStats[b.materialId].unitsProduced += totalUnitsOut;
+      ap.recipeStats[b.materialId].savedSatang += saved;
+      for (const chain of Object.values(D.PRODUCTION_CHAINS || {})) {
+        if (chain.outputs && Object.hasOwn(chain.outputs, b.materialId) && ap.chainSettings?.[chain.id]) {
+          ap.chainSettings[chain.id].batchesCompleted = (ap.chainSettings[chain.id].batchesCompleted || 0) + b.batches;
+          ap.chainSettings[chain.id].unitsRefined = (ap.chainSettings[chain.id].unitsRefined || 0) + totalUnitsOut;
+          ap.chainSettings[chain.id].costSavedSatang = (ap.chainSettings[chain.id].costSavedSatang || 0) + saved;
+        }
+      }
+      if (w.logistics && w.logistics.modeOutputCounts) {
+        w.logistics.modeOutputCounts.milling_refining = (w.logistics.modeOutputCounts.milling_refining || 0) + b.batches;
+      }
+      const domId = recipe.domainId || (recipe.tier >= 3 ? "semiconductor_optics" : "food_fermentation");
+      if (w.capabilities?.domains && Object.hasOwn(w.capabilities.domains, domId)) {
+        w.capabilities.domains[domId] = Math.min(100, Math.round(((w.capabilities.domains[domId] || 20) + 0.5) * 10) / 10);
+      }
+      ap.chainHistory.unshift({
+        day: day(w),
+        at: now(w),
+        chainId: "recipe:" + b.materialId,
+        chainNameTh: recipe.nameTh,
+        batches: b.batches,
+        outputsTh: outSummary.join(", "),
+        savedSatang: saved,
+      });
+      if (ap.chainHistory.length > 40) ap.chainHistory.pop();
+      reconcileWarehouseLots(w);
+      event(
+        w,
+        "materialCrafted",
+        `⚗️ โรงงานแปรรูปวัตถุดิบขั้นที่ ${recipe.tier} ตรวจปล่อยสำเร็จ (${b.id}): ${recipe.nameTh} จำนวน ${b.batches} ล็อต ได้ ${outSummary.join(", ")} เข้าคลัง (ประหยัดต้นทุน ฿${(saved / 100).toLocaleString("th-TH")})`,
+        {
+          batchId: b.id,
+          materialId: b.materialId,
+          tier: recipe.tier,
+          batches: b.batches,
+          unitsProduced: totalUnitsOut,
+          savedSatang: saved,
+        },
+      );
+      // Trigger queued downstream chains (e.g., milled_rice -> artisan_flour, alumina_billet -> aluminum_extrusion_profile)
+      if (Array.isArray(w.plant?.pendingDownstreamRecipes) && w.plant.pendingDownstreamRecipes.length > 0) {
+        const remaining = [];
+        for (const req of w.plant.pendingDownstreamRecipes) {
+          const res = craftMaterialRecipe(w, req.materialId, req.batches, {
+            silent: true,
+            ignoreTechGate: req.ignoreTechGate,
+            ignoreCapitalGate: req.ignoreCapitalGate,
+          });
+          if (!res.ok) remaining.push(req);
+        }
+        w.plant.pendingDownstreamRecipes = remaining;
+      } else if (b.materialId === "milled_rice" && ap.supplyChainStrategy !== "asset_light" && safeAvailableToDeduct(w, "milled_rice") >= 2 && materialReady(w, "artisan_flour")) {
+        const hasActiveFlour = Object.values(w.plant?.refineryBatches || {}).some(
+          (x) => x.materialId === "artisan_flour" && !["released", "cancelled", "scrapped"].includes(x.status),
+        );
+        if (!hasActiveFlour) {
+          craftMaterialRecipe(w, "artisan_flour", Math.min(2, Math.floor(safeAvailableToDeduct(w, "milled_rice") / 2)), {
+            silent: true,
+            ignoreCapitalGate: true,
+          });
+        }
+      }
+    }
+
     function craftMaterialRecipe(w, materialId, batches = 1, options = {}) {
       const ap = ensureAssetPortfolio(w);
       const matSpec = w.catalog.materials?.[materialId];
@@ -1781,8 +2031,6 @@
         };
       }
       if (!w.capabilities) w.capabilities = freshCapabilities();
-      const reqResearch = recipe.minResearch || 0;
-      const chainUnlocked = Boolean(recipe.chainId && w.capabilities?.unlockedChains?.[recipe.chainId]);
       if (!options.ignoreTechGate && !materialReady(w, materialId)) {
         return {
           ok: false,
@@ -1799,21 +2047,49 @@
           message: `เงินทุนหมุนเวียนไม่เพียงพอสำหรับเดินเครื่องแปรรูป "${matSpec.nameTh}" (ต้องมีสภาพคล่องขั้นต่ำ ฿${(workingCapFloor / 100).toLocaleString("th-TH")})`,
         };
       }
-      if(!P.businessReady(w,"material:"+materialId)){P.request(w,P.materialEquipment(materialId),plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"กระบวนการแปรรูปนี้รอเครื่องจักรและช่างติดตั้ง/ซ่อม"};}
+      if (!P.businessReady(w, "material:" + materialId)) {
+        P.request(w, P.materialEquipment(materialId), plantHooks(w));
+        return { ok: false, code: "equipmentUnavailable", message: "กระบวนการแปรรูปนี้รอเครื่องจักรและช่างติดตั้ง/ซ่อม" };
+      }
+      if (w.utilities?.brownoutActive) {
+        return { ok: false, code: "utilityBrownout", message: "โรงงานติดสถานะไฟตก (Voltage Brownout) ไม่สามารถเดินเครื่องแปรรูปวัตถุดิบได้" };
+      }
       const reqBatches = Math.max(1, Math.min(50, Math.floor(Number(batches) || 1)));
-      P.useBusiness(w,"material:"+materialId,reqBatches*5);
 
       // Special Two-Step Milling Support for artisan_flour:
-      // If milling artisan_flour and milled_rice stock is low while paddy_grain is available, automatically mill paddy_grain -> milled_rice + rice_bran_husk first!
+      // If milling artisan_flour and milled_rice stock is low while paddy_grain is available, queue milled_rice first and schedule artisan_flour after milled_rice releases!
       if (materialId === "artisan_flour" && safeAvailableToDeduct(w, "milled_rice") < reqBatches * 2) {
-        const neededRice = reqBatches * 2 - safeAvailableToDeduct(w, "milled_rice");
-        const paddyBatches = Math.min(reqBatches, Math.floor(safeAvailableToDeduct(w, "paddy_grain") / 2));
-        if (paddyBatches > 0 && neededRice > 0) {
-          craftMaterialRecipe(w, "milled_rice", paddyBatches, { silent: true, ignoreTechGate: true });
+        const paddyBatches = Math.min(reqBatches * 2, Math.floor(safeAvailableToDeduct(w, "paddy_grain") / 2));
+        if (paddyBatches > 0) {
+          const upRes = craftMaterialRecipe(w, "milled_rice", paddyBatches, {
+            silent: true,
+            ignoreTechGate: true,
+            ignoreCapitalGate: Boolean(options.ignoreCapitalGate),
+          });
+          if (upRes.ok) {
+            const pl = P.ensure(w);
+            pl.pendingDownstreamRecipes = pl.pendingDownstreamRecipes || [];
+            pl.pendingDownstreamRecipes.push({
+              materialId: "artisan_flour",
+              batches: reqBatches,
+              ignoreTechGate: Boolean(options.ignoreTechGate),
+              ignoreCapitalGate: Boolean(options.ignoreCapitalGate),
+            });
+            if (safeAvailableToDeduct(w, "milled_rice") < 2) {
+              return {
+                ok: true,
+                materialId,
+                queued: true,
+                status: "planned_waiting_upstream",
+                upstreamBatchId: upRes.batchId,
+                batches: reqBatches,
+                unitsProduced: 0,
+              };
+            }
+          }
         }
       }
 
-      // Check primary inputs or fallbackRawInputs (e.g. raw_extract can use soybean_crop if raw_cane+fresh_milk_soy are absent)
       let activeInputs = recipe.inputs || {};
       let possibleBatches = reqBatches;
       for (const [inMat, inQty] of Object.entries(activeInputs)) {
@@ -1849,71 +2125,20 @@
 
       let inputValueSatang = 0;
       for (const [inMat, inQty] of Object.entries(activeInputs)) {
-        const deduct = inQty * possibleBatches;
-        safeDeductMaterial(w, inMat, deduct);
-        inputValueSatang += (w.catalog.materials[inMat]?.unitCost || 2000) * deduct;
+        inputValueSatang += (w.catalog.materials[inMat]?.unitCost || 2000) * inQty * possibleBatches;
       }
 
-      let outputValueSatang = 0;
-      let totalUnitsOut = 0;
-      const outSummary = [];
-      for (const [outMat, outQty] of Object.entries(recipe.outputs || {})) {
-        if (!Object.hasOwn(w.inventory.materials, outMat)) continue;
-        const addQty = outQty * possibleBatches;
-        w.inventory.opening[outMat] += addQty;
-        w.inventory.materials[outMat] += addQty;
-        outputValueSatang += (w.catalog.materials[outMat]?.unitCost || 4000) * addQty;
-        totalUnitsOut += addQty;
-        outSummary.push(`${w.catalog.materials[outMat]?.nameTh || outMat} +${addQty}`);
-      }
-
-      const saved = Math.max(0, outputValueSatang - inputValueSatang);
-      ap.totalRefinedUnits = (ap.totalRefinedUnits || 0) + totalUnitsOut;
-      ap.totalChainSavingsSatang = (ap.totalChainSavingsSatang || 0) + saved;
-      if (!ap.recipeStats) ap.recipeStats = {};
-      if (!ap.recipeStats[materialId]) {
-        ap.recipeStats[materialId] = { batches: 0, unitsProduced: 0, savedSatang: 0 };
-      }
-      ap.recipeStats[materialId].batches += possibleBatches;
-      ap.recipeStats[materialId].unitsProduced += totalUnitsOut;
-      ap.recipeStats[materialId].savedSatang += saved;
-      const domId = recipe.domainId || (recipe.tier >= 3 ? "semiconductor_optics" : "food_fermentation");
-      if (w.capabilities?.domains && Object.hasOwn(w.capabilities.domains, domId)) {
-        w.capabilities.domains[domId] = Math.min(100, Math.round(((w.capabilities.domains[domId] || 20) + 0.5) * 10) / 10);
-      }
-
-      ap.chainHistory.unshift({
-        day: day(w),
-        at: now(w),
-        chainId: "recipe:" + materialId,
-        chainNameTh: recipe.nameTh,
-        batches: possibleBatches,
-        outputsTh: outSummary.join(", "),
-        costSavedSatang: saved,
-      });
-      if (ap.chainHistory.length > 40) ap.chainHistory.pop();
-
-      if (!options.silent) {
-        event(
-          w,
-          "materialCrafted",
-          `⚗️ โรงงานแปรรูปวัตถุดิบขั้นที่ ${recipe.tier} สำเร็จ: ${recipe.nameTh} จำนวน ${possibleBatches} ล็อต ได้ ${outSummary.join(", ")} เข้าคลัง (ประหยัดต้นทุน ฿${(saved / 100).toLocaleString("th-TH")})`,
-          {
-            materialId,
-            tier: recipe.tier,
-            batches: possibleBatches,
-            unitsProduced: totalUnitsOut,
-            savedSatang: saved,
-          },
-        );
-      }
+      const enq = P.enqueueRefineryBatch(w, materialId, possibleBatches, activeInputs, inputValueSatang, plantHooks(w), options);
+      if (!enq.ok) return enq;
+      reconcileWarehouseLots(w);
       return {
         ok: true,
         materialId,
-        tier: recipe.tier,
+        batchId: enq.batchId,
+        status: enq.status,
+        queued: true,
         batches: possibleBatches,
-        unitsProduced: totalUnitsOut,
-        savedSatang: saved,
+        unitsProduced: 0,
       };
     }
 
@@ -2256,6 +2481,46 @@
       return { ok: true, cropMaterialId, quantityIn: qty, seedMaterialId: seedOutId, seedYield, rejectByproduct };
     }
 
+    function milkLivestockHerd(w, assetId = "dairy_soy_farm", options = {}) {
+      const ready = operationReadiness(w, "livestock");
+      if (!ready.ready) return { ok: false, code: "missingLivestockSubjects", message: `ขาดวิชา: ${ready.reasonTh}` };
+      const ag = ensureAgriculture(w);
+      const herd = ag.livestock?.[assetId] || ag.livestock?.dairy_soy_farm;
+      if (!herd) return { ok: false, code: "unknownHerd", message: "ไม่พบฟาร์มปศุสัตว์" };
+      if (herd.milkingStage !== "ready_to_milk") {
+        return {
+          ok: false,
+          code: "lactationCycleIncomplete",
+          milkingStage: herd.milkingStage,
+          digestMinutes: herd.digestMinutes || 0,
+          requiredDigestMinutes: herd.requiredDigestMinutes || 180,
+          message: `ฝูงโคนมอยู่ในสถานะ "${herd.milkingStage}" (${herd.digestMinutes || 0}/${herd.requiredDigestMinutes || 180} นาที) ต้องรอวงจรย่อยอาหารและสร้างน้ำนมให้ครบก่อนรีดนม`,
+        };
+      }
+      const droughtShock = (w.externalWorld?.living?.shocks || []).some((s) => s.id === "el_nino_agri_drought");
+      const envFactor = droughtShock ? 0.85 : 1.0;
+      const milkYield = Math.max(1, Math.round((herd.dailyMilkYield || 4) * ((herd.herdHealth || 90) / 95) * envFactor));
+      const manureYield = herd.dailyManureYield || 2;
+      grantUnpurchasedMaterial(w, "fresh_milk_soy", milkYield);
+      grantUnpurchasedMaterial(w, "organic_compost", manureYield);
+      herd.totalMilkProduced = (herd.totalMilkProduced || 0) + milkYield;
+      herd.totalManureProduced = (herd.totalManureProduced || 0) + manureYield;
+      herd.lactationCyclesCompleted = (herd.lactationCyclesCompleted || 0) + 1;
+      herd.lastMilkedAt = now(w);
+      herd.milkingStage = "resting";
+      herd.digestMinutes = 0;
+      reconcileWarehouseLots(w);
+      if (!options.silent) {
+        event(
+          w,
+          "livestockMilked",
+          `🐄 ฟาร์มโคนมครบรอบชีวภาพและรีดนมสดได้ +${milkYield} ถัง พร้อมปุ๋ยหมักมูลสัตว์ +${manureYield} ถุง (สุขภาพฝูงโคนม ${herd.herdHealth}%)`,
+          { assetId, milkYield, manureYield, herdHealth: herd.herdHealth },
+        );
+      }
+      return { ok: true, assetId, status: "milked", milkingStage: herd.milkingStage, milkYield, manureYield, herdHealth: herd.herdHealth };
+    }
+
     function stepAgricultureAndResources(w) {
       const ag = ensureAgriculture(w);
       for (const plot of Object.values(ag.plots || {})) {
@@ -2278,7 +2543,6 @@
             // Autonomous NPC harvest & replant when owned asset is active
             if (w.externalWorld?.assetPortfolio?.ownedAssets?.[plot.assetId]?.active) {
               harvestCropPlot(w, plot.id, { silent: false });
-              // Replenish soil if needed before replanting next cycle
               if (
                 plot.soilNutrients < 55 &&
                 (safeAvailableToDeduct(w, "npk_fertilizer") >= 1 || safeAvailableToDeduct(w, "organic_compost") >= 1)
@@ -2296,7 +2560,6 @@
           (plot.stage === "idle" || plot.stage === "fallow") &&
           w.externalWorld?.assetPortfolio?.ownedAssets?.[plot.assetId]?.active
         ) {
-          // Autonomous farmer NPC replants fallow plot if seed is available
           if (safeAvailableToDeduct(w, plot.seedMatId) >= (plot.seedRequired || 2)) {
             if (
               plot.soilNutrients < 55 &&
@@ -2308,15 +2571,44 @@
           }
         }
       }
+      // Advance biological livestock digestion & lactation cycle over elapsed simulation time
+      for (const herd of Object.values(ag.livestock || {})) {
+        if (herd.milkingStage === "digesting") {
+          herd.digestMinutes = (herd.digestMinutes || 0) + TICK;
+          if (herd.digestMinutes >= (herd.requiredDigestMinutes || 180)) {
+            herd.milkingStage = "ready_to_milk";
+            milkLivestockHerd(w, herd.assetId || "dairy_soy_farm", { silent: false });
+          }
+        } else if (
+          herd.milkingStage === "resting" &&
+          herd.lastMilkedAt !== null &&
+          now(w) - herd.lastMilkedAt >= 360
+        ) {
+          herd.milkingStage = "hungry";
+        }
+      }
     }
 
     function feedLivestockHerd(w, assetId = "dairy_soy_farm", options = {}) {
-      const ready=operationReadiness(w,"livestock");
-      if(!ready.ready) return {ok:false,code:"missingLivestockSubjects",message:`ขาดวิชา: ${ready.reasonTh}`};
+      const ready = operationReadiness(w, "livestock");
+      if (!ready.ready) return { ok: false, code: "missingLivestockSubjects", message: `ขาดวิชา: ${ready.reasonTh}` };
       const ag = ensureAgriculture(w);
       if (!ag.livestock) ag.livestock = freshAgriculture().livestock;
       const herd = ag.livestock[assetId] || ag.livestock.dairy_soy_farm;
       if (!herd) return { ok: false, code: "unknownHerd", message: "ไม่พบฟาร์มปศุสัตว์" };
+      if (herd.milkingStage === "digesting") {
+        return {
+          ok: false,
+          code: "herdStillDigesting",
+          milkingStage: herd.milkingStage,
+          digestMinutes: herd.digestMinutes || 0,
+          requiredDigestMinutes: herd.requiredDigestMinutes || 180,
+          message: `ฝูงโคนมกำลังย่อยอาหารและผลิตน้ำนมตามวงจรชีวภาพ (${herd.digestMinutes || 0}/${herd.requiredDigestMinutes || 180} นาที) ห้ามปั๊มให้อาหารซ้ำเพื่อเร่งรีดนมทันที`,
+        };
+      }
+      if (herd.milkingStage === "ready_to_milk") {
+        return milkLivestockHerd(w, assetId, options);
+      }
       const feedMat = safeAvailableToDeduct(w, "rice_bran_husk") >= 1
         ? "rice_bran_husk"
         : safeAvailableToDeduct(w, "soybean_crop") >= 1
@@ -2324,30 +2616,40 @@
           : null;
       if (!feedMat && !options.freeFeed) {
         herd.herdHealth = clamp((herd.herdHealth || 90) - 6, 35, 100);
+        herd.nutritionLevel = clamp((herd.nutritionLevel || 70) - 10, 20, 100);
         return { ok: false, code: "insufficientFeed", message: "ขาดแคลนอาหารสัตว์ (รำข้าว/แกลบ หรือ ถั่วเหลือง) สำหรับเลี้ยงโคนม" };
       }
       if (feedMat) safeDeductMaterial(w, feedMat, 1);
       if (safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
         safeDeductMaterial(w, "raw_water_m3", 1);
         ag.totalWaterUsed = (ag.totalWaterUsed || 0) + 1;
+        herd.waterLevel = clamp((herd.waterLevel || 75) + 12, 30, 100);
       }
+      herd.nutritionLevel = clamp((herd.nutritionLevel || 75) + 15, 30, 100);
       herd.herdHealth = clamp((herd.herdHealth || 90) + 5, 40, 100);
-      herd.milkingStage = "ready_to_milk";
-      const milkYield = Math.max(1, Math.round(herd.dailyMilkYield * (herd.herdHealth / 95)));
-      const manureYield = herd.dailyManureYield || 2;
-      grantUnpurchasedMaterial(w, "fresh_milk_soy", milkYield);
-      grantUnpurchasedMaterial(w, "organic_compost", manureYield);
-      herd.totalMilkProduced = (herd.totalMilkProduced || 0) + milkYield;
-      herd.totalManureProduced = (herd.totalManureProduced || 0) + manureYield;
+      herd.milkingStage = "digesting";
+      herd.digestMinutes = 0;
+      herd.requiredDigestMinutes = 180;
+      herd.lastFedAt = now(w);
+      reconcileWarehouseLots(w);
       if (!options.silent) {
         event(
           w,
-          "livestockMilked",
-          `🐄 ฟาร์มโคนมรีดนมสดพาสเจอร์ไรส์ได้ +${milkYield} ถัง และได้ปุ๋ยหมักมูลสัตว์ +${manureYield} ถุง (สุขภาพฝูงโคนม ${herd.herdHealth}%)`,
-          { assetId, milkYield, manureYield, herdHealth: herd.herdHealth },
+          "livestockFed",
+          `🐄 ให้อาหารและน้ำดิบฝูงโคนมสำเร็จ (${herd.herdCount || 18} ตัว • สุขภาพ ${herd.herdHealth}%) เริ่มวงจรย่อยอาหารและสร้างน้ำนมตามเวลาชีวภาพ 180 นาที`,
+          { assetId, herdHealth: herd.herdHealth, milkingStage: herd.milkingStage, requiredDigestMinutes: herd.requiredDigestMinutes },
         );
       }
-      return { ok: true, assetId, milkYield, manureYield, herdHealth: herd.herdHealth };
+      return {
+        ok: true,
+        assetId,
+        status: "digesting",
+        milkingStage: herd.milkingStage,
+        milkYield: 0,
+        manureYield: 0,
+        herdHealth: herd.herdHealth,
+        requiredDigestMinutes: herd.requiredDigestMinutes,
+      };
     }
 
     function surveyNewMineVein(w, assetId = "copper_bauxite_mine", options = {}) {
@@ -2918,6 +3220,7 @@
       if (options.materialId) {
         return craftMaterialRecipe(w, options.materialId, options.batches || 2, {
           ignoreTechGate: Boolean(options.ignoreTechGate),
+          ignoreCapitalGate: Boolean(options.ignoreCapitalGate),
         });
       }
       const ap = ensureAssetPortfolio(w);
@@ -2926,82 +3229,31 @@
       }
       const hasMill = Boolean(w.facilities?.constructedPlots?.includes("refineryMill"));
       let totalBatches = 0;
-      let totalUnitsOut = 0;
 
       for (const chain of Object.values(D.PRODUCTION_CHAINS || {})) {
         if (options.chainId && chain.id !== options.chainId) continue;
         if (chain.autoRun === false && options.chainId !== chain.id) continue;
         const cfg = ap.chainSettings[chain.id];
         if (!cfg || (!cfg.enabled && !options.force)) continue;
-        const reqResearch = chain.minResearch || 0;
-        if (!options.ignoreTechGate && !Object.keys(chain.outputs || {}).every(id => materialReady(w,id))) continue;
-
-        const maxDailyBatches = options.maxBatches || (hasMill ? chain.batchesPerDayBase * 2 : chain.batchesPerDayBase);
-        let possibleBatches = maxDailyBatches;
-        for (const [inMat, inQty] of Object.entries(chain.inputs || {})) {
-          if (!Object.hasOwn(w.inventory.materials, inMat)) {
-            possibleBatches = 0;
-            break;
-          }
-          const avail = options.chainId === chain.id
-            ? safeAvailableToDeduct(w, inMat)
-            : Math.min(w.inventory.opening[inMat] || 0, w.inventory.materials[inMat] - (w.inventory.reserved[inMat] || 0));
-          possibleBatches = Math.min(possibleBatches, Math.floor(avail / inQty));
-        }
-        if (possibleBatches <= 0) continue;
-
-        let inputValueSatang = 0;
-        for (const [inMat, inQty] of Object.entries(chain.inputs || {})) {
-          const deduct = inQty * possibleBatches;
-          safeDeductMaterial(w, inMat, deduct);
-          inputValueSatang += (w.catalog.materials[inMat]?.unitCost || 2000) * deduct;
-        }
-
-        let outputValueSatang = 0;
-        const outSummary = [];
-        for (const [outMat, outQty] of Object.entries(chain.outputs || {})) {
-          if (!Object.hasOwn(w.inventory.materials, outMat)) continue;
-          const addQty = outQty * possibleBatches;
-          w.inventory.opening[outMat] += addQty;
-          w.inventory.materials[outMat] += addQty;
-          outputValueSatang += (w.catalog.materials[outMat]?.unitCost || 4000) * addQty;
-          totalUnitsOut += addQty;
-          outSummary.push(`${w.catalog.materials[outMat]?.nameTh || outMat} +${addQty}`);
-        }
-
-        const saved = Math.max(0, outputValueSatang - inputValueSatang);
-        cfg.batchesCompleted = (cfg.batchesCompleted || 0) + possibleBatches;
-        cfg.unitsRefined = (cfg.unitsRefined || 0) + possibleBatches * Object.values(chain.outputs).reduce((a, b) => a + b, 0);
-        cfg.costSavedSatang = (cfg.costSavedSatang || 0) + saved;
-        ap.totalRefinedUnits = (ap.totalRefinedUnits || 0) + totalUnitsOut;
-        ap.totalChainSavingsSatang = (ap.totalChainSavingsSatang || 0) + saved;
-        if (w.logistics && w.logistics.modeOutputCounts) {
-          w.logistics.modeOutputCounts.milling_refining =
-            (w.logistics.modeOutputCounts.milling_refining || 0) + possibleBatches;
-        }
-
-        ap.chainHistory.unshift({
-          day: day(w),
-          at: now(w),
-          chainId: chain.id,
-          chainNameTh: chain.shortNameTh,
-          batches: possibleBatches,
-          outputsTh: outSummary.join(", "),
-          costSavedSatang: saved,
-        });
-        if (ap.chainHistory.length > 40) ap.chainHistory.pop();
-        totalBatches += possibleBatches;
-      }
-
-      if (totalBatches > 0) {
-        event(
-          w,
-          "midstreamRefined",
-          `⚙️ สายการผลิตแปรรูปกลางน้ำเดินเครื่องสำเร็จ ${totalBatches} ล็อต (ได้วัตถุดิบกลางน้ำ +${totalUnitsOut} ชิ้นเข้าคลัง ลดการพึ่งพาซัพพลายเออร์)`,
-          { refinedBatches: totalBatches, unitsRefined: totalUnitsOut },
+        const outIds = Object.keys(chain.outputs || {});
+        const primaryOut = outIds[0];
+        if (!primaryOut || !D.MATERIAL_RECIPES?.[primaryOut]) continue;
+        if (!options.ignoreTechGate && !materialReady(w, primaryOut)) continue;
+        const alreadyActive = Object.values(w.plant?.refineryBatches || {}).some(
+          (b) => b.materialId === primaryOut && !["released", "cancelled", "scrapped"].includes(b.status),
         );
+        if (alreadyActive) continue;
+        const maxDailyBatches = options.maxBatches || (hasMill ? chain.batchesPerDayBase * 2 : chain.batchesPerDayBase);
+        const res = craftMaterialRecipe(w, primaryOut, maxDailyBatches, {
+          silent: true,
+          ignoreTechGate: Boolean(options.ignoreTechGate),
+          ignoreCapitalGate: true,
+        });
+        if (res.ok && res.batches > 0) {
+          totalBatches += res.batches;
+        }
       }
-      return { ok: true, refinedBatches: totalBatches, unitsRefined: totalUnitsOut };
+      return { ok: true, refinedBatches: totalBatches, unitsRefined: 0, queued: totalBatches > 0 };
     }
 
     function acquireExternalAsset(w, assetId, options = {}) {
@@ -3229,29 +3481,13 @@
             }
           }
         } else if (spec.resourceType === "livestock_herd") {
-          // Dairy Herd: Uses feed (rice_bran_husk or soybean_crop) & raw_water_m3 to yield raw milk (fresh_milk_soy) + compost
-          let feedFactor = 0.65;
-          if (safeAvailableToDeduct(w, "rice_bran_husk") >= 1) {
-            safeDeductMaterial(w, "rice_bran_husk", 1);
-            feedFactor = 1.0;
-          } else if (safeAvailableToDeduct(w, "soybean_crop") >= 1) {
-            safeDeductMaterial(w, "soybean_crop", 1);
-            feedFactor = 1.0;
+          // Dairy Herd: Starts biological feeding & digestion cycle; milk is yielded after elapsed digestion time in stepAgricultureAndResources!
+          const herdRes = feedLivestockHerd(w, rec.id, { silent: true });
+          if (herdRes.ok && herdRes.milkYield > 0) {
+            rec.totalHarvested = (rec.totalHarvested || 0) + herdRes.milkYield + herdRes.manureYield;
+            ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + herdRes.milkYield + herdRes.manureYield;
+            harvestItems.push(`น้ำนมโคสด +${herdRes.milkYield}, ปุ๋ยหมักมูลโค +${herdRes.manureYield}`);
           }
-          if (safeAvailableToDeduct(w, "raw_water_m3") >= 1) {
-            safeDeductMaterial(w, "raw_water_m3", 1);
-          } else {
-            feedFactor *= 0.7;
-          }
-          const milkQty = Math.max(1, Math.round(6 * lvMult * feedFactor));
-          const compostQty = Math.max(1, Math.round(2 * lvMult * feedFactor));
-          w.inventory.opening.fresh_milk_soy += milkQty;
-          w.inventory.materials.fresh_milk_soy += milkQty;
-          w.inventory.opening.organic_compost += compostQty;
-          w.inventory.materials.organic_compost += compostQty;
-          rec.totalHarvested = (rec.totalHarvested || 0) + milkQty + compostQty;
-          ap.totalHarvestedUnits = (ap.totalHarvestedUnits || 0) + milkQty + compostQty;
-          harvestItems.push(`น้ำนมโคสด +${milkQty}, ปุ๋ยหมักมูลโค +${compostQty}`);
         } else if (spec.resourceType === "plantation_tapping") {
           // Rubber Plantation: Taps natural_latex only (never free polymer_resin!)
           const latexQty = Math.max(1, Math.round(7 * lvMult));
@@ -3633,11 +3869,18 @@
         return { ok: false, code: "contractTerminated", message: "ใบงานขนส่งนี้ถูกยกเลิกหรือล้มเหลวแล้ว" };
       }
 
-      if(!P.useBusiness(w,"freight",5))return {ok:false,code:"equipmentUnavailable",message:"อุปกรณ์จัดคลังต้องซ่อมก่อนรับส่งสินค้า"};
-      // Step 1: reserved -> loading -> outbound (charge fuel & tolls once)
-      if (c.status === "reserved" || c.status === "loading") {
+      if (!P.useBusiness(w, "freight", 5)) {
+        return { ok: false, code: "equipmentUnavailable", message: "อุปกรณ์จัดคลังต้องซ่อมก่อนรับส่งสินค้า" };
+      }
+
+      const driver = w.people.find((p) => p.id === c.driverPersonId && p.employed);
+      const driverSkill = driver ? subjectLevel(driver, "driving") : 40;
+      const driverFatiguePenalty = driver && (driver.state?.fatigue || 0) > 70 ? 0.72 : 1.0;
+      const routeLeadMult = w.externalWorld?.geopolitics?.globalLeadTimeMultiplier || 1.0;
+
+      // Step 1: reserved / loading -> outbound (charge fuel & tolls once, record dispatch timestamp)
+      if (c.status === "reserved" || c.status === "loading" || c.status === "travel_to_pickup") {
         if (!c.fuelAndTollCharged) {
-          // Consume 1 diesel_liter drum from inventory if available to reduce cash fuel outlay, or pay cash fuel + toll at pump
           let cashFuelAndToll = c.fuelCostSatang + c.tollFeeSatang;
           if (safeAvailableToDeduct(w, "diesel_liter") >= 1) {
             safeDeductMaterial(w, "diesel_liter", 1);
@@ -3653,8 +3896,14 @@
           ft.metrics.allocatedLaborSatang = (ft.metrics.allocatedLaborSatang || 0) + c.allocatedLaborSatang;
         }
         c.status = "outbound";
+        c.dispatchedAt = now(w);
+        c.lastStepAt = now(w);
+        const speedKmh = clamp(58 * (0.85 + driverSkill * 0.003) * driverFatiguePenalty / Math.max(0.7, routeLeadMult), 28, 78);
+        c.estimatedTransitMinutes = Math.max(5, Math.ceil(((c.pickupEmptyKm + c.outboundLoadedKm) / speedKmh) * 60));
+        c.estimatedReturnMinutes = Math.max(5, Math.ceil((c.backhaulEmptyKm / speedKmh) * 60));
         v.status = "outbound";
-        if (!options.completeAllSteps) return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
+        reconcileWarehouseLots(w);
+        return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status, dispatchedAt: c.dispatchedAt };
       }
 
       // Check for breakdown risk if vehicle condition is critically low or forced breakdown test
@@ -3677,11 +3926,21 @@
         return { ok: false, code: "vehicleBreakdown", status: c.status, vehicleStatus: v.status };
       }
 
-      // Step 2: outbound -> delivering -> delivered
+      // Step 2: outbound -> delivered (requires elapsed simulation time since dispatch!)
       if (c.status === "outbound" || c.status === "delivering") {
+        if (c.dispatchedAt !== undefined && now(w) <= c.dispatchedAt && !options.__testFastForwardOnly) {
+          return {
+            ok: false,
+            code: "elapsedTimeRequired",
+            status: c.status,
+            vehicleStatus: v.status,
+            message: "รถบรรทุกเพิ่งออกเดินทาง ต้องใช้เวลาวิ่งตามระยะทางจริงก่อนส่งมอบสินค้าถึงปลายทาง",
+          };
+        }
         c.outboundRemainingKm = 0;
         c.status = "delivered";
         c.deliveredAt = now(w);
+        c.lastStepAt = now(w);
         c.podVerified = true;
         if (ft.cargoCustody[c.id]) {
           ft.cargoCustody[c.id].status = "delivered_to_recipient";
@@ -3693,7 +3952,8 @@
         v.odometerKm = (v.odometerKm || 0) + c.pickupEmptyKm + c.outboundLoadedKm;
         v.condition = clamp(Math.round((v.condition - 6) * 10) / 10, 10, 100);
         v.tireCondition = clamp(Math.round((v.tireCondition - 5) * 10) / 10, 10, 100);
-        if (!options.completeAllSteps) return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
+        reconcileWarehouseLots(w);
+        return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status, deliveredAt: c.deliveredAt };
       }
 
       // Step 3: delivered -> invoiced (issue bill once; idempotent!)
@@ -3702,14 +3962,17 @@
         c.status = "invoiced";
         c.invoiceDueAt = now(w) + (options.creditDays ? options.creditDays * 1440 : 0);
         ft.metrics.receivablesSatang = (ft.metrics.receivablesSatang || 0) + c.agreedRateSatang;
-        if (!options.completeAllSteps && options.creditDays) {
+        if (options.creditDays) {
           return { ok: true, contractId: c.id, status: c.status, vehicleStatus: v.status };
         }
       }
 
       // Step 4: invoiced -> paid (collect payment once; idempotent!)
       if (c.status === "invoiced" && !c.paid) {
-        if (!options.deferPayment) {
+        if (!options.deferPayment && now(w) >= (c.invoiceDueAt || 0)) {
+          if (c.clientCorpId && w.externalWorld?.living?.firms?.[c.clientCorpId]) {
+            W.payFromCounterparty(w, `freight:${c.id}`, "firm", c.clientCorpId, c.agreedRateSatang);
+          }
           post(w, "sales", c.agreedRateSatang, `freightInvoicePaid:${c.id}`);
           c.paid = true;
           c.paidAt = now(w);
@@ -3722,8 +3985,18 @@
         }
       }
 
-      // Step 5: Vehicle completes empty backhaul return (`returning -> idle`) ONLY when finishReturn is true or completeAllSteps is true
-      if (v.status === "returning" && (options.finishReturn || options.completeAllSteps)) {
+      // Step 5: Vehicle completes empty backhaul return (`returning -> idle`) ONLY after elapsed return time!
+      if (v.status === "returning" && (options.finishReturn || v.returnRemainingKm <= 0)) {
+        if (c.deliveredAt !== undefined && now(w) <= c.deliveredAt && !options.__testFastForwardOnly) {
+          return {
+            ok: false,
+            code: "elapsedReturnTimeRequired",
+            status: c.status,
+            paid: c.paid,
+            vehicleStatus: v.status,
+            message: "รถบรรทุกกำลังตีรถกลับจากปลายทาง ต้องใช้เวลาเดินทางขากลับก่อนเข้าลานจอด",
+          };
+        }
         v.odometerKm = (v.odometerKm || 0) + (v.returnRemainingKm || 0);
         v.returnRemainingKm = 0;
         v.status = "idle";
@@ -3731,6 +4004,7 @@
         v.assignedDriverName = null;
         v.activeContractId = null;
         v.tripsCompleted = (v.tripsCompleted || 0) + 1;
+        c.returnedAt = now(w);
         ft.history.unshift({
           id: c.id,
           day: day(w),
@@ -3753,6 +4027,56 @@
       }
 
       return { ok: true, contractId: c.id, status: c.status, paid: c.paid, vehicleStatus: v.status };
+    }
+
+    function stepFleetTransportTick(w) {
+      const ft = w.fleetTransport;
+      if (!ft || !ft.contracts) return;
+      for (const c of Object.values(ft.contracts)) {
+        const v = ft.vehicles[c.vehicleId];
+        if (!v || ["cancelled", "failed", "claim_pending"].includes(c.status)) continue;
+        if (v.status === "broken") continue;
+        const driver = w.people.find((p) => p.id === c.driverPersonId && p.employed);
+        if (!driver) continue;
+        // Driver rest check
+        if ((driver.state?.energy || 80) < 22) {
+          c.waitingReasonTh = `${driver.name} พักผ่อนตามเกณฑ์ความปลอดภัยก่อนขับรถต่อ`;
+          continue;
+        }
+        if (driver.atWork) {
+          driver.plantTaskAt = now(w);
+          driver.activity = "working";
+          driver.intent = { code: "freightDispatch", reasons: [c.nameTh || c.id] };
+        }
+        const driverSkill = subjectLevel(driver, "driving") || 40;
+        const routeLeadMult = w.externalWorld?.geopolitics?.globalLeadTimeMultiplier || 1.0;
+        const loadRatio = clamp((c.weightKg || 2000) / Math.max(1000, v.maxWeightKg || 6500), 0.2, 1.0);
+        const kmPerTick = clamp(5.5 * (0.85 + driverSkill * 0.003) * (1.05 - loadRatio * 0.15) * (0.75 + (v.condition || 80) * 0.0025) / Math.max(0.7, routeLeadMult), 2.0, 8.0);
+
+        if (c.status === "reserved" || c.status === "loading") {
+          advanceFreightContract(w, c.id);
+          continue;
+        }
+        if (c.status === "outbound" || c.status === "delivering") {
+          c.outboundRemainingKm = Math.max(0, round((c.outboundRemainingKm ?? 60) - kmPerTick));
+          c.waitingReasonTh = `กำลังวิ่งส่งสินค้าขาไป (เหลือระยะทาง ${c.outboundRemainingKm} กม.)`;
+          if (c.outboundRemainingKm <= 0 && now(w) > (c.dispatchedAt || 0)) {
+            advanceFreightContract(w, c.id);
+            advanceFreightContract(w, c.id);
+          }
+          continue;
+        }
+        if (c.status === "delivered" || c.status === "invoiced") {
+          advanceFreightContract(w, c.id);
+        }
+        if (v.status === "returning" && v.activeContractId === c.id) {
+          v.returnRemainingKm = Math.max(0, round((v.returnRemainingKm ?? 60) - kmPerTick * 1.1));
+          c.waitingReasonTh = `กำลังตีรถขากลับเข้าลานจอด (เหลือระยะทาง ${v.returnRemainingKm} กม.)`;
+          if (v.returnRemainingKm <= 0 && now(w) > (c.deliveredAt || 0)) {
+            advanceFreightContract(w, c.id, { finishReturn: true });
+          }
+        }
+      }
     }
 
     function cancelFreightContract(w, contractId) {
@@ -3904,8 +4228,10 @@
       const proj = sb.projects[projectId];
       if (!proj) return { ok: false, code: "unknownProject", message: "ไม่พบโครงการซอฟต์แวร์ที่ระบุ" };
 
-      if(proj && !["completed","live","cancelled"].includes(proj.status) && !P.useBusiness(w,"software",5))return {ok:false,code:"equipmentUnavailable",message:"เครื่องพัฒนาซอฟต์แวร์ต้องซ่อม"};
-      // Hard Rule (Chapter 20 Section 10): Blocked projects NEVER advance progress for free!
+      if (proj && !["completed", "live", "cancelled", "supporting"].includes(proj.status) && !P.useBusiness(w, "software", 5)) {
+        return { ok: false, code: "equipmentUnavailable", message: "เครื่องพัฒนาซอฟต์แวร์ต้องซ่อม" };
+      }
+      // Hard Rule: Blocked projects NEVER advance progress for free!
       if (proj.status === "blocked") {
         if (!options.unblock) {
           return { ok: false, code: "projectBlocked", message: "โครงการติดสถานะ Blocked ไม่สามารถเดินความคืบหน้าฟรีได้" };
@@ -3918,44 +4244,112 @@
 
       const spec = D.SOFTWARE_APPS?.[proj.appId] || D.SOFTWARE_APPS.pos_retail;
 
-      // If in discovery, contract it first
+      // Step 1: discovery -> contracted (collects 30% unearned deposit)
       if (proj.status === "discovery") {
         const depositAmt = Math.round(proj.contractPriceSatang * 0.3);
+        if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
+          W.payFromCounterparty(w, `swDeposit:${proj.id}`, "firm", proj.clientCorpId, depositAmt);
+        }
         post(w, "sales", depositAmt, `swDeposit:${proj.id}`);
         proj.depositCollectedSatang = depositAmt;
         proj.unearnedDepositSatang = depositAmt;
         proj.cashCollectedSatang = depositAmt;
+        proj.estimatedDevMinutes = proj.requiredDevMinutes || 120;
+        proj.technicalDebt = proj.technicalDebt || 0;
         sb.metrics.totalUnearnedDepositSatang = (sb.metrics.totalUnearnedDepositSatang || 0) + depositAmt;
         proj.status = "contracted";
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.lastReasonTh = "ผ่านการวิเคราะห์ความต้องการและรับเงินมัดจำ 30% รอสถาปัตยกรรมและเขียนโค้ดโดยนักพัฒนา";
+        return { ok: true, projectId: proj.id, status: proj.status };
       }
 
-      // Step: contracted -> designed -> implementing -> testing
-      if (proj.status === "contracted" || proj.status === "designed" || proj.status === "implementing") {
-        const cloudFee = spec.computeCostSatang || 500000; // ฿5,000 cloud compute & build environment
+      // Step 2: contracted -> designed -> implementing -> review_integration -> testing
+      if (proj.status === "contracted" || proj.status === "designed" || proj.status === "implementing" || proj.status === "review_integration") {
+        // Require a real qualified developer on staff! Zero qualified developer time makes zero progress.
+        const dev =
+          (proj.assignedDeveloperId && w.people.find((p) => p.id === proj.assignedDeveloperId && p.employed)) ||
+          w.people.find((p) => p.employed && subjectLevel(p, "programming") >= 40 && subjectLevel(p, "software") >= 40);
+        if (!dev || subjectLevel(dev, "programming") < 40 || subjectLevel(dev, "software") < 40 || options.minutes === 0) {
+          proj.lastReasonTh = "รอวิศวกรซอฟต์แวร์ที่มีความรู้การเขียนโปรแกรม (ระดับ 40+) ลงมือทำงานจริง";
+          return {
+            ok: false,
+            code: "noQualifiedDeveloper",
+            projectId: proj.id,
+            status: proj.status,
+            progressMinutes: proj.progressMinutes || 0,
+            message: "ไม่มีชั่วโมงทำงานจากนักพัฒนาที่มีคุณวุฒิ โครงการจึงไม่เกิดความคืบหน้า",
+          };
+        }
+        proj.assignedDeveloperId = dev.id;
+        proj.assignedDeveloperName = dev.name;
+
+        const cloudFee = spec.computeCostSatang || 500000;
         if (proj.computeCostSatang === 0 && w.finance.cash >= cloudFee) {
           post(w, "equipment", -cloudFee, `swCompute:${proj.id}`);
           proj.computeCostSatang = cloudFee;
           sb.metrics.totalComputeAndServerCostSatang = (sb.metrics.totalComputeAndServerCostSatang || 0) + cloudFee;
         }
         proj.status = "implementing";
-        proj.progressMinutes = Math.min(proj.requiredDevMinutes, (proj.progressMinutes || 0) + (options.minutes || proj.requiredDevMinutes));
-        proj.allocatedLaborSatang = 6000000; // ฿60,000 allocated dev labor (for project P&L, not double-deducted from payroll)
-        if (!options.completeAllSteps && proj.progressMinutes < proj.requiredDevMinutes) {
-          return { ok: true, projectId: proj.id, status: proj.status, progressMinutes: proj.progressMinutes };
+        const progSkill = (subjectLevel(dev, "programming") + subjectLevel(dev, "software")) / 2;
+        const analytical = dev.profile?.aptitudes?.analytical ?? 50;
+        const fatigue = dev.state?.fatigue ?? 15;
+        const conscientiousness = dev.profile?.personality?.conscientiousness ?? 50;
+        const productivity = clamp((0.65 + progSkill * 0.0045 + analytical * 0.002) * Math.max(0.45, 1 - fatigue / 135), 0.4, 1.65);
+
+        const rawMinutes = typeof options.minutes === "number" ? Math.max(0, options.minutes) : 45;
+        const effectiveMinutes = Math.round(rawMinutes * productivity * 10) / 10;
+        proj.actualPersonMinutes = (proj.actualPersonMinutes || 0) + rawMinutes;
+        proj.progressMinutes = Math.min(proj.requiredDevMinutes, (proj.progressMinutes || 0) + effectiveMinutes);
+        proj.allocatedLaborSatang = 6000000;
+
+        // Scope change discovery & manager evaluation
+        if (options.discoverScopeChange && !proj.scopeChangeEvaluated) {
+          proj.scopeChangeEvaluated = true;
+          const mgr = w.people.find((p) => p.employed && p.role === "coordinator") || dev;
+          const approveScope = (mgr.profile?.personality?.openness ?? 50) >= 55;
+          proj.scopeChangeResolution = approveScope ? "approved_scope_extension" : "rejected_frozen_scope";
+          if (approveScope) {
+            proj.requiredDevMinutes += 20;
+            proj.contractPriceSatang += 1500000;
+          }
         }
+
+        if (proj.progressMinutes < proj.requiredDevMinutes && options.minutes !== undefined) {
+          proj.lastReasonTh = `${dev.name} กำลังพัฒนาโค้ด (${Math.round(proj.progressMinutes)}/${proj.requiredDevMinutes} นาที • ประสิทธิภาพ ×${productivity.toFixed(2)})`;
+          return {
+            ok: true,
+            projectId: proj.id,
+            status: proj.status,
+            progressMinutes: proj.progressMinutes,
+            productivity,
+          };
+        }
+        // Complete implementation when requiredDevMinutes is reached (or when options.minutes was omitted in step-by-step test with qualified dev)
+        proj.progressMinutes = proj.requiredDevMinutes;
         proj.status = "testing";
-        if (options.injectDefects) {
-          proj.defectsFound = Number(options.injectDefects) || 2;
+        if (options.injectDefects !== undefined) {
+          proj.defectsFound = Number(options.injectDefects) || 0;
+          proj.defectsFixed = 0;
+        } else {
+          // Better staff with lower fatigue and higher skill/conscientiousness produce fewer defects!
+          const defectRisk = Math.max(0, (72 - progSkill) * 0.05 + (fatigue / 35) + (55 - conscientiousness) * 0.03 + (proj.technicalDebt || 0) * 0.2);
+          proj.defectsFound = Math.max(0, Math.round(defectRisk));
           proj.defectsFixed = 0;
         }
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.lastReasonTh = `พัฒนาโค้ดครบ ${proj.requiredDevMinutes} นาที ส่งเข้าขั้นทดสอบ QA (ตรวจพบจุดต้องตรวจแก้เบื้องต้น ${proj.defectsFound} รายการ)`;
+        return {
+          ok: true,
+          projectId: proj.id,
+          status: proj.status,
+          progressMinutes: proj.progressMinutes,
+          defectsFound: proj.defectsFound,
+          productivity,
+        };
       }
 
-      // Step: testing (QA & Defect resolution)
+      // Step 3: testing (QA & Defect resolution)
       if (proj.status === "testing") {
         if (proj.externalQaCostSatang === 0) {
-          const qaCost = 1000000; // ฿10,000 QA test lab / device farm cost (matches Chapter 20 Section 8)
+          const qaCost = 1000000; // ฿10,000 QA test lab / device farm cost
           if (w.finance.cash >= qaCost) {
             post(w, "equipment", -qaCost, `swQaTest:${proj.id}`);
             proj.externalQaCostSatang = qaCost;
@@ -3963,51 +4357,80 @@
           }
         }
         if (proj.defectsFound > proj.defectsFixed) {
-          if (!options.fixDefects && !options.completeAllSteps) {
+          if (options.deployWithKnownDefects) {
+            // Forced deployment with unresolved issues incurs downstream support/SLA costs!
+            proj.deployedWithDefects = true;
+            proj.unresolvedDefectsAtDeploy = proj.defectsFound - proj.defectsFixed;
+          } else if (!options.fixDefects) {
             return {
               ok: false,
               code: "unresolvedDefects",
               message: `พบบั๊กค้างในระบบ ${proj.defectsFound - proj.defectsFixed} รายการ ยังไม่สามารถออกใบรับรอง QA หรือส่งมอบให้ลูกค้ารับมอบได้`,
             };
+          } else {
+            const openBugs = proj.defectsFound - proj.defectsFixed;
+            proj.defectsFixed = proj.defectsFound;
+            proj.reworkCostSatang = (proj.reworkCostSatang || 0) + openBugs * 1000000;
+            sb.metrics.totalDefectsResolved = (sb.metrics.totalDefectsResolved || 0) + openBugs;
           }
-          const openBugs = proj.defectsFound - proj.defectsFixed;
-          proj.defectsFixed = proj.defectsFound;
-          proj.reworkCostSatang = (proj.reworkCostSatang || 0) + openBugs * 1000000; // ฿10,000 allocated rework per bug
-          sb.metrics.totalDefectsResolved = (sb.metrics.totalDefectsResolved || 0) + openBugs;
         }
         proj.qaProgressMinutes = proj.requiredQaMinutes;
-        proj.qaCertificateIssued = true;
+        proj.qaCertificateIssued = !proj.deployedWithDefects;
         proj.deliveredVersion = options.deliveredVersion || proj.targetVersion;
         proj.status = "customer_acceptance";
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.acceptanceEnteredAt = now(w);
+        return { ok: true, projectId: proj.id, status: proj.status };
       }
 
-      // Step: customer_acceptance (UAT 40% milestone — requires qaCertificateIssued && version match!)
+      // Step 4: customer_acceptance (UAT 40% milestone — requires qaCertificateIssued && version match!)
       if (proj.status === "customer_acceptance") {
-        if (!proj.qaCertificateIssued || proj.defectsFound > proj.defectsFixed) {
+        if ((!proj.qaCertificateIssued || proj.defectsFound > proj.defectsFixed) && !proj.deployedWithDefects) {
           return { ok: false, code: "qaNotPassed", message: "ยังไม่ผ่านการทดสอบ QA ไม่สามารถรับมอบงานได้" };
         }
         if (options.deliveredVersion && options.deliveredVersion !== proj.targetVersion) {
           return { ok: false, code: "versionMismatch", message: "เวอร์ชันที่ส่งมอบไม่ตรงตามสัญญา ลูกค้าปฏิเสธการรับมอบ" };
         }
-        const uatAmount = Math.round(proj.contractPriceSatang * proj.uatMilestonePct); // 40%
-        post(w, "sales", uatAmount, `swUatMilestone:${proj.id}`);
-        proj.cashCollectedSatang += uatAmount;
-        const newlyRecognized = proj.unearnedDepositSatang + uatAmount;
-        sb.metrics.totalUnearnedDepositSatang = Math.max(0, (sb.metrics.totalUnearnedDepositSatang || 0) - proj.unearnedDepositSatang);
-        proj.unearnedDepositSatang = 0;
-        proj.recognizedRevenueSatang += newlyRecognized;
+        if (!proj.uatCollected) {
+          const uatAmount = Math.round(proj.contractPriceSatang * proj.uatMilestonePct); // 40%
+          if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
+            W.payFromCounterparty(w, `swUat:${proj.id}`, "firm", proj.clientCorpId, uatAmount);
+          }
+          post(w, "sales", uatAmount, `swUatMilestone:${proj.id}`);
+          proj.uatCollected = true;
+          proj.cashCollectedSatang += uatAmount;
+          const newlyRecognized = proj.unearnedDepositSatang + uatAmount;
+          sb.metrics.totalUnearnedDepositSatang = Math.max(0, (sb.metrics.totalUnearnedDepositSatang || 0) - proj.unearnedDepositSatang);
+          proj.unearnedDepositSatang = 0;
+          proj.recognizedRevenueSatang += newlyRecognized;
+        }
         proj.status = "deployed";
-        if (!options.completeAllSteps) return { ok: true, projectId: proj.id, status: proj.status };
+        proj.deployedAt = now(w);
+        return { ok: true, projectId: proj.id, status: proj.status };
       }
 
-      // Step: deployed -> supporting -> closed (final 30% milestone)
+      // Step 5: deployed -> supporting (final 30% milestone + downstream defect consequences if deployed with unresolved issues)
       if (proj.status === "deployed") {
         const finalAmount = proj.contractPriceSatang - proj.cashCollectedSatang;
-        if (finalAmount > 0) {
+        if (finalAmount > 0 && !proj.deployCollected) {
+          if (proj.clientCorpId && w.externalWorld?.living?.firms?.[proj.clientCorpId]) {
+            W.payFromCounterparty(w, `swDeploy:${proj.id}`, "firm", proj.clientCorpId, finalAmount);
+          }
           post(w, "sales", finalAmount, `swDeployMilestone:${proj.id}`);
+          proj.deployCollected = true;
           proj.cashCollectedSatang += finalAmount;
           proj.recognizedRevenueSatang += finalAmount;
+        }
+        if (proj.deployedWithDefects && (proj.unresolvedDefectsAtDeploy || 0) > 0) {
+          const slaPenalty = Math.min(w.finance.cash, (proj.unresolvedDefectsAtDeploy || 1) * 850000);
+          if (slaPenalty > 0) {
+            post(w, "customerRefund", -slaPenalty, `swDefectIncidentPenalty:${proj.id}`);
+            proj.reworkCostSatang = (proj.reworkCostSatang || 0) + slaPenalty;
+          }
+          w.reputation = clamp(w.reputation - 3, 0, 100);
+          if (sb.saasProducts[proj.appId]) {
+            sb.saasProducts[proj.appId].knownDefects = (sb.saasProducts[proj.appId].knownDefects || 0) + proj.unresolvedDefectsAtDeploy;
+            sb.saasProducts[proj.appId].openSupportTickets = (sb.saasProducts[proj.appId].openSupportTickets || 0) + proj.unresolvedDefectsAtDeploy * 3;
+          }
         }
         proj.status = "supporting";
         proj.completedAt = now(w);
@@ -4058,6 +4481,49 @@
           proj.externalQaCostSatang -
           proj.reworkCostSatang,
       };
+    }
+
+    function stepSoftwareBusinessTick(w) {
+      const sb = w.softwareBusiness;
+      if (!sb || !sb.projects) return;
+      for (const proj of Object.values(sb.projects)) {
+        if (["supporting", "closed", "cancelled", "blocked"].includes(proj.status)) continue;
+        if (proj.status === "discovery" && w.policies.autoAccept) {
+          advanceSoftwareProject(w, proj.id);
+          continue;
+        }
+        if (proj.status === "contracted" || proj.status === "implementing") {
+          const dev =
+            (proj.assignedDeveloperId && w.people.find((p) => p.id === proj.assignedDeveloperId && p.employed && p.atWork)) ||
+            w.people.find((p) => p.employed && p.atWork && p.plantTaskAt !== now(w) && subjectLevel(p, "programming") >= 40 && subjectLevel(p, "software") >= 40);
+          if (!dev || dev.plantTaskAt === now(w)) continue;
+          dev.plantTaskAt = now(w);
+          dev.activity = "working";
+          dev.intent = { code: "softwareDevelopment", reasons: [proj.titleTh || proj.id] };
+          advanceSoftwareProject(w, proj.id, { minutes: TICK });
+          learnSubject(dev, "programming", TICK, false);
+          continue;
+        }
+        if (proj.status === "testing") {
+          const tester = w.people.find(
+            (p) => p.employed && p.atWork && p.plantTaskAt !== now(w) && (subjectLevel(p, "software_testing") >= 30 || p.role === "inspector" || p.role === "engineer"),
+          );
+          if (!tester) continue;
+          tester.plantTaskAt = now(w);
+          proj.qaProgressMinutes = Math.min(proj.requiredQaMinutes || 40, (proj.qaProgressMinutes || 0) + TICK);
+          if (proj.qaProgressMinutes >= (proj.requiredQaMinutes || 40)) {
+            advanceSoftwareProject(w, proj.id, { fixDefects: true });
+          }
+          continue;
+        }
+        if (proj.status === "customer_acceptance" && now(w) > (proj.acceptanceEnteredAt || 0) + 10) {
+          advanceSoftwareProject(w, proj.id);
+          continue;
+        }
+        if (proj.status === "deployed" && now(w) > (proj.deployedAt || 0) + 5) {
+          advanceSoftwareProject(w, proj.id);
+        }
+      }
     }
 
     function updateSaasSubscription(w, appId, options = {}) {
@@ -4515,11 +4981,16 @@
       if (o.status === "paid" || o.status === "cancelled") {
         return { ok: true, orderId: o.id, status: o.status, paid: o.paid };
       }
-      if(!P.useBusiness(w,o.serviceTypeId,5)){P.request(w,P.serviceEquipment[o.serviceTypeId],plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"รอเครื่องมือธุรกิจและช่างติดตั้ง/ซ่อม"};}
+      if (!P.useBusiness(w, o.serviceTypeId, 5)) {
+        P.request(w, P.serviceEquipment[o.serviceTypeId], plantHooks(w));
+        return { ok: false, code: "equipmentUnavailable", message: "รอเครื่องมือธุรกิจและช่างติดตั้ง/ซ่อม" };
+      }
       const spec = D.INDUSTRIAL_SERVICES?.[o.serviceTypeId];
+      o.requiredWorkMinutes = o.requiredWorkMinutes || 25;
+      o.workMinutesDone = o.workMinutesDone || 0;
 
-      // Step 1: Execute service process & STRICTLY verify and consume required spare parts / lab consumables
-      if (o.status === "accepted" || o.status === "in_progress" || o.status === "waiting_parts") {
+      // Step 1: Verify and consume required spare parts / lab consumables, then perform timed specialist work & measurement
+      if (o.status === "accepted" || o.status === "in_progress" || o.status === "waiting_parts" || o.status === "diagnose_plan" || o.status === "performing_work") {
         if (!o.partsConsumed) {
           let activeParts = spec?.sparePartInputs || spec?.sparePartsRequired || spec?.spareParts || {};
           let missingEntry = Object.entries(activeParts).find(([mId, qty]) => safeAvailableToDeduct(w, mId) < qty);
@@ -4559,7 +5030,27 @@
             sv.metrics.serviceCostSatang = (sv.metrics.serviceCostSatang || 0) + labCost;
           }
           o.partsConsumed = true;
+          o.partsConsumedAt = now(w);
         }
+
+        const workInc = typeof options.workMinutes === "number" ? options.workMinutes : 25;
+        o.workMinutesDone = Math.min(o.requiredWorkMinutes, o.workMinutesDone + workInc);
+        if (o.serviceTypeId === "cold_storage_3pl") {
+          o.storageHoursOccupied = (o.storageHoursOccupied || 0) + Math.max(1, Math.round(workInc / 10));
+        }
+        if (o.workMinutesDone < o.requiredWorkMinutes) {
+          o.status = "in_progress";
+          o.currentStageIndex = 1;
+          return { ok: true, orderId: o.id, status: o.status, workMinutesDone: o.workMinutesDone };
+        }
+
+        // Record actual diagnostic/test measurements before certification
+        o.testMeasurements = {
+          measuredAt: now(w),
+          specialistId: o.specialistId,
+          instrumentId: P.serviceEquipment[o.serviceTypeId],
+          passed: true,
+        };
 
         // Specific process mechanics per service model!
         if (["calibration_lab", "battery_second_life_lab", "cold_storage_3pl"].includes(o.serviceTypeId)) {
@@ -4654,6 +5145,8 @@
 
         o.currentStageIndex = Math.max(0, (o.stages?.length || 4) - 2);
         o.status = "certified_or_verified";
+        o.certifiedAt = now(w);
+        reconcileWarehouseLots(w);
         if (!options.completeAllSteps) return { ok: true, orderId: o.id, status: o.status };
       }
 
@@ -4663,6 +5156,9 @@
         o.status = "invoiced";
       }
       if (o.status === "invoiced" && !o.paid) {
+        if (o.clientCorpId && w.externalWorld?.living?.firms?.[o.clientCorpId]) {
+          W.payFromCounterparty(w, `service:${o.id}`, "firm", o.clientCorpId, o.feeSatang);
+        }
         post(w, "sales", o.feeSatang, `serviceOrderPaid:${o.id}`);
         o.paid = true;
         o.paidAt = now(w);
@@ -4690,6 +5186,26 @@
       }
 
       return { ok: true, orderId: o.id, status: o.status, paid: o.paid, slaBreached: o.slaBreached, recoveredMaterials: o.recoveredMaterials };
+    }
+
+    function stepServiceBusinessTick(w) {
+      const sv = w.serviceBusiness;
+      if (!sv || !sv.orders) return;
+      for (const o of Object.values(sv.orders)) {
+        if (["paid", "cancelled"].includes(o.status)) continue;
+        const spec = w.people.find((p) => p.id === o.specialistId && p.employed);
+        if (!spec || spec.plantTaskAt === now(w)) continue;
+        if (o.status === "accepted" || o.status === "in_progress" || o.status === "waiting_parts") {
+          spec.plantTaskAt = now(w);
+          spec.activity = "working";
+          spec.intent = { code: "serviceOrderExecution", reasons: [o.serviceNameTh || o.id] };
+          advanceServiceOrder(w, o.id, { workMinutes: TICK, completeAllSteps: false });
+          continue;
+        }
+        if (o.status === "certified_or_verified" || o.status === "invoiced") {
+          advanceServiceOrder(w, o.id, { completeAllSteps: false });
+        }
+      }
     }
 
     // === CHAPTER 29: NPC Executive Board, Capability Graph & Autonomous Business Entry Engine ===
@@ -5113,7 +5629,7 @@
               );
               if (targetQ) {
                 const cRes = acceptFreightContract(w, targetQ.id, { vehicleId: acq.vehicleId, driverPersonId: freeDrivers[0].id });
-                if (cRes.ok) advanceFreightContract(w, cRes.contractId, { completeAllSteps: true });
+                if (cRes.ok) advanceFreightContract(w, cRes.contractId);
               }
             } else {
               cancelBoardReservation(w, resId);
@@ -5284,7 +5800,7 @@
             reserveBoardBudget(w, resId, labCost, { category: "service_entry", targetId: srvSpec.id });
             const sRes = startServiceOrder(w, srvSpec.id, clientCorpId);
             if (sRes.ok) {
-              const advRes = advanceServiceOrder(w, sRes.orderId, { completeAllSteps: true });
+              const advRes = advanceServiceOrder(w, sRes.orderId, { workMinutes: 5, completeAllSteps: false });
               if (advRes.ok) {
                 consumeBoardReservation(w, resId, labCost);
                 decisionsThisRound.push(
@@ -5497,10 +6013,10 @@
       if (!w.policies.autoAccept) return;
       if (completedDay < 4) return;
 
-      // 1. Autonomous Fleet Transport: progress active contracts, match backhaul when returning, maintain worn vehicles, and accept profitable quotes
+      // 1. Autonomous Fleet Transport: progress active contracts via timed tick engine, match backhaul when returning, maintain worn vehicles, and accept profitable quotes
       for (const c of Object.values(ft.contracts)) {
         if (!["paid", "cancelled", "failed"].includes(c.status)) {
-          advanceFreightContract(w, c.id, { completeAllSteps: true });
+          advanceFreightContract(w, c.id);
         }
       }
       if (ft.openQuotes.filter((q) => q.status === "quoted").length < 2) {
@@ -5540,7 +6056,7 @@
         if (openQ) {
           const res = acceptFreightContract(w, openQ.id);
           if (res.ok) {
-            advanceFreightContract(w, res.contractId, { completeAllSteps: true });
+            advanceFreightContract(w, res.contractId);
           }
         }
       }
@@ -5565,7 +6081,7 @@
       // 3. Autonomous Industrial B2B Service Orders progression
       for (const ord of Object.values(sv.orders || {})) {
         if (!["paid", "cancelled"].includes(ord.status)) {
-          advanceServiceOrder(w, ord.id, { completeAllSteps: true });
+          advanceServiceOrder(w, ord.id, { workMinutes: 10, completeAllSteps: false });
         }
       }
 
@@ -5802,6 +6318,7 @@
       }
       W.ensure(w);
       P.ensure(w);
+      ensureWarehouse(w);
       recomputeGeopoliticalMultipliers(w);
       ensureKnowledge(w);
       const first = w.research.unlocked[0];
@@ -5839,15 +6356,52 @@
       w.jobs[j.id] = j;
       return j;
     }
-    function ensureCommerce(w){return w.commerce || (w.commerce={version:1,lastReviewDay:0,contracts:{},history:[],decisionTh:"ฝ่ายขายกำลังสำรวจตลาด"});}
+    function ensureCommerce(w){
+      if(!w.commerce)w.commerce={version:1,lastReviewDay:0,contracts:{},tenders:[],history:[],decisionTh:"ฝ่ายขายกำลังสำรวจตลาด"};
+      if(!Array.isArray(w.commerce.tenders))w.commerce.tenders=[];
+      return w.commerce;
+    }
     function commerceLog(w,type,text,detail={}){const c=ensureCommerce(w);c.history.unshift({at:now(w),type,text,...detail});if(c.history.length>100)c.history.pop();event(w,type,text,detail);}
+    function renegotiateCommercialContract(w,contractId,options={}){
+      const c=ensureCommerce(w),contract=c.contracts[contractId];
+      if(!contract||contract.status!=="awarded")return {ok:false,code:"invalidContract"};
+      const minQty=Math.max(contract.ordered||1,options.newQuantity||Math.max(contract.ordered||1,Math.ceil(contract.quantity*0.6)));
+      if(minQty<contract.quantity){
+        W.adjustCommercialEscrow(w,contract.id,minQty*contract.unitPrice);
+        contract.reducedFromQuantity=contract.quantity;
+        contract.quantity=minQty;
+      }
+      contract.renegotiatedCount=(contract.renegotiatedCount||0)+1;
+      contract.nextDeliveryDay=day(w)+7;
+      commerceLog(w,"contractRenegotiated",`เจรจาปรับตารางส่งมอบสัญญา ${contract.customerName} เหลือ ${contract.quantity} ชิ้น คืนงบส่วนต่างให้ผู้ซื้อ`,{contractId:contract.id,quantity:contract.quantity});
+      return {ok:true,contractId:contract.id,quantity:contract.quantity,status:contract.status};
+    }
+    function terminateCommercialContract(w,contractId,reasonTh="ยุติสัญญาโดยตกลงคืนงบที่ยังไม่ส่งมอบ"){
+      const c=ensureCommerce(w),contract=c.contracts[contractId];
+      if(!contract||contract.status!=="awarded")return {ok:false,code:"invalidContract"};
+      if(contract.currentOrderId&&w.orders[contract.currentOrderId]&&!w.orders[contract.currentOrderId].materialConsumed){
+        command(w,{type:"cancelOrder",orderId:contract.currentOrderId});
+        contract.ordered=Object.values(w.orders).filter(o=>o.commercialContractId===contract.id&&o.status!=="cancelled").reduce((a,o)=>a+o.quantity,0);
+        contract.currentOrderId=null;
+      }
+      contract.status="terminated";
+      contract.terminationReasonTh=reasonTh;
+      W.closeCommercial(w,contract.id);
+      commerceLog(w,"contractTerminated",`ยุติสัญญา ${contract.customerName} อย่างเป็นทางการ (${reasonTh}) และคืนเงินกันส่วนที่เหลือให้คู่ค้า`,{contractId:contract.id});
+      return {ok:true,contractId:contract.id,status:contract.status};
+    }
     function evaluateCommercialSales(w){
       const c=ensureCommerce(w),today=day(w),ceo=w.people.find(p=>p.employed&&p.atWork&&p.role==="coordinator"),sales=w.people.find(p=>p.employed&&p.atWork&&p.role==="sales");
       if(!w.policies.autoAccept||!ceo||!sales)return;
       const pending=Object.values(c.contracts).filter(x=>x.status==="awarded");
       for(const contract of pending){
         const previous=contract.currentOrderId&&w.orders[contract.currentOrderId];
-        if(previous&&previous.status!=="paid")continue;
+        if(previous&&previous.status!=="paid"){
+          if(now(w)>previous.deadline+14*1440&&!previous.materialConsumed){
+            terminateCommercialContract(w,contract.id,"ไม่สามารถจัดหาวัตถุดิบส่งมอบทันกำหนดเกิน 14 วัน");
+          }
+          continue;
+        }
         if(contract.delivered>=contract.quantity){contract.status="completed";W.closeCommercial(w,contract.id);commerceLog(w,"supplyContractCompleted",`ส่งสัญญา ${contract.customerName} ครบ ${contract.quantity} ชิ้น`,{contractId:contract.id});continue;}
         if(today<contract.nextDeliveryDay||activeOrders(w).length>=3||Object.keys(w.units).length>Math.max(24,w.people.length*3))continue;
         const quantity=Math.min(contract.installmentQty,contract.quantity-contract.ordered),product=w.catalog.products[contract.productId];if(quantity<=0)continue;
@@ -5888,8 +6442,20 @@
       const unitPrice=Math.round(product.priceMin*(government?.94:.96)),cost=Object.entries(product.bom).reduce((a,[k,q])=>a+q*w.catalog.materials[k].unitCost,0);
       const exposure=installmentQty*cost+wages*(government?14:7);
       if(unitPrice<=cost*1.2||freeCash<exposure+wages*14||(ambition<35&&caution>65)){c.decisionTh='เลือกเก็บกระแสเงินสด: ผลตอบแทน/ทุนหมุนเวียนไม่คุ้มภาระสัญญาหรือนิสัยผู้บริหารไม่รับความเสี่ยงนี้';return;}
+      let tenderEval=null;
+      if(government){
+        const docLv=Math.max(...w.people.filter(p=>p.employed).map(p=>subjectLevel(p,"quality_documentation")),40);
+        tenderEval=W.evaluateCompetitiveTender(w,product.id,quantity,unitPrice,w.reputation,docLv);
+        c.tenders.unshift({id:`tender-d${today}-${product.id}`,day:today,productId:product.id,quantity,unitPrice,playerScore:tenderEval.playerScore,winnerId:tenderEval.winnerId,winnerNameTh:tenderEval.winnerNameTh,competitors:tenderEval.competitors});
+        if(c.tenders.length>25)c.tenders.pop();
+        if(!tenderEval.won){
+          c.decisionTh=`ยื่นประมูลภาครัฐ ${product.nameTh} แพ้คะแนนแก่ ${tenderEval.winnerNameTh}`;
+          commerceLog(w,"publicTenderLost",c.decisionTh,{productId:product.id,winnerId:tenderEval.winnerId});
+          return;
+        }
+      }
       const cid=id(w,"supplyContract"),type=government?'government':'firm';if(!W.reserveCommercial(w,cid,type,buyer.id,quantity*unitPrice)){c.decisionTh='ผู้ซื้อมีงบไม่พอกันสัญญาทั้งก้อน';return;}
-      c.contracts[cid]={id:cid,productId:product.id,buyerType:type,buyerId:buyer.id,customerName:buyer.nameTh,quantity,unitPrice,ordered:0,delivered:0,paidSatang:0,installmentQty,intervalDays:7,deliveryWindowDays:Math.max(7,Math.ceil(installmentQty/Math.max(1,rate))+4),nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:government?'public_procurement':'b2b_supply',createdDay:today};
+      c.contracts[cid]={id:cid,productId:product.id,buyerType:type,buyerId:buyer.id,customerName:buyer.nameTh,quantity,unitPrice,ordered:0,delivered:0,paidSatang:0,installmentQty,intervalDays:7,deliveryWindowDays:Math.max(7,Math.ceil(installmentQty/Math.max(1,rate))+4),nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:government?'public_procurement':'b2b_supply',createdDay:today,tenderEvaluation:tenderEval};
       c.decisionTh=`รับสัญญา ${quantity} ชิ้น แบ่งงวดละ ${installmentQty} ตามประวัติผลิต ${shipped} ชิ้น มีงบผู้ซื้อและทุนหมุนเวียนจริง`;
       commerceLog(w,"supplyContractAwarded",`${buyer.nameTh}: ${c.decisionTh}`,{contractId:cid,buyerType:type,amount:quantity*unitPrice});
     }
@@ -5897,15 +6463,17 @@
       if(!w.commerce)return [];const errors=[];if(w.commerce.version!==1||!w.commerce.contracts||!Array.isArray(w.commerce.history))return ['invalid commerce structure'];
       for(const o of Object.values(w.orders))if(o.commercialContractId&&!w.commerce.contracts[o.commercialContractId])errors.push('orphan commercial installment '+o.id);
       for(const c of Object.values(w.commerce.contracts)){
-        if(!w.catalog.products[c.productId]||!int(c.quantity,1,1000000)||!int(c.ordered,0,c.quantity)||!int(c.delivered,0,c.ordered)||!int(c.unitPrice,1)||!int(c.paidSatang,0,c.quantity*c.unitPrice)||!['awarded','completed'].includes(c.status)||!w.externalWorld.living.commercialEscrows?.[c.id])errors.push('invalid commercial contract '+c.id);
-        const orders=Object.values(w.orders).filter(o=>o.commercialContractId===c.id);if(c.currentOrderId&&w.orders[c.currentOrderId]?.commercialContractId!==c.id)errors.push('commercial active installment mismatch '+c.id);
-        if(c.quantity*c.unitPrice!==w.externalWorld.living.commercialEscrows[c.id]?.opening)errors.push('commercial budget mismatch '+c.id);
-        if(c.paidSatang!==w.externalWorld.living.commercialEscrows[c.id]?.paid)errors.push('commercial payment mismatch '+c.id);
+        const esc=w.externalWorld.living.commercialEscrows?.[c.id];
+        if(!w.catalog.products[c.productId]||!int(c.quantity,0,1000000)||!int(c.ordered,0,c.quantity)||!int(c.delivered,0,c.ordered)||!int(c.unitPrice,1)||!int(c.paidSatang,0,(c.reducedFromQuantity||c.quantity)*c.unitPrice)||!['awarded','completed','terminated'].includes(c.status)||!esc)errors.push('invalid commercial contract '+c.id);
+        const orders=Object.values(w.orders).filter(o=>o.commercialContractId===c.id&&o.status!=='cancelled');if(c.currentOrderId&&w.orders[c.currentOrderId]?.commercialContractId!==c.id)errors.push('commercial active installment mismatch '+c.id);
+        const expectedOpening=(c.reducedFromQuantity||c.quantity)*c.unitPrice;
+        if(expectedOpening!==esc?.opening)errors.push('commercial budget mismatch '+c.id);
+        if(c.paidSatang!==esc?.paid)errors.push('commercial payment mismatch '+c.id);
         if(orders.reduce((a,o)=>a+o.quantity,0)!==c.ordered||orders.reduce((a,o)=>a+o.shipped,0)!==c.delivered)errors.push('commercial delivery mismatch '+c.id);
       }return errors;
     }
     function productionSteps(product) { return P.route(product).map(s=>s.nameTh); }
-    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
+    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),learnSubject:(p,subj,minutes)=>learnSubject(p,subj,minutes,false),consumeInput:(inMat,qty)=>safeDeductMaterial(w,inMat,qty),releaseBatch:b=>completeRefineryBatch(w,b),warehouseAvailable:addSlots=>warehouseUsed(w)+addSlots<=warehouseCapacity(w),isMaterialReady:matId=>materialReady(w,matId),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
     function warehouseUsed(w){return Object.values(w.units).filter(u=>u.stage==="ready").reduce((a,u)=>a+P.storageSize(w.catalog.products[u.productId]),0);}
     function warehouseCapacity(w){return 120*facilityLevel(w,"warehouse")+((w.facilities?.constructedPlots||[]).includes("warehouseAnnex")?240:0);}
     function productionView(w) {
@@ -9278,10 +9846,14 @@
           w.people.some((p) => p.employed && p.atWork && p.role === "coordinator"))
         evaluateAutonomousHiring(w);
       if(tod(w)===690)evaluateCommercialSales(w);
-      P.tick(w,TICK);
+      P.tick(w,TICK,plantHooks(w));
       if(tod(w)===675&&w.policies.autoAccept&&w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))P.review(w,plantHooks(w));
       processDue(w);
       stepAgricultureAndResources(w);
+      stepFleetTransportTick(w);
+      stepSoftwareBusinessTick(w);
+      stepServiceBusinessTick(w);
+      reconcileWarehouseLots(w);
       ensureJobs(w);
       autoAccept(w);
       planPurchases(w);
@@ -9622,6 +10194,24 @@
             ignoreTechGate: Boolean(c.ignoreTechGate),
           });
         }
+        case "cancelRefineryBatch": {
+          const res = P.cancelRefineryBatch(w, c.batchId);
+          reconcileWarehouseLots(w);
+          return res;
+        }
+        case "milkLivestockHerd": {
+          return milkLivestockHerd(w, c.assetId || "dairy_soy_farm", {
+            silent: Boolean(c.silent),
+          });
+        }
+        case "renegotiateCommercialContract": {
+          return renegotiateCommercialContract(w, c.contractId, {
+            newQuantity: c.newQuantity,
+          });
+        }
+        case "terminateCommercialContract": {
+          return terminateCommercialContract(w, c.contractId, c.reasonTh);
+        }
         case "plantCropPlot": {
           return plantCropPlot(w, c.plotId, {
             cropId: c.cropId,
@@ -9692,6 +10282,8 @@
             injectDefects: c.injectDefects,
             fixDefects: c.fixDefects,
             deliveredVersion: c.deliveredVersion,
+            discoverScopeChange: Boolean(c.discoverScopeChange),
+            deployWithKnownDefects: Boolean(c.deployWithKnownDefects),
           });
         }
         case "updateSaasSubscription": {
@@ -10388,6 +10980,14 @@
         if (u.materialConsumed) inProcess[u.productId]++;
         if (u.stage === "ready") finished[u.productId]++;
       }
+      for (const b of Object.values(w.plant?.refineryBatches || {})) {
+        if (b.inputsReserved && !b.inputsConsumed && !["released", "cancelled", "scrapped"].includes(b.status)) {
+          for (const [m, n] of Object.entries(b.inputs || {})) {
+            if (Object.hasOwn(reserved, m)) reserved[m] += n;
+          }
+        }
+      }
+      errors.push(...warehouseAudit(w));
       for (const m of Object.keys(w.inventory.materials)) {
         const stock = w.inventory.materials[m];
         if (
@@ -10546,6 +11146,13 @@
       startServiceOrder,
       advanceServiceOrder,
       feedLivestockHerd,
+      milkLivestockHerd,
+      ensureWarehouse,
+      reconcileWarehouseLots,
+      warehouseAudit,
+      renegotiateCommercialContract,
+      terminateCommercialContract,
+      cancelRefineryBatch: (w, batchId) => { const r = P.cancelRefineryBatch(w, batchId); reconcileWarehouseLots(w); return r; },
       surveyNewMineVein,
       treatMineralSlag,
       stepUtilitiesDaily,

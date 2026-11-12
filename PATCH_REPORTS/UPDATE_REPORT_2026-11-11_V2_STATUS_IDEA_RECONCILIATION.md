@@ -8,4 +8,4 @@
 - **ข้อจำกัด:** รายงาน v2.0.0 ระบุการซิงก์ Master Skills ในแอป Gemini แต่ตรวจยืนยันจาก repo นี้ไม่ได้; benchmark 500 NPC เป็นผลในรายงาน v2.0.0 ไม่ได้รันซ้ำในงานเอกสารนี้
 - **ผลตรวจใน checkout ระหว่าง reconciliation (source code unchanged):** `npm test` 132/132; `npm run check` ผ่าน; `npm run build` ผ่าน (1,294,182 UTF-8 bytes); `npm run test:browser` 6/6
 - **ไม่มีการเปลี่ยนแปลง:** game logic, save behavior, assets หรือ Human Core; SHA-256 ของ Human Core คง `fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`
-- **เอกสารหลัก:** [project status](../project_status_and_ai_onboarding.md), [ideas index](../ideas/company/README.md), [patch report index](README.md)
+- **เอกสารหลัก:** [project status](../../../project_status_and_ai_onboarding.md), [ideas index](../../../ideas/company/README.md), [patch report index](README.md)

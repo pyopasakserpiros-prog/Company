@@ -9,7 +9,7 @@ const API = require("../js/api.js");
 
 test("v1.3.0 Chapter 28 & 30: 58 Materials with true physical/chemical origins (N-P-K from Nitrogen Ammonia + Phosphate/Potash), 36 Products across 10 Families, 9 Capability Domains, and 6 B2B Industrial Services", () => {
   const cat = D.createCatalog();
-  assert.strictEqual(D.RELEASE_VERSION, "2.6.0");
+  assert.strictEqual(D.RELEASE_VERSION, "2.7.0");
   assert.strictEqual(Object.keys(cat.materials).length, 64, "Catalog has 58 materials");
   assert.strictEqual(Object.keys(cat.products).length, 42, "Catalog has 36 products");
   assert.strictEqual(Object.keys(D.MATERIAL_RECIPES).length, 40, "Catalog has 35 material recipes");
@@ -23,9 +23,11 @@ test("v1.3.0 Chapter 28 & 30: 58 Materials with true physical/chemical origins (
   prepare(w,{subjects:["chemical_processing","agriculture"]});
   S.command(w, { type: "directorEdit", action: "grantMaterial", materialId: "phosphate_potash_rock", quantity: 4 });
   const nh3Res = S.command(w, { type: "craftMaterial", materialId: "nitrogen_ammonia", batches: 1 });
-  assert.strictEqual(nh3Res.ok, true, "nitrogen_ammonia crafted from ambient_air_gas + raw_water_m3");
+  assert.strictEqual(nh3Res.ok, true, "nitrogen_ammonia queued from ambient_air_gas + raw_water_m3");
+  S.advance(w, 60);
   const npkRes = S.command(w, { type: "craftMaterial", materialId: "npk_fertilizer", batches: 1 });
-  assert.strictEqual(npkRes.ok, true, "npk_fertilizer crafted from nitrogen_ammonia + phosphate_potash_rock");
+  assert.strictEqual(npkRes.ok, true, "npk_fertilizer queued from released nitrogen_ammonia + phosphate_potash_rock");
+  S.advance(w, 60);
 
   // Verify wheat_flour cannot be planted as seed, while wheat_seed can be planted
   const wfSpec = w.catalog.materials.wheat_flour;
@@ -147,7 +149,7 @@ test("v1.3.0 Chapter 29 & 31 Acceptance Scenarios: Executive Board Decision Ledg
 
   const app = API.create("v130-api-snapshot", { autonomous: true });
   const snap = app.snapshot();
-  assert.strictEqual(snap.releaseVersion, "2.6.0");
+  assert.strictEqual(snap.releaseVersion, "2.7.0");
   assert.strictEqual(snap.catalog.capabilityDomains.length, 9);
   assert.strictEqual(snap.catalog.productFamilies.length, 10);
   assert.strictEqual(snap.catalog.industrialServices.length, 10);

@@ -216,6 +216,7 @@
     }
     if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
     if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
+    if(w.warehouse){try{for(const err of S.warehouseAudit(w))add(false,err);}catch(_){add(false,"invalid warehouse");}}
     if (w.externalWorld?.living) {
       try { for (const err of S.worldAudit(w)) add(false,err); } catch (_) { add(false,"invalid living world data"); }
     }
@@ -259,7 +260,7 @@
       let noOverlap = true;
       if (record(ft) && record(ft.contracts)) {
         for (const c of Object.values(ft.contracts)) {
-          if (record(c) && ["reserved", "loading", "outbound", "delivering"].includes(c.status)) {
+          if (record(c) && ["reserved", "travel_to_pickup", "loading", "outbound", "delivering"].includes(c.status)) {
             if (activeVehs.has(c.vehicleId) || activeDrivers.has(c.driverPersonId)) {
               noOverlap = false;
             }
