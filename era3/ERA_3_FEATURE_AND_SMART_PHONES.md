@@ -8,8 +8,8 @@
 | Current shipped runtime | v2.9.0; source baseline `855e183d9b7a404c857e9abc162c1a67a4a84f76` on `pyopasakserpiros-prog/Company`, branch `main` |
 | Intended major release | v3.0.0 / Era 3; **proposed, not implemented** |
 | Current authorization | Publish the proposal, ideas and current context so multiple AIs can collaborate. This document does not authorize claiming an implementation or completed release. |
-| Portable companion | `project_status_and_ai_onboarding.md` and `ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md`, located beside this file in `era3/` |
-| Canonical proposal location | `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` (with detailed Thai + technical co-evolution architecture blueprint in `era3/ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md`) |
+| Portable companion | `project_status_and_ai_onboarding.md`, `ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md`, and `ERA_3_BUSINESS_MECHANICS_AND_CALCULATIONS.md`, located beside this file in `era3/` |
+| Canonical proposal location | `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` (with detailed Thai + technical co-evolution architecture blueprint in `era3/ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md` and full business mechanics & mathematical models in `era3/ERA_3_BUSINESS_MECHANICS_AND_CALCULATIONS.md`) |
 
 ## 0. Read this first: the game is an autonomous world, not a management-command game
 

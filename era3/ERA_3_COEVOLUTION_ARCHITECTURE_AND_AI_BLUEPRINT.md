@@ -3,7 +3,7 @@
 - **โครงการ:** Company Simulation / Siam Enterprise (`COMPANY_SOURCE/`)
 - **ฐานซอร์สปัจจุบัน:** `v2.9.0` (สาขา `main` ของ `pyopasakserpiros-prog/Company`)
 - **เป้าหมายเอกสารนี้:** เอกสารออกแบบเชิงลึกและใบสั่งงานสถาปัตยกรรม (System Architecture & AI Implementation Blueprint) สำหรับ **Era 3 (v3.0.0)** เพื่อให้เจ้าของโปรเจกต์อ่านเข้าใจภาพรวมทั้งหมดเป็นภาษาไทย และสามารถส่งต่อให้ AI ตัวอื่น (Codex, Gemini, ChatGPT, Claude) ใช้เป็นพิมพ์เขียวเขียนโค้ดจริงได้ทันที
-- **ใช้คู่กับ:** [`era3/ERA_3_FEATURE_AND_SMART_PHONES.md`](ERA_3_FEATURE_AND_SMART_PHONES.md) และ [`era3/project_status_and_ai_onboarding.md`](project_status_and_ai_onboarding.md)
+- **ใช้คู่กับ:** [`era3/ERA_3_BUSINESS_MECHANICS_AND_CALCULATIONS.md`](ERA_3_BUSINESS_MECHANICS_AND_CALCULATIONS.md) (เอกสารเจาะลึกองค์ประกอบ กลไกธุรกิจ ลูปการทำงาน และสูตรการคำนวณทั้งหมด), [`era3/ERA_3_FEATURE_AND_SMART_PHONES.md`](ERA_3_FEATURE_AND_SMART_PHONES.md) และ [`era3/project_status_and_ai_onboarding.md`](project_status_and_ai_onboarding.md)
 
 ---
 
@@ -360,10 +360,11 @@ flowchart TD
 
 ```text
 คุณคือผู้ร่วมพัฒนาเกม Company Simulation / Siam Enterprise (โค้ดอยู่ใน COMPANY_SOURCE/)
-ให้อ่านเอกสารในโฟลเดอร์ era3/ ทั้ง 3 ไฟล์ก่อนเริ่มงาน:
+ให้อ่านเอกสารในโฟลเดอร์ era3/ ทั้ง 4 ไฟล์ก่อนเริ่มงาน:
 1. era3/ERA_3_COEVOLUTION_ARCHITECTURE_AND_AI_BLUEPRINT.md (พิมพ์เขียวสถาปัตยกรรมระบบชิป ฮาร์ดแวร์ ดีล B2B และสมาร์ตโฟนที่วิวัฒนาการร่วมกัน)
-2. era3/ERA_3_FEATURE_AND_SMART_PHONES.md (ข้อกำหนดฉบับเต็มของ Era 3)
-3. era3/project_status_and_ai_onboarding.md (สถานะซอร์สปัจจุบัน v2.9.0 และกฎเหล็กของโปรเจกต์)
+2. era3/ERA_3_BUSINESS_MECHANICS_AND_CALCULATIONS.md (เอกสารเจาะลึกองค์ประกอบของระบบ กลไกธุรกิจ ลูปการทำงาน และสูตรการคำนวณพร้อมตัวอย่างตัวเลขจริงครบวงจร)
+3. era3/ERA_3_FEATURE_AND_SMART_PHONES.md (ข้อกำหนดฉบับเต็มของ Era 3)
+4. era3/project_status_and_ai_onboarding.md (สถานะซอร์สปัจจุบัน v2.9.0 และกฎเหล็กของโปรเจกต์)
 
 เป้าหมายสำคัญที่สุดของผม:
 - เกมนี้เป็นโลกจำลองอัตโนมัติ (Autonomous NPC World) ที่ NPC ระดับผู้บริหาร วิศวกร ฝ่ายจัดซื้อ และฝ่ายขายคิดและตัดสินใจทำธุรกิจเองทั้งหมด 100% ห้ามสร้างปุ่มบังคับให้ผู้เล่นกดอนุมัติหรือสั่งงานบริหารรายวัน ผู้เล่นเป็นผู้สังเกตการณ์และใช้ Edit Hub เพื่อทดลองเปลี่ยนเงื่อนไขเท่านั้น
