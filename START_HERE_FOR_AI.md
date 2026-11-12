@@ -11,5 +11,6 @@
 - [รายงาน v3.0.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md)
 - [สัญญาระบบโทรศัพท์](docs/company/ERA3_PHONE_SYSTEM.md) / [รับช่วง](docs/company/ERA3_V300_HANDOFF.md)
 - [งานค้าง Era3](ideas/company/36_era3_phone_industry_remaining.md)
+- **[เอกสารร่างโปรเจกต์ใหม่ (Spin-off ธุรกิจเทคโนโลยีและสมาร์ตโฟน): `spinoff_phone/`](spinoff_phone/README.md)** — อ่าน [`SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md`](spinoff_phone/SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md) และ [`SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md`](spinoff_phone/SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md) สำหรับพิมพ์เขียวฉบับเต็มที่เตรียมไว้ให้ Codex และทีม AI ระดมสมองต่อยอด
 
 ตรวจใน `COMPANY_SOURCE`: `node tools/verify.cjs`, `node tools/test.cjs` (**236/236 tests**), `node tools/build.cjs`, `node tools/phone-industry-soak.cjs`, `node tools/benchmark.cjs`; hash Human Core (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`) และ `AGENTS.md` ห้ามเปลี่ยนโดยไม่มีคำสั่งตรง

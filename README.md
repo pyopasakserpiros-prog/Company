@@ -1,6 +1,6 @@
 > **พรอมต์รับช่วงล่าสุดสำหรับ Gemini:** [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) — ระบบนิเวศการผลิตโทรศัพท์และบริษัทชิ้นส่วนที่บริษัทเราเข้าไปดำเนินธุรกิจได้จริง ส่งพร้อม ZIP สาขา main
 
-> **ล่าสุด v3.0.0 — Era 3 โทรศัพท์:** มีธุรกิจโทรศัพท์ ชิ้นส่วนและสินค้าจริงในคลัง การวิจัย/ต้นแบบ/ประกอบ/เปิดตัวโดย NPC ดู [สถานะ](project_status_and_ai_onboarding.md), [คู่มือ](docs/company/ERA3_PHONE_SYSTEM.md), [รายงาน](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.0.0.md) และ [งานค้าง](ideas/company/36_era3_phone_industry_remaining.md) ข้อเสนอเดิมอยู่ใน [era3/](era3/)
+> **ล่าสุด v3.1.0 — Era 3 โทรศัพท์ & ข้อเสนอโปรเจกต์ใหม่ Spin-off สมาร์ตโฟน:** มีธุรกิจโทรศัพท์และซัพพลายเออร์ 12 บทบาทใน [รายงาน v3.1.0](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V3.1.0.md) และมี **พิมพ์เขียวเกม Spin-off ธุรกิจเทคโนโลยีและสมาร์ตโฟนฉบับสมบูรณ์สำหรับ Codex/AI Team** อยู่ในโฟลเดอร์ **[`spinoff_phone/`](spinoff_phone/README.md)** ([Master Blueprint](spinoff_phone/SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md) · [Gameplay, Labs & UI Specs](spinoff_phone/SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md))
 
 # Company Simulation — Autonomous Campus
 
