@@ -49,3 +49,9 @@ reviewKnowledge reads actual geopolitics.sectorDemandMultipliers and government.
 `js/world.js` now owns `externalWorld.living`: ensure/step/apply/validate/scenario/quote/sellToPlayer/receivePlayerSale. 12 nations/blocs, 28 opening firms (22 catalog + 5 regional + finite wholesale exchange), 66 relations. Daily government/corporate decisions use actual indicators and account balances. Stocks and paid goods in transit are separate. Existing scripted manual scenarios remain; periodic random event/regime/corporate-news rotation is removed. Read LIVING_WORLD_SYSTEM.md before changing supply or policies. Never regenerate opening stocks on daily steps. Company-wide cash conservation includes explicit playerNetSatang for material trades only; legacy product/service/software/freight contracts are not all linked to firm wallets. Do not claim agent-level households, real military or jurisdiction tax laws.
 
 Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
+
+## Verified v2.6.0 integration
+
+world.js reserveCommercial/payCommercial/closeCommercial/recordProductDelivery connect new warehouse/B2B/public procurement buyers to finite real budgets. commercialEscrows counted in global conservation. Existing generic market/software/freight/service contracts are not all retrofitted. Actual new-contract deliveries increment buyer.finishedGoods and commerce.delivered; refunds return unspent reserve.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

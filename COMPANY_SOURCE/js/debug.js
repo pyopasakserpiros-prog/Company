@@ -1601,7 +1601,7 @@
   /* ---------- 3. Bottom Nav Sheets (People, Campus, Log, Market, Policy, Menu/Edit Hub) ---------- */
   function renderCompanySheet(v, body) {
     byId("shTitle").textContent = "🏛️ บริษัท — กิจการ คน ความรู้ และแผนงาน";
-    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
+    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_plant",label:"เครื่องจักร / งานช่าง"},{id:"company_contracts",label:"ฝ่ายขาย / สัญญา"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
     setSheetTabs(tabs);
     if (!tabs.some(t=>t.id===uiState.subTab)) uiState.subTab = "company_overview";
     body.replaceChildren();
@@ -1642,6 +1642,22 @@
       for(const p of k.products) row(`${p.ready ? "✅ พร้อม" : "🔒 ยังไม่พร้อม"} ${p.nameTh}`,`ผลิตแล้ว ${v.production.completed[p.id] || 0} ชิ้น • วิชา${p.subjectNameTh || "เฉพาะทาง"} • ${p.reasons.join(" / ") || "มีทีมและกระบวนการพร้อม; ฝ่ายขายยังต้องประเมินกำไรและคำสั่งซื้อ"} • ${coverage(p.coverage)}`);
       for(const service of k.serviceReadiness || []) row(`${service.ready ? "✓ ทีมพร้อม" : "🔒 ขาดความรู้"} ${service.nameTh}`,coverage(service.coverage));
       row("ธุรกิจบริการ / ขนส่ง / ซอฟต์แวร์",`งานบริการ ${Object.keys(v.serviceBusiness?.orders || {}).length} • สัญญาขนส่ง ${Object.keys(v.fleetTransport?.contracts || {}).length} • โครงการซอฟต์แวร์ ${Object.keys(v.softwareBusiness?.projects || {}).length}`);
+    } else if(uiState.subTab==="company_plant") {
+      const plant=v.plant;
+      row("เครื่องจักรและเครื่องมือ",plant?.decisionTh || "ยังไม่มีเครื่องจักร");
+      row("คลังและพลังงาน",`พื้นที่สินค้าสำเร็จรูป ${v.warehouseUsed}/${v.warehouseCapacity} ช่อง (สินค้าขนาดใหญ่ใช้หลายช่อง) • พลังงานเครื่องมือสะสม ${(plant?.energyKwh||0).toFixed(2)} kWh รวมในมิเตอร์รายวัน`);
+      for(const m of Object.values(plant?.machines||{})){
+        const spec=plant.specs[m.id],status={ready:"พร้อมทำงาน",installing:"รอช่างติดตั้ง",maintenance:"อยู่ระหว่างซ่อม/บำรุง"};
+        row(spec.nameTh,`${status[m.status]||m.status} • สภาพ ${m.condition.toFixed(1)}% • อุณหภูมิ ${m.temperatureC.toFixed(0)}°C\n${m.status==='installing'?'กำหนดรับเครื่องวันที่ '+(Math.floor((m.availableAt||0)/1440)+1)+' • ':''}เครื่องรองรับ ${spec.capacity} งาน • ใช้อยู่ ${Object.keys(m.slots).length} • กำลังไฟ ${spec.kw} kW\nชั่วโมงใช้สะสม ${(m.totalMinutes/60).toFixed(1)} • ค่าเครื่อง ${moneyFull(spec.cost)}`);
+      }
+      row("เครื่องมือเฉพาะที่ยังไม่มี",Object.entries(plant?.specs||{}).filter(([id])=>!plant.machines[id]).map(([id,s])=>`${s.nameTh}: ${moneyFull(s.cost)}`).join(" • ")+" — ผู้บริหารจะพิจารณาตามงาน ทุนสำรอง และปริมาณผลิต");
+      for(const task of plant?.maintenance||[])row(`งานช่าง: ${plant.specs[task.machineId].nameTh}`,`${task.type==='install'?'ติดตั้ง':'ซ่อมบำรุง'} ${Math.round(task.progress/task.required*100)}% • ผู้ทำ ${v.people.find(p=>p.id===task.workerId)?.name||'รอช่างที่รู้จริง'} • ${task.type==='repair'?(task.partsConsumed?'เบิกอะไหล่แล้ว':'รอเบิกอะไหล่'):'ยังไม่ใช้งานจนติดตั้งเสร็จ'}`);
+      for(const e of (plant?.history||[]).slice(0,12))row(`นาที ${e.at}`,e.text);
+    } else if(uiState.subTab==="company_contracts") {
+      row("ฝ่ายขายและภาระสัญญา",v.commerce?.decisionTh||"กำลังสะสมประวัติการผลิตและสำรวจผู้ซื้อ");
+      row("การขายและการรับเงิน","ฝ่ายขายเสนอสินค้าจากคลังให้คู่ค้าที่ใช้สินค้านั้น ผู้ซื้อกันเงินก่อนรับสัญญา สัญญารวม120/240/1,000ชิ้นแบ่งงวดตามประวัติผลิต งานรัฐต้องมีชื่อเสียง วิชาเอกสารคุณภาพและสัญญา และทุนรอรับเงินหลังส่งของ");
+      for(const c of Object.values(v.commerce?.contracts||{}))row(`${c.buyerType==='government'?'🏛️ จัดซื้อรัฐ':'🤝 B2B'} ${c.customerName}`,`${v.catalog.products.find(p=>p.id===c.productId)?.nameTh||c.productId} • สัญญารวม ${c.quantity} ชิ้น • ออกงวดแล้ว ${c.ordered} • ส่งแล้ว ${c.delivered}\nงวดละ ${c.installmentQty} • ราคาต่อหน่วย ${moneyFull(c.unitPrice)} • รับเงินจริง ${moneyFull(c.paidSatang)} • ${c.status==='completed'?'ส่งครบแล้ว':'มีภาระส่งมอบ'}\nกำหนดออกงวดถัดไปวันที่ ${c.nextDeliveryDay}`);
+      for(const e of (v.commerce?.history||[]).slice(0,16))row(`นาที ${e.at}`,e.text);
     } else if(uiState.subTab==="company_board") {
       row("แผนเตรียมความสามารถ",k.decision);
       const b=v.executiveBoard || {};

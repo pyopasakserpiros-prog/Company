@@ -47,3 +47,9 @@ productReadiness, materialReady, SERVICE_SUBJECTS and software/field-operation m
 ## v2.5.0 integration
 
 sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.
+
+## Verified v2.6.0 integration
+
+plant.js routes42 products through real labor fractions, equipment slots, passive elapsed waits and temperature. sim still uses assembly kind then QA/packing. Services10, material recipes40, software/freight require mapped working tools. Material recipe completion remains legacy synchronous batch after equipment gate; do not claim continuous-refinery timing. See P.route/available/stationFor/labor/tick and sim hooks.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

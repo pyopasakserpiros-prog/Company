@@ -3,6 +3,7 @@
 const S=require('../js/sim');
 module.exports=function prepare(w,{products=[],materials=[],subjects=[]}={}) {
   S.ensureKnowledge(w);
+  const P=require("../js/plant");P.ensure(w);for(const k of Object.keys(P.SPECS))if(!w.plant.machines[k])P.install(w,k,true);
   const definitions=S.companyKnowledgeView(w).subjects;
   const teach=(req)=>{for(const p of w.people) for(const id of Object.keys(req)) p.education.subjects[id]=80;};
   teach(Object.fromEntries(subjects.map(id=>[id,80])));

@@ -35,3 +35,7 @@
 ## World update v2.4.0
 
 Read [world contract](../../docs/company/LIVING_WORLD_SYSTEM.md) and [patch report](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md). World, observability, architecture, save, accounting, supply-chain and delivery skills have verified integration notes. Repo masters/root copies are synchronized; Gemini app-local synchronization is still unconfirmed.
+
+## v2.6.0 equipment/commerce
+
+Read [plant contract](../../docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md) and [report](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md). Updated masters and production/accounting/supply/campus/executive/world/observability/architecture/save/QA domains; starter maturity unchanged. Gemini app-local sync remains pending.

@@ -9298,8 +9298,8 @@ canvas.pt {
     return e;
   }
   return Object.freeze({
-    VERSION: "2.5.0",
-    RELEASE_VERSION: "2.5.0",
+    VERSION: "2.6.0",
+    RELEASE_VERSION: "2.6.0",
     RESOURCE_CLASSES,
     AGRICULTURE_CROPS,
     FLEET_VEHICLES,
@@ -10047,6 +10047,19 @@ canvas.pt {
     const affected={el_nino_agri_drought:['TH','ASEAN','ID'],australia_pilbara_cyclone_iron_shock:['AU'],indonesia_nickel_bauxite_ban:['ID']};
     if(affected[eventId]){m.shocks=m.shocks.filter(s=>s.id!==eventId);m.shocks.push({id:eventId,nations:affected[eventId],untilDay:day+duration,outputMultiplier:.6});}
   }
+  function reserveCommercial(w,id,buyerType,buyerId,amount){
+    const m=ensure(w);m.commercialEscrows=m.commercialEscrows||{};
+    if(m.commercialEscrows[id]||!Number.isSafeInteger(amount)||amount<=0)return false;
+    if(buyerType==='government'){const n=m.nations[buyerId];if(!n||n.treasury<amount)return false;n.treasury-=amount;n.spending+=amount;}
+    else{const f=m.firms[buyerId];if(!f||f.cash<amount)return false;payment(f,amount);}
+    m.commercialEscrows[id]={id,buyerType,buyerId,opening:amount,balance:amount,paid:0,returned:0};return true;
+  }
+  function payCommercial(w,id,amount){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e||!Number.isSafeInteger(amount)||amount<0||e.balance<amount)return false;e.balance-=amount;e.paid+=amount;m.playerNetSatang-=amount;return true;}
+  function closeCommercial(w,id){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e)return false;const amount=e.balance;
+    if(e.buyerType==='government'){m.nations[e.buyerId].treasury+=amount;m.nations[e.buyerId].spending-=amount;}else receipt(m.firms[e.buyerId],amount);
+    e.balance=0;e.returned+=amount;return true;
+  }
+  function recordProductDelivery(w,id,productId,qty){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e)return false;const buyer=e.buyerType==='government'?m.nations[e.buyerId]:m.firms[e.buyerId];buyer.finishedGoods=buyer.finishedGoods||{};buyer.finishedGoods[productId]=(buyer.finishedGoods[productId]||0)+qty;return true;}
   function quote(w,k,qty,preferredId){
     const m=ensure(w),candidate=Object.values(m.firms).filter(f=>(w.externalWorld.corporations[f.id].sellsMaterials||[]).includes(k)&&(f.stock[k]||0)>=qty);
     candidate.sort((a,b)=>(a.id===preferredId?-100:0)+(a.id==='world_exchange'?30:0)+route(m,a.nationId,'TH').days-((b.id===preferredId?-100:0)+(b.id==='world_exchange'?30:0)+route(m,b.nationId,'TH').days)||a.id.localeCompare(b.id));
@@ -10077,12 +10090,122 @@ canvas.pt {
     for(const r of m.relations)if(!m.nations[r.a]||!m.nations[r.b]||!['peace','treaty','sanctions','war'].includes(r.status)||!Number.isFinite(r.tension)||r.tension<0||r.tension>100)errors.push('world relation '+r.id);
     if(new Set(m.shipments.map(s=>s.id)).size!==m.shipments.length)errors.push('world duplicate shipment');
     for(const s of m.shipments)if(!m.firms[s.sellerId]||!m.firms[s.buyerId]||!m.markets[s.materialId]||!safe(s.quantity)||s.quantity<1||!safe(s.dueDay))errors.push('world shipment '+s.id);
-    const actual=Object.values(m.firms).reduce((a,f)=>a+f.cash,0)+Object.values(m.nations).reduce((a,n)=>a+n.treasury+n.householdCash,0);
+    for(const e of Object.values(m.commercialEscrows||{}))if(!['firm','government'].includes(e.buyerType)||!safe(e.balance)||!safe(e.paid)||!safe(e.returned)||!safe(e.opening)||e.opening!==e.balance+e.paid+e.returned||!(e.buyerType==='government'?m.nations[e.buyerId]:m.firms[e.buyerId]))errors.push('world commercial escrow '+e.id);
+    const actual=Object.values(m.commercialEscrows||{}).reduce((a,e)=>a+e.balance,0)+Object.values(m.firms).reduce((a,f)=>a+f.cash,0)+Object.values(m.nations).reduce((a,n)=>a+n.treasury+n.householdCash,0);
     const opening=Object.values(m.firms).reduce((a,f)=>a+f.openingCash,0)+Object.values(m.nations).reduce((a,n)=>a+n.openingTreasury+n.openingHouseholdCash,0);
     if(actual!==opening+m.playerNetSatang)errors.push('world total cash conservation');
     return errors;
   }
-  return Object.freeze({ensure,step,apply,validate,receivePlayerSale,quote,scenario,sellToPlayer,route,statusName});
+  return Object.freeze({ensure,step,apply,validate,receivePlayerSale,reserveCommercial,payCommercial,closeCommercial,recordProductDelivery,quote,scenario,sellToPlayer,route,statusName});
+});
+
+</script>
+    <script>
+/* js/plant.js */
+(function(root,factory){const v=factory(typeof module==='object'&&module.exports?require('./data.js'):root.CompanyData);if(typeof module==='object'&&module.exports)module.exports=v;else root.CompanyPlant=v;})(typeof globalThis!=='undefined'?globalThis:this,function(D){
+'use strict';
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const SPECS={
+ hand_tools:{nameTh:'ชุดเครื่องมือช่างและโต๊ะเตรียมงาน',cost:350000,capacity:4,kw:.1,subject:'maintenance',level:20},
+ electronics_bench:{nameTh:'สถานีบัดกรีและเครื่องวัดวงจร',cost:1200000,capacity:3,kw:.4,subject:'electrical_basics',level:25},
+ test_rig:{nameTh:'ชุดทดสอบไฟฟ้าและโหลดจำลอง',cost:900000,capacity:3,kw:.6,subject:'electrical_basics',level:25},
+ mixer:{nameTh:'เครื่องผสมอาหาร',cost:850000,capacity:4,kw:1.5,subject:'maintenance',level:25},
+ oven:{nameTh:'เตาอบควบคุมอุณหภูมิ',cost:1500000,capacity:6,kw:4,subject:'maintenance',level:30},
+ cooker:{nameTh:'หม้อต้มและเครื่องกวนให้ความร้อน',cost:1000000,capacity:5,kw:3,subject:'maintenance',level:25},
+ pasteurizer:{nameTh:'เครื่องพาสเจอไรซ์',cost:2600000,capacity:5,kw:5,subject:'maintenance',level:35},
+ fermenter:{nameTh:'ถังหมักและตู้บ่มควบคุมสภาวะ',cost:1800000,capacity:8,kw:1,subject:'maintenance',level:30},
+ press:{nameTh:'แท่นอัดและเครื่องขึ้นรูปโลหะ',cost:2800000,capacity:3,kw:5,subject:'metal_machining',level:35},
+ welder:{nameTh:'เครื่องเชื่อมและฟิกซ์เจอร์ประกอบ',cost:1400000,capacity:3,kw:3,subject:'maintenance',level:30},
+ autoclave:{nameTh:'เครื่องนึ่งฆ่าเชื้อและห้องสะอาด',cost:3600000,capacity:6,kw:6,subject:'maintenance',level:40},
+ clean_fill:{nameTh:'เครื่องกรองและบรรจุปลอดเชื้อ',cost:2400000,capacity:4,kw:2,subject:'maintenance',level:35},
+ cold_room:{nameTh:'ห้องเย็นและระบบตรวจอุณหภูมิ',cost:2000000,capacity:12,kw:2,subject:'maintenance',level:30},
+ developer_pc:{nameTh:'เครื่องพัฒนาซอฟต์แวร์และระบบสำรองข้อมูล',cost:180000,capacity:4,kw:.2,subject:'software',level:25},
+ diagnostic_kit:{nameTh:'เครื่องมือวินิจฉัยและสอบเทียบภาคสนาม',cost:700000,capacity:3,kw:.2,subject:'metrology',level:25},
+ warehouse_tools:{nameTh:'รถเข็น เครื่องชั่งและอุปกรณ์จัดคลัง',cost:450000,capacity:4,kw:.1,subject:'logistics',level:25},
+ grain_mill:{nameTh:'โรงสีและเครื่องโม่ธัญพืช',cost:1800000,capacity:4,kw:3,subject:'maintenance',level:30},
+ chemical_reactor:{nameTh:'ถังปฏิกรณ์และระบบกลั่นควบคุมสารเคมี',cost:6500000,capacity:3,kw:8,subject:'maintenance',level:40},
+ semiconductor_fab:{nameTh:'สายกระบวนการเวเฟอร์และห้องสะอาดเฉพาะทาง',cost:20000000000,capacity:4,kw:20,subject:'maintenance',level:45},
+ smelter:{nameTh:'เตาถลุงและเครื่องรีดวัสดุ',cost:4500000,capacity:3,kw:10,subject:'metal_machining',level:40}
+};
+function stage(nameTh,equipment,share,hold=0,temp=null){return {nameTh,equipment,share,holdMinutes:hold,temperatureC:temp};}
+function route(p){const id=p.id;
+ if(/croissant|bakery|biscuit/.test(id))return [stage('ชั่งและนวดแป้ง','mixer',.3),stage('พักแป้งและขึ้นรูป','hand_tools',.3,/biscuit/.test(id)?0:45),stage('อบตามอุณหภูมิและพักเย็น','oven',.4,25,180)];
+ if(/yogurt|probiotic|synbiotic/.test(id))return [stage('ผสมและเตรียมอาหารเลี้ยงเชื้อ','mixer',.3),stage('พาสเจอไรซ์และลดอุณหภูมิ','pasteurizer',.35,20,72),stage('เพาะเชื้อและบ่ม','fermenter',.35,180,38)];
+ if(/saline|wound_dressing/.test(id))return [stage('เตรียมและกรองวัตถุดิบ','clean_fill',.4),stage('บรรจุในพื้นที่ควบคุม','clean_fill',.3),stage('ฆ่าเชื้อและพักเย็น','autoclave',.3,30,121)];
+ if(p.industry==='food')return [stage('ชั่งและผสมตามสูตร','mixer',.3),stage(/oil/.test(id)?'แยกและกรองน้ำมัน':'ให้ความร้อนและแปรรูป','cooker',.4,15,90),stage('พักเย็นและเตรียมบรรจุ','hand_tools',.3,10)];
+ if(/rail|tray|suspension|motor|agv|Actuator/.test(id))return [stage('เตรียมและขึ้นรูปวัสดุ','press',.4),stage('เชื่อมและประกอบ','welder',.4),stage('ทดสอบมิติและการทำงาน','diagnostic_kit',.2,10)];
+ if(/battery|lfp|nmc|powerwall/i.test(id))return [stage('คัดเซลล์และตรวจความปลอดภัย','test_rig',.25),stage('ประกอบโมดูลและระบบป้องกัน','electronics_bench',.45),stage('ทดสอบโหลดและเฝ้าดูอุณหภูมิ','test_rig',.3,60)];
+ return [stage('เตรียมชิ้นส่วนและตรวจแบบ','hand_tools',.25),stage('ประกอบและเชื่อมต่อ','electronics_bench',.5),stage('ตั้งค่าและทดสอบเดินเครื่อง','test_rig',.25,5)];
+}
+const serviceEquipment={calibration_lab:'diagnostic_kit',field_maintenance:'hand_tools',battery_second_life_lab:'test_rig',returnable_pallet_pool:'warehouse_tools',cold_storage_3pl:'cold_room',industrial_recycling:'press',energy_epc_install:'diagnostic_kit',b2b_technical_academy:'developer_pc',wholesale_distribution:'warehouse_tools',toll_smelting_extrusion:'smelter'};
+function ensure(w){if(w.plant)return w.plant;w.plant={version:1,machines:{},maintenance:[],history:[],energyKwh:0,billedEnergyKwh:0,partsConsumed:{},decisionTh:'ยังไม่มีแผนซื้อเครื่องใหม่',lastReviewDay:0};for(const k of ['hand_tools','electronics_bench','test_rig','developer_pc','warehouse_tools'])install(w,k,true);return w.plant;}
+function install(w,k,opening=false){const x=w.plant;if(!SPECS[k])return null;const m={id:k,condition:100,status:'ready',slots:{},temperatureC:25,totalMinutes:0,totalKwh:0,installedAt:w.clock.absoluteMinute,opening,costSatang:opening?0:SPECS[k].cost};x.machines[k]=m;return m;}
+function log(w,type,text,details={}){const x=ensure(w);x.history.unshift({at:w.clock.absoluteMinute,type,text,...details});if(x.history.length>100)x.history.pop();}
+function workState(w,j){const u=w.units[j.unitId];if(!u)return null;const steps=route(w.catalog.products[u.productId]);if(!u.process||u.process.version!==1){u.process={version:1,index:0,labor:0,phase:'labor',history:[]};j.progress=0;}return {u,steps,state:u.process,step:steps[u.process.index]};}
+function stationFor(w,j){if(j.kind!=='assembly'||!j.unitId)return null;const q=workState(w,j);if(!q?.step)return null;const stations=Object.values(w.layout.stations).filter(s=>s.kind==='assembly').sort((a,b)=>a.id.localeCompare(b.id));if(!stations.length)return null;const n=Object.keys(SPECS).indexOf(q.step.equipment);return stations[n%stations.length].id;}
+function available(w,j){if(j.kind!=='assembly'||!j.unitId)return true;const q=workState(w,j);if(!q||!q.step)return true;if(q.state.phase==='machine')return false;const m=ensure(w).machines[q.step.equipment];return !!m&&m.status==='ready'&&m.condition>=25&&(m.slots[j.id]||Object.keys(m.slots).length<SPECS[m.id].capacity);}
+function power(w,m,minutes){if(minutes<=5&&m.lastPowerAt===w.clock.absoluteMinute)return;m.lastPowerAt=w.clock.absoluteMinute;const energy=SPECS[m.id].kw*minutes/60;m.totalKwh+=energy;ensure(w).energyKwh+=energy;m.totalMinutes+=minutes;m.condition=Math.max(0,m.condition-minutes*.003);}
+function labor(w,j,p,delta,tick){const q=workState(w,j);if(!q||!q.step)return {delta,release:false};const {step,state}=q,m=ensure(w).machines[step.equipment];if(!available(w,j))return {delta:0,release:true};
+ m.slots[j.id]=true;const required=j.required*step.share,added=Math.min(delta*(.65+m.condition*.0035),Math.max(0,required-state.labor));state.labor+=added;power(w,m,tick);
+ if(state.labor+1e-8>=required){state.workerId=p.id;state.startedAt=w.clock.absoluteMinute;if(step.holdMinutes){state.phase='machine';state.holdDone=0;state.lastTick=w.clock.absoluteMinute;return {delta:added,release:true};}completeStage(w,j,q,m);return {delta:added,release:state.phase!=="complete"};}
+ return {delta:added,release:false};
+}
+function completeStage(w,j,q,m){const s=q.state;s.history.push({nameTh:q.step.nameTh,machineId:m.id,workerId:s.workerId||null,completedAt:w.clock.absoluteMinute,holdMinutes:s.holdDone||0,temperatureC:m.temperatureC});delete m.slots[j.id];s.index++;s.labor=0;s.phase='labor';q.u.processHistory=s.history;q.u.processStep=s.index;if(s.index>=q.steps.length){j.progress=j.required;s.phase='complete';}}
+function tick(w,tick){const x=ensure(w);
+ const cold=x.machines.cold_room;if(cold?.status==='ready'&&cold.condition>=25&&Object.values(w.units).some(u=>u.stage==='ready'&&w.catalog.products[u.productId]?.industry==='food')){cold.temperatureC+=clamp(4-cold.temperatureC,-tick*2,tick*2);power(w,cold,tick);}
+
+ for(const m of Object.values(x.machines)){for(const slots of [m.slots,m.heldSlots||{}])for(const jid of Object.keys(slots))if(!w.jobs[jid]||!w.units[w.jobs[jid].unitId])delete slots[jid];if(!Object.keys(m.slots).length)m.temperatureC+=clamp(25-m.temperatureC,-tick,tick);}
+ for(const j of Object.values(w.jobs)){if(j.kind!=='assembly'||!j.unitId)continue;const q=workState(w,j);if(!q?.step||q.state.phase!=='machine')continue;const m=x.machines[q.step.equipment];if(!m||m.status!=='ready'||m.condition<25||w.utilities?.brownoutActive)continue;
+  const dt=Math.min(tick,Math.max(0,w.clock.absoluteMinute-q.state.lastTick));q.state.lastTick=w.clock.absoluteMinute;if(!dt)continue;
+  power(w,m,dt);const target=q.step.temperatureC;if(target!==null&&m.lastThermalAt!==w.clock.absoluteMinute){m.temperatureC+=clamp(target-m.temperatureC,-dt*3,dt*3);m.lastThermalAt=w.clock.absoluteMinute;}if(target===null||Math.abs(m.temperatureC-target)<=2)q.state.holdDone+=dt;
+  if(q.state.holdDone>=q.step.holdMinutes)completeStage(w,j,q,m);
+ }
+}
+function requirements(w){const ks=new Set();for(const u of Object.values(w.units))for(const s of route(w.catalog.products[u.productId]))ks.add(s.equipment);for(const o of Object.values(w.serviceBusiness?.orders||{}))if(!['paid','cancelled'].includes(o.status)&&serviceEquipment[o.serviceTypeId])ks.add(serviceEquipment[o.serviceTypeId]);return [...ks];}
+function repairPart(k){return ['press','welder','smelter','grain_mill','warehouse_tools','hand_tools'].includes(k)?'metal_sheet':['mixer','cooker','pasteurizer','fermenter','cold_room','clean_fill','autoclave','chemical_reactor'].includes(k)?'polymer_resin':'wire_harness';}
+function repairSubject(p,k){const s=p.education?.subjects||{};return Math.max(s.maintenance||0,(s[SPECS[k].subject]||0)*.8,(s.electrical_basics||0)*.55);}
+function request(w,k,hooks){const x=ensure(w),spec=SPECS[k];if(!spec)return false;if(x.machines[k])return true;const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0),reserve=wages*18;
+ if(spec.cost>5000000&&Object.values(w.production.shipped).reduce((a,n)=>a+n,0)<50){x.decisionTh=`ยังไม่ซื้อ ${spec.nameTh}: ยังไม่มีปริมาณผลิตรองรับ เลือกซื้อวัตถุดิบจากผู้ผลิตภายนอก`;return false;}
+ if(w.finance.cash<spec.cost+reserve){x.decisionTh=`ยังไม่ซื้อ ${spec.nameTh}: ต้องเก็บเงินสำรอง18วัน`;return false;}
+ hooks.pay(spec.cost,'plant:buy:'+k);install(w,k);x.machines[k].status='installing';x.machines[k].availableAt=w.clock.absoluteMinute+(k==='semiconductor_fab'?180:spec.cost>=5000000?14:spec.cost>=1800000?5:2)*1440;x.maintenance.push({id:'install:'+k,machineId:k,type:'install',progress:0,required:k==='semiconductor_fab'?4320:spec.cost>=5000000?480:spec.cost>=1800000?240:60,workerId:null,partsConsumed:false});log(w,'equipmentPurchased',`ซื้อ ${spec.nameTh} รอช่างติดตั้ง`,{machineId:k,cost:spec.cost});return true;
+}
+function maintain(w,hooks){const x=ensure(w),minute=w.clock.absoluteMinute;if(minute%5)return;
+ const busy=new Set();
+ const task=x.maintenance.find(t=>t.progress<t.required);if(!task)return;
+ const m=x.machines[task.machineId],spec=SPECS[m.id];if(task.type==='install'&&minute<(m.availableAt||0)){x.decisionTh=`รอส่งมอบ ${spec.nameTh} วันที่ ${Math.floor(m.availableAt/1440)+1}`;return;}if(Object.keys(m.slots).length)return;
+ const p=w.people.filter(p=>p.employed&&p.atWork&&!busy.has(p.id)&&!p.path.length&&!(p.breakUntil>minute)&&!['eating','sleeping','resting'].includes(p.activity)&&repairSubject(p,m.id)>=spec.level).sort((a,b)=>repairSubject(b,m.id)-repairSubject(a,m.id))[0];
+ if(!p){const learner=w.people.find(p=>p.employed&&p.role==='engineer');if(learner&&learner.education&&!learner.education.course)hooks.train?.(learner,'maintenance',spec.level);x.decisionTh=`${spec.nameTh} รอช่างที่รู้ ${spec.subject} / การซ่อมบำรุง`;return;}
+ if(!task.partsConsumed&&task.type==='repair'){
+  const part=repairPart(m.id);if((w.inventory.materials[part]||0)-(w.inventory.reserved[part]||0)<1){x.decisionTh=`ซ่อม ${spec.nameTh} รออะไหล่ ${w.catalog.materials[part].nameTh}`;return;}
+  w.inventory.materials[part]--;w.inventory.consumed[part]++;x.partsConsumed=x.partsConsumed||{};x.partsConsumed[part]=(x.partsConsumed[part]||0)+1;task.partsConsumed=true;task.partId=part;
+ }
+ task.workerId=p.id;p.activity='working';p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};const apt=p.profile.aptitudes,ability=((apt.analytical||50)+(apt.dexterity??50))/200;const fatigue=Math.max(.3,1-(p.state.fatigue||0)/140);const speed=(.4+repairSubject(p,m.id)/100)*(.7+ability*.6)*fatigue;
+ const station=Object.values(w.layout.stations).find(s=>s.kind==='assembly');if(station&&(p.position.x!==station.access.x||p.position.y!==station.access.y)){hooks.walk(p,station);return;}
+ task.progress=Math.min(task.required,task.progress+5*speed);hooks.claim?.(p);p.activity='working';p.intent={code:'equipmentMaintenance',reasons:[spec.nameTh]};p.plantTaskAt=minute;
+ hooks.learn?.(p,5);
+ if(task.progress>=task.required){m.condition=task.type==='install'?100:Math.min(100,75+repairSubject(p,m.id)*.25);m.status='ready';if(m.heldSlots){m.slots=m.heldSlots;delete m.heldSlots;}log(w,'equipmentMaintained',`${p.name} ${task.type==='install'?'ติดตั้ง':'ซ่อม/บำรุง'} ${spec.nameTh} เสร็จ`,{machineId:m.id,workerId:p.id});x.maintenance=x.maintenance.filter(t=>t!==task);}
+}
+function review(w,hooks){const x=ensure(w);for(const k of requirements(w))if(!x.machines[k]){request(w,k,hooks);break;}
+ for(const m of Object.values(x.machines)){if(m.condition<55&&m.status==='ready'&&(!Object.keys(m.slots).length||m.condition<25)&&!x.maintenance.some(t=>t.machineId===m.id)){
+  const cost=Math.round(SPECS[m.id].cost*.015);if(w.finance.cash<cost)continue;hooks.pay(cost,'plant:repair:'+m.id+':'+w.clock.absoluteMinute);m.heldSlots=m.slots;m.slots={};m.status='maintenance';x.maintenance.push({id:'repair:'+m.id+':'+w.clock.absoluteMinute,machineId:m.id,type:'repair',progress:0,required:m.condition<25?120:45,workerId:null,partsConsumed:false});log(w,'equipmentRepairPlanned',`วางแผนซ่อม ${SPECS[m.id].nameTh}`,{cost,machineId:m.id});break;
+ }}
+}
+function materialEquipment(id){if(/rice|flour/.test(id))return 'grain_mill';if(/microchip|wafer|optical/.test(id))return 'semiconductor_fab';if(/ore|alumin|steel|billet|silicon/.test(id))return 'smelter';if(/resin|electrolyte|cathode|fertilizer|culture/.test(id))return 'chemical_reactor';if(/sugar|palm|extract|water|compost/.test(id))return 'cooker';if(/pcb|led|sensor|cell|inverter/.test(id))return 'electronics_bench';if(/dough|protein/.test(id))return 'mixer';return 'press';}
+function toolFor(type){return type.startsWith('material:')?materialEquipment(type.slice(9)):['agriculture','harvest','livestock','mining'].includes(type)?'hand_tools':type==='software'?'developer_pc':type==='freight'?'warehouse_tools':serviceEquipment[type];}
+function businessReady(w,type){const k=toolFor(type);if(!k)return true;const m=w.plant?.machines[k];return !!m&&m.status==='ready'&&m.condition>=25;}
+function useBusiness(w,type,minutes){const k=toolFor(type);const m=ensure(w).machines[k];if(!m||m.status!=='ready'||m.condition<25)return false;power(w,m,minutes);return true;}
+function storageSize(p){return /powerwall|grid_rack|drone|agv|motor|cabinet/.test(p.id)?6:/battery|inverter|charger|tray|rail/i.test(p.id)?3:1;}
+function view(w){if(!w.plant)return null;return {...w.plant,specs:SPECS,routes:Object.fromEntries(Object.values(w.catalog.products).map(p=>[p.id,route(p)]))};}
+function validate(w){const x=w.plant;if(!x)return [];const errors=[],int=n=>Number.isSafeInteger(n)&&n>=0;if(x.version!==1||!x.machines||!Array.isArray(x.maintenance))return ['invalid plant structure'];
+ for(const [k,m]of Object.entries(x.machines)){if(!SPECS[k]||!m||!Number.isFinite(m.condition)||m.condition<0||m.condition>100||!['ready','maintenance','installing'].includes(m.status)||!m.slots||Object.keys(m.slots).length>SPECS[k].capacity||!Number.isFinite(m.temperatureC)||!Number.isFinite(m.totalKwh)||m.totalKwh<0)errors.push('invalid equipment '+k);}
+ for(const m of Object.values(x.machines))for(const slots of [m.slots,m.heldSlots||{}])for(const [jid,v]of Object.entries(slots))if(v!==true||!w.jobs[jid]||!w.units[w.jobs[jid].unitId])errors.push('invalid equipment reservation '+jid);
+ for(const [id,q]of Object.entries(x.partsConsumed||{}))if(!w.catalog.materials[id]||!int(q))errors.push('invalid repair parts '+id);
+ for(const t of x.maintenance)if(!x.machines[t.machineId]||!Number.isFinite(t.progress)||t.progress<0||t.progress>t.required||!Number.isFinite(t.required)||t.required<=0)errors.push('invalid maintenance task');
+ for(const u of Object.values(w.units)){if(!u.process)continue;const a=u.process,steps=route(w.catalog.products[u.productId]);if(a.version!==1||!int(a.index)||a.index>steps.length||!Number.isFinite(a.labor)||a.labor<0||!['labor','machine','complete'].includes(a.phase)||!Array.isArray(a.history))errors.push('invalid process '+u.id);}
+ if(new Set(x.maintenance.map(t=>t.machineId)).size!==x.maintenance.length)errors.push('duplicate maintenance reservation');
+ if(!Number.isFinite(x.energyKwh)||x.energyKwh<0||!Number.isFinite(x.billedEnergyKwh)||x.billedEnergyKwh<0||x.billedEnergyKwh>x.energyKwh+.001)errors.push('invalid plant energy');return errors;
+}
+return Object.freeze({SPECS,route,ensure,install,available,stationFor,labor,tick,request,review,maintain,businessReady,useBusiness,view,validate,serviceEquipment,materialEquipment,toolFor,storageSize,repairPart});
 });
 
 </script>
@@ -10097,15 +10220,16 @@ canvas.pt {
     node ? require("./layout.js") : root.CompanyLayout,
     node ? require("./economy.js") : root.CompanyEconomy,
     node ? require("./world.js") : root.CompanyWorld,
+    node ? require("./plant.js") : root.CompanyPlant,
   );
   if (node) module.exports = value;
   else root.CompanySim = value;
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
-  function (H, D, L, E, W) {
+  function (H, D, L, E, W, P) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.5.0",
+      RELEASE_VERSION = "2.6.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -10815,7 +10939,8 @@ canvas.pt {
     function operationReadiness(w,kind) {
       const req=OPERATIONS_SUBJECTS[kind] || {};
       const coverage=teamCoverage(w,req);
-      return {ready:coverage.every(r=>r.ready),coverage,reasonTh:coverage.filter(r=>!r.ready).map(r=>`${r.nameTh} ${r.level}`).join(", ")};
+      const tools=P.businessReady(w,kind);
+      return {ready:coverage.every(r=>r.ready)&&tools,coverage,reasonTh:[...coverage.filter(r=>!r.ready).map(r=>`${r.nameTh} ${r.level}`),...(!tools?["เครื่องมือธุรกิจต้องติดตั้งหรือซ่อม"]:[])].join(", ")};
     }
     function acquireTechnologyLicense(w,targetId,kind="product") {
       const spec=kind==="material" ? D.MATERIAL_RECIPES?.[targetId] : w.catalog.products[targetId];
@@ -11887,7 +12012,9 @@ canvas.pt {
           message: `เงินทุนหมุนเวียนไม่เพียงพอสำหรับเดินเครื่องแปรรูป "${matSpec.nameTh}" (ต้องมีสภาพคล่องขั้นต่ำ ฿${(workingCapFloor / 100).toLocaleString("th-TH")})`,
         };
       }
+      if(!P.businessReady(w,"material:"+materialId)){P.request(w,P.materialEquipment(materialId),plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"กระบวนการแปรรูปนี้รอเครื่องจักรและช่างติดตั้ง/ซ่อม"};}
       const reqBatches = Math.max(1, Math.min(50, Math.floor(Number(batches) || 1)));
+      P.useBusiness(w,"material:"+materialId,reqBatches*5);
 
       // Special Two-Step Milling Support for artisan_flour:
       // If milling artisan_flour and milled_rice stock is low while paddy_grain is available, automatically mill paddy_grain -> milled_rice + rice_bran_husk first!
@@ -13719,6 +13846,7 @@ canvas.pt {
         return { ok: false, code: "contractTerminated", message: "ใบงานขนส่งนี้ถูกยกเลิกหรือล้มเหลวแล้ว" };
       }
 
+      if(!P.useBusiness(w,"freight",5))return {ok:false,code:"equipmentUnavailable",message:"อุปกรณ์จัดคลังต้องซ่อมก่อนรับส่งสินค้า"};
       // Step 1: reserved -> loading -> outbound (charge fuel & tolls once)
       if (c.status === "reserved" || c.status === "loading") {
         if (!c.fuelAndTollCharged) {
@@ -13989,6 +14117,7 @@ canvas.pt {
       const proj = sb.projects[projectId];
       if (!proj) return { ok: false, code: "unknownProject", message: "ไม่พบโครงการซอฟต์แวร์ที่ระบุ" };
 
+      if(proj && !["completed","live","cancelled"].includes(proj.status) && !P.useBusiness(w,"software",5))return {ok:false,code:"equipmentUnavailable",message:"เครื่องพัฒนาซอฟต์แวร์ต้องซ่อม"};
       // Hard Rule (Chapter 20 Section 10): Blocked projects NEVER advance progress for free!
       if (proj.status === "blocked") {
         if (!options.unblock) {
@@ -14599,6 +14728,7 @@ canvas.pt {
       if (o.status === "paid" || o.status === "cancelled") {
         return { ok: true, orderId: o.id, status: o.status, paid: o.paid };
       }
+      if(!P.useBusiness(w,o.serviceTypeId,5)){P.request(w,P.serviceEquipment[o.serviceTypeId],plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"รอเครื่องมือธุรกิจและช่างติดตั้ง/ซ่อม"};}
       const spec = D.INDUSTRIAL_SERVICES?.[o.serviceTypeId];
 
       // Step 1: Execute service process & STRICTLY verify and consume required spare parts / lab consumables
@@ -15884,6 +16014,7 @@ canvas.pt {
         w.people.push(createPerson(w, "employee-" + (i + 1), s.name, s.role, s.dailyWage));
       }
       W.ensure(w);
+      P.ensure(w);
       recomputeGeopoliticalMultipliers(w);
       ensureKnowledge(w);
       const first = w.research.unlocked[0];
@@ -15921,17 +16052,82 @@ canvas.pt {
       w.jobs[j.id] = j;
       return j;
     }
-    function productionSteps(product) {
-      const stages={food:["เตรียมและชั่งวัตถุดิบ","ผสมและขึ้นรูป","แปรรูปและพักก่อนตรวจ"],electronics:["เตรียมแผงและชิ้นส่วน","ประกอบและเชื่อมต่อวงจร","ตั้งค่าและทดสอบการทำงาน"],automotive:["เตรียมวัสดุและเครื่องมือ","ขึ้นรูปและประกอบ","ปรับแต่งและทดสอบ"],energy:["เตรียมวัสดุและชิ้นส่วน","ประกอบระบบพลังงาน","ทดสอบความปลอดภัย"],biomed:["เตรียมวัตถุดิบและพื้นที่","แปรรูปและควบคุมสภาวะ","ตรวจความสม่ำเสมอก่อนปล่อยล็อต"]};
-      return stages[product.industry==="tech"?"electronics":product.industry] || ["เตรียมวัตถุดิบ","แปรรูปและประกอบ","ตรวจการทำงานก่อนส่ง QC"];
+    function ensureCommerce(w){return w.commerce || (w.commerce={version:1,lastReviewDay:0,contracts:{},history:[],decisionTh:"ฝ่ายขายกำลังสำรวจตลาด"});}
+    function commerceLog(w,type,text,detail={}){const c=ensureCommerce(w);c.history.unshift({at:now(w),type,text,...detail});if(c.history.length>100)c.history.pop();event(w,type,text,detail);}
+    function evaluateCommercialSales(w){
+      const c=ensureCommerce(w),today=day(w),ceo=w.people.find(p=>p.employed&&p.atWork&&p.role==="coordinator"),sales=w.people.find(p=>p.employed&&p.atWork&&p.role==="sales");
+      if(!w.policies.autoAccept||!ceo||!sales)return;
+      const pending=Object.values(c.contracts).filter(x=>x.status==="awarded");
+      for(const contract of pending){
+        const previous=contract.currentOrderId&&w.orders[contract.currentOrderId];
+        if(previous&&previous.status!=="paid")continue;
+        if(contract.delivered>=contract.quantity){contract.status="completed";W.closeCommercial(w,contract.id);commerceLog(w,"supplyContractCompleted",`ส่งสัญญา ${contract.customerName} ครบ ${contract.quantity} ชิ้น`,{contractId:contract.id});continue;}
+        if(today<contract.nextDeliveryDay||activeOrders(w).length>=3||Object.keys(w.units).length>Math.max(24,w.people.length*3))continue;
+        const quantity=Math.min(contract.installmentQty,contract.quantity-contract.ordered),product=w.catalog.products[contract.productId];if(quantity<=0)continue;
+        const oid=makeOffer(w,product.id,quantity,contract.deliveryWindowDays,.7,sales);
+        const offer=typeof oid==='object'?oid:w.offers[oid];
+        if(!offer)continue;offer.unitPrice=contract.unitPrice;offer.depositPct=contract.buyerType==='government'?0:.2;offer.customerName=contract.customerName;offer.clientId=contract.buyerType==='firm'?contract.buyerId:null;offer.commercialContractId=contract.id;offer.paymentMinutes=contract.buyerType==='government'?7*1440:2*1440;
+        const order=accept(w,offer,sales);
+        if(order){contract.nextDeliveryDay=today+contract.intervalDays;commerceLog(w,"supplyInstallmentStarted",`ฝ่ายขายออกงวด ${product.nameTh} ${quantity} ชิ้น จากสัญญารวม ${contract.quantity}`,{contractId:contract.id,orderId:order.id});}
+      }
+      if(c.lastReviewDay===today)return;c.lastReviewDay=today;
+      if(today>=14&&today%14===0&&w.reputation>=65&&(ceo.profile.personality.openness??50)>=30){
+        const gap=teamCoverage(w,{quality_documentation:40,contract_management:25}).find(x=>!x.ready);
+        const learner=w.people.filter(p=>p.employed&&!p.education?.course&&["admin","sales","coordinator","inspector"].includes(p.role)).sort((a,b)=>subjectLevel(b,gap?.id)-subjectLevel(a,gap?.id))[0];
+        if(gap&&learner){plantHooks(w).train(learner,gap.id,gap.level);c.decisionTh=`เตรียมทีมก่อนเสนอขายรัฐ: ${learner.name} เรียน ${SUBJECTS[learner.education.course]||learner.education.course}`;commerceLog(w,"publicProcurementPreparation",c.decisionTh,{personId:learner.id,subjectId:learner.education.course});}
+      }
+      // Sell real free warehouse goods first. No income is booked until the normal shipment/invoice pipeline runs.
+      if(activeOrders(w).length<2){
+        const stock=productionView(w).find(x=>x.stock>=2);
+        if(stock){const product=w.catalog.products[stock.id],buyer=Object.values(w.externalWorld.corporations).find(b=>(b.buysProducts||[]).includes(product.id));
+          if(buyer){const qty=Math.min(stock.stock,20),unitPrice=Math.round(product.priceMin*.98),contractId=id(w,"warehouseSale");
+            if(W.reserveCommercial(w,contractId,'firm',buyer.id,qty*unitPrice)){
+              const contract=c.contracts[contractId]={id:contractId,productId:product.id,buyerId:buyer.id,buyerType:'firm',customerName:buyer.nameTh,quantity:qty,ordered:0,delivered:0,paidSatang:0,unitPrice,installmentQty:qty,intervalDays:1,deliveryWindowDays:5,nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:'warehouse',createdDay:today};
+              commerceLog(w,"warehouseStockOffered",`ฝ่ายขายเสนอคลัง ${product.nameTh} ${qty} ชิ้น ให้ ${buyer.nameTh} ผู้ซื้อกันเงินจริงแล้ว`,{contractId:contract.id});
+            }
+          }
+        }
+      }
+      if(today<14||today%7!==0||pending.filter(x=>x.kind!=='warehouse').length>=1)return;
+      const employees=w.people.filter(p=>p.employed),wages=employees.reduce((a,p)=>a+p.pay.dailyWage,0),freeCash=w.finance.cash;
+      const caution=ceo.profile.personality.prudence??50,ambition=ceo.profile.personality.ambition??50;
+      if(freeCash<wages*(18+caution/10)||w.metrics.ordersPaid<3){c.decisionTh='ยังไม่รับสัญญาระยะยาว: เงินสำรองหรือประวัติส่งมอบยังไม่พอ';return;}
+      const products=w.research.unlocked.map(id=>w.catalog.products[id]).filter(p=>productReadiness(w,p.id).ready);
+      const product=products.sort((a,b)=>(w.production.shipped[b.id]||0)-(w.production.shipped[a.id]||0))[0];if(!product)return;
+      const shipped=w.production.shipped[product.id]||0;if(shipped<12){c.decisionTh='ต้องพิสูจน์การผลิตสินค้านี้อย่างน้อย12ชิ้นก่อนรับสัญญาใหญ่';return;}
+      const government=today%14===0&&w.reputation>=65&&teamReady(w,{quality_documentation:40,contract_management:25});
+      const buyer=government?{id:'TH',nameTh:'หน่วยงานจัดซื้อภาครัฐ (ไทย)'}:Object.values(w.externalWorld.corporations).find(b=>(b.buysProducts||[]).includes(product.id));if(!buyer)return;
+      const rate=Math.max(1,Math.floor(shipped/Math.max(7,today-1))),installmentQty=Math.min(80,Math.max(4,rate*5)),quantity=employees.length>=30&&shipped>=200?1000:employees.length>=15?240:120;
+      const unitPrice=Math.round(product.priceMin*(government?.94:.96)),cost=Object.entries(product.bom).reduce((a,[k,q])=>a+q*w.catalog.materials[k].unitCost,0);
+      const exposure=installmentQty*cost+wages*(government?14:7);
+      if(unitPrice<=cost*1.2||freeCash<exposure+wages*14||(ambition<35&&caution>65)){c.decisionTh='เลือกเก็บกระแสเงินสด: ผลตอบแทน/ทุนหมุนเวียนไม่คุ้มภาระสัญญาหรือนิสัยผู้บริหารไม่รับความเสี่ยงนี้';return;}
+      const cid=id(w,"supplyContract"),type=government?'government':'firm';if(!W.reserveCommercial(w,cid,type,buyer.id,quantity*unitPrice)){c.decisionTh='ผู้ซื้อมีงบไม่พอกันสัญญาทั้งก้อน';return;}
+      c.contracts[cid]={id:cid,productId:product.id,buyerType:type,buyerId:buyer.id,customerName:buyer.nameTh,quantity,unitPrice,ordered:0,delivered:0,paidSatang:0,installmentQty,intervalDays:7,deliveryWindowDays:Math.max(7,Math.ceil(installmentQty/Math.max(1,rate))+4),nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:government?'public_procurement':'b2b_supply',createdDay:today};
+      c.decisionTh=`รับสัญญา ${quantity} ชิ้น แบ่งงวดละ ${installmentQty} ตามประวัติผลิต ${shipped} ชิ้น มีงบผู้ซื้อและทุนหมุนเวียนจริง`;
+      commerceLog(w,"supplyContractAwarded",`${buyer.nameTh}: ${c.decisionTh}`,{contractId:cid,buyerType:type,amount:quantity*unitPrice});
     }
+    function commercialAudit(w){
+      if(!w.commerce)return [];const errors=[];if(w.commerce.version!==1||!w.commerce.contracts||!Array.isArray(w.commerce.history))return ['invalid commerce structure'];
+      for(const o of Object.values(w.orders))if(o.commercialContractId&&!w.commerce.contracts[o.commercialContractId])errors.push('orphan commercial installment '+o.id);
+      for(const c of Object.values(w.commerce.contracts)){
+        if(!w.catalog.products[c.productId]||!int(c.quantity,1,1000000)||!int(c.ordered,0,c.quantity)||!int(c.delivered,0,c.ordered)||!int(c.unitPrice,1)||!int(c.paidSatang,0,c.quantity*c.unitPrice)||!['awarded','completed'].includes(c.status)||!w.externalWorld.living.commercialEscrows?.[c.id])errors.push('invalid commercial contract '+c.id);
+        const orders=Object.values(w.orders).filter(o=>o.commercialContractId===c.id);if(c.currentOrderId&&w.orders[c.currentOrderId]?.commercialContractId!==c.id)errors.push('commercial active installment mismatch '+c.id);
+        if(c.quantity*c.unitPrice!==w.externalWorld.living.commercialEscrows[c.id]?.opening)errors.push('commercial budget mismatch '+c.id);
+        if(c.paidSatang!==w.externalWorld.living.commercialEscrows[c.id]?.paid)errors.push('commercial payment mismatch '+c.id);
+        if(orders.reduce((a,o)=>a+o.quantity,0)!==c.ordered||orders.reduce((a,o)=>a+o.shipped,0)!==c.delivered)errors.push('commercial delivery mismatch '+c.id);
+      }return errors;
+    }
+    function productionSteps(product) { return P.route(product).map(s=>s.nameTh); }
+    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
+    function warehouseUsed(w){return Object.values(w.units).filter(u=>u.stage==="ready").reduce((a,u)=>a+P.storageSize(w.catalog.products[u.productId]),0);}
+    function warehouseCapacity(w){return 120*facilityLevel(w,"warehouse")+((w.facilities?.constructedPlots||[]).includes("warehouseAnnex")?240:0);}
     function productionView(w) {
-      return Object.values(w.catalog.products).map(p=>({id:p.id,nameTh:p.nameTh,steps:productionSteps(p),stock:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).length,reserved:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&!w.orders[u.orderId]?.stockBatch).length,wip:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").length,activeSteps:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").map(u=>({id:u.id,step:u.stage==="assembly"?productionSteps(p)[u.processStep||0]:u.stage,history:u.processHistory||[]}))}));
+      return Object.values(w.catalog.products).map(p=>({id:p.id,nameTh:p.nameTh,steps:productionSteps(p),stock:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).length,reserved:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&!w.orders[u.orderId]?.stockBatch).length,wip:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").length,activeSteps:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").map(u=>({id:u.id,step:u.stage==="assembly"?`${productionSteps(p)[u.process?.index||0]||"เสร็จกระบวนการ"}${u.process?.phase==="machine"?" (เครื่องทำงาน/รอเวลา)":""}`:u.stage,history:u.processHistory||[]}))}));
     }
     function planStockProduction(w) {
       if(!w.policies.autoAccept || tod(w)!==660 || !w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))return;
       const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);
-      if(w.finance.cash<wages*21 || Object.keys(w.units).length>24)return;
+      if(w.finance.cash<wages*21 || Object.keys(w.units).length>24 || warehouseUsed(w)>=warehouseCapacity(w)*.8)return;
       for(const pid of w.research.unlocked){
         const product=w.catalog.products[pid];if(!productReadiness(w,pid).ready)continue;
         const existing=Object.values(w.units).filter(u=>u.productId===pid&&w.orders[u.orderId]?.stockBatch).length;
@@ -16204,6 +16400,7 @@ canvas.pt {
           }
         }
       }
+      for(const task of w.plant?.maintenance||[])if(task.type==="repair"&&!task.partsConsumed){const part=P.repairPart(task.machineId);needed[part]=(needed[part]||0)+1;}
       autoCraftNeededMaterials(w, needed);
       for (const [m, n] of Object.entries(needed)) {
         const incoming = Object.values(w.purchases)
@@ -16308,6 +16505,7 @@ canvas.pt {
     }
     function accept(w, offer, actor = null, decision = null) {
       if (!productReadiness(w, offer.productId).ready) return null;
+      if(offer.commercialContractId){const contract=ensureCommerce(w).contracts[offer.commercialContractId];if(!contract||contract.status!=="awarded"||contract.ordered+offer.quantity>contract.quantity||(contract.currentOrderId&&w.orders[contract.currentOrderId]?.status!=="paid"))return null;}
       const total = offer.quantity * offer.unitPrice,
         deposit = Math.floor(total * offer.depositPct);
       if (
@@ -16346,10 +16544,13 @@ canvas.pt {
           salesPersonId: salesActor ? salesActor.id : null,
           salesPersonName: salesActor ? salesActor.name : null,
           negotiationReport: negReport,
+          commercialContractId: offer.commercialContractId || null,
         };
       offer.status = "accepted";
       w.orders[oid] = o;
+      if(o.commercialContractId && !W.payCommercial(w,o.commercialContractId,deposit)){delete w.orders[oid];offer.status="open";return null;}
       if (deposit) post(w, "sales", deposit, oid + ":deposit");
+      if(o.commercialContractId){const contract=ensureCommerce(w).contracts[o.commercialContractId];contract.paidSatang+=deposit;contract.ordered+=o.quantity;contract.currentOrderId=o.id;}
       const stocked=Object.values(w.units).filter(u=>u.productId===o.productId&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).slice(0,o.quantity);
       for(const u of stocked){u.stockLotId=u.orderId;u.orderId=o.id;}
       for (let i = stocked.length; i < o.quantity; i++) addUnit(w, o);
@@ -16784,7 +16985,10 @@ canvas.pt {
         }
       for (const i of Object.values(w.invoices))
         if (i.status === "unpaid" && i.dueAt <= now(w)) {
+          const commercialId=w.orders[i.orderId]?.commercialContractId;
+          if(commercialId && !W.payCommercial(w,commercialId,i.amount))continue;
           post(w, "sales", i.amount, i.id);
+          if(commercialId)ensureCommerce(w).contracts[commercialId].paidSatang+=i.amount;
           i.status = "paid";
           i.paidAt = now(w);
           const order = w.orders[i.orderId];
@@ -16932,7 +17136,7 @@ canvas.pt {
         const sp = ensureSectorProcesses(w);
         const ind = product?.industry || "electronics";
         if (ind === "food") {
-          const coldChain = Boolean(w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active);
+          const coldChain = Boolean(w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active) || P.businessReady(w,"cold_storage_3pl");
           u.freshnessPct = 100;
           u.shelfLifeDays = coldChain ? 7 : 3;
           sp.foodBakery.coldChainActive = coldChain;
@@ -17011,6 +17215,7 @@ canvas.pt {
           if (spShip.electronicsRma.warrantyLots.length > 25) spShip.electronicsRma.warrantyLots.pop();
         }
         o.shipped = o.quantity;
+        if(o.commercialContractId){ensureCommerce(w).contracts[o.commercialContractId].delivered+=o.quantity;W.recordProductDelivery(w,o.commercialContractId,o.productId,o.quantity);}
         o.completedAt = now(w);
         o.status = "invoicing";
         const late = Math.max(0, now(w) - o.deadline);
@@ -17247,7 +17452,13 @@ canvas.pt {
           const subject=productSubject(w,w.units[j.unitId].productId);
           if(subjectLevel(p,subject)<20) continue;
         }
-        const available = stations(w, j.stationKind, stationLoadMap);
+        if(j.kind==="packing"){
+          const reservedSpace=Object.values(w.jobs).filter(x=>x.kind==="packing"&&x.assignee&&w.units[x.unitId]).reduce((a,x)=>a+P.storageSize(w.catalog.products[w.units[x.unitId].productId]),0);
+          if(warehouseUsed(w)+reservedSpace+P.storageSize(w.catalog.products[w.units[j.unitId].productId])>warehouseCapacity(w))continue;
+        }
+        if(!P.available(w,j))continue;
+        const equipmentStation=P.stationFor(w,j);
+        const available = stations(w, j.stationKind, stationLoadMap).filter(st=>!equipmentStation||st.id===equipmentStation);
         if (!available.length) continue;
         if (seenBatchKeys) {
           seenBatchKeys.add(j.kind + ":" + (j.orderId || "") + ":" + j.createdAt);
@@ -17467,6 +17678,7 @@ canvas.pt {
         p.atWork = true;
         p.activity = "idle";
       }
+      if(p.plantTaskAt===now(w)){p.state=H.tickState(p.profile,p.state,{activity:"work",minutes:TICK,workload:.7});p.experience.workMinutes+=TICK;p.dayStats.workMinutes+=TICK;return;}
       if (p.path.length && !p.taskId && p.intent.code === "selfStudy" &&
           Object.values(w.jobs).some((j) => !j.assignee && j.skill === w.catalog.roles[p.role].skill)) {
         p.path = [];
@@ -17730,6 +17942,7 @@ canvas.pt {
         j = w.jobs[p.taskId];
       }
       const u = w.units[j.unitId];
+      if(j.kind==="assembly"&&!P.available(w,j)){release(w,p,stationLoadMap);p.intent={code:"equipmentUnavailable",reasons:[u ? productionSteps(w.catalog.products[u.productId])[u.process?.index||0] : "เครื่องมือ"]};return;}
       if (u && !u.materialConsumed) consume(w, u);
       const demand = own(w.catalog.taskKinds, j.kind) || {},
         a = ability(w, p, j.skill, {...demand,subject:jobSubject(w,j)}),
@@ -17805,11 +18018,9 @@ canvas.pt {
         }
       }
       j.elapsedMinutes = (j.elapsedMinutes || 0) + TICK;
-      j.progress = Math.min(
-        j.required,
-        j.progress + TICK * a.speedMultiplier * help *
-          (1 + (facilityLevel(w, facilityForJob(j.kind)) - 1) * 0.12 + plotBonus),
-      );
+      const proposedWork=TICK * a.speedMultiplier * help * (1 + (facilityLevel(w, facilityForJob(j.kind)) - 1) * 0.12 + plotBonus);
+      const plantWork=j.kind==="assembly"?P.labor(w,j,p,proposedWork,TICK):{delta:proposedWork,release:false};
+      j.progress=Math.min(j.required,j.progress+plantWork.delta);
       p.activity = "working";
       p.intent = { code: j.kind, reasons: [j.id] };
       const order = j.orderId ? w.orders[j.orderId] : null,
@@ -17831,12 +18042,7 @@ canvas.pt {
       p.experience.workMinutes += TICK;
       p.dayStats.workMinutes += TICK;
       if (time >= 1080) p.dayStats.otMinutes += TICK;
-      if(j.kind==="assembly" && w.units[j.unitId]){
-        const unit=w.units[j.unitId],steps=productionSteps(w.catalog.products[unit.productId]);unit.processHistory=unit.processHistory||[];
-        const completed=Math.min(steps.length,Math.floor(j.progress/j.required*steps.length));
-        while(unit.processHistory.length<completed){unit.processHistory.push({step:steps[unit.processHistory.length],completedAt:now(w),workerId:p.id});}
-        unit.processStep=completed;
-      }
+      if(plantWork.release){release(w,p,stationLoadMap);return;}
       if (j.progress >= j.required) {
         if (stationLoadMap && p.stationId) {
           stationLoadMap.set(p.stationId, Math.max(0, (stationLoadMap.get(p.stationId) || 1) - 1));
@@ -18542,7 +18748,9 @@ canvas.pt {
           regimePowerMult,
       );
       const otKwh = Math.round(otHours * tariffs.kwhPerOtHour);
-      const grossKwh = Math.max(20, baseKwh + otKwh);
+      const plant=P.ensure(w),plantKwh=Math.max(0,plant.energyKwh-plant.billedEnergyKwh);
+      const grossKwh = Math.max(20, baseKwh + otKwh + Math.round(plantKwh));
+      plant.billedEnergyKwh=plant.energyKwh;
 
       const hasSolarPlot = constructed.includes("solarPlant");
       const offsiteSolar = w.externalWorld?.assetPortfolio?.ownedAssets?.offsite_solar_wind_farm;
@@ -19282,6 +19490,9 @@ canvas.pt {
       if (tod(w) === 660 && day(w) >= 5 && w.policies.autoAccept &&
           w.people.some((p) => p.employed && p.atWork && p.role === "coordinator"))
         evaluateAutonomousHiring(w);
+      if(tod(w)===690)evaluateCommercialSales(w);
+      P.tick(w,TICK);
+      if(tod(w)===675&&w.policies.autoAccept&&w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))P.review(w,plantHooks(w));
       processDue(w);
       stepAgricultureAndResources(w);
       ensureJobs(w);
@@ -19360,6 +19571,7 @@ canvas.pt {
         }
       }
 
+      P.maintain(w,plantHooks(w));
       for (const p of w.people) personStep(w, p, stationLoadMap, tickCtx);
       w.clock.absoluteMinute += TICK;
       w.clock.tick++;
@@ -19472,6 +19684,7 @@ canvas.pt {
         }
         case "cancelOrder": {
           const o = own(w.orders, c.orderId);
+          if(o?.commercialContractId)return failure("contractObligation","งวดนี้เป็นภาระสัญญาระยะยาว ต้องส่งตามข้อตกลง");
           if (
             !o ||
             o.status !== "accepted" ||
@@ -20362,6 +20575,8 @@ canvas.pt {
     function audit(w) {
       const errors = [
         ...W.validate(w),
+        ...P.validate(w),
+        ...commercialAudit(w),
         ...E.auditFinance(w.finance),
         ...D.validateCatalog(w.catalog),
         ...L.validateLayout(w.layout),
@@ -20402,7 +20617,7 @@ canvas.pt {
           (n, p) => n + (p.bom[m] || 0) * w.production.started[p.id],
           0,
         );
-        if (consumed + (w.knowledge?.materialsConsumed?.[m] || 0) !== w.inventory.consumed[m])
+        if (consumed + (w.knowledge?.materialsConsumed?.[m] || 0) + (w.plant?.partsConsumed?.[m] || 0) !== w.inventory.consumed[m])
           errors.push("material allocation " + m);
         const received = Object.values(w.purchases)
           .filter((p) => p.materialId === m && p.status === "received")
@@ -20569,6 +20784,13 @@ canvas.pt {
       evaluateExternalAssetsDaily,
       getActiveExternalAssetBonuses,
       scaleCompany,
+      commerceView: w=>w.commerce || null,
+      evaluateCommercialSales,
+      commercialAudit,
+      warehouseCapacity,
+      warehouseUsed,
+      plantView: P.view,
+      plantAudit: P.validate,
       productionView,
       productionSteps,
       planStockProduction,
@@ -20805,6 +21027,8 @@ canvas.pt {
         "invalid logistics state",
       );
     }
+    if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
+    if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
     if (w.externalWorld?.living) {
       try { for (const err of S.worldAudit(w)) add(false,err); } catch (_) { add(false,"invalid living world data"); }
     }
@@ -21704,6 +21928,8 @@ canvas.pt {
       if (p.activity === "resting") return "กำลังพักสูดอากาศลดความเครียดที่สวนหย่อม";
       if (p.activity === "helping") return "กำลังช่วยเพื่อนร่วมงานเร่งงานด่วน";
       if (code === "selfStudy") return "กำลังศึกษาพัฒนาทักษะในสายงานตัวเอง";
+      if(code === "equipmentMaintenance")return "กำลังติดตั้ง/ซ่อมบำรุงเครื่องมือ: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "equipmentUnavailable")return "รอเครื่องจักรพร้อมใช้งาน: "+(p.intent.reasons||[]).join(" • ");
       if (code === "waitingForWorkOrMaterials")
         return "รอวัตถุดิบจากคลังเพื่อเริ่มผลิต";
       if (code === "noProductionOrder") return "รอออเดอร์ใหม่จากฝ่ายขาย";
@@ -22589,6 +22815,10 @@ canvas.pt {
           capabilities: w.capabilities || null,
           companyKnowledge: S.companyKnowledgeView(w),
           manufacturing: S.productionView(w),
+          plant: S.plantView(w),
+          commerce: S.commerceView(w),
+          warehouseCapacity: S.warehouseCapacity(w),
+          warehouseUsed: S.warehouseUsed(w),
           executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
           companyProgression: w.companyProgression || null,
@@ -26208,7 +26438,7 @@ canvas.pt {
   /* ---------- 3. Bottom Nav Sheets (People, Campus, Log, Market, Policy, Menu/Edit Hub) ---------- */
   function renderCompanySheet(v, body) {
     byId("shTitle").textContent = "🏛️ บริษัท — กิจการ คน ความรู้ และแผนงาน";
-    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
+    const tabs = [{id:"company_overview",label:"ภาพรวม"},{id:"company_knowledge",label:"องค์ความรู้ / R&D"},{id:"company_curriculum",label:"สารบัญวิชา"},{id:"company_business",label:"ธุรกิจ / สินค้า"},{id:"company_board",label:"บอร์ด / แผน"},{id:"company_org",label:"โครงสร้าง / คน"},{id:"company_plant",label:"เครื่องจักร / งานช่าง"},{id:"company_contracts",label:"ฝ่ายขาย / สัญญา"},{id:"company_assets",label:"ทรัพย์สิน / ทรัพยากร"}];
     setSheetTabs(tabs);
     if (!tabs.some(t=>t.id===uiState.subTab)) uiState.subTab = "company_overview";
     body.replaceChildren();
@@ -26249,6 +26479,22 @@ canvas.pt {
       for(const p of k.products) row(`${p.ready ? "✅ พร้อม" : "🔒 ยังไม่พร้อม"} ${p.nameTh}`,`ผลิตแล้ว ${v.production.completed[p.id] || 0} ชิ้น • วิชา${p.subjectNameTh || "เฉพาะทาง"} • ${p.reasons.join(" / ") || "มีทีมและกระบวนการพร้อม; ฝ่ายขายยังต้องประเมินกำไรและคำสั่งซื้อ"} • ${coverage(p.coverage)}`);
       for(const service of k.serviceReadiness || []) row(`${service.ready ? "✓ ทีมพร้อม" : "🔒 ขาดความรู้"} ${service.nameTh}`,coverage(service.coverage));
       row("ธุรกิจบริการ / ขนส่ง / ซอฟต์แวร์",`งานบริการ ${Object.keys(v.serviceBusiness?.orders || {}).length} • สัญญาขนส่ง ${Object.keys(v.fleetTransport?.contracts || {}).length} • โครงการซอฟต์แวร์ ${Object.keys(v.softwareBusiness?.projects || {}).length}`);
+    } else if(uiState.subTab==="company_plant") {
+      const plant=v.plant;
+      row("เครื่องจักรและเครื่องมือ",plant?.decisionTh || "ยังไม่มีเครื่องจักร");
+      row("คลังและพลังงาน",`พื้นที่สินค้าสำเร็จรูป ${v.warehouseUsed}/${v.warehouseCapacity} ช่อง (สินค้าขนาดใหญ่ใช้หลายช่อง) • พลังงานเครื่องมือสะสม ${(plant?.energyKwh||0).toFixed(2)} kWh รวมในมิเตอร์รายวัน`);
+      for(const m of Object.values(plant?.machines||{})){
+        const spec=plant.specs[m.id],status={ready:"พร้อมทำงาน",installing:"รอช่างติดตั้ง",maintenance:"อยู่ระหว่างซ่อม/บำรุง"};
+        row(spec.nameTh,`${status[m.status]||m.status} • สภาพ ${m.condition.toFixed(1)}% • อุณหภูมิ ${m.temperatureC.toFixed(0)}°C\n${m.status==='installing'?'กำหนดรับเครื่องวันที่ '+(Math.floor((m.availableAt||0)/1440)+1)+' • ':''}เครื่องรองรับ ${spec.capacity} งาน • ใช้อยู่ ${Object.keys(m.slots).length} • กำลังไฟ ${spec.kw} kW\nชั่วโมงใช้สะสม ${(m.totalMinutes/60).toFixed(1)} • ค่าเครื่อง ${moneyFull(spec.cost)}`);
+      }
+      row("เครื่องมือเฉพาะที่ยังไม่มี",Object.entries(plant?.specs||{}).filter(([id])=>!plant.machines[id]).map(([id,s])=>`${s.nameTh}: ${moneyFull(s.cost)}`).join(" • ")+" — ผู้บริหารจะพิจารณาตามงาน ทุนสำรอง และปริมาณผลิต");
+      for(const task of plant?.maintenance||[])row(`งานช่าง: ${plant.specs[task.machineId].nameTh}`,`${task.type==='install'?'ติดตั้ง':'ซ่อมบำรุง'} ${Math.round(task.progress/task.required*100)}% • ผู้ทำ ${v.people.find(p=>p.id===task.workerId)?.name||'รอช่างที่รู้จริง'} • ${task.type==='repair'?(task.partsConsumed?'เบิกอะไหล่แล้ว':'รอเบิกอะไหล่'):'ยังไม่ใช้งานจนติดตั้งเสร็จ'}`);
+      for(const e of (plant?.history||[]).slice(0,12))row(`นาที ${e.at}`,e.text);
+    } else if(uiState.subTab==="company_contracts") {
+      row("ฝ่ายขายและภาระสัญญา",v.commerce?.decisionTh||"กำลังสะสมประวัติการผลิตและสำรวจผู้ซื้อ");
+      row("การขายและการรับเงิน","ฝ่ายขายเสนอสินค้าจากคลังให้คู่ค้าที่ใช้สินค้านั้น ผู้ซื้อกันเงินก่อนรับสัญญา สัญญารวม120/240/1,000ชิ้นแบ่งงวดตามประวัติผลิต งานรัฐต้องมีชื่อเสียง วิชาเอกสารคุณภาพและสัญญา และทุนรอรับเงินหลังส่งของ");
+      for(const c of Object.values(v.commerce?.contracts||{}))row(`${c.buyerType==='government'?'🏛️ จัดซื้อรัฐ':'🤝 B2B'} ${c.customerName}`,`${v.catalog.products.find(p=>p.id===c.productId)?.nameTh||c.productId} • สัญญารวม ${c.quantity} ชิ้น • ออกงวดแล้ว ${c.ordered} • ส่งแล้ว ${c.delivered}\nงวดละ ${c.installmentQty} • ราคาต่อหน่วย ${moneyFull(c.unitPrice)} • รับเงินจริง ${moneyFull(c.paidSatang)} • ${c.status==='completed'?'ส่งครบแล้ว':'มีภาระส่งมอบ'}\nกำหนดออกงวดถัดไปวันที่ ${c.nextDeliveryDay}`);
+      for(const e of (v.commerce?.history||[]).slice(0,16))row(`นาที ${e.at}`,e.text);
     } else if(uiState.subTab==="company_board") {
       row("แผนเตรียมความสามารถ",k.decision);
       const b=v.executiveBoard || {};

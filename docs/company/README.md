@@ -2,6 +2,12 @@
 
 เปิดจากหน้านี้เพื่อหาเอกสารตามงาน ไม่ต้องไล่หาไฟล์จากรายชื่อปะปน
 
+## ระบบล่าสุดv2.6.0
+
+- [โรงงาน เครื่องมือและสัญญา](PLANT_AND_COMMERCIAL_SYSTEM.md)
+- [รายงานv2.6.0](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md)
+- [รับช่วง](PLANT_V260_HANDOFF.md)
+
 ## สถานะงานและคำสั่ง
 
 - [ACTIVE_PROMPT.md](../../ACTIVE_PROMPT.md) — สถานะคำสั่งล่าสุดและพรอมต์ประวัติ อยู่ที่ราก repo

@@ -47,3 +47,9 @@ operationReadiness checks freight knowledge and the assigned driver's driving le
 ## v2.5.0 integration
 
 sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.
+
+## Verified v2.6.0 integration
+
+Machines attach deterministically to existing assembly stations via P.stationFor; operators travel between steps. Technician must reach workshop before work, uses a reserved tick (no parallel production). New machinery lead times2/5/14days (wafer line180days) then installation; existing freight uses warehouse tools while retaining vehicle/fuel/custody lifecycle. No new machine sprites or dedicated buildings claimed.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

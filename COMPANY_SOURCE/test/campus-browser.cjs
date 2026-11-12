@@ -272,3 +272,14 @@ test("standalone World screen renders actual world without mutating save state",
   assert.equal(await page.evaluate(()=>CompanyDebug.app.save()),before);assert.deepEqual(errors,[]);
  }finally{await page.close();}
 });
+
+test('mobile machinery and commercial contract tabs expose actual equipment state without management duties',async()=>{
+ const {page,errors}=await openGame();try{
+  await page.evaluate(()=>CompanyDebug.app.setSpeed(0));const saved=await page.evaluate(()=>CompanyDebug.app.save());
+  await page.locator('[data-nav="company"]').click();await page.getByRole('button',{name:'เครื่องจักร / งานช่าง',exact:true}).click();
+  assert.ok((await page.locator('#shBody').innerText()).includes('สถานีบัดกรี'));assert.ok((await page.locator('#shBody').innerText()).includes('สภาพ'));
+  if(process.env.COMPANY_SCREENSHOTS_DIR)await page.screenshot({path:path.join(process.env.COMPANY_SCREENSHOTS_DIR,'plant-machinery.png')});
+  await page.getByRole('button',{name:'ฝ่ายขาย / สัญญา',exact:true}).click();assert.ok((await page.locator('#shBody').innerText()).includes('กันเงิน'));
+  assert.equal(await page.evaluate(()=>CompanyDebug.app.save()),saved);assert.deepEqual(errors,[]);
+ }finally{await page.close();}
+});

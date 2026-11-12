@@ -49,3 +49,9 @@ Research tuition/experiments and technology license costs post equipment expense
 World module uses integer satang in firm/nation accounts and exact cash conservation. Player materials PO cost equals seller receipt + import tax to TH; B2B sale debits buyer cash and adds buyer stock. `playerNetSatang` reconciles these explicit player boundary flows. External daily levy is simplified 15% of positive cash surplus, not jurisdiction accounting profit. Main product/service contract finance remains existing system. Never describe world accounts as covering every main contract.
 
 Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
+
+## Verified v2.6.0 integration
+
+Purchases/repairs post equipment expenses. Machine energy becomes incremental utility consumption; partsConsumed reconciles repair materials separately. Commercial reserve/pay/close are World escrow transfers, not sales on signature. Firm or TH treasury must reserve full contract funds; only actual deposits/invoices reach company cash. Sum world cash includes escrow balances. commerce.paidSatang must equal escrow.paid.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

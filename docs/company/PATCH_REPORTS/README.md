@@ -36,3 +36,5 @@
 - [v2.4.0 — โลกเศรษฐกิจและ UI โลก](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md)
 
 - [v2.5.0 เวลาและฐานการผลิตเข้าคลัง](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.5.0.md)
+
+- [v2.6.0 เครื่องจักร งานช่าง และสัญญาขายเป็นงวด](PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md)

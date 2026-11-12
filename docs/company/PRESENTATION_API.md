@@ -21,3 +21,7 @@ Commands: `beginKnowledgeProject {targetId, kind:"product"|"material"}`, `acquir
 ## Living world v2.4.0
 
 Snapshot `externalWorld.living` includes nations, firms, relations, shipments, markets, journal, history and playerNetSatang. These are frozen cloned state, never mutate them from UI. `World.ensure/step/apply/validate` own the simulation contract; `S.worldAudit(w)` is public diagnostics. `buyMaterials` can return `worldSupplyUnavailable` without charging. `sellMaterialB2B` can return `buyerCannotPay`. Read [world system](LIVING_WORLD_SYSTEM.md) for units, cash/material equations and boundaries. World screen `renderWorldSheet` observes six categories and preserves selected entity IDs while refreshing.
+
+## Plant and commercial supply v2.6.0
+
+Snapshot adds plant (machines/specs/routes/maintenance/history), commerce (contracts/history/decisionTh), manufacturing activeSteps and warehouseCapacity/warehouseUsed. S.plantAudit/S.commercialAudit validate current states; World escrow reserve/pay/close bridge external budget to actual sales. Never mutate plant or contracts in render. P.businessReady/view are read-only, P.ensure belongs in simulation setup. Read [contract](PLANT_AND_COMMERCIAL_SYSTEM.md) for ordering and limitations.

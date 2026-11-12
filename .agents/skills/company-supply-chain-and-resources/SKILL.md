@@ -49,3 +49,9 @@ Prototype inputs join normal purchase demand; material qualifications are per pr
 External firms consume D.MATERIAL_RECIPES inputs and produce all catalog outputs/byproducts; natural extraction draws finite reserves, environmental flows are capacity-limited. Supported crop cycles consume real planting stock, water, fertilizer and wait at least two daily steps; save seed from gross harvest. Unsupported biological upstream processes do not auto-produce. Wholesale opening500/material is finite and buys replenishment from real producers. PO reserves seller stock immediately; buyer physical inventory arrives through existing pipeline. External interfirm goods remain living.shipments until delivery.
 
 Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
+
+## Verified v2.6.0 integration
+
+Material recipes map to grain mill/smelter/reactor/fab and other equipment. Missing machines may fall back to existing real supplier pipeline. Repair parts metal_sheet/polymer_resin/wire_harness have actual consumption in plant.partsConsumed; purchase planning includes unmet maintenance needs. Warehouse space uses product footprint1/3/6 slots, pack jobs reserve capacity; stock planning pauses at80%.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

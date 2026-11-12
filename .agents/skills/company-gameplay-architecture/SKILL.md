@@ -49,3 +49,9 @@ sim.js owns subject learning, team matrices, R&D projects, licensing and sample 
 Load world.js after economy.js, before sim.js in index.html. sim UMD receives World dependency. updateExternalWorld calls World.step once per completedDay via simulateGlobalGeopoliticsDaily; recomputeGeopoliticalMultipliers resets base then World.apply. Repeat apply without the reset is unsupported. No wall time/RNG in UI. sim.audit includes world account audit. Historical simulateOffsiteEcosystemDaily only retains player surplus selling; world owns external company activity.
 
 Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
+
+## Verified v2.6.0 integration
+
+index loads world.js then plant.js before sim.js. Plant owns machine/process state, sim owns clocks/ledger/learning/job assignments; API snapshots plant/commerce/manufacturing/warehouseCapacity/warehouseUsed. P.tick before person steps, maintain reserves technician tick, labor clips at phase boundaries. Slot reservations survive passive waiting and repair. No wall time or rendering RNG.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

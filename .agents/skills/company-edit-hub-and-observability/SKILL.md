@@ -53,3 +53,9 @@ Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/
 ## v2.5.0 integration
 
 sim.productionSteps/productionView expose actual timed assembly checkpoints; planStockProduction creates no-deposit internal stockBatch orders, excluded from activeOrders/shipping until ready stock is allocated on acceptance. Save accepts internal offerId=null only with stockBatch/deposit0/unitPrice1. api.frame uses2game minutes/real second at1×; move uses8cells/tick. Read v2.5.0 patch report for remaining manufacturing scope; do not claim dedicated machinery or government procurement completed.
+
+## Verified v2.6.0 integration
+
+Company sheet adds company_plant and company_contracts. Show actual machine condition, temperature, utilization slots, parts/install/repair queues, technician, price and energy, plus contract ordered/delivered/paid. No normal management buttons. API resolveActivityLabelTh translates equipmentMaintenance/equipmentUnavailable. Snapshot reads never initialize plant; P.businessReady/view are pure.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

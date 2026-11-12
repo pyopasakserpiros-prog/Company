@@ -309,6 +309,19 @@
     const affected={el_nino_agri_drought:['TH','ASEAN','ID'],australia_pilbara_cyclone_iron_shock:['AU'],indonesia_nickel_bauxite_ban:['ID']};
     if(affected[eventId]){m.shocks=m.shocks.filter(s=>s.id!==eventId);m.shocks.push({id:eventId,nations:affected[eventId],untilDay:day+duration,outputMultiplier:.6});}
   }
+  function reserveCommercial(w,id,buyerType,buyerId,amount){
+    const m=ensure(w);m.commercialEscrows=m.commercialEscrows||{};
+    if(m.commercialEscrows[id]||!Number.isSafeInteger(amount)||amount<=0)return false;
+    if(buyerType==='government'){const n=m.nations[buyerId];if(!n||n.treasury<amount)return false;n.treasury-=amount;n.spending+=amount;}
+    else{const f=m.firms[buyerId];if(!f||f.cash<amount)return false;payment(f,amount);}
+    m.commercialEscrows[id]={id,buyerType,buyerId,opening:amount,balance:amount,paid:0,returned:0};return true;
+  }
+  function payCommercial(w,id,amount){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e||!Number.isSafeInteger(amount)||amount<0||e.balance<amount)return false;e.balance-=amount;e.paid+=amount;m.playerNetSatang-=amount;return true;}
+  function closeCommercial(w,id){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e)return false;const amount=e.balance;
+    if(e.buyerType==='government'){m.nations[e.buyerId].treasury+=amount;m.nations[e.buyerId].spending-=amount;}else receipt(m.firms[e.buyerId],amount);
+    e.balance=0;e.returned+=amount;return true;
+  }
+  function recordProductDelivery(w,id,productId,qty){const m=ensure(w),e=m.commercialEscrows?.[id];if(!e)return false;const buyer=e.buyerType==='government'?m.nations[e.buyerId]:m.firms[e.buyerId];buyer.finishedGoods=buyer.finishedGoods||{};buyer.finishedGoods[productId]=(buyer.finishedGoods[productId]||0)+qty;return true;}
   function quote(w,k,qty,preferredId){
     const m=ensure(w),candidate=Object.values(m.firms).filter(f=>(w.externalWorld.corporations[f.id].sellsMaterials||[]).includes(k)&&(f.stock[k]||0)>=qty);
     candidate.sort((a,b)=>(a.id===preferredId?-100:0)+(a.id==='world_exchange'?30:0)+route(m,a.nationId,'TH').days-((b.id===preferredId?-100:0)+(b.id==='world_exchange'?30:0)+route(m,b.nationId,'TH').days)||a.id.localeCompare(b.id));
@@ -339,10 +352,11 @@
     for(const r of m.relations)if(!m.nations[r.a]||!m.nations[r.b]||!['peace','treaty','sanctions','war'].includes(r.status)||!Number.isFinite(r.tension)||r.tension<0||r.tension>100)errors.push('world relation '+r.id);
     if(new Set(m.shipments.map(s=>s.id)).size!==m.shipments.length)errors.push('world duplicate shipment');
     for(const s of m.shipments)if(!m.firms[s.sellerId]||!m.firms[s.buyerId]||!m.markets[s.materialId]||!safe(s.quantity)||s.quantity<1||!safe(s.dueDay))errors.push('world shipment '+s.id);
-    const actual=Object.values(m.firms).reduce((a,f)=>a+f.cash,0)+Object.values(m.nations).reduce((a,n)=>a+n.treasury+n.householdCash,0);
+    for(const e of Object.values(m.commercialEscrows||{}))if(!['firm','government'].includes(e.buyerType)||!safe(e.balance)||!safe(e.paid)||!safe(e.returned)||!safe(e.opening)||e.opening!==e.balance+e.paid+e.returned||!(e.buyerType==='government'?m.nations[e.buyerId]:m.firms[e.buyerId]))errors.push('world commercial escrow '+e.id);
+    const actual=Object.values(m.commercialEscrows||{}).reduce((a,e)=>a+e.balance,0)+Object.values(m.firms).reduce((a,f)=>a+f.cash,0)+Object.values(m.nations).reduce((a,n)=>a+n.treasury+n.householdCash,0);
     const opening=Object.values(m.firms).reduce((a,f)=>a+f.openingCash,0)+Object.values(m.nations).reduce((a,n)=>a+n.openingTreasury+n.openingHouseholdCash,0);
     if(actual!==opening+m.playerNetSatang)errors.push('world total cash conservation');
     return errors;
   }
-  return Object.freeze({ensure,step,apply,validate,receivePlayerSale,quote,scenario,sellToPlayer,route,statusName});
+  return Object.freeze({ensure,step,apply,validate,receivePlayerSale,reserveCommercial,payCommercial,closeCommercial,recordProductDelivery,quote,scenario,sellToPlayer,route,statusName});
 });

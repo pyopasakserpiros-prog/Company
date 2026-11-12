@@ -43,3 +43,9 @@ systematic-debugging; source Company และ ideas บท 28–32 — ดู [
 reviewKnowledge / productReadiness / acquireTechnologyLicense: cash, team coverage, market and cost shape research-versus-purchase decisions. License purchase pays real money and never instantly qualifies manufacturing.
 
 หลักฐาน: `COMPANY_SOURCE/test/knowledge-and-company.test.cjs` และ `test/campus-browser.cjs`; อ่านคู่มือ `docs/company/LEARNED_KNOWLEDGE_SYSTEM.md` และเทมเพลตวิชาก่อนเพิ่มรายการใหม่ เกณฑ์เหล่านี้ไม่เปลี่ยน maturity ของร่างเดิมโดยอัตโนมัติ
+
+## Verified v2.6.0 integration
+
+At11:15 CEO/autonomy may buy required equipment with18-day cash reserve; >5m satang equipment needs50 shipped units. At11:30 commercial sales evaluates inventory sales and weekly contracts afterday14, history/knowledge/cash/prudence/ambition. Contracts120/240/1000 aggregate units release4–80-unit installments only after prior paid. Government requires rep65, quality_documentation40, contract_management25, no deposit and7-day payment. Procurement is simplified solicitation, not competitive multi-bid legal tender.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

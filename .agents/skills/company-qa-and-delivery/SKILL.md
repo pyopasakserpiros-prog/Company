@@ -49,3 +49,9 @@ New tests: knowledge-and-company.test.cjs and added mobile browser cases cover r
 v2.4.0 adds test/living-world-v240.test.cjs (14 cases) and two World browser tests. Run check/test/build/browser and simulation benchmark. World tests cover conservation, no capital/input, crop propagation, finite reserves, policies/terms, bilateral scenarios, real purchasing, multi-seed days and save continuation. npm test baseline166, browser11 at delivery; verify actual output, don't copy counts. Package world.js as source plus rebuilt three HTML aliases and documents/skills; CRC/hash-check final ZIP and run extracted source checks. See patch report and LIVING_WORLD_SYSTEM.md.
 
 Contract: `docs/company/LIVING_WORLD_SYSTEM.md`; evidence: `COMPANY_SOURCE/test/living-world-v240.test.cjs`, `test/campus-browser.cjs` and patch report. Existing starter maturity is unchanged.
+
+## Verified v2.6.0 integration
+
+test/plant-and-commercial.test.cjs adds10 scenarios covering physical equipment/thermal timing/repair gates, full warehouse sale fulfillment and escrow conservation, large contracts and government budget. Browser adds machinery/contracts mobile read-only check. Latest targets177 tests/12browser but always verify actual counts. Extract final ZIP and run check/test/build; include plant.js/world.js and all hidden skills/docs.
+
+Contract: `docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md`; report: `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.6.0.md`. Existing starter maturity is unchanged.

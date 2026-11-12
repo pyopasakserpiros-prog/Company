@@ -267,6 +267,8 @@
       if (p.activity === "resting") return "กำลังพักสูดอากาศลดความเครียดที่สวนหย่อม";
       if (p.activity === "helping") return "กำลังช่วยเพื่อนร่วมงานเร่งงานด่วน";
       if (code === "selfStudy") return "กำลังศึกษาพัฒนาทักษะในสายงานตัวเอง";
+      if(code === "equipmentMaintenance")return "กำลังติดตั้ง/ซ่อมบำรุงเครื่องมือ: "+(p.intent.reasons||[]).join(" • ");
+      if(code === "equipmentUnavailable")return "รอเครื่องจักรพร้อมใช้งาน: "+(p.intent.reasons||[]).join(" • ");
       if (code === "waitingForWorkOrMaterials")
         return "รอวัตถุดิบจากคลังเพื่อเริ่มผลิต";
       if (code === "noProductionOrder") return "รอออเดอร์ใหม่จากฝ่ายขาย";
@@ -1152,6 +1154,10 @@
           capabilities: w.capabilities || null,
           companyKnowledge: S.companyKnowledgeView(w),
           manufacturing: S.productionView(w),
+          plant: S.plantView(w),
+          commerce: S.commerceView(w),
+          warehouseCapacity: S.warehouseCapacity(w),
+          warehouseUsed: S.warehouseUsed(w),
           executiveBoard: w.executiveBoard || null,
           externalWorld: w.externalWorld || null,
           companyProgression: w.companyProgression || null,

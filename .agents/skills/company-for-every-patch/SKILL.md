@@ -1,8 +1,16 @@
 ---
 name: company-for-every-patch
-description: Evergreen pre-patch and post-patch workflow, architectural invariants, Zero Code-Zero verification, 8 Business Process Models, NPC Business-Entry Audit invariants & Era 2.2.0 Geopolitics/Trade Corridors audit, and MANDATORY Master Skill update checklist for every patch of Siam Enterprise / Company Simulation (COMPANY_SOURCE/) through v2.4.0. Use on every Company patch alongside company-evolution-dev.
+description: Evergreen pre-patch and post-patch workflow, architectural invariants, Zero Code-Zero verification, 8 Business Process Models, NPC Business-Entry Audit invariants & Era 2.2.0 Geopolitics/Trade Corridors audit, and MANDATORY Master Skill update checklist for every patch of Siam Enterprise / Company Simulation (COMPANY_SOURCE/) through v2.6.0. Use on every Company patch alongside company-evolution-dev.
 ---
-## Current release contract — v2.4.0 (supersedes historical summaries below)
+## Current release — v2.6.0 (authoritative; earlier sections are historical)
+
+Plant module:20 equipment types,42 product routes with actual worker labor, elapsed machine holds, temperatures, stations/capacity, wear, electricity and technical maintenance. Equipment purchase requires cash, delivery lead time and qualified installation. Learn missing maintenance prerequisites through the actual education system; no free skill gains. Material40 recipes/service10/software/freight/hand agriculture use appropriate tool gates, while material recipes retain synchronous batch completion.
+
+Commercial sales: stock offers and120/240/1000-unit supply contracts split4–80-unit releases from real buyer/TH budgets held in World.commercialEscrows. Deposits/invoices release actual money; completed contracts return unused reserve. Public procurement is simplified solicitation, not legal competitive tender. Read PLANT_AND_COMMERCIAL_SYSTEM and v2.6.0 report before modifying, including limits and current verification177 tests/12 browser.
+
+Every patch must produce an update report, refresh affected skills/status/docs and validate final ZIP. Root copies synchronized; Gemini app-local skill updates still await that app's tool/user workflow and cannot be claimed from repo edits. No changes to AGENTS/Human Core.
+
+## Historical v2.4.0 world foundation
 
 External World uses `COMPANY_SOURCE/js/world.js`, daily aggregate nation and firm accounts, finite material stocks, real interfirm transactions/in-transit shipments and indicator-based government/corporate choices. UI World has six inspection categories with nested entity details. 12 nations/blocs, 28 opening firms plus later spin-offs, 66 bilateral relations. Main material purchases and B2B sales connect to outside cash/stock; other main product/service contracts retain legacy finance. No scheduled random government/corporate headlines.
 

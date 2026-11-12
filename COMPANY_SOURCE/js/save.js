@@ -214,6 +214,8 @@
         "invalid logistics state",
       );
     }
+    if(w.commerce){try{for(const err of S.commercialAudit(w))add(false,err);}catch(_){add(false,"invalid commerce");}}
+    if(w.plant){try{for(const err of S.plantAudit(w))add(false,err);}catch(_){add(false,"invalid plant");}}
     if (w.externalWorld?.living) {
       try { for (const err of S.worldAudit(w)) add(false,err); } catch (_) { add(false,"invalid living world data"); }
     }

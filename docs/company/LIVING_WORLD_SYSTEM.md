@@ -1,3 +1,5 @@
+> ส่วนเพิ่มv2.6.0: สัญญาใหม่แบบwarehouse/B2B supply/public procurementผูกเงินจริงผ่านcommercialEscrowsแล้ว สมการเงินโลกนับescrow balanceเป็นสินทรัพย์ด้วย อ่าน[คู่มือโรงงาน/สัญญา](PLANT_AND_COMMERCIAL_SYSTEM.md) ส่วนสัญญาตลาด/บริการเดิมยังคงข้อจำกัดที่อธิบายในประวัติv2.4.0ด้านล่าง
+
 # โลกภายนอก Company — v2.4.0
 
 ฐานพัฒนา `a511b3e` (v2.3.0) ผู้ใช้มอบหมายให้ยกเครื่องรัฐบาล บริษัทภายนอก และหน้าต่างโลก พร้อมรายงานทุกครั้งที่อัปเดต เอกสารนี้อธิบายสิ่งที่ทำจริง อ่านคู่กับ [project status](../../project_status_and_ai_onboarding.md) และ [รายงานแพตช์](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.4.0.md)

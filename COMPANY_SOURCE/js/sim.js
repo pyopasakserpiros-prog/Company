@@ -7,15 +7,16 @@
     node ? require("./layout.js") : root.CompanyLayout,
     node ? require("./economy.js") : root.CompanyEconomy,
     node ? require("./world.js") : root.CompanyWorld,
+    node ? require("./plant.js") : root.CompanyPlant,
   );
   if (node) module.exports = value;
   else root.CompanySim = value;
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
-  function (H, D, L, E, W) {
+  function (H, D, L, E, W, P) {
     "use strict";
     const VERSION = "0.1.0",
-      RELEASE_VERSION = "2.5.0",
+      RELEASE_VERSION = "2.6.0",
       SCHEMA = "company-foundation-1",
       TICK = 5;
     const BUILTIN_TASK_SKILLS = {
@@ -725,7 +726,8 @@
     function operationReadiness(w,kind) {
       const req=OPERATIONS_SUBJECTS[kind] || {};
       const coverage=teamCoverage(w,req);
-      return {ready:coverage.every(r=>r.ready),coverage,reasonTh:coverage.filter(r=>!r.ready).map(r=>`${r.nameTh} ${r.level}`).join(", ")};
+      const tools=P.businessReady(w,kind);
+      return {ready:coverage.every(r=>r.ready)&&tools,coverage,reasonTh:[...coverage.filter(r=>!r.ready).map(r=>`${r.nameTh} ${r.level}`),...(!tools?["เครื่องมือธุรกิจต้องติดตั้งหรือซ่อม"]:[])].join(", ")};
     }
     function acquireTechnologyLicense(w,targetId,kind="product") {
       const spec=kind==="material" ? D.MATERIAL_RECIPES?.[targetId] : w.catalog.products[targetId];
@@ -1797,7 +1799,9 @@
           message: `เงินทุนหมุนเวียนไม่เพียงพอสำหรับเดินเครื่องแปรรูป "${matSpec.nameTh}" (ต้องมีสภาพคล่องขั้นต่ำ ฿${(workingCapFloor / 100).toLocaleString("th-TH")})`,
         };
       }
+      if(!P.businessReady(w,"material:"+materialId)){P.request(w,P.materialEquipment(materialId),plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"กระบวนการแปรรูปนี้รอเครื่องจักรและช่างติดตั้ง/ซ่อม"};}
       const reqBatches = Math.max(1, Math.min(50, Math.floor(Number(batches) || 1)));
+      P.useBusiness(w,"material:"+materialId,reqBatches*5);
 
       // Special Two-Step Milling Support for artisan_flour:
       // If milling artisan_flour and milled_rice stock is low while paddy_grain is available, automatically mill paddy_grain -> milled_rice + rice_bran_husk first!
@@ -3629,6 +3633,7 @@
         return { ok: false, code: "contractTerminated", message: "ใบงานขนส่งนี้ถูกยกเลิกหรือล้มเหลวแล้ว" };
       }
 
+      if(!P.useBusiness(w,"freight",5))return {ok:false,code:"equipmentUnavailable",message:"อุปกรณ์จัดคลังต้องซ่อมก่อนรับส่งสินค้า"};
       // Step 1: reserved -> loading -> outbound (charge fuel & tolls once)
       if (c.status === "reserved" || c.status === "loading") {
         if (!c.fuelAndTollCharged) {
@@ -3899,6 +3904,7 @@
       const proj = sb.projects[projectId];
       if (!proj) return { ok: false, code: "unknownProject", message: "ไม่พบโครงการซอฟต์แวร์ที่ระบุ" };
 
+      if(proj && !["completed","live","cancelled"].includes(proj.status) && !P.useBusiness(w,"software",5))return {ok:false,code:"equipmentUnavailable",message:"เครื่องพัฒนาซอฟต์แวร์ต้องซ่อม"};
       // Hard Rule (Chapter 20 Section 10): Blocked projects NEVER advance progress for free!
       if (proj.status === "blocked") {
         if (!options.unblock) {
@@ -4509,6 +4515,7 @@
       if (o.status === "paid" || o.status === "cancelled") {
         return { ok: true, orderId: o.id, status: o.status, paid: o.paid };
       }
+      if(!P.useBusiness(w,o.serviceTypeId,5)){P.request(w,P.serviceEquipment[o.serviceTypeId],plantHooks(w));return {ok:false,code:"equipmentUnavailable",message:"รอเครื่องมือธุรกิจและช่างติดตั้ง/ซ่อม"};}
       const spec = D.INDUSTRIAL_SERVICES?.[o.serviceTypeId];
 
       // Step 1: Execute service process & STRICTLY verify and consume required spare parts / lab consumables
@@ -5794,6 +5801,7 @@
         w.people.push(createPerson(w, "employee-" + (i + 1), s.name, s.role, s.dailyWage));
       }
       W.ensure(w);
+      P.ensure(w);
       recomputeGeopoliticalMultipliers(w);
       ensureKnowledge(w);
       const first = w.research.unlocked[0];
@@ -5831,17 +5839,82 @@
       w.jobs[j.id] = j;
       return j;
     }
-    function productionSteps(product) {
-      const stages={food:["เตรียมและชั่งวัตถุดิบ","ผสมและขึ้นรูป","แปรรูปและพักก่อนตรวจ"],electronics:["เตรียมแผงและชิ้นส่วน","ประกอบและเชื่อมต่อวงจร","ตั้งค่าและทดสอบการทำงาน"],automotive:["เตรียมวัสดุและเครื่องมือ","ขึ้นรูปและประกอบ","ปรับแต่งและทดสอบ"],energy:["เตรียมวัสดุและชิ้นส่วน","ประกอบระบบพลังงาน","ทดสอบความปลอดภัย"],biomed:["เตรียมวัตถุดิบและพื้นที่","แปรรูปและควบคุมสภาวะ","ตรวจความสม่ำเสมอก่อนปล่อยล็อต"]};
-      return stages[product.industry==="tech"?"electronics":product.industry] || ["เตรียมวัตถุดิบ","แปรรูปและประกอบ","ตรวจการทำงานก่อนส่ง QC"];
+    function ensureCommerce(w){return w.commerce || (w.commerce={version:1,lastReviewDay:0,contracts:{},history:[],decisionTh:"ฝ่ายขายกำลังสำรวจตลาด"});}
+    function commerceLog(w,type,text,detail={}){const c=ensureCommerce(w);c.history.unshift({at:now(w),type,text,...detail});if(c.history.length>100)c.history.pop();event(w,type,text,detail);}
+    function evaluateCommercialSales(w){
+      const c=ensureCommerce(w),today=day(w),ceo=w.people.find(p=>p.employed&&p.atWork&&p.role==="coordinator"),sales=w.people.find(p=>p.employed&&p.atWork&&p.role==="sales");
+      if(!w.policies.autoAccept||!ceo||!sales)return;
+      const pending=Object.values(c.contracts).filter(x=>x.status==="awarded");
+      for(const contract of pending){
+        const previous=contract.currentOrderId&&w.orders[contract.currentOrderId];
+        if(previous&&previous.status!=="paid")continue;
+        if(contract.delivered>=contract.quantity){contract.status="completed";W.closeCommercial(w,contract.id);commerceLog(w,"supplyContractCompleted",`ส่งสัญญา ${contract.customerName} ครบ ${contract.quantity} ชิ้น`,{contractId:contract.id});continue;}
+        if(today<contract.nextDeliveryDay||activeOrders(w).length>=3||Object.keys(w.units).length>Math.max(24,w.people.length*3))continue;
+        const quantity=Math.min(contract.installmentQty,contract.quantity-contract.ordered),product=w.catalog.products[contract.productId];if(quantity<=0)continue;
+        const oid=makeOffer(w,product.id,quantity,contract.deliveryWindowDays,.7,sales);
+        const offer=typeof oid==='object'?oid:w.offers[oid];
+        if(!offer)continue;offer.unitPrice=contract.unitPrice;offer.depositPct=contract.buyerType==='government'?0:.2;offer.customerName=contract.customerName;offer.clientId=contract.buyerType==='firm'?contract.buyerId:null;offer.commercialContractId=contract.id;offer.paymentMinutes=contract.buyerType==='government'?7*1440:2*1440;
+        const order=accept(w,offer,sales);
+        if(order){contract.nextDeliveryDay=today+contract.intervalDays;commerceLog(w,"supplyInstallmentStarted",`ฝ่ายขายออกงวด ${product.nameTh} ${quantity} ชิ้น จากสัญญารวม ${contract.quantity}`,{contractId:contract.id,orderId:order.id});}
+      }
+      if(c.lastReviewDay===today)return;c.lastReviewDay=today;
+      if(today>=14&&today%14===0&&w.reputation>=65&&(ceo.profile.personality.openness??50)>=30){
+        const gap=teamCoverage(w,{quality_documentation:40,contract_management:25}).find(x=>!x.ready);
+        const learner=w.people.filter(p=>p.employed&&!p.education?.course&&["admin","sales","coordinator","inspector"].includes(p.role)).sort((a,b)=>subjectLevel(b,gap?.id)-subjectLevel(a,gap?.id))[0];
+        if(gap&&learner){plantHooks(w).train(learner,gap.id,gap.level);c.decisionTh=`เตรียมทีมก่อนเสนอขายรัฐ: ${learner.name} เรียน ${SUBJECTS[learner.education.course]||learner.education.course}`;commerceLog(w,"publicProcurementPreparation",c.decisionTh,{personId:learner.id,subjectId:learner.education.course});}
+      }
+      // Sell real free warehouse goods first. No income is booked until the normal shipment/invoice pipeline runs.
+      if(activeOrders(w).length<2){
+        const stock=productionView(w).find(x=>x.stock>=2);
+        if(stock){const product=w.catalog.products[stock.id],buyer=Object.values(w.externalWorld.corporations).find(b=>(b.buysProducts||[]).includes(product.id));
+          if(buyer){const qty=Math.min(stock.stock,20),unitPrice=Math.round(product.priceMin*.98),contractId=id(w,"warehouseSale");
+            if(W.reserveCommercial(w,contractId,'firm',buyer.id,qty*unitPrice)){
+              const contract=c.contracts[contractId]={id:contractId,productId:product.id,buyerId:buyer.id,buyerType:'firm',customerName:buyer.nameTh,quantity:qty,ordered:0,delivered:0,paidSatang:0,unitPrice,installmentQty:qty,intervalDays:1,deliveryWindowDays:5,nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:'warehouse',createdDay:today};
+              commerceLog(w,"warehouseStockOffered",`ฝ่ายขายเสนอคลัง ${product.nameTh} ${qty} ชิ้น ให้ ${buyer.nameTh} ผู้ซื้อกันเงินจริงแล้ว`,{contractId:contract.id});
+            }
+          }
+        }
+      }
+      if(today<14||today%7!==0||pending.filter(x=>x.kind!=='warehouse').length>=1)return;
+      const employees=w.people.filter(p=>p.employed),wages=employees.reduce((a,p)=>a+p.pay.dailyWage,0),freeCash=w.finance.cash;
+      const caution=ceo.profile.personality.prudence??50,ambition=ceo.profile.personality.ambition??50;
+      if(freeCash<wages*(18+caution/10)||w.metrics.ordersPaid<3){c.decisionTh='ยังไม่รับสัญญาระยะยาว: เงินสำรองหรือประวัติส่งมอบยังไม่พอ';return;}
+      const products=w.research.unlocked.map(id=>w.catalog.products[id]).filter(p=>productReadiness(w,p.id).ready);
+      const product=products.sort((a,b)=>(w.production.shipped[b.id]||0)-(w.production.shipped[a.id]||0))[0];if(!product)return;
+      const shipped=w.production.shipped[product.id]||0;if(shipped<12){c.decisionTh='ต้องพิสูจน์การผลิตสินค้านี้อย่างน้อย12ชิ้นก่อนรับสัญญาใหญ่';return;}
+      const government=today%14===0&&w.reputation>=65&&teamReady(w,{quality_documentation:40,contract_management:25});
+      const buyer=government?{id:'TH',nameTh:'หน่วยงานจัดซื้อภาครัฐ (ไทย)'}:Object.values(w.externalWorld.corporations).find(b=>(b.buysProducts||[]).includes(product.id));if(!buyer)return;
+      const rate=Math.max(1,Math.floor(shipped/Math.max(7,today-1))),installmentQty=Math.min(80,Math.max(4,rate*5)),quantity=employees.length>=30&&shipped>=200?1000:employees.length>=15?240:120;
+      const unitPrice=Math.round(product.priceMin*(government?.94:.96)),cost=Object.entries(product.bom).reduce((a,[k,q])=>a+q*w.catalog.materials[k].unitCost,0);
+      const exposure=installmentQty*cost+wages*(government?14:7);
+      if(unitPrice<=cost*1.2||freeCash<exposure+wages*14||(ambition<35&&caution>65)){c.decisionTh='เลือกเก็บกระแสเงินสด: ผลตอบแทน/ทุนหมุนเวียนไม่คุ้มภาระสัญญาหรือนิสัยผู้บริหารไม่รับความเสี่ยงนี้';return;}
+      const cid=id(w,"supplyContract"),type=government?'government':'firm';if(!W.reserveCommercial(w,cid,type,buyer.id,quantity*unitPrice)){c.decisionTh='ผู้ซื้อมีงบไม่พอกันสัญญาทั้งก้อน';return;}
+      c.contracts[cid]={id:cid,productId:product.id,buyerType:type,buyerId:buyer.id,customerName:buyer.nameTh,quantity,unitPrice,ordered:0,delivered:0,paidSatang:0,installmentQty,intervalDays:7,deliveryWindowDays:Math.max(7,Math.ceil(installmentQty/Math.max(1,rate))+4),nextDeliveryDay:today,status:'awarded',currentOrderId:null,kind:government?'public_procurement':'b2b_supply',createdDay:today};
+      c.decisionTh=`รับสัญญา ${quantity} ชิ้น แบ่งงวดละ ${installmentQty} ตามประวัติผลิต ${shipped} ชิ้น มีงบผู้ซื้อและทุนหมุนเวียนจริง`;
+      commerceLog(w,"supplyContractAwarded",`${buyer.nameTh}: ${c.decisionTh}`,{contractId:cid,buyerType:type,amount:quantity*unitPrice});
     }
+    function commercialAudit(w){
+      if(!w.commerce)return [];const errors=[];if(w.commerce.version!==1||!w.commerce.contracts||!Array.isArray(w.commerce.history))return ['invalid commerce structure'];
+      for(const o of Object.values(w.orders))if(o.commercialContractId&&!w.commerce.contracts[o.commercialContractId])errors.push('orphan commercial installment '+o.id);
+      for(const c of Object.values(w.commerce.contracts)){
+        if(!w.catalog.products[c.productId]||!int(c.quantity,1,1000000)||!int(c.ordered,0,c.quantity)||!int(c.delivered,0,c.ordered)||!int(c.unitPrice,1)||!int(c.paidSatang,0,c.quantity*c.unitPrice)||!['awarded','completed'].includes(c.status)||!w.externalWorld.living.commercialEscrows?.[c.id])errors.push('invalid commercial contract '+c.id);
+        const orders=Object.values(w.orders).filter(o=>o.commercialContractId===c.id);if(c.currentOrderId&&w.orders[c.currentOrderId]?.commercialContractId!==c.id)errors.push('commercial active installment mismatch '+c.id);
+        if(c.quantity*c.unitPrice!==w.externalWorld.living.commercialEscrows[c.id]?.opening)errors.push('commercial budget mismatch '+c.id);
+        if(c.paidSatang!==w.externalWorld.living.commercialEscrows[c.id]?.paid)errors.push('commercial payment mismatch '+c.id);
+        if(orders.reduce((a,o)=>a+o.quantity,0)!==c.ordered||orders.reduce((a,o)=>a+o.shipped,0)!==c.delivered)errors.push('commercial delivery mismatch '+c.id);
+      }return errors;
+    }
+    function productionSteps(product) { return P.route(product).map(s=>s.nameTh); }
+    function plantHooks(w) {return {pay:(amount,ref)=>post(w,"equipment",-amount,ref),claim:p=>release(w,p),learn:(p,minutes)=>learnSubject(p,"maintenance",minutes),train:(p,subject,level)=>{if(p.education.course)return;let course=subject,desired=level;const seen=new Set();while(SUBJECT_PREREQUISITES[course]&&subjectLevel(p,SUBJECT_PREREQUISITES[course])<prerequisiteLevel(course)&&!seen.has(course)){seen.add(course);desired=prerequisiteLevel(course);course=SUBJECT_PREREQUISITES[course];}p.education.course=course;p.education.courseLevel=desired;},walk:(p,station)=>{if(p.taskId)release(w,p);destination(w,p,station,"working","equipmentMaintenance");}};}
+    function warehouseUsed(w){return Object.values(w.units).filter(u=>u.stage==="ready").reduce((a,u)=>a+P.storageSize(w.catalog.products[u.productId]),0);}
+    function warehouseCapacity(w){return 120*facilityLevel(w,"warehouse")+((w.facilities?.constructedPlots||[]).includes("warehouseAnnex")?240:0);}
     function productionView(w) {
-      return Object.values(w.catalog.products).map(p=>({id:p.id,nameTh:p.nameTh,steps:productionSteps(p),stock:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).length,reserved:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&!w.orders[u.orderId]?.stockBatch).length,wip:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").length,activeSteps:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").map(u=>({id:u.id,step:u.stage==="assembly"?productionSteps(p)[u.processStep||0]:u.stage,history:u.processHistory||[]}))}));
+      return Object.values(w.catalog.products).map(p=>({id:p.id,nameTh:p.nameTh,steps:productionSteps(p),stock:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).length,reserved:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage==="ready"&&!w.orders[u.orderId]?.stockBatch).length,wip:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").length,activeSteps:Object.values(w.units).filter(u=>u.productId===p.id&&u.stage!=="ready").map(u=>({id:u.id,step:u.stage==="assembly"?`${productionSteps(p)[u.process?.index||0]||"เสร็จกระบวนการ"}${u.process?.phase==="machine"?" (เครื่องทำงาน/รอเวลา)":""}`:u.stage,history:u.processHistory||[]}))}));
     }
     function planStockProduction(w) {
       if(!w.policies.autoAccept || tod(w)!==660 || !w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))return;
       const wages=w.people.filter(p=>p.employed).reduce((a,p)=>a+p.pay.dailyWage,0);
-      if(w.finance.cash<wages*21 || Object.keys(w.units).length>24)return;
+      if(w.finance.cash<wages*21 || Object.keys(w.units).length>24 || warehouseUsed(w)>=warehouseCapacity(w)*.8)return;
       for(const pid of w.research.unlocked){
         const product=w.catalog.products[pid];if(!productReadiness(w,pid).ready)continue;
         const existing=Object.values(w.units).filter(u=>u.productId===pid&&w.orders[u.orderId]?.stockBatch).length;
@@ -6114,6 +6187,7 @@
           }
         }
       }
+      for(const task of w.plant?.maintenance||[])if(task.type==="repair"&&!task.partsConsumed){const part=P.repairPart(task.machineId);needed[part]=(needed[part]||0)+1;}
       autoCraftNeededMaterials(w, needed);
       for (const [m, n] of Object.entries(needed)) {
         const incoming = Object.values(w.purchases)
@@ -6218,6 +6292,7 @@
     }
     function accept(w, offer, actor = null, decision = null) {
       if (!productReadiness(w, offer.productId).ready) return null;
+      if(offer.commercialContractId){const contract=ensureCommerce(w).contracts[offer.commercialContractId];if(!contract||contract.status!=="awarded"||contract.ordered+offer.quantity>contract.quantity||(contract.currentOrderId&&w.orders[contract.currentOrderId]?.status!=="paid"))return null;}
       const total = offer.quantity * offer.unitPrice,
         deposit = Math.floor(total * offer.depositPct);
       if (
@@ -6256,10 +6331,13 @@
           salesPersonId: salesActor ? salesActor.id : null,
           salesPersonName: salesActor ? salesActor.name : null,
           negotiationReport: negReport,
+          commercialContractId: offer.commercialContractId || null,
         };
       offer.status = "accepted";
       w.orders[oid] = o;
+      if(o.commercialContractId && !W.payCommercial(w,o.commercialContractId,deposit)){delete w.orders[oid];offer.status="open";return null;}
       if (deposit) post(w, "sales", deposit, oid + ":deposit");
+      if(o.commercialContractId){const contract=ensureCommerce(w).contracts[o.commercialContractId];contract.paidSatang+=deposit;contract.ordered+=o.quantity;contract.currentOrderId=o.id;}
       const stocked=Object.values(w.units).filter(u=>u.productId===o.productId&&u.stage==="ready"&&w.orders[u.orderId]?.stockBatch).slice(0,o.quantity);
       for(const u of stocked){u.stockLotId=u.orderId;u.orderId=o.id;}
       for (let i = stocked.length; i < o.quantity; i++) addUnit(w, o);
@@ -6694,7 +6772,10 @@
         }
       for (const i of Object.values(w.invoices))
         if (i.status === "unpaid" && i.dueAt <= now(w)) {
+          const commercialId=w.orders[i.orderId]?.commercialContractId;
+          if(commercialId && !W.payCommercial(w,commercialId,i.amount))continue;
           post(w, "sales", i.amount, i.id);
+          if(commercialId)ensureCommerce(w).contracts[commercialId].paidSatang+=i.amount;
           i.status = "paid";
           i.paidAt = now(w);
           const order = w.orders[i.orderId];
@@ -6842,7 +6923,7 @@
         const sp = ensureSectorProcesses(w);
         const ind = product?.industry || "electronics";
         if (ind === "food") {
-          const coldChain = Boolean(w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active);
+          const coldChain = Boolean(w.externalWorld?.assetPortfolio?.ownedAssets?.cold_chain_hub?.active) || P.businessReady(w,"cold_storage_3pl");
           u.freshnessPct = 100;
           u.shelfLifeDays = coldChain ? 7 : 3;
           sp.foodBakery.coldChainActive = coldChain;
@@ -6921,6 +7002,7 @@
           if (spShip.electronicsRma.warrantyLots.length > 25) spShip.electronicsRma.warrantyLots.pop();
         }
         o.shipped = o.quantity;
+        if(o.commercialContractId){ensureCommerce(w).contracts[o.commercialContractId].delivered+=o.quantity;W.recordProductDelivery(w,o.commercialContractId,o.productId,o.quantity);}
         o.completedAt = now(w);
         o.status = "invoicing";
         const late = Math.max(0, now(w) - o.deadline);
@@ -7157,7 +7239,13 @@
           const subject=productSubject(w,w.units[j.unitId].productId);
           if(subjectLevel(p,subject)<20) continue;
         }
-        const available = stations(w, j.stationKind, stationLoadMap);
+        if(j.kind==="packing"){
+          const reservedSpace=Object.values(w.jobs).filter(x=>x.kind==="packing"&&x.assignee&&w.units[x.unitId]).reduce((a,x)=>a+P.storageSize(w.catalog.products[w.units[x.unitId].productId]),0);
+          if(warehouseUsed(w)+reservedSpace+P.storageSize(w.catalog.products[w.units[j.unitId].productId])>warehouseCapacity(w))continue;
+        }
+        if(!P.available(w,j))continue;
+        const equipmentStation=P.stationFor(w,j);
+        const available = stations(w, j.stationKind, stationLoadMap).filter(st=>!equipmentStation||st.id===equipmentStation);
         if (!available.length) continue;
         if (seenBatchKeys) {
           seenBatchKeys.add(j.kind + ":" + (j.orderId || "") + ":" + j.createdAt);
@@ -7377,6 +7465,7 @@
         p.atWork = true;
         p.activity = "idle";
       }
+      if(p.plantTaskAt===now(w)){p.state=H.tickState(p.profile,p.state,{activity:"work",minutes:TICK,workload:.7});p.experience.workMinutes+=TICK;p.dayStats.workMinutes+=TICK;return;}
       if (p.path.length && !p.taskId && p.intent.code === "selfStudy" &&
           Object.values(w.jobs).some((j) => !j.assignee && j.skill === w.catalog.roles[p.role].skill)) {
         p.path = [];
@@ -7640,6 +7729,7 @@
         j = w.jobs[p.taskId];
       }
       const u = w.units[j.unitId];
+      if(j.kind==="assembly"&&!P.available(w,j)){release(w,p,stationLoadMap);p.intent={code:"equipmentUnavailable",reasons:[u ? productionSteps(w.catalog.products[u.productId])[u.process?.index||0] : "เครื่องมือ"]};return;}
       if (u && !u.materialConsumed) consume(w, u);
       const demand = own(w.catalog.taskKinds, j.kind) || {},
         a = ability(w, p, j.skill, {...demand,subject:jobSubject(w,j)}),
@@ -7715,11 +7805,9 @@
         }
       }
       j.elapsedMinutes = (j.elapsedMinutes || 0) + TICK;
-      j.progress = Math.min(
-        j.required,
-        j.progress + TICK * a.speedMultiplier * help *
-          (1 + (facilityLevel(w, facilityForJob(j.kind)) - 1) * 0.12 + plotBonus),
-      );
+      const proposedWork=TICK * a.speedMultiplier * help * (1 + (facilityLevel(w, facilityForJob(j.kind)) - 1) * 0.12 + plotBonus);
+      const plantWork=j.kind==="assembly"?P.labor(w,j,p,proposedWork,TICK):{delta:proposedWork,release:false};
+      j.progress=Math.min(j.required,j.progress+plantWork.delta);
       p.activity = "working";
       p.intent = { code: j.kind, reasons: [j.id] };
       const order = j.orderId ? w.orders[j.orderId] : null,
@@ -7741,12 +7829,7 @@
       p.experience.workMinutes += TICK;
       p.dayStats.workMinutes += TICK;
       if (time >= 1080) p.dayStats.otMinutes += TICK;
-      if(j.kind==="assembly" && w.units[j.unitId]){
-        const unit=w.units[j.unitId],steps=productionSteps(w.catalog.products[unit.productId]);unit.processHistory=unit.processHistory||[];
-        const completed=Math.min(steps.length,Math.floor(j.progress/j.required*steps.length));
-        while(unit.processHistory.length<completed){unit.processHistory.push({step:steps[unit.processHistory.length],completedAt:now(w),workerId:p.id});}
-        unit.processStep=completed;
-      }
+      if(plantWork.release){release(w,p,stationLoadMap);return;}
       if (j.progress >= j.required) {
         if (stationLoadMap && p.stationId) {
           stationLoadMap.set(p.stationId, Math.max(0, (stationLoadMap.get(p.stationId) || 1) - 1));
@@ -8452,7 +8535,9 @@
           regimePowerMult,
       );
       const otKwh = Math.round(otHours * tariffs.kwhPerOtHour);
-      const grossKwh = Math.max(20, baseKwh + otKwh);
+      const plant=P.ensure(w),plantKwh=Math.max(0,plant.energyKwh-plant.billedEnergyKwh);
+      const grossKwh = Math.max(20, baseKwh + otKwh + Math.round(plantKwh));
+      plant.billedEnergyKwh=plant.energyKwh;
 
       const hasSolarPlot = constructed.includes("solarPlant");
       const offsiteSolar = w.externalWorld?.assetPortfolio?.ownedAssets?.offsite_solar_wind_farm;
@@ -9192,6 +9277,9 @@
       if (tod(w) === 660 && day(w) >= 5 && w.policies.autoAccept &&
           w.people.some((p) => p.employed && p.atWork && p.role === "coordinator"))
         evaluateAutonomousHiring(w);
+      if(tod(w)===690)evaluateCommercialSales(w);
+      P.tick(w,TICK);
+      if(tod(w)===675&&w.policies.autoAccept&&w.people.some(p=>p.employed&&p.atWork&&p.role==="coordinator"))P.review(w,plantHooks(w));
       processDue(w);
       stepAgricultureAndResources(w);
       ensureJobs(w);
@@ -9270,6 +9358,7 @@
         }
       }
 
+      P.maintain(w,plantHooks(w));
       for (const p of w.people) personStep(w, p, stationLoadMap, tickCtx);
       w.clock.absoluteMinute += TICK;
       w.clock.tick++;
@@ -9382,6 +9471,7 @@
         }
         case "cancelOrder": {
           const o = own(w.orders, c.orderId);
+          if(o?.commercialContractId)return failure("contractObligation","งวดนี้เป็นภาระสัญญาระยะยาว ต้องส่งตามข้อตกลง");
           if (
             !o ||
             o.status !== "accepted" ||
@@ -10272,6 +10362,8 @@
     function audit(w) {
       const errors = [
         ...W.validate(w),
+        ...P.validate(w),
+        ...commercialAudit(w),
         ...E.auditFinance(w.finance),
         ...D.validateCatalog(w.catalog),
         ...L.validateLayout(w.layout),
@@ -10312,7 +10404,7 @@
           (n, p) => n + (p.bom[m] || 0) * w.production.started[p.id],
           0,
         );
-        if (consumed + (w.knowledge?.materialsConsumed?.[m] || 0) !== w.inventory.consumed[m])
+        if (consumed + (w.knowledge?.materialsConsumed?.[m] || 0) + (w.plant?.partsConsumed?.[m] || 0) !== w.inventory.consumed[m])
           errors.push("material allocation " + m);
         const received = Object.values(w.purchases)
           .filter((p) => p.materialId === m && p.status === "received")
@@ -10479,6 +10571,13 @@
       evaluateExternalAssetsDaily,
       getActiveExternalAssetBonuses,
       scaleCompany,
+      commerceView: w=>w.commerce || null,
+      evaluateCommercialSales,
+      commercialAudit,
+      warehouseCapacity,
+      warehouseUsed,
+      plantView: P.view,
+      plantAudit: P.validate,
       productionView,
       productionSteps,
       planStockProduction,
