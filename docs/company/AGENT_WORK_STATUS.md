@@ -1,6 +1,6 @@
 # สถานะงานร่วมระหว่างเอเจนต์
 
-อัปเดต: 12 พฤศจิกายน 2026 (หลังพัฒนาและรวมแพตช์ v2.8.0 บน `main`) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
+อัปเดต: 12 พฤศจิกายน 2026 (runtime v2.9.0; งานล่าสุดคือเอกสารข้อเสนอ Era 3 ไม่ใช่การส่งมอบ v3.0.0) · ใช้ร่วมกับ [workflow](AGENT_COLLABORATION_WORKFLOW.md) และยึด source/commit ล่าสุดเหนือบันทึกเก่า
 
 ## งานแพตช์ที่ดำเนินการเสร็จในรอบนี้ (รวมบน main แล้ว)
 
@@ -31,3 +31,11 @@
 ## งานล่าสุด — SME origins / civics / informed decisions
 
 Codex ฐาน `f7167e2` / Agy v2.8.0 → **v2.9.0 implemented/verified**: 6SME origins, political leaders/ministries/commodity agreements, NPCnews/learning, actual supplier risk/partnerships, software bypass/payment fixes. คงAgyเดิม ไม่แก้AGENTS/HumanCore. Unit/integration203, browser14, 12โลก×30วันaudit/saveผ่าน. ดู [รายงาน](PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md), [handoff](SME_CIVICS_V290_HANDOFF.md). ข้อจำกัดด้านรายสินค้า/การเมืองเต็มรูปแบบแยกไว้ ไม่อ้างทำทุกอย่างครบ
+
+## Era 3 — Feature and Smart Phones (documentation assignment)
+
+- Owner: Codex; source baseline `855e183d9b7a404c857e9abc162c1a67a4a84f76` / runtime v2.9.0.
+- Status: documentation complete and validated — two English documents grouped in `era3/`; runtime implementation not started. Initial audit, source/core check, English-only handoff, status/master mirrors and 185 repository links checked.
+- Scope: documentation, navigation and handoff references only. Era 3 runtime implementation has not started. User reiterated fully autonomous NPC decisions; the player observes and edits conditions, never issues operational management orders.
+
+Files: [Era 3 proposal](../../era3/ERA_3_FEATURE_AND_SMART_PHONES.md), [portable status](../../era3/project_status_and_ai_onboarding.md), [documentation report](PATCH_REPORTS/UPDATE_REPORT_2026-11-12_ERA3_PROPOSAL_HANDOFF.md). Existing Agy/Codex runtime history above is preserved.

@@ -2,6 +2,14 @@
 
 เปิดจากหน้านี้เพื่อหาเอกสารตามงาน ไม่ต้องไล่หาไฟล์จากรายชื่อปะปน
 
+## Era 3 proposal / two-file collaboration handoff
+
+- [Era 3 — Feature and Smart Phones](../../era3/ERA_3_FEATURE_AND_SMART_PHONES.md)
+- [Portable current status](../../era3/project_status_and_ai_onboarding.md)
+- [Documentation update report](PATCH_REPORTS/UPDATE_REPORT_2026-11-12_ERA3_PROPOSAL_HANDOFF.md)
+
+Proposal only; runtime remains v2.9.0. NPCs operate autonomously; the player observes/edits conditions.
+
 ## ระบบล่าสุด v2.9.0
 
 - [SME รัฐบาล การค้าและข่าว](SME_AND_CIVICS_SYSTEM.md)

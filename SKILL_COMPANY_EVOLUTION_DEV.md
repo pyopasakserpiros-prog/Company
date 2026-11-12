@@ -47,3 +47,7 @@ Timed Material Processing (`w.plant.refineryBatches`) for all 40 recipes; 42 pro
 - **v2.6.0:** Plant module (20 equipment types, 42 product routes) & commercial sales contracts (`World.commercialEscrows`).
 - **v2.4.0 – v2.5.0:** External World (`js/world.js`, 12 nations, 28+ firms, 66 bilateral relations), 1× time (2 game min/real sec), 8 cells/tick walk, `stockBatch`.
 - **v2.2.0 – v2.3.0:** 170 learned subjects outside the locked Human Core, 6-stage SME ladder, utilities/brownout, workplace culture, 64 materials, 40 recipes, 42 products, 10 B2B services, and Permanently Locked Human Core 1.0.0 (`fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32`).
+
+## Era 3 proposal routing — documentation update, 2026-11-12
+
+The current runtime remains v2.9.0. `era3/ERA_3_FEATURE_AND_SMART_PHONES.md` is the canonical **proposed** major phone-industry design, accompanied by `era3/project_status_and_ai_onboarding.md`; root and COMPANY_SOURCE status copies must match the canonical English status. Two files provide context, not source access or an implementation. NPCs make all engineering/business decisions; the observer can inspect/time-control/edit conditions, never issue normal operational orders. Keep proposed dynamic products, semiconductor operations and external professionals separate from existing capabilities. Update status/report/skills with actual evidence when implementation occurs. Gemini app synchronization is not established by these repo files.

@@ -1,3 +1,5 @@
+> **Current collaboration: Era 3 — Feature and Smart Phones.** Download the two English context documents in [era3/](era3/): [proposal](era3/ERA_3_FEATURE_AND_SMART_PHONES.md) and [current project status](era3/project_status_and_ai_onboarding.md). Runtime remains v2.9.0; v3.0.0 is proposed, not implemented. NPCs make all operational decisions; the player observes and edits conditions through Edit Hub.
+
 # เริ่มงานกับ Company v2.9.0
 
 อ่าน [AGENTS.md](AGENTS.md) ฉบับจริงทุกครั้ง → [สถานะ](project_status_and_ai_onboarding.md) → [workflow](docs/company/AGENT_COLLABORATION_WORKFLOW.md) / [ทะเบียนงาน](docs/company/AGENT_WORK_STATUS.md) → [.agents/skills](.agents/skills/README.md) → source/tests ที่เกี่ยวข้อง

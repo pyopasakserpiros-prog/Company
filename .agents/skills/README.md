@@ -23,15 +23,19 @@
 - `company-gameplay-architecture` — สถาปัตยกรรมเกม
 - `company-data-integrity` — ความถูกต้องของข้อมูล
 - `company-save-system` — ระบบเซฟและการตรวจความสมบูรณ์กลางงาน (รวม `w.watchlist`)
-- `company-rendering-and-performance` — การแสดงผลและประสิทธิภาพ (`~0.911 ms/tick` ที่ 500 NPCs)
-- `company-qa-and-delivery` — QA เอกสารและส่งมอบ (`190/190` tests)
+- `company-rendering-and-performance` — การแสดงผลและประสิทธิภาพ (v2.9 recorded Node simulation mean `1.382 ms/tick` at 500 NPCs; not mobile FPS)
+- `company-qa-and-delivery` — QA เอกสารและส่งมอบ (v2.9 historical `203/203` unit/integration and `14/14` browser; verify future output)
 
 ## การดูแลสกิล
 
 ทุกแพตช์ให้ตรวจ Master Skill และสกิลเฉพาะด้านที่ได้รับผลกระทบกับ source/test จริง อัปเดตดัชนีและไฟล์ที่เกี่ยวข้อง พร้อมระบุผลในรายงาน
 
-## v2.9.0 Living Scenarios, Observability & Human Depth
+## Retained v2.8.0 Living Scenarios, Observability & Human Depth
 
-อ่าน [คู่มือโรงงาน/คลัง/สัญญา](../../docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md), [คู่มือโลกภายนอก](../../docs/company/LIVING_WORLD_SYSTEM.md), [รายงาน v2.9.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.8.0.md) และ [รายงาน v2.7.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md).
+อ่าน [คู่มือโรงงาน/คลัง/สัญญา](../../docs/company/PLANT_AND_COMMERCIAL_SYSTEM.md), [คู่มือโลกภายนอก](../../docs/company/LIVING_WORLD_SYSTEM.md), [รายงาน v2.8.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.8.0.md) และ [รายงาน v2.7.0](../../docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.7.0.md).
 
 ล่าสุด v2.9.0 เพิ่มสัญญา startup.js/civics.js และ news/learning/software fixes ใน Master ทั้งสองและ14domain references; root copiesตรงcanonical รายงานและข้อจำกัดดู `docs/company/SME_AND_CIVICS_SYSTEM.md` จำนวน203เทสต์/14browser เป็นหลักฐานรุ่นนี้ ไม่ใช่เกณฑ์จำนวนตายตัว สถานะdraftของสกิลเฉพาะด้านยังไม่เปลี่ยน และยังไม่ยืนยันอัปเดต2สกิลภายในแอปGemini
+
+## Era 3 proposal (not a runtime skill certification)
+
+See [the English two-document handoff](../../era3/ERA_3_FEATURE_AND_SMART_PHONES.md) and [status copy](../../era3/project_status_and_ai_onboarding.md). Master/evergreen/QA references route collaborators there; no new phone functionality, release or skill maturity is claimed. The player's role is observer/Edit Hub; NPCs operate the world.

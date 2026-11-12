@@ -1,3 +1,5 @@
+> **Era 3 — Feature and Smart Phones:** the English [proposal](era3/ERA_3_FEATURE_AND_SMART_PHONES.md) and [project status](era3/project_status_and_ai_onboarding.md) are grouped in [era3/](era3/) for two-document AI handoff. Proposed v3.0.0; current playable runtime is v2.9.0. NPCs make the decisions; players observe and edit conditions.
+
 > รุ่นล่าสุด v2.9.0: เริ่ม SME 6 แบบ รัฐบาล/กระทรวง/ข้อตกลงรายสินค้า และ NPC ที่รับข่าว/เรียนรู้ตามบริบท ดู [รายงาน](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md) / [คู่มือ](docs/company/SME_AND_CIVICS_SYSTEM.md)
 
 # Company Simulation — Autonomous Campus

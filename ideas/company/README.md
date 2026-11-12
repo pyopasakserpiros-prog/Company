@@ -40,3 +40,7 @@
 ## ส่วนที่ยืนยันทำแล้วใน v2.9.0
 
 จุดเริ่ม SME 6 แบบ ผู้นำ/วาระ กระทรวง/มาตรการรายสินค้า ข้อตกลงมีอายุ งบความขัดแย้ง และข่าวที่ NPC รับรู้ ย้ายสถานะไป [project status](../../project_status_and_ai_onboarding.md) แล้ว ไม่ใช้เป็นงานค้างซ้ำ รายละเอียดรายสินค้า/กระบวนการเฉพาะทางที่ยังไม่ได้ทำยังคงเป็นข้อเสนอ ดู [ส่วนที่ยังเหลือ](38_sme_civics_followups.md)
+
+## Era 3 — Feature and Smart Phones (proposal, not implemented)
+
+The consolidated English industry design and game context are at [era3/ERA_3_FEATURE_AND_SMART_PHONES.md](../../era3/ERA_3_FEATURE_AND_SMART_PHONES.md), with a [current-status copy](../../era3/project_status_and_ai_onboarding.md) beside it for two-file handoff. Dynamic phone products, semiconductor depth, external professionals and autonomous strategy remain proposed. Do not mark them completed or duplicate a conflicting design here; contribute dated revisions to the canonical proposal. Player intervention remains Edit Hub; NPCs decide all operations.

@@ -41,3 +41,5 @@
 - [Process-realism English prompt handoff](PROMPT_HANDOFF_PROCESS_REALISM_2026-11-12.md)
 
 ทะเบียนงานและ workflow: [AGENT_WORK_STATUS.md](../AGENT_WORK_STATUS.md) · [AGENT_COLLABORATION_WORKFLOW.md](../AGENT_COLLABORATION_WORKFLOW.md) · [PROCESS_REALISM_V270_HANDOFF.md](../PROCESS_REALISM_V270_HANDOFF.md)
+
+- [Era 3 English proposal and two-document handoff publication](UPDATE_REPORT_2026-11-12_ERA3_PROPOSAL_HANDOFF.md) — documentation only; no v3.0.0 runtime release.

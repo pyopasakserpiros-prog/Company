@@ -1,3 +1,11 @@
+# Current collaboration — Era 3: Feature and Smart Phones
+
+The owner requested a portable English proposal/current-context handoff for other AIs. Canonical context: [Era 3 proposal](era3/ERA_3_FEATURE_AND_SMART_PHONES.md) and [status copy](era3/project_status_and_ai_onboarding.md), together in `era3/`. This documentation assignment does not implement or release v3.0.0; current runtime remains v2.9.0.
+
+**NPCs decide and operate everything autonomously. The player observes and experiments through Edit Hub; do not build player-driven research, design, procurement, hiring or launch workflows.** Collaborators should critique and extend the proposal creatively, distinguish current code from future ideas, and obtain/inspect source and AGENTS before actual implementation.
+
+## Prior completed runtime assignment and historical prompts
+
 # คำสั่งปัจจุบัน — Company
 
 **สถานะ: งาน SME / civics ที่ผู้ใช้มอบหมายดำเนินการใน v2.9.0 แล้ว** ฐาน `f7167e2`/Agy v2.8.0 อ่าน [รายงาน](docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V2.9.0.md) และ [บันทึกรับช่วง](docs/company/SME_CIVICS_V290_HANDOFF.md) ก่อนเริ่มงานใหม่
