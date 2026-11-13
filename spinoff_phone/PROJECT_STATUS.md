@@ -4,7 +4,7 @@ Second playable release, source base a3635f0, 2026-11-13. Independent executable
 
 ## Play
 
-Open root `Silicon_Handset_single.html` offline. Source development requires this complete repository: SPINOFF_SOURCE imports the original immutable HumanCore and pure phone-engineering module from COMPANY_SOURCE. Source server: serve repository root, visit SPINOFF_SOURCE/index.html. Save key `silicon-handset-v020`, schema2/release0.2.0, separate from Company saves. Never import or delete parent-game saves automatically.
+Open root `Silicon_Handset_single.html` offline. All runtime dependencies now live in SPINOFF_SOURCE/js: the immutable HumanCore and pure phone-engineering module were copied byte-for-byte from the base. Source server: serve repository root, visit SPINOFF_SOURCE/index.html. Save key `silicon-handset-v020`, schema2/release0.2.0, separate from Company saves. Never import or delete parent-game saves automatically.
 
 Choose/randomise a world seed and one of seven starting roles: handset SME, chip, memory/storage, camera, display, battery, or enclosure/EMS supply. This sets initial conditions only. Named NPCs choose normal business operations. Six Thai observation tabs show people/company activity, rivals, measured products, inventories/queues, events and Edit Hub. Time controls pause/1x/5x/20x and advance-one-day are observation tools.
 
@@ -32,7 +32,7 @@ This is the first playable vertical slice, not the whole Empire blueprint. Work 
 
 ## Verification / next work
 
-Run npm test/check/build/test:browser inside SPINOFF_SOURCE; tools/soak.cjs runs five full spin-off worlds×365days with daily audits/monthly save validation. Browser tests cover source390px and standalone1280px, read purity, Edit Hub units, separate storage and30day continuation. Parent Company regression is checked separately. Exact results and review fixes: PATCH_REPORT_V0.2.0.md and validation/v020. Archive acceptance/size/SHA are supplied separately with the final ZIP.
+Run npm test/check/build/test:browser inside SPINOFF_SOURCE; tools/soak.cjs runs five full spin-off worlds×365days with daily audits/monthly save validation. Browser tests cover source390px and standalone1280px, read purity, Edit Hub units, separate storage and30day continuation. Parent Company regression logs were removed from this dedicated branch; historical results are not current spin-off evidence. Exact results and review fixes: PATCH_REPORT_V0.2.0.md and validation/v020. Archive acceptance/size/SHA are supplied separately with the final ZIP.
 
 Next priorities: actual supplier tooling/process economics; supplier-specific lot quality and repeat contracts; deeper subjects/relationships; owned capacity vs outsourcing; broader technical envelopes. Retain independent rivals and no catchup. Every patch updates this status, affected skills, report and verified full editable delivery.
 

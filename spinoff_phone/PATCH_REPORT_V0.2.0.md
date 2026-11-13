@@ -1,3 +1,5 @@
+> Historical evidence from before branch separation; parent-game results are not current branch validation. See BRANCH_SEPARATION_REPORT.md.
+
 # Silicon & Handset v0.2.0 implementation report
 
 2026-11-13; owner-authorised continuation from `a3635f0ae4c2131bd50df8074f2dfe90f0fcb11d` on main. Release0.2.0/schema2/storage silicon-handset-v020. Parent Company remains3.1.0; AGENTS, HumanCore/lock, shared phone engineering and all parent gameplay/builds are unchanged. The integration commit is the commit containing this report; the external artifact verification receipt supplies its exact SHA.
@@ -48,7 +50,7 @@ This is a deeper playable slice, not the full original Empire blueprint. Cohorts
 
 ## Documents, skills and delivery
 
-Updated actual spin-off status/API, README/entry pointers, work register, source README, silicon-handset-dev, both Company master sibling notices and all root mirrors, skill index, three identical parent status mirrors, Gemini sync ledger and [handoff](../docs/company/SILICON_HANDSET_V020_HANDOFF.md). Company domain references were reviewed for scope: their parent APIs are unchanged, so no domain formula/hook rewrite or maturity upgrade is justified. Installed Gemini app copies were not accessed and remain pending sync for these sibling notes. Historical reports and unimplemented blueprint proposals remain available; no proposal is silently declared complete.
+Updated actual spin-off status/API, README/entry pointers, work register, source README, silicon-handset-dev, both Company master sibling notices and all root mirrors, skill index, three identical parent status mirrors, Gemini sync ledger and [handoff](V020_HANDOFF_HISTORY.md). Company domain references were reviewed for scope: their parent APIs are unchanged, so no domain formula/hook rewrite or maturity upgrade is justified. Installed Gemini app copies were not accessed and remain pending sync for these sibling notes. Historical reports and unimplemented blueprint proposals remain available; no proposal is silently declared complete.
 
 Open root Silicon_Handset_single.html, or serve repository root and visit SPINOFF_SOURCE/index.html. For development install dependencies with npm ci and run the commands above. Source imports original parent HumanCore and phone-engineering; the complete editable ZIP must include both source trees, all tracked documents/research/tests/tools and hidden .agents. Final archive CRC/path/all-file hashes, fresh extraction/check/test/build/browser/soak, original/extracted/rebuilt HTML equality, archive size/SHA and exact pushed commit are recorded in the external verification JSON delivered with the ZIP. The archive receipt is external to avoid self-referential hashes. Recipient download is not independently verified from this environment.
 

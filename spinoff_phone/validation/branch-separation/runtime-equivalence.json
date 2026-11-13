@@ -1,0 +1,35 @@
+{
+  "scope": "five seeds 30 days exact serialized equality; core, engineering, lock and AGENTS byte equality; built HTML equal after ONLY two dependency require path substitutions",
+  "results": [
+    {
+      "seed": "dawn",
+      "days": 30,
+      "sha256": "7c11fa5c95f4e009f212d4fe9ca5bf0b2c378e5b5c5178c5860eb034233a252c",
+      "equal": true
+    },
+    {
+      "seed": "river",
+      "days": 30,
+      "sha256": "1a4aa22b53a2f61b2d7ca7e594f9ed35e1b64180fefeb1ee71674159bf99094e",
+      "equal": true
+    },
+    {
+      "seed": "silicon",
+      "days": 30,
+      "sha256": "849266d633516bb5274f7df9cc7e54f32ef80f155c08c3ee9ab5c1246abebd2f",
+      "equal": true
+    },
+    {
+      "seed": "island",
+      "days": 30,
+      "sha256": "f6dd4c5dc32cfaa0a845442901a7763446442b0c9eda6e84895142d9dd64e5a8",
+      "equal": true
+    },
+    {
+      "seed": "horizon",
+      "days": 30,
+      "sha256": "c15cae3a1280cf2d146f41a24ab5b729903e20a71868ab771d0f5be88d389a00",
+      "equal": true
+    }
+  ]
+}

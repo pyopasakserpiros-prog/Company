@@ -1,0 +1,26 @@
+
+> silicon-handset-spinoff@0.2.0 test:browser
+> npm run build && node --test test/browser.test.cjs
+
+
+> silicon-handset-spinoff@0.2.0 build
+> node tools/build.cjs
+
+Built spin-off standalone: 166989 bytes
+✔ observer UI boot, pure tabs, real EditHub and safe save on 390 (1544.988257ms)
+✔ observer UI boot, pure tabs, real EditHub and safe save on 1280 (1114.643783ms)
+✔ commercial observability, save purity and explicit old-save rejection on mobile (1013.208633ms)
+✔ invalid autosave remains preserved rather than overwritten by fallback world (11334.465822ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15364.999401
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

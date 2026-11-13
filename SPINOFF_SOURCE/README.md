@@ -1,7 +1,7 @@
-# Silicon & Handset v0.2.0
+# Silicon & Handset v0.2.0 standalone source
 
-Open ../Silicon_Handset_single.html offline. For editable source, keep the complete repository (shared immutable HumanCore/engineering reside in COMPANY_SOURCE), serve repo root and visit SPINOFF_SOURCE/index.html. This is a separate executable/save namespace; parent Company3.1.0 is preserved.
+All runtime dependencies are in this folder. Open the root or source Silicon_Handset_single.html offline in a browser that permits local files; alternatively serve the repository root (`python3 -m http.server 8000`) and visit /SPINOFF_SOURCE/index.html. Managed Chromium here blocks file:// by policy; localhost tests do not certify local-file navigation.
 
-Run `npm ci` for development dependencies, then `npm test`, `npm run check`, `npm run build`, `npm run test:browser`; `node tools/soak.cjs OUTPUT.json` validates five365day worlds. Browser tests use CHROMIUM_PATH if supplied, otherwise system /usr/bin/chromium where present, otherwise Playwright's installed browser (`npx playwright install chromium`). Build inlines all shared code/CSS and creates both root and source Silicon_Handset_single.html.
+With Node >=20, run `npm ci`, `npm run check`, `npm test`, `npm run build`, `npm run test:browser`, then `node tools/soak.cjs OUTPUT.json`. Browser tests use Playwright and CHROMIUM_PATH, /usr/bin/chromium when available, or Playwright Chromium (`npx playwright install chromium`). Build inlines CSS/JS and writes identical source/root HTML aliases. No external parent-game source or dependency symlinks are needed.
 
-Detailed game/API/limitations: ../spinoff_phone/PROJECT_STATUS.md. All normal operations are autonomous. New-game seed and starting role set opening conditions; Edit Hub experiments are logged. Export/import/autosave use only silicon-handset-v020; invalid import preserves the active world.
+[Status/API/limits](../spinoff_phone/PROJECT_STATUS.md) · [Dependency provenance](../spinoff_phone/DEPENDENCY_PROVENANCE.md). Schema2/release0.2.0 and silicon-handset-v020 storage are retained. This branch relocation implements no new gameplay feature.

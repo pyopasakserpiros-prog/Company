@@ -1,0 +1,39 @@
+
+> silicon-handset-spinoff@0.2.0 test
+> node --test test/simulation.test.cjs
+
+✔ seeded independent firms, subjects, measured feature-only opening; snapshot isolated (48.97524ms)
+✔ normal 210-day world physically develops, manufactures, sells and conserves money and materials (706.047826ms)
+✔ pending shipment, WIP and notice save/load deterministic continuation; profiles refrozen (214.42958ms)
+✔ no cash cannot buy work or progress; no staff cannot research or manufacture (127.36221ms)
+✔ no components stops prototype; intermediate WIP holds consumed parts before any phones appear (184.922447ms)
+✔ player cash does not change rival research under fixed no-trade/no-hiring fixture (562.373869ms)
+✔ Edit Hub isolates person, validates commands and accounts capital source (9.419728ms)
+✔ autonomous recruitment preserves person identity and requires notice before transfer (21.43196ms)
+✔ invalid saves reject without replacing live world (28.962907ms)
+✔ hour boundaries are chunk-invariant, travel and rest are actual human-core updates (35.262979ms)
+✔ seed varies opening finance, resources and teams; specialist SME origin trades actual output (531.05406ms)
+✔ healthy employed engineers can autonomously transfer after notice without cloning knowledge (136.365233ms)
+✔ time smaller than one hour cannot grant advance work (25.601248ms)
+✔ reject corrupt project requirements, owner/level links, duplicate WIP and forged reservations (84.692871ms)
+✔ failed validation pays for timed redesign, consumes a fresh prototype and recovers (135.600286ms)
+✔ slow duplicate player supplier cannot cap qualified independent suppliers or rival designs (8.542393ms)
+✔ segments fund their own purchases with distinct utility, hard budgets and actual inventories (491.899007ms)
+✔ paid sales expertise changes conversion capacity without granting engineering work or money (140.440941ms)
+✔ supplier alternatives trade price against time, split scarce stock and preserve paid generation ownership (151.173286ms)
+✔ current commercial saves reject missing wallets, invalid plans and incompatible old saves (196.659973ms)
+✔ autonomous weekly pricing clears accumulated inventory while preserving estimated cost floor (253.047407ms)
+✔ market-facing engineering measurements reject corrupt saves before resumed settlement (243.40822ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4448.458446
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

@@ -1,3 +1,5 @@
+> Historical evidence from before branch separation; parent-game results are not current branch validation. See BRANCH_SEPARATION_REPORT.md.
+
 # Spin-off v0.1.0 implementation report
 
 Base9f6e2b8, 2026-11-12. Owner explicitly authorised the first playable spin-off and independent generated rivals, resources and recruitable people. Parent Company remains3.1.0; AGENTS/HumanCore/lock unchanged. Shared core/phone engineering are imported in source and inlined in offline build. Release/save namespace is independent.
