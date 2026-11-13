@@ -1,5 +1,7 @@
-# Gemini app sync — pending
+# Gemini app sync — synchronized for v0.3.0 (2026-11-13)
 
-Both installed app entries `user:company-evolution-dev` and `user:company-for-every-patch` are **unsynced for this branch**. This environment cannot access/update those installed skills. Prior parent-game sync claims do not establish this branch update.
+Both installed Gemini app entries `user:company-evolution-dev` and `user:company-for-every-patch` were updated via `skills:update_skill` (`status: "updated"`, 2026-11-13) during the Silicon & Handset v0.3.0 implementation task in the Gemini app environment. Both skills preserve the parent `main` (`COMPANY_SOURCE/`) reference in a separate section while embedding the complete `spinoff-phone` (`SPINOFF_SOURCE/`, v0.3.0, schema 3) master and every-patch workflow.
 
-When working on this spin-off in Gemini, import the complete [spin-off master](../.agents/skills/silicon-handset-dev/SKILL.md) and [every-patch reference](../.agents/skills/silicon-handset-every-patch/SKILL.md) as the two branch-specific equivalents; preserve unrelated parent-project instructions separately. Record actual app confirmation/date/version if accessible, otherwise keep pending. Repository copies are ready-to-import documents, not proof of app sync.
+Branch-specific repository skill copies (maintained in lockstep and ready for standalone import if needed):
+- [Spin-off master reference](../.agents/skills/silicon-handset-dev/SKILL.md)
+- [Spin-off every-patch workflow](../.agents/skills/silicon-handset-every-patch/SKILL.md)

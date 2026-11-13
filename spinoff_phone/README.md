@@ -1,32 +1,24 @@
-# Silicon & Handset — playable v0.2.0
+# Silicon & Handset — playable v0.3.0
 
-**เปิดเล่น:** ดาวน์โหลด [Silicon_Handset_single.html](../Silicon_Handset_single.html) แล้วเปิดออฟไลน์ หรือใช้ SPINOFF_SOURCE พร้อม shared dependencies ใน repo นี้
+**เปิดเล่น:** ดาวน์โหลด [Silicon_Handset_single.html](../Silicon_Handset_single.html) แล้วเปิดออฟไลน์ หรือรันจาก `SPINOFF_SOURCE/` พร้อม local dependencies ในสาขานี้
 
-- [สถานะ/API/ข้อจำกัดของเกมจริง](PROJECT_STATUS.md)
-- [รายงานแพตช์ล่าสุด](PATCH_REPORT_V0.2.0.md)
+- [สถานะ/API/ข้อจำกัดของเกมจริง (v0.3.0)](PROJECT_STATUS.md)
+- [รายงานแพตช์ล่าสุด (v0.3.0)](PATCH_REPORT_V0.3.0.md) · [รายงานแพตช์ก่อนหน้า (v0.2.0)](PATCH_REPORT_V0.2.0.md)
+- [บันทึกรับช่วงและพรอมต์ถัดไป (v0.3.0 Handoff)](V030_HANDOFF_HISTORY.md)
 - [วิธีรัน/ทดสอบซอร์ส](../SPINOFF_SOURCE/README.md)
 
-เกม Company เดิมยังเป็น3.1.0 ภาคใหม่นี้แยก executable/เซฟ มีบริษัทคู่แข่งและทีมงานสุ่มตามseed ไม่มี catchup ตามผู้เล่น แผนระยะยาวด้านล่างยังไม่ใช่รายการที่ทำครบแล้ว
+เกม Company เดิมยังแยกอยู่บน `main` ภาค Spin-off นี้แยก executable และเซฟ (`silicon-handset-v030`, schema 3) มีบริษัทคู่แข่ง ทีมงาน พอร์ตวิจัยเฉพาะทาง (9 เป้าหมายวิศวกรรม) รหัสชิ้นส่วน SKU และล็อตผลิตจริง (`w.skus`, `w.lots`) สุ่มและเติบโตตามเหตุปัจจัยของตนเอง ไม่มี catchup ตามผู้เล่น แผนระยะยาวด้านล่างยังคงเป็นพิมพ์เขียวสำหรับต่อยอดในอนาคต
 
 # โครงการ Spin-off: มหาศึกสมาร์ตโฟนและจักรวรรดิซิลิคอน (Silicon & Handset Empire)
 
-โฟลเดอร์นี้เป็นศูนย์กลางการออกแบบและพิมพ์เขียวฉบับสมบูรณ์สำหรับโครงการ **Spin-off Game** ที่โฟกัสเฉพาะธุรกิจ เทคโนโลยี ชิปเซมิคอนดักเตอร์ และอุตสาหกรรมโทรศัพท์มือถืออย่างลึกซึ้งและสมจริงที่สุด ("สมจริงจนน่าขนลุก แต่ดูชีวิต NPC สนุก")
+โฟลเดอร์นี้เป็นศูนย์กลางการออกแบบและพิมพ์เขียวสำหรับโครงการ **Spin-off Game** ที่โฟกัสเฉพาะธุรกิจ เทคโนโลยี ชิปเซมิคอนดักเตอร์ และอุตสาหกรรมโทรศัพท์มือถืออย่างลึกซึ้งและสมจริง ("สมจริงจนน่าขนลุก แต่ดูชีวิต NPC สนุก")
 
 ## อ่านข้อทักท้วงก่อนใช้เป็นสเปก
 
-[Codex review and design refinements](CODEX_REVIEW_AND_DESIGN_REFINEMENTS.md) — ตรวจจากฐาน `bdfa62c` / Company v3.1.0 แยกข้อเสนอเดิมออกจากข้อจำกัดจริงของ source พร้อมแนวแก้ progression, การแข่งขัน, RAM/storage, เงินสด, ฟิสิกส์, NPC และลำดับ vertical slice ข้อเสนอในโฟลเดอร์นี้ยังไม่ใช่เกม Spin-off ที่สร้างแล้ว
+[Codex review and design refinements](CODEX_REVIEW_AND_DESIGN_REFINEMENTS.md) — แยกข้อเสนอเดิมออกจากข้อจำกัดจริงของ source พร้อมแนวแก้ progression, การแข่งขัน, RAM/storage, เงินสด, ฟิสิกส์, NPC และลำดับ vertical slice
 
 ## เอกสารหลักในโฟลเดอร์นี้ (สำหรับเจ้าของโปรเจกต์, Codex และทีม AI)
 
-1. **[`SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md`](SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md)** — **พิมพ์เขียวแม่บท วิสัยทัศน์ กลไกธุรกิจ และสมการตัดสินใจเชิงลึก:**
-   - บันไดการเติบโต 6 ขั้น (จากร้านรีแบรนด์ ODM ทุนหลักแสน สู่บริษัทที่วิจัยชิป SoC และโมเด็ม 5G ของตัวเอง)
-   - กลไกการตัดสินใจของ NPC บอร์ดบริหาร: **"ทำชิปเอง vs ซื้อชิปคนอื่น (Make-or-Buy Silicon Engine)"** พร้อมตารางตัดสินใจครบทั้ง **7 แกนเทคโนโลยีของโทรศัพท์** (ชิป, โมเด็ม/RF, กล้อง/ISP, หน้าจอ/กระจก, แบตเตอรี่/ชาร์จไว, OS/App Store, และโรงงานประกอบ)
-   - กับดักทางธุรกิจจริงที่ซ่อนอยู่ (`Tape-out Failure & Respin`, `TSMC Allocation Squeeze`, `Cellular Patent Cliff`, `Display Binning Bias`, `Supply Chain Leaks & Osborne Effect`, `Storage Tier Margin Engine`, `Carrier Certification`, และ `Pre-Launch Cash Valley of Death`)
-   - สมองกลและการถกเถียงของ NPC ในห้องประชุม C-Suite (CEO vs CFO vs CTO vs VP Marketing)
-   - วิวัฒนาการคู่ขนานของชิปตลาดและเทคโนโลยีโลกภายนอก + ชุดสูตรคำนวณทางฟิสิกส์และเศรษฐศาสตร์
-
-2. **[`SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md`](SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md)** — **พิมพ์เขียวโครงสร้างตัวเกมจริง ผังแคมปัส ชีวิต NPC หน้าจอ UI และสถาปัตยกรรมโค้ด:**
-   - **ผังแคมปัสและห้องปฏิบัติการ 10 โซน:** ห้องประชุม War Room, สตูดิโอดีไซน์ & เวที Keynote, แล็บบอร์ดต้นแบบ, ศูนย์ออกแบบชิป VLSI & ห้องเซิร์ฟเวอร์ EDA, ห้องมืดจูนสีกล้อง, ห้องไร้คลื่นสะท้อน RF, ห้องทรมานเครื่อง (อบความร้อน/ปล่อยตกพื้น), สตูดิโอ OS/Driver, โรงงานคลีนรูม SMT และศูนย์ผ่าเครื่องเคลม RMA
-   - **14 สายอาชีพเฉพาะทางและดราม่าชีวิตการทำงานของ NPC:** ความขัดแย้งระหว่างดีไซเนอร์กับวิศวกรความร้อน, ช่วงปั่นงานก่อนเปิดตัว, และการดึงตัวคนสำคัญ
-   - **วงจรชีวิตของโทรศัพท์ 1 รุ่นครบ 7 ฉาก:** ตั้งแต่วางแผน, สร้างต้นแบบ, ข่าวหลุด, ผลิตจริง, ถ่ายทอดสดงานเปิดตัว Keynote, วันแกะกล่องรีวิว/ผ่าเครื่อง ไปจนถึงการปล่อยอัปเดต OTA หลังวางขาย
-   - **การออกแบบหน้าจอ UI ทั้ง 6 หน้าต่างหลัก** และ **โครงสร้างไฟล์โปรเจกต์ (`SPINOFF_SOURCE/`)** สำหรับเริ่มลงมือสร้างจริงทีละเฟส
+1. **[`SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md`](SPINOFF_MASTER_DESIGN_AND_CODEX_BLUEPRINT.md)** — **พิมพ์เขียวแม่บท วิสัยทัศน์ กลไกธุรกิจ และสมการตัดสินใจเชิงลึก**
+2. **[`SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md`](SPINOFF_GAMEPLAY_UI_AND_SYSTEM_SPECS.md)** — **พิมพ์เขียวโครงสร้างตัวเกม ผังแคมปัส ชีวิต NPC หน้าจอ UI และสถาปัตยกรรมโค้ด**
+3. **[`IDEAS.md`](IDEAS.md)** — **รายการงานวิจัยและระบบที่รอพัฒนาต่อหลัง v0.3.0**

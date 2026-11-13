@@ -1,0 +1,14 @@
+Browser verification report for Silicon & Handset v0.3.0 (2026-11-13)
+Environment: Linux x86_64 sandbox VM, Node v18.20.4, /usr/bin/chromium 156.0.8078.73
+
+1. Playwright runner (`SPINOFF_SOURCE/test/browser.test.cjs`):
+   - Updated to test v0.3.0 observer tabs, SKU/Lot/R&D portfolio text, Provenance Tracer, Edit Hub isolation, 390px/1280px responsive viewports, 150% zoom, and `silicon-handset-v030` / `silicon-handset-v020` / `silicon-handset-v010` storage preservation.
+   - In this offline sandbox container, `node_modules/playwright` is not pre-installed and outbound npm install is disabled.
+
+2. System Chromium (`/usr/bin/chromium`) policy check:
+   - Attempted headless Chromium execution via Python `selenium` WebDriver against both `http://127.0.0.1:<port>/SPINOFF_SOURCE/index.html`, `http://localhost:<port>/SPINOFF_SOURCE/index.html`, and `file:///.../Silicon_Handset_single.html`.
+   - Managed browser policy in this container (`URLBlocklist`) blocks navigation to both `file://` and local HTTP loopback (`This page is blocked: Your organization doesn't allow you to view this site`). Per `AGENTS.md` and `ACTIVE_PROMPT.md` ("do not bypass policy or claim file:// was tested. Keep final limitations and unresolved failures explicit"), browser policy was not bypassed.
+
+3. In-process UI/DOM verification (`test/simulation.test.cjs` Test 29):
+   - Executed `SPINOFF_SOURCE/js/ui.js` in a deterministic Node VM DOM + `localStorage` harness (`ok 29 - UI module renders all 6 observer tabs, provenance tracer, Edit Hub isolation and safe autosave without mutating world`).
+   - Verified all 6 tabs render without `NaN`, `traceSkuChain` selector renders SKU/engineer provenance without mutating serialized world state, Edit Hub shows target/current/proposed values, and `company-original-sentinel` + `silicon-handset-v010` keys remain untouched.

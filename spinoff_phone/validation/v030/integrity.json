@@ -1,0 +1,18 @@
+{
+  "release": "0.3.0",
+  "schema": 3,
+  "receivedBaseCommit": "e7dbd0dbdf2ef733d8d5679aeeb036ff0d139284",
+  "receivedZipSha256": "916a5bbfcd092131415905460e04f9ffbcc5a88a57f58cc8db5dee3c5bf451d0",
+  "receivedZipBytes": 659627,
+  "protectedHashes": {
+    "AGENTS.md": "909301ff2290bdea100401e5243637ac32d1fdc7646abd4dfec7b4caa248ca95",
+    "SPINOFF_SOURCE/js/human-core.js": "fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32",
+    "SPINOFF_SOURCE/CORE_LOCK.json": "9543f73d658f35dd22bdc96a1882c9ebdaeee5a5aaea1cc085cab40fc61602c6",
+    "SPINOFF_SOURCE/js/phone-engineering.js": "26a27e574b7870867cbb86d50755b84e82071455a9cb0207ee8b5344c613aa43"
+  },
+  "standaloneHtml": {
+    "bytes": 227609,
+    "sha256": "04423c56e31988efed0c882cb3d20b413ee3b445fcec92d86cedb0dd9fd94b72",
+    "aliasesIdentical": true
+  }
+}

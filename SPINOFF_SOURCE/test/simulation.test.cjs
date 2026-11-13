@@ -78,7 +78,7 @@ test('supplier alternatives trade price against time, split scarce stock and pre
  for(let i=0;i<48&&!w.shipments.some(s=>s.to===f.id&&s.key===key);i++)S.advance(w,60);const orders=w.shipments.filter(s=>s.to===f.id&&s.key===key);assert(orders.some(s=>s.from===fast.id));assert(orders.some(s=>s.from===slow.id));assert.equal(orders.reduce((n,s)=>n+s.quantity,0),12);assert(f.cash<balance);assert(orders.every(s=>s.unitPrice>0&&s.eta>w.minute-60));assert(S.audit(w).ok);const restored=S.deserialize(S.serialize(w));run(w,5);run(restored,5);assert.deepEqual(restored,w);
 });
 test('current commercial saves reject missing wallets, invalid plans and incompatible old saves',()=>{
- const w=S.create('commercial-save');run(w,20);const text=S.serialize(w);for(const mutate of [v=>v.segments[0].cash++,v=>delete v.segments,v=>v.segments[1].maxPrice=999999,v=>v.firms[0].strategy.level=99,v=>v.firms[0].salesWork=-1,v=>v.firms[0].procurement=[null],v=>v.firms[1].supplyTerms.leadHours=0,v=>v.designs[0].segmentSales.value++,v=>{v.schema=1;v.release='0.1.0';}]){const v=JSON.parse(text);mutate(v);assert.throws(()=>S.deserialize(JSON.stringify(v)));}assert.equal(S.serialize(w),text);
+ const w=S.create('commercial-save');run(w,20);const text=S.serialize(w);for(const mutate of [v=>v.segments[0].cash++,v=>delete v.segments,v=>v.segments[1].maxPrice=999999,v=>v.firms[0].strategy.level=99,v=>v.firms[0].salesWork=-1,v=>v.firms[0].procurement=[null],v=>v.firms[1].supplyTerms.leadHours=0,v=>v.designs[0].segmentSales.value++,v=>{v.schema=1;v.release='0.1.0';},v=>{v.schema=2;v.release='0.2.0';}]){const v=JSON.parse(text);mutate(v);assert.throws(()=>S.deserialize(JSON.stringify(v)));}assert.equal(S.serialize(w),text);
 });
 test('autonomous weekly pricing clears accumulated inventory while preserving estimated cost floor',()=>{
  const w=S.create('clearance');w.settings.market=false;run(w,100);const designs=w.designs.filter(d=>d.released&&d.inventory>20&&d.priceReason.includes('ระบาย'));assert(designs.length>0);for(const d of designs){const f=w.firms.find(f=>f.id===d.firmId),ceo=w.people.find(p=>p.id===f.people[0]);assert(d.price>=Math.round(d.estimatedUnitCost*1.08));assert(d.price<=Math.round(d.estimatedUnitCost*(1.25+ceo.profile.personality.ambition/400)));assert(f.strategy.level<=f.capability);}assert(S.audit(w).ok);
@@ -86,4 +86,318 @@ test('autonomous weekly pricing clears accumulated inventory while preserving es
 });
 test('market-facing engineering measurements reject corrupt saves before resumed settlement',()=>{
  const w=S.create('review');run(w,60);const d=w.designs.find(d=>d.released&&d.inventory>0);assert(d);const original=S.serialize(w);for(const mutate of [e=>delete e.taskScores,e=>e.taskScores=null,e=>delete e.taskScores.call,e=>e.taskScores.web='8',e=>e.taskScores.game=101,e=>delete e.photoLowLightScore,e=>e.photoLowLightScore=-1]){const candidate=JSON.parse(original);mutate(candidate.designs.find(x=>x.id===d.id).evaluation);assert.equal(S.audit(candidate).ok,false);assert.throws(()=>S.deserialize(JSON.stringify(candidate)));}assert.equal(S.serialize(w),original);const restored=S.deserialize(original);run(w,8);run(restored,8);assert.deepEqual(restored,w);assert(S.audit(w).ok);
+});
+
+test('SKU and physical lot provenance trace design, IP, manufacturer, transit, WIP reservation and finished phone without retroactive upgrade',()=>{
+ const w=S.create('sku-provenance');
+ assert.equal(S.LOT_POLICY.allowImplicitMerge,false);
+ assert(w.skus.length>=18);
+ assert(w.lots.length>=14);
+ const chipSupplier=w.firms.find(f=>f.id==='supplier-chip');
+ const openingChipSku=w.skus.find(s=>s.manufacturerId===chipSupplier.id&&s.kind==='chip'&&s.level===0);
+ assert(openingChipSku);
+ const openingSpecCopy=JSON.parse(JSON.stringify(openingChipSku.spec));
+ const openingLot=w.lots.find(l=>l.skuId===openingChipSku.id&&l.ownerId===chipSupplier.id&&l.location==='stock');
+ assert(openingLot);
+
+ // Advance until a brand buys a shipment, consumes prototype lots, reserves WIP lots, and finishes a phone batch
+ run(w,95);
+ const completedPhone=w.designs.find(d=>d.produced>0&&d.finishedLots?.length>0&&d.prototypeLots?.length===7);
+ assert(completedPhone);
+ assert(completedPhone.bomSkus.chip);
+ assert(completedPhone.bomSkus.pcb_rf);
+ assert(completedPhone.bomSkus.os);
+ assert(completedPhone.osLicense.skuId);
+ const snapChipBefore=JSON.parse(JSON.stringify(completedPhone.chip));
+ const snapBomLotsBefore=JSON.parse(JSON.stringify(completedPhone.finishedLots[0].bomLots));
+
+ // Advance further so suppliers complete higher-level R&D SKUs
+ run(w,90);
+ assert(w.skus.some(s=>s.manufacturerId===chipSupplier.id&&s.level>=1));
+ // Retroactive immunity: old SKU, old lots and already produced phone designs retain their exact original specs and lot provenance
+ assert.deepEqual(openingChipSku.spec,openingSpecCopy);
+ assert.deepEqual(completedPhone.chip,snapChipBefore);
+ assert.deepEqual(completedPhone.finishedLots[0].bomLots,snapBomLotsBefore);
+
+ // Pure traceSkuChain read does not mutate world
+ const serializedBeforeTrace=S.serialize(w);
+ const trace=S.traceSkuChain(w,completedPhone.bomSkus.chip);
+ assert.equal(trace.type,'sku');
+ assert(trace.designs.some(d=>d.id===completedPhone.id));
+ assert.equal(S.serialize(w),serializedBeforeTrace);
+ assert(S.audit(w).ok);
+});
+
+test('at least three firms pursue distinct R&D portfolio paths with measurable tradeoffs and business consequences',()=>{
+ const w=S.create('divergent-rnd');
+ run(w,160);
+ const completed=w.firms.flatMap(f=>f.rndPortfolio.completedProjects.map(p=>({...p,firmRole:f.role})));
+ const distinctFocuses=new Set(completed.map(c=>c.targetFocus));
+ assert(distinctFocuses.size>=4,`expected >=4 distinct R&D target focuses, got ${[...distinctFocuses].join(',')}`);
+
+ // Compare supplier-chip (power_efficiency) vs supplier-chip-alt (compute_performance) at level 0
+ const effChip=w.skus.find(s=>s.designerId==='supplier-chip'&&s.kind==='chip'&&s.level===0);
+ const perfChip=w.skus.find(s=>s.designerId==='supplier-chip-alt'&&s.kind==='chip'&&s.level===0);
+ assert.equal(effChip.focus,'power_efficiency');
+ assert.equal(perfChip.focus,'compute_performance');
+
+ // Compare supplier-camera (camera_optics) vs supplier-camera-alt (reliability)
+ const camOptics=w.skus.find(s=>s.designerId==='supplier-camera'&&s.kind==='camera'&&s.level===0);
+ const camRel=w.skus.find(s=>s.designerId==='supplier-camera-alt'&&s.kind==='camera'&&s.level===0);
+ assert.equal(camOptics.focus,'camera_optics');
+ assert.equal(camRel.focus,'reliability');
+
+ // Compare RAM vs Storage distinct functions & constraints
+ const ramSku=w.skus.find(s=>s.kind==='ram'&&s.level===0);
+ const stoSku=w.skus.find(s=>s.kind==='storage'&&s.level===0);
+ assert(ramSku.spec.bandwidthGBps>0&&ramSku.spec.type==='SDRAM');
+ assert(stoSku.spec.readMBps>0&&stoSku.spec.writeMBps>0&&stoSku.spec.interface==='SPI');
+ assert(S.audit(w).ok);
+});
+
+test('incompatible SKU parts, OS mismatches and extreme power/ISP envelopes fail qualification explicitly; compatible lot substitution is audited',()=>{
+ const w=S.create('compat-subst');
+ run(w,35);
+ const d=w.designs[0];
+ assert(d);
+
+ // 1. Incompatible RAM type (LPDDR on level-0 SDRAM chip)
+ const badRamParts=JSON.parse(JSON.stringify(d.parts));
+ badRamParts.ram.type='LPDDR';
+ const r1=S.evaluateSkuCompatibility(d.chip,badRamParts);
+ assert.equal(r1.compatible,false);
+ assert(r1.reasonsTh.some(x=>x.includes('ชนิดแรม')));
+
+ // 2. Incompatible Battery discharge (< peakPowerW)
+ const badBattParts=JSON.parse(JSON.stringify(d.parts));
+ badBattParts.battery.maxDischargeW=0.1;
+ const r2=S.evaluateSkuCompatibility(d.chip,badBattParts);
+ assert.equal(r2.compatible,false);
+ assert(r2.reasonsTh.some(x=>x.includes('แบตเตอรี่จ่ายกำลังสูงสุดไม่พอ')));
+
+ // 3. Incompatible OS ISA or insufficient driverCoverage
+ const badOsParts=JSON.parse(JSON.stringify(d.parts));
+ badOsParts.os.driverCoverage=0.5;
+ const r3=S.evaluateSkuCompatibility(d.chip,badOsParts);
+ assert.equal(r3.compatible,false);
+ assert(r3.reasonsTh.some(x=>x.includes('ไดรเวอร์ชิ้นส่วนยังไม่ครบ')));
+
+ // 4. Camera megapixels exceeding chip ISP limit
+ const badCamParts=JSON.parse(JSON.stringify(d.parts));
+ badCamParts.camera.megapixels=100;
+ const r4=S.evaluateSkuCompatibility(d.chip,badCamParts);
+ assert.equal(r4.compatible,false);
+ assert(r4.reasonsTh.some(x=>x.includes('ISP')));
+
+ // 5. Pure qualifySubstitution check on owned compatible vs wrong-kind lot
+ const f=w.firms.find(x=>x.id===d.firmId);
+ const altChipSku=w.skus.find(s=>s.id==='sku-chip-supplier-chip-alt-g0-r1');
+ w.lots.push({
+   id:'lot-test-sub',
+   skuId:altChipSku.id,
+   kind:'chip',
+   level:0,
+   revision:1,
+   focus:altChipSku.focus,
+   designerId:altChipSku.designerId,
+   ipOwnerId:altChipSku.ipOwnerId,
+   manufacturerId:altChipSku.manufacturerId,
+   ownerId:f.id,
+   location:'stock',
+   quantity:2,
+   unitPrice:17000,
+   createdMinute:w.minute,
+   shipmentId:null,
+   wipId:null,
+   designId:null
+ });
+ f.stock['chip:0']=(f.stock['chip:0']||0)+2;
+ w.materials.componentOpening+=2;
+ const beforeSub=S.serialize(w);
+ const subOk=S.qualifySubstitution(w,d.id,'chip','lot-test-sub');
+ assert.equal(subOk.ok,true);
+ const subWrongKind=S.qualifySubstitution(w,d.id,'camera','lot-test-sub');
+ assert.equal(subWrongKind.ok,false);
+ assert.equal(S.serialize(w),beforeSub);
+ assert(S.audit(w).ok);
+});
+
+test('R&D requires relevant specialist subjects, triggers rework on low-skill prototype failure, and records sunk cost on cancellation',()=>{
+ const w=S.create('rnd-rework',{role:'chip'});
+ w.settings.recruitment=false;
+ const f=w.firms[0];
+ for(const pid of f.people){
+   S.command(w,{type:'setSubject',personId:pid,subjectId:'semiconductor',level:12});
+ }
+ S.command(w,{type:'grantCash',firmId:f.id,amount:50000000});
+ for(let i=0;i<150;i++){
+   run(w,1);
+   const proj=w.rndProjects.find(r=>r.firmId===f.id);
+   if(proj&&proj.reworkCount>0)break;
+ }
+ const proj=w.rndProjects.find(r=>r.firmId===f.id);
+ assert(proj&&proj.reworkCount>0,'expected low-skill prototype qualification to trigger rework');
+ assert(f.rndPortfolio.sunkCostSatang>0);
+
+ const spentBeforeCancel=proj.nreSpentSatang;
+ assert(spentBeforeCancel>0);
+ S.command(w,{type:'cancelRndProject',firmId:f.id});
+ assert.equal(proj.status,'cancelled');
+ assert.equal(f.rndPortfolio.activeProjectId,null);
+ assert.equal(f.rndPortfolio.cancelledProjects.length,1);
+ assert(f.rndPortfolio.sunkCostSatang>=spentBeforeCancel);
+ assert(S.audit(w).ok);
+});
+
+test('make/buy/license evaluation separates objective infeasibility from prudent strategic refusal (declined_prudent)',()=>{
+ const w=S.create('sourcing-modes');
+ const f=w.firms[0];
+ const ceoId=f.people[0];
+ // Case 1: Low cash -> co_develop_custom_sku is objectively infeasible
+ clearMoney(w,f);
+ S.command(w,{type:'grantCash',firmId:f.id,amount:400000});
+ S.advance(w,60);
+ assert(f.sourcingDecision);
+ assert.equal(f.sourcingDecision.chosenMode,'buy_merchant_sku');
+ assert(f.sourcingDecision.infeasibleModes.length>0);
+ assert.equal(f.sourcingDecision.declinedFeasibleModes.length,0);
+
+ // Case 2: Advance to day 7 midnight boundary with adequate cash & high skills, but prudent/risk-averse CEO -> feasible but declined prudently
+ S.advance(w,7*1440-w.minute);
+ clearMoney(w,f);
+ S.command(w,{type:'grantCash',firmId:f.id,amount:1450000});
+ for(const pid of f.people){
+   S.command(w,{type:'setSubject',personId:pid,subjectId:'electronics',level:60});
+   S.command(w,{type:'setSubject',personId:pid,subjectId:'software',level:60});
+ }
+ S.command(w,{type:'setTrait',personId:ceoId,key:'prudence',level:90});
+ S.command(w,{type:'setTrait',personId:ceoId,key:'riskTaking',level:20});
+ S.advance(w,60);
+ assert.equal(f.sourcingDecision.chosenMode,'license_and_buy_prudent');
+ assert.equal(f.sourcingDecision.infeasibleModes.length,0);
+ assert(f.sourcingDecision.declinedFeasibleModes.length>0);
+ assert(S.audit(w).ok);
+});
+
+test('adversarial schema 3 saves reject unknown hostile fields and forged SKU/lot/R&D links while preserving mid-process round trips',()=>{
+ const w=S.create('mid-process');
+ run(w,18);
+ assert(w.rndProjects.length>0);
+ assert(w.lots.length>0);
+ const saved=S.serialize(w);
+ const roundTrip=S.deserialize(saved);
+ assert.deepEqual(roundTrip,w);
+
+ const mutations=[
+   v=>{v.hackedAdminPrivilege=true;},
+   v=>{v.skus[0].kind='quantum_core';},
+   v=>{v.lots[0].quantity+=5;},
+   v=>{v.lots[0].skuId='missing-sku';},
+   v=>{v.lots[0].location='transit';v.lots[0].shipmentId='missing-ship';},
+   v=>{v.rndProjects[0].stage='teleported';},
+   v=>{v.rndProjects[0].leadEngineerId='ghost-person';},
+   v=>{v.firms[0].rndPortfolio.activeProjectId='missing-rnd';}
+ ];
+ for(const mutate of mutations){
+   const candidate=JSON.parse(saved);
+   mutate(candidate);
+   assert.equal(S.audit(candidate).ok,false);
+   assert.throws(()=>S.deserialize(JSON.stringify(candidate)));
+ }
+ assert.equal(S.serialize(w),saved);
+});
+
+test('UI module renders all 6 observer tabs, provenance tracer, Edit Hub isolation and safe autosave without mutating world',()=>{
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+ const makeNode=(tag,text='',cls='')=>({
+   tagName:String(tag).toUpperCase(),
+   textContent:text===undefined?'':String(text),
+   className:cls||'',
+   value:'',
+   type:'',
+   step:'',
+   min:0,
+   max:100,
+   files:[],
+   dataset:{},
+    attributes:{},
+   children:[],
+   classList:{
+     classes:new Set((cls||'').split(/\s+/).filter(Boolean)),
+     add(c){this.classes.add(c);},
+     toggle(c,on){if(on)this.classes.add(c);else this.classes.delete(c);}
+   },
+   setAttribute(k,v){this.attributes[k]=String(v);},
+   getAttribute(k){return this.attributes[k];},
+   append(...items){for(const it of items)if(it){this.children.push(it);if(this.tagName==="SELECT"&&!this.value&&it.tagName==="OPTION"&&it.value!==undefined)this.value=it.value;}},
+   replaceChildren(...items){this.children=[...items];},
+   showModal(){this.open=true;},
+   close(){this.open=false;},
+   click(){if(typeof this.onclick==='function')this.onclick({preventDefault(){}});},
+   get options(){return this.children.filter(c=>c.tagName==='OPTION');},
+   getContext(){
+     return {fillStyle:'',font:'',fillRect(){},fillText(){},beginPath(){},arc(){},fill(){}};
+   },
+   get innerText(){
+     return (this.textContent||'')+' '+this.children.map(c=>c.innerText||'').join(' ');
+   }
+ });
+ const ids={};
+ for(const id of ['time','kpis','firm','firmReason','tabs','content','message','nextDay','seed','randomSeed','newWorld','welcome','resume','createWorld','startRole','export','import','help']){
+   ids[id]=makeNode('div');
+ }
+ ids.startRole.value='brand';
+ ids.seed.value='ui-harness';
+ const speedBtns=[0,1,5,20].map(s=>{const b=makeNode('button');b.dataset.speed=String(s);return b;});
+ const storage=new Map([['company-original-sentinel','untouched'],['silicon-handset-v010','v010-kept']]);
+ const sandbox={
+   SiliconSim:S,
+   performance:{now:()=>0},
+   requestAnimationFrame:()=>{},
+   crypto:{getRandomValues(arr){for(let i=0;i<arr.length;i++)arr[i]=12345+i;return arr;}},
+   Blob:class{},
+   URL:{createObjectURL:()=>'blob:test',revokeObjectURL:()=>{}},
+   setTimeout:()=>{},
+   alert:()=>{},
+   localStorage:{
+     getItem:k=>storage.has(k)?storage.get(k):null,
+     setItem:(k,v)=>storage.set(k,String(v))
+   },
+   document:{
+     getElementById:id=>ids[id]||(ids[id]=makeNode('div')),
+     createElement:(tag)=>makeNode(tag),
+     querySelectorAll:sel=>sel==='[data-speed]'?speedBtns:[]
+   },
+   window:{}
+ };
+ sandbox.window=sandbox;
+ const uiCode=fs.readFileSync(path.resolve(__dirname,'../js/ui.js'),'utf8');
+ vm.runInNewContext(uiCode,sandbox);
+ assert(sandbox.SiliconGame);
+ sandbox.SiliconGame.advance(1440*60);
+ const before=S.serialize(sandbox.SiliconGame.world);
+
+ // Click through every observer tab and check content + read purity
+ for(const tabBtn of [...ids.tabs.children]){
+   if(tabBtn.textContent.includes('Edit Hub'))continue;
+   tabBtn.click();
+   assert(!ids.content.innerText.includes('NaN'));
+ }
+ // Supply tab provenance tracer
+ const supplyBtn=ids.tabs.children.find(b=>b.textContent.includes('คลังและคิวผลิต'));
+ supplyBtn.click();
+ assert(ids.content.innerText.includes('มาตรฐานร่วมกัน'));
+ assert(ids.content.innerText.includes('ตามรอยสายโซ่'));
+ assert.equal(S.serialize(sandbox.SiliconGame.world),before);
+
+ // Edit Hub tab: test live preview, subject change, trait change, and grantCash
+ const editBtn=ids.tabs.children.find(b=>b.textContent.includes('Edit Hub'));
+ editBtn.click();
+ assert(ids.content.innerText.includes('เป้าหมาย:'));
+ assert(ids.content.innerText.includes('ค่าที่เสนอ'));
+ assert.equal(S.serialize(sandbox.SiliconGame.world),before);
+
+ // Verify old saves remain untouched
+ assert.equal(storage.get('company-original-sentinel'),'untouched');
+ assert.equal(storage.get('silicon-handset-v010'),'v010-kept');
 });

@@ -1,0 +1,155 @@
+TAP version 13
+# Subtest: seeded independent firms, subjects, measured feature-only opening; snapshot isolated
+ok 1 - seeded independent firms, subjects, measured feature-only opening; snapshot isolated
+  ---
+  duration_ms: 72.413409
+  ...
+# Subtest: normal 210-day world physically develops, manufactures, sells and conserves money and materials
+ok 2 - normal 210-day world physically develops, manufactures, sells and conserves money and materials
+  ---
+  duration_ms: 1136.710355
+  ...
+# Subtest: pending shipment, WIP and notice save/load deterministic continuation; profiles refrozen
+ok 3 - pending shipment, WIP and notice save/load deterministic continuation; profiles refrozen
+  ---
+  duration_ms: 357.995915
+  ...
+# Subtest: no cash cannot buy work or progress; no staff cannot research or manufacture
+ok 4 - no cash cannot buy work or progress; no staff cannot research or manufacture
+  ---
+  duration_ms: 203.477317
+  ...
+# Subtest: no components stops prototype; intermediate WIP holds consumed parts before any phones appear
+ok 5 - no components stops prototype; intermediate WIP holds consumed parts before any phones appear
+  ---
+  duration_ms: 215.771682
+  ...
+# Subtest: player cash does not change rival research under fixed no-trade/no-hiring fixture
+ok 6 - player cash does not change rival research under fixed no-trade/no-hiring fixture
+  ---
+  duration_ms: 783.666926
+  ...
+# Subtest: Edit Hub isolates person, validates commands and accounts capital source
+ok 7 - Edit Hub isolates person, validates commands and accounts capital source
+  ---
+  duration_ms: 13.21253
+  ...
+# Subtest: autonomous recruitment preserves person identity and requires notice before transfer
+ok 8 - autonomous recruitment preserves person identity and requires notice before transfer
+  ---
+  duration_ms: 28.848108
+  ...
+# Subtest: invalid saves reject without replacing live world
+ok 9 - invalid saves reject without replacing live world
+  ---
+  duration_ms: 35.619017
+  ...
+# Subtest: hour boundaries are chunk-invariant, travel and rest are actual human-core updates
+ok 10 - hour boundaries are chunk-invariant, travel and rest are actual human-core updates
+  ---
+  duration_ms: 68.598265
+  ...
+# Subtest: seed varies opening finance, resources and teams; specialist SME origin trades actual output
+ok 11 - seed varies opening finance, resources and teams; specialist SME origin trades actual output
+  ---
+  duration_ms: 898.88376
+  ...
+# Subtest: healthy employed engineers can autonomously transfer after notice without cloning knowledge
+ok 12 - healthy employed engineers can autonomously transfer after notice without cloning knowledge
+  ---
+  duration_ms: 200.860277
+  ...
+# Subtest: time smaller than one hour cannot grant advance work
+ok 13 - time smaller than one hour cannot grant advance work
+  ---
+  duration_ms: 49.557806
+  ...
+# Subtest: reject corrupt project requirements, owner/level links, duplicate WIP and forged reservations
+ok 14 - reject corrupt project requirements, owner/level links, duplicate WIP and forged reservations
+  ---
+  duration_ms: 140.164015
+  ...
+# Subtest: failed validation pays for timed redesign, consumes a fresh prototype and recovers
+ok 15 - failed validation pays for timed redesign, consumes a fresh prototype and recovers
+  ---
+  duration_ms: 213.527107
+  ...
+# Subtest: slow duplicate player supplier cannot cap qualified independent suppliers or rival designs
+ok 16 - slow duplicate player supplier cannot cap qualified independent suppliers or rival designs
+  ---
+  duration_ms: 16.730228
+  ...
+# Subtest: segments fund their own purchases with distinct utility, hard budgets and actual inventories
+ok 17 - segments fund their own purchases with distinct utility, hard budgets and actual inventories
+  ---
+  duration_ms: 758.917215
+  ...
+# Subtest: paid sales expertise changes conversion capacity without granting engineering work or money
+ok 18 - paid sales expertise changes conversion capacity without granting engineering work or money
+  ---
+  duration_ms: 210.41158
+  ...
+# Subtest: supplier alternatives trade price against time, split scarce stock and preserve paid generation ownership
+ok 19 - supplier alternatives trade price against time, split scarce stock and preserve paid generation ownership
+  ---
+  duration_ms: 139.696378
+  ...
+# Subtest: current commercial saves reject missing wallets, invalid plans and incompatible old saves
+ok 20 - current commercial saves reject missing wallets, invalid plans and incompatible old saves
+  ---
+  duration_ms: 200.898096
+  ...
+# Subtest: autonomous weekly pricing clears accumulated inventory while preserving estimated cost floor
+ok 21 - autonomous weekly pricing clears accumulated inventory while preserving estimated cost floor
+  ---
+  duration_ms: 384.689804
+  ...
+# Subtest: market-facing engineering measurements reject corrupt saves before resumed settlement
+ok 22 - market-facing engineering measurements reject corrupt saves before resumed settlement
+  ---
+  duration_ms: 423.096044
+  ...
+# Subtest: SKU and physical lot provenance trace design, IP, manufacturer, transit, WIP reservation and finished phone without retroactive upgrade
+ok 23 - SKU and physical lot provenance trace design, IP, manufacturer, transit, WIP reservation and finished phone without retroactive upgrade
+  ---
+  duration_ms: 765.577224
+  ...
+# Subtest: at least three firms pursue distinct R&D portfolio paths with measurable tradeoffs and business consequences
+ok 24 - at least three firms pursue distinct R&D portfolio paths with measurable tradeoffs and business consequences
+  ---
+  duration_ms: 744.659902
+  ...
+# Subtest: incompatible SKU parts, OS mismatches and extreme power/ISP envelopes fail qualification explicitly; compatible lot substitution is audited
+ok 25 - incompatible SKU parts, OS mismatches and extreme power/ISP envelopes fail qualification explicitly; compatible lot substitution is audited
+  ---
+  duration_ms: 179.010422
+  ...
+# Subtest: R&D requires relevant specialist subjects, triggers rework on low-skill prototype failure, and records sunk cost on cancellation
+ok 26 - R&D requires relevant specialist subjects, triggers rework on low-skill prototype failure, and records sunk cost on cancellation
+  ---
+  duration_ms: 255.303985
+  ...
+# Subtest: make/buy/license evaluation separates objective infeasibility from prudent strategic refusal (declined_prudent)
+ok 27 - make/buy/license evaluation separates objective infeasibility from prudent strategic refusal (declined_prudent)
+  ---
+  duration_ms: 58.520181
+  ...
+# Subtest: adversarial schema 3 saves reject unknown hostile fields and forged SKU/lot/R&D links while preserving mid-process round trips
+ok 28 - adversarial schema 3 saves reject unknown hostile fields and forged SKU/lot/R&D links while preserving mid-process round trips
+  ---
+  duration_ms: 207.779312
+  ...
+# Subtest: UI module renders all 6 observer tabs, provenance tracer, Edit Hub isolation and safe autosave without mutating world
+ok 29 - UI module renders all 6 observer tabs, provenance tracer, Edit Hub isolation and safe autosave without mutating world
+  ---
+  duration_ms: 447.943819
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9392.923643
