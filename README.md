@@ -1,4 +1,4 @@
-> **เกมภาคใหม่ Silicon & Handset0.1.0:** [เปิดไฟล์เล่นเดี่ยว](Silicon_Handset_single.html) · [สถานะและวิธีเล่น](spinoff_phone/PROJECT_STATUS.md) · [รายงาน](spinoff_phone/PATCH_REPORT_V0.1.0.md) — Company เดิมยังเป็น3.1.0
+> **เกมภาคใหม่ Silicon & Handset0.2.0:** [เปิดไฟล์เล่นเดี่ยว](Silicon_Handset_single.html) · [สถานะและวิธีเล่น](spinoff_phone/PROJECT_STATUS.md) · [รายงาน](spinoff_phone/PATCH_REPORT_V0.2.0.md) — Company เดิมยังเป็น3.1.0
 
 > **พรอมต์รับช่วงล่าสุดสำหรับ Gemini:** [ACTIVE_PROMPT.md](ACTIVE_PROMPT.md) — ระบบนิเวศการผลิตโทรศัพท์และบริษัทชิ้นส่วนที่บริษัทเราเข้าไปดำเนินธุรกิจได้จริง ส่งพร้อม ZIP สาขา main
 

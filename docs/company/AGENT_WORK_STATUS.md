@@ -67,3 +67,9 @@ Files: [Era 3 proposal](../../era3/ERA_3_FEATURE_AND_SMART_PHONES.md), [portable
 ## Spin-off design review — Codex, 2026-11-12
 
 Task `spinoff-phone-design-review`; base `bdfa62c`, parent runtime3.1.0. Status: documentation review integrated by the commit containing this entry. Reviewed both spin-off briefs, status/skills and relevant engineering/industry source. Added source-backed criticism and complementary design proposals in `spinoff_phone/CODEX_REVIEW_AND_DESIGN_REFINEMENTS.md`, with notices/links/addenda in original documents. No gameplay/AGENTS/Human Core changes; no spin-off implementation authorised or started in this task. Runtime test/app-skill results are not independently recertified. Documentation-only scope does not change existing runtime skill contracts or features listed in project status.
+
+## Silicon & Handset v0.2.0 — integrated by the containing main commit
+
+Owner Codex; base a3635f0; authorised continuation. Scope SPINOFF_SOURCE autonomous segmented market/product strategy, sales expertise, multi-supplier procurement, observer UI, tests, docs and complete editable delivery. No parent gameplay/AGENTS/core edits. Integrator Codex.
+
+Evidence:22/22 spin-off simulation,4/4 browser, five365-day audited worlds; parent236/236 simulation and17/17 browser/check/build passed. See spinoff_phone/PATCH_REPORT_V0.2.0.md and docs/company/SILICON_HANDSET_V020_HANDOFF.md. Main integration is the commit containing this entry; final artifact receipt verifies pushed SHA and archive acceptance. Self-review plus independent narrow market/save review; its missing-measurement load-validation finding was corrected and targeted regression rechecked. Full blueprint remains partial.

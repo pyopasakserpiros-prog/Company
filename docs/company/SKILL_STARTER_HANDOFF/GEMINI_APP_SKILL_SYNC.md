@@ -24,3 +24,7 @@ Codex และ Agy ดูแลไฟล์ใน repo ได้ตามงา
 ## สถานะของการส่งร่างครั้งนี้
 
 ร่าง 14 หมวดถูกเพิ่มใน repo ให้ Gemini ยกระดับแล้ว สองสกิลเดิมใน repo คงไว้เป็นฐานและยังรอ Gemini ปรับตามงานที่มอบหมาย ไม่มีหลักฐานยืนยันว่าสอง installed skills ในแอปได้รับการอัปเดตแล้ว
+
+## Sibling Silicon & Handset0.2.0 — 2026-11-13
+
+Canonical master references/root mirrors and silicon-handset-dev updated from actual commercial APIs/tests. Repository copies match. Installed Gemini app skills were not accessed; sync remains pending for these sibling notes. No Company gameplay API or skill maturity changed.

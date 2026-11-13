@@ -47,4 +47,4 @@ Both master skills (`company-evolution-dev` and `company-for-every-patch`), thei
 
 ## Silicon & Handset spin-off
 
-[Dedicated source-backed reference](silicon-handset-dev/SKILL.md) covers SPINOFF_SOURCE0.1.0, separate from Company3.1.0. Read [spin-off status](../../spinoff_phone/PROJECT_STATUS.md) for implemented scope and explicit limits.
+[Dedicated source-backed reference](silicon-handset-dev/SKILL.md) covers SPINOFF_SOURCE0.2.0, separate from Company3.1.0. Read [spin-off status](../../spinoff_phone/PROJECT_STATUS.md) for implemented scope and explicit limits.

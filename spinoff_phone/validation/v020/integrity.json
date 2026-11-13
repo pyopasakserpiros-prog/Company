@@ -1,0 +1,28 @@
+{
+  "base_commit": "a3635f0ae4c2131bd50df8074f2dfe90f0fcb11d",
+  "protected_files": {
+    "AGENTS.md": {
+      "sha256": "909301ff2290bdea100401e5243637ac32d1fdc7646abd4dfec7b4caa248ca95",
+      "unchanged_from_base": true
+    },
+    "COMPANY_SOURCE/js/human-core.js": {
+      "sha256": "fa83eaa0ef3407f26f21675161f632a4365242f67fea7b0c192e59e75b9d5c32",
+      "unchanged_from_base": true
+    },
+    "COMPANY_SOURCE/CORE_LOCK.json": {
+      "sha256": "9543f73d658f35dd22bdc96a1882c9ebdaeee5a5aaea1cc085cab40fc61602c6",
+      "unchanged_from_base": true
+    },
+    "COMPANY_SOURCE/js/phone-engineering.js": {
+      "sha256": "26a27e574b7870867cbb86d50755b84e82071455a9cb0207ee8b5344c613aa43",
+      "unchanged_from_base": true
+    },
+    "Company_single.html": {
+      "sha256": "d19c4cc5d7f5babe7a85281eff49a16e985adbc78d18f4e39847635eb7a00b7c",
+      "unchanged_from_base": true
+    }
+  },
+  "status_mirrors": "identical",
+  "master_skill_mirrors": "identical",
+  "scope": "No parent gameplay or build changes; Company status mirror updated only"
+}

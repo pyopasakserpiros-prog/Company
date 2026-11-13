@@ -1,4 +1,4 @@
-> Current new-game task: Silicon & Handset spin-off0.1.0, authorised by owner. Read [spin-off status](spinoff_phone/PROJECT_STATUS.md), [report](spinoff_phone/PATCH_REPORT_V0.1.0.md) and [dedicated skill](.agents/skills/silicon-handset-dev/SKILL.md). Parent Company remains3.1.0.
+> Current new-game task: Silicon & Handset spin-off0.2.0, authorised by owner. Read [spin-off status](spinoff_phone/PROJECT_STATUS.md), [report](spinoff_phone/PATCH_REPORT_V0.2.0.md) and [dedicated skill](.agents/skills/silicon-handset-dev/SKILL.md). Parent Company remains3.1.0.
 
 # เริ่มงานกับ Company v3.1.0
 

@@ -1,0 +1,34 @@
+
+> company-campus-simulation@0.1.0 test:browser
+> npm run build && node --test test/campus-browser.cjs
+
+
+> company-campus-simulation@0.1.0 build
+> node tools/build.cjs
+
+Built CompanyFoundation_single.html: 1982770 UTF-8 bytes; autonomous campus simulation
+✔ mobile selection card can be closed and remains closed as the simulation updates (1961.808455ms)
+✔ zoom buttons and two-finger pinch change the actual canvas camera (1122.676041ms)
+✔ company management is observational while Edit Hub can grant an item to stock (1505.811771ms)
+✔ CEO upgrade is reflected in the building sheet and visibly changes the building (1221.408032ms)
+✔ a new company runs and fulfills orders without player management commands (1605.003301ms)
+✔ desktop and standalone build boot without uncaught errors (1940.92327ms)
+✔ portrait camera fits the entire campus and can zoom out beyond the old clamp (980.335774ms)
+✔ company tabs expose team coverage, learned subjects and assets on a phone (1169.038379ms)
+✔ character knowledge tab shows personal subjects at Lv4 and Lv5 (977.087852ms)
+✔ World UI opens six categories and drills into governments, firms, materials and diplomacy on mobile (1503.558563ms)
+✔ standalone World screen renders actual world without mutating save state (1216.463703ms)
+✔ mobile machinery and commercial contract tabs expose actual equipment state without management duties (1215.051366ms)
+✔ SME chooser pauses initial time, starts chosen business and exposes paid capital on mobile (3564.011098ms)
+✔ country ministry and NPC news are observable and opening panels does not change simulation (1628.62855ms)
+✔ phone industry mobile inspection has six read-only tabs and preserves saved world (1326.227235ms)
+✔ standalone phone industry snapshot inspection stays read-only (1262.405741ms)
+✔ phone designs expose measurable hardware, owned stock and read-only EditHub experiments (13348.900702ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 38231.96478

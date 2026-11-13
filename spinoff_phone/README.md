@@ -1,9 +1,9 @@
-# Silicon & Handset — first playable v0.1.0
+# Silicon & Handset — playable v0.2.0
 
 **เปิดเล่น:** ดาวน์โหลด [Silicon_Handset_single.html](../Silicon_Handset_single.html) แล้วเปิดออฟไลน์ หรือใช้ SPINOFF_SOURCE พร้อม shared dependencies ใน repo นี้
 
 - [สถานะ/API/ข้อจำกัดของเกมจริง](PROJECT_STATUS.md)
-- [รายงานแพตช์แรก](PATCH_REPORT_V0.1.0.md)
+- [รายงานแพตช์ล่าสุด](PATCH_REPORT_V0.2.0.md)
 - [วิธีรัน/ทดสอบซอร์ส](../SPINOFF_SOURCE/README.md)
 
 เกม Company เดิมยังเป็น3.1.0 ภาคใหม่นี้แยก executable/เซฟ มีบริษัทคู่แข่งและทีมงานสุ่มตามseed ไม่มี catchup ตามผู้เล่น แผนระยะยาวด้านล่างยังไม่ใช่รายการที่ทำครบแล้ว

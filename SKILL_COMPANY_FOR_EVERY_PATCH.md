@@ -55,6 +55,8 @@ Full ZIP delivery: one root with directories including .agents; all tracked sour
    - Update `.agents/skills/company-evolution-dev/SKILL.md`, `.agents/skills/company-for-every-patch/SKILL.md`, root `SKILL.md`, `SKILL_COMPANY_EVOLUTION_DEV.md`, `SKILL_COMPANY_FOR_EVERY_PATCH.md`, `.agents/skills/README.md`, `START_HERE_FOR_AI.md`, `project_status_and_ai_onboarding.md`, `docs/company/AGENT_WORK_STATUS.md`, and affected domain skills/docs.
    - Write `docs/company/PATCH_REPORTS/PATCH_IMPLEMENTATION_REPORT_COMPANY_V<X.Y.Z>.md` and keep `main` free of `.zip` files.
 
-## Sibling spin-off v0.1.0 (separate runtime)
+## Sibling spin-off v0.2.0 (separate runtime)
 
 SPINOFF_SOURCE is the owner-authorised Silicon & Handset game, reusing unchanged HumanCore/pure phone engineering. Read spinoff_phone/PROJECT_STATUS.md and silicon-handset-dev skill for its distinct hourly loop, generated rivals, finite WIP/ledger, recruiting and audit {ok,errors}. Parent Company remains3.1.0; do not interpret spin-off results as new Company features. Build/test/save namespaces and standalone files are separate. App skills were not accessed by this sibling release.
+
+Sibling0.2.0 reference maintenance: use silicon-handset-dev for finite cohort wallets, paid sales work, autonomous target/pricing reviews, supplier price/transit alternatives and schema2 validation. Company runtime/APIs stay3.1.0; Gemini app copies were not accessed in this patch.

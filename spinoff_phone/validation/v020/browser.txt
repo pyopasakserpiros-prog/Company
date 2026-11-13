@@ -1,0 +1,21 @@
+
+> silicon-handset-spinoff@0.2.0 test:browser
+> npm run build && node --test test/browser.test.cjs
+
+
+> silicon-handset-spinoff@0.2.0 build
+> node tools/build.cjs
+
+Built spin-off standalone: 167033 bytes
+✔ observer UI boot, pure tabs, real EditHub and safe save on 390 (1826.035714ms)
+✔ observer UI boot, pure tabs, real EditHub and safe save on 1280 (1086.623288ms)
+✔ commercial observability, save purity and explicit old-save rejection on mobile (929.008595ms)
+✔ invalid autosave remains preserved rather than overwritten by fallback world (11289.31115ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15516.282242

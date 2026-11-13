@@ -59,9 +59,9 @@ Building on the v3.0.0 generated physical phone industry foundation, **v3.1.0** 
 - Carrier/retail channels (`carrier_bundle`, `retail_distributor`, `direct_household` in `w.phoneIndustry.channels`) record segment and radio-generation sales, while full carrier balance-sheet financing, app-store developer ecosystems, and formal patent/IP litigation remain partial or future scope.
 - Playwright (`playwright` npm package) is not pre-installed in the offline sandbox VM container, so `npm run test:browser` must be run in an environment with Playwright/Chromium installed.
 
-## Spin-off implementation — separate Silicon & Handset v0.1.0
+## Spin-off implementation — separate Silicon & Handset v0.2.0
 
-Owner authorised a first playable spin-off after the design review. SPINOFF_SOURCE now implements independent seeded rival firms/people/resources, autonomous phone/supplier business, persistent work/stock/production, recruiting and a separate observer UI/save namespace. Company gameplay remains3.1.0. Read spinoff_phone/PROJECT_STATUS.md and PATCH_REPORT_V0.1.0.md for exact scope/evidence/limits; do not infer the complete Empire blueprint is finished. Root Silicon_Handset_single.html is the separate offline game.
+Owner authorised a first playable spin-off after the design review. SPINOFF_SOURCE now implements independent seeded rival firms/people/resources, autonomous phone/supplier business, persistent work/stock/production, recruiting and a separate observer UI/save namespace. Company gameplay remains3.1.0. Read spinoff_phone/PROJECT_STATUS.md and PATCH_REPORT_V0.2.0.md for exact scope/evidence/limits; do not infer the complete Empire blueprint is finished. Root Silicon_Handset_single.html is the separate offline game. Sibling0.2.0 adds three finite-wallet consumer cohorts, autonomous target/generation/pricing reviews, paid sales expertise and two suppliers per role with price/delay procurement. Save schema2 and silicon-handset-v020 remain separate from Company; older spin-off saves are explicitly rejected without deleting them.
 
 ## Verification and delivery
 
